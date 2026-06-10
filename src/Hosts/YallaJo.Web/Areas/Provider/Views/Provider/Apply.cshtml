@@ -1,7 +1,9 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Models
 @model ProviderApplyVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Become a provider";
+    ViewData["Title"] = Localizer["Provider.Apply.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -9,66 +11,64 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-9 col-xl-8">
-                <a asp-area="Provider" asp-controller="Provider" asp-action="Status"
-                   class="btn btn-sm btn-secondary-soft mb-3"><i class="bi bi-arrow-left me-1"></i>My application</a>
-                <h1 class="fs-3 mb-1"><i class="bi bi-clipboard-check me-2"></i>Become a provider</h1>
-                <p class="text-body-secondary mb-3">Tell us about your business. You can submit your application for review on the next step.</p>
+                <a asp-action="Status" class="btn btn-sm btn-secondary-soft mb-3"><i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.Apply.BackToStatus"]</a>
+                <h1 class="fs-4 mb-1"><i class="fa-solid fa-clipboard-check me-2" aria-hidden="true"></i>@Localizer["Provider.Apply.Heading"]</h1>
+                <p class="text-body-secondary mb-3">@Localizer["Provider.Apply.Intro"]</p>
 
-                <div class="card border">
+                <div class="card shadow-sm">
                     <div class="card-body">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                        <form asp-area="Provider" asp-controller="Provider" asp-action="Apply" method="post" class="row g-3">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                        <form asp-action="Apply" method="post" class="row g-3">
                             @Html.AntiForgeryToken()
 
-        <div class="col-md-6">
-            <label asp-for="Type" class="form-label"></label>
-            <select asp-for="Type" class="form-select">
-                <option value="">— choose —</option>
-                @foreach (var opt in Model.TypeOptions)
-                {
-                    <option value="@opt.Value">@opt.Label</option>
-                }
-            </select>
-            <span asp-validation-for="Type" class="text-danger"></span>
-        </div>
+                            <div class="col-md-6">
+                                <label asp-for="Type" class="form-label"></label>
+                                <select asp-for="Type" class="form-select">
+                                    <option value="">@Localizer["Provider.Apply.ChooseType"]</option>
+                                    @foreach (var opt in Model.TypeOptions)
+                                    {
+                                        <option value="@opt.Value">@opt.Label</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Type" class="text-danger small" role="alert"></span>
+                            </div>
 
-        <div class="col-md-6">
-            <label asp-for="BusinessName" class="form-label"></label>
-            <input asp-for="BusinessName" class="form-control" />
-            <span asp-validation-for="BusinessName" class="text-danger"></span>
-        </div>
+                            <div class="col-md-6">
+                                <label asp-for="BusinessName" class="form-label"></label>
+                                <input asp-for="BusinessName" class="form-control" />
+                                <span asp-validation-for="BusinessName" class="text-danger small" role="alert"></span>
+                            </div>
 
-        <div class="col-md-6">
-            <label asp-for="ContactEmail" class="form-label"></label>
-            <input asp-for="ContactEmail" class="form-control" />
-            <span asp-validation-for="ContactEmail" class="text-danger"></span>
-        </div>
+                            <div class="col-md-6">
+                                <label asp-for="ContactEmail" class="form-label"></label>
+                                <input asp-for="ContactEmail" type="email" dir="ltr" class="form-control" />
+                                <span asp-validation-for="ContactEmail" class="text-danger small" role="alert"></span>
+                            </div>
 
-        <div class="col-md-6">
-            <label asp-for="ContactPhone" class="form-label"></label>
-            <input asp-for="ContactPhone" class="form-control" />
-            <span asp-validation-for="ContactPhone" class="text-danger"></span>
-        </div>
-
-        <div class="col-12">
-            <label asp-for="Address" class="form-label"></label>
-            <input asp-for="Address" class="form-control" />
-            <span asp-validation-for="Address" class="text-danger"></span>
-        </div>
-
-        <div class="col-12">
-            <label asp-for="Description" class="form-label"></label>
-            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-            <span asp-validation-for="Description" class="text-danger"></span>
-        </div>
+                            <div class="col-md-6">
+                                <label asp-for="ContactPhone" class="form-label"></label>
+                                <input asp-for="ContactPhone" type="tel" dir="ltr" class="form-control" />
+                                <span asp-validation-for="ContactPhone" class="text-danger small" role="alert"></span>
+                            </div>
 
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary">Start application</button>
-                                <a asp-area="Provider" asp-controller="Provider" asp-action="Status"
-                                   class="btn btn-link">Cancel</a>
+                                <label asp-for="Address" class="form-label"></label>
+                                <input asp-for="Address" class="form-control" />
+                                <span asp-validation-for="Address" class="text-danger small" role="alert"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Description" class="form-label"></label>
+                                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                                <span asp-validation-for="Description" class="text-danger small" role="alert"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Provider.Apply.Start"]</button>
+                                <a asp-action="Status" class="btn btn-link">@Localizer["Provider.Apply.Cancel"]</a>
                             </div>
                         </form>
-                        <p class="text-body-secondary small mt-3 mb-0">Document upload becomes available after you start the application.</p>
+                        <p class="text-body-secondary small mt-3 mb-0"><i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>@Localizer["Provider.Apply.DocNote"]</p>
                     </div>
                 </div>
             </div>

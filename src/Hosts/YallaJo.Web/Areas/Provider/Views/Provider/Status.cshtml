@@ -1,250 +1,238 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Models
 @using YallaJo.Web.Infrastructure.Authorization
 @model ProviderStatusVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "My provider application";
+    ViewData["Title"] = Localizer["Provider.Onboarding.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var culture = CultureInfo.CurrentUICulture;
+    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd", culture);
+
+    (string Color, string Icon) AppBadge(string s) => (s ?? "").ToLowerInvariant() switch
+    {
+        "approved" => ("success", "circle-check"),
+        "rejected" => ("danger", "circle-xmark"),
+        "suspended" => ("warning", "triangle-exclamation"),
+        "moredocsneeded" => ("info", "file-circle-question"),
+        "draft" => ("secondary", "pen-ruler"),
+        "submitted" or "pending" => ("warning", "clock"),
+        _ => ("secondary", "circle-info"),
+    };
 }
 
 <section class="pt-5">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <h1 class="fs-3 mb-3"><i class="bi bi-clipboard-check me-2"></i>My provider application</h1>
+            <div class="col-lg-10 vstack gap-3">
+                <h1 class="fs-4 mb-0"><i class="fa-solid fa-clipboard-check me-2" aria-hidden="true"></i>@Localizer["Provider.Onboarding.Heading"]</h1>
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
-
-    @if (!Model.HasApplication)
-    {
-        <div class="card border">
-            <div class="card-body text-center">
-                <p class="mb-3">You haven't applied to become a provider yet.</p>
-                <div class="d-flex flex-wrap gap-2 justify-content-center">
-                    <a asp-area="Provider" asp-controller="Provider" asp-action="Apply"
-                       class="btn btn-primary">
-                        <i class="bi bi-building-add me-1"></i>Become a provider
-                    </a>
-                    <a asp-area="Provider" asp-controller="Provider" asp-action="Apply"
-                       asp-route-type="IndependentGuide"
-                       class="btn btn-primary-soft">
-                        <i class="bi bi-person-badge me-1"></i>Become a guide
-                    </a>
-                </div>
-                <p class="form-text mt-2 mb-0">
-                    Independent guides apply through the same form with the guide type pre-selected.
-                </p>
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="card border mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                        <h5 class="mb-1">@Model.BusinessName</h5>
-                        <span class="text-muted">@Model.TypeLabel</span>
-                    </div>
-                    <span class="badge text-bg-secondary">@Model.Status</span>
-                </div>
-
-                @if (string.Equals(Model.Status, "Approved", StringComparison.OrdinalIgnoreCase))
+                @if (!Model.HasApplication)
                 {
-                    <div class="mb-3">
-                        <a asp-area="Provider" asp-controller="Dashboard" asp-action="Index"
-                           class="btn btn-primary btn-sm">Go to Provider Dashboard</a>
-                    </div>
-                }
-
-                <ul class="list-group list-group-flush small">
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                        <span>Submitted</span><strong>@(Model.SubmittedAt?.ToString("yyyy-MM-dd") ?? "—")</strong>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                        <span>Reviewed</span><strong>@(Model.ReviewedAt?.ToString("yyyy-MM-dd") ?? "—")</strong>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                        <span>Reapplications</span><strong>@Model.ReapplicationCount</strong>
-                    </li>
-                </ul>
-
-                @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
-                {
-                    <div class="alert alert-danger mt-3 mb-0">
-                        <strong>Rejection reason:</strong> @Model.RejectionReason
-                    </div>
-                }
-                @if (!string.IsNullOrWhiteSpace(Model.SuspensionReason))
-                {
-                    <div class="alert alert-warning mt-3 mb-0">
-                        <strong>Suspension reason:</strong> @Model.SuspensionReason
-                    </div>
-                }
-                @if (Model.CoolingPeriodEndsAt.HasValue)
-                {
-                    <div class="alert alert-info mt-3 mb-0">
-                        You may reapply after @Model.CoolingPeriodEndsAt.Value.ToString("yyyy-MM-dd").
-                    </div>
-                }
-
-                @* Reapply is offered only for a Rejected application once the cooling
-                   period has passed and the reapplication limit has not been reached. *@
-                @if (Model.CanReapply)
-                {
-                    <permission require="@WebPermission.ProviderApplication.Update">
-                        <form asp-area="Provider" asp-controller="Provider" asp-action="Reapply"
-                              method="post" class="mt-3">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-primary">Reapply</button>
-                            <div class="form-text">
-                                Reapplying reopens your application as a draft so you can update it and submit again
-                                (@Model.ReapplyAttemptsRemaining of @Model.ReapplyMaxAttempts attempts remaining).
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center">
+                            <p class="mb-3">@Localizer["Provider.Onboarding.NotAppliedMsg"]</p>
+                            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                                <a asp-action="Apply" class="btn btn-primary"><i class="fa-solid fa-building-circle-arrow-right me-1" aria-hidden="true"></i>@Localizer["Provider.Onboarding.BecomeProvider"]</a>
+                                <a asp-action="Apply" asp-route-type="IndependentGuide" class="btn btn-primary-soft"><i class="fa-solid fa-id-badge me-1" aria-hidden="true"></i>@Localizer["Provider.Onboarding.BecomeGuide"]</a>
                             </div>
-                        </form>
-                    </permission>
-                }
-                else if (Model.HasApplication
-                         && string.Equals(Model.Status, "Rejected", StringComparison.OrdinalIgnoreCase)
-                         && Model.ReapplyLimitReached)
-                {
-                    <div class="alert alert-secondary mt-3 mb-0">
-                        You have reached the maximum number of reapplications (@Model.ReapplyMaxAttempts).
+                            <p class="form-text mt-2 mb-0">@Localizer["Provider.Onboarding.GuideNote"]</p>
+                        </div>
                     </div>
-                }
-            </div>
-        </div>
-
-        <div class="card border mb-3">
-            <div class="card-header"><strong>Documents</strong></div>
-            <div class="card-body">
-                @if (!Model.HasDocuments)
-                {
-                    <p class="small text-muted mb-0">No documents attached yet.</p>
                 }
                 else
                 {
-                    <ul class="list-group list-group-flush small mb-0">
-                        @foreach (var doc in Model.Documents)
-                        {
-                            var replaceId = $"replace-{doc.DocumentId:N}";
-                            <li class="list-group-item px-0">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span>
-                                        <i class="bi bi-file-earmark-text me-1"></i>
-                                        <strong>@doc.DocumentTypeLabel</strong> — @doc.FileName
-                                    </span>
-                                    <span class="text-muted">
-                                        @(doc.ExpiresAt.HasValue ? $"expires {doc.ExpiresAt.Value:yyyy-MM-dd}" : "")
-                                        @if (Model.CanUploadDocuments)
-                                        {
-                                            <permission require="@WebPermission.ProviderApplication.Update">
-                                                <button type="button" class="btn btn-link btn-sm p-0 ms-2"
-                                                        data-bs-toggle="collapse" data-bs-target="#@replaceId">
-                                                    Replace
-                                                </button>
-                                            </permission>
-                                        }
-                                    </span>
+                    var badge = AppBadge(Model.Status);
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h2 class="h5 mb-1">@Model.BusinessName</h2>
+                                    <span class="text-body-secondary">@Model.TypeLabel</span>
                                 </div>
+                                <span class="badge bg-@badge.Color bg-opacity-10 text-@badge.Color"><i class="fa-solid fa-@badge.Icon fa-fw" aria-hidden="true"></i> @Localizer["Provider.Status." + Model.Status]</span>
+                            </div>
 
-                                @if (Model.CanUploadDocuments)
-                                {
-                                    <permission require="@WebPermission.ProviderApplication.Update">
-                                        <div class="collapse mt-2" id="@replaceId">
-                                            @* Posts the top-level ReplaceProviderDocumentVm bound by the
-                                               ReplaceDocument action; plain name attributes are used here. *@
-                                            <form asp-area="Provider" asp-controller="Provider" asp-action="ReplaceDocument"
-                                                  method="post" class="row g-2 align-items-end">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="DocumentId" value="@doc.DocumentId" />
+                            @if (string.Equals(Model.Status, "Approved", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <div class="mb-3">
+                                    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary btn-sm"><i class="fa-solid fa-gauge me-1" aria-hidden="true"></i>@Localizer["Provider.Onboarding.GoToDashboard"]</a>
+                                </div>
+                            }
 
-                                                <div class="col-md-4">
-                                                    <label class="form-label">New file URL</label>
-                                                    <input name="FileUrl" type="url" class="form-control"
-                                                           value="@doc.FileUrl" placeholder="https://…" />
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label">File name</label>
-                                                    <input name="FileName" type="text" class="form-control"
-                                                           value="@doc.FileName" />
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="form-label">Size (bytes)</label>
-                                                    <input name="FileSizeBytes" type="number" min="1" class="form-control" />
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="form-label">Expires at</label>
-                                                    <input name="ExpiresAt" type="date" class="form-control"
-                                                           value="@(doc.ExpiresAt?.ToString("yyyy-MM-dd"))" />
-                                                </div>
-                                                <div class="col-md-1 d-grid">
-                                                    <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </permission>
-                                }
-                            </li>
-                        }
-                    </ul>
-                }
-
-                @if (Model.CanUploadDocuments)
-                {
-                    <permission require="@WebPermission.ProviderApplication.Create">
-                        <hr />
-                        <h6 class="mb-2">Upload a document</h6>
-                        <p class="small text-muted mb-2">
-                            Accepted formats: PDF, JPG or PNG, up to 10&nbsp;MB. Upload all required
-                            documents for your provider type, then submit your application for review.
-                        </p>
-                        @* Inputs post to the top-level ProviderDocumentUploadVm bound by the
-                           UploadDocument action, so plain name attributes are used here. *@
-                        <form asp-area="Provider" asp-controller="Provider" asp-action="UploadDocument"
-                              method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
-                            @Html.AntiForgeryToken()
-
-                            <div class="col-md-4">
-                                <label for="DocumentType" class="form-label">Document type</label>
-                                <select id="DocumentType" name="DocumentType" class="form-select">
-                                    <option value="">— choose —</option>
-                                    @foreach (var opt in Model.UploadForm.DocumentTypeOptions)
+                            <ul class="list-group list-group-flush small">
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span>@Localizer["Provider.Onboarding.Submitted"]</span>
+                                    @if (Model.SubmittedAt.HasValue)
                                     {
-                                        <option value="@opt.Value">@opt.Label</option>
+                                        <strong><bdi dir="ltr" class="font-data">@Date(Model.SubmittedAt.Value)</bdi></strong>
                                     }
-                                </select>
-                            </div>
+                                    else
+                                    {
+                                        <span class="text-secondary">&mdash;</span>
+                                    }
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span>@Localizer["Provider.Onboarding.Reviewed"]</span>
+                                    @if (Model.ReviewedAt.HasValue)
+                                    {
+                                        <strong><bdi dir="ltr" class="font-data">@Date(Model.ReviewedAt.Value)</bdi></strong>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-secondary">&mdash;</span>
+                                    }
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span>@Localizer["Provider.Onboarding.Reapplications"]</span><strong><bdi dir="ltr" class="font-data">@Model.ReapplicationCount</bdi></strong>
+                                </li>
+                            </ul>
 
-                            <div class="col-md-4">
-                                <label for="File" class="form-label">File</label>
-                                <input id="File" name="File" type="file" class="form-control"
-                                       accept="@ProviderDocumentUploadVm.AcceptAttribute" />
-                            </div>
+                            @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
+                            {
+                                <div class="alert alert-danger mt-3 mb-0">@Localizer["Provider.Onboarding.RejectionReason", Model.RejectionReason]</div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.SuspensionReason))
+                            {
+                                <div class="alert alert-warning mt-3 mb-0">@Localizer["Provider.Onboarding.SuspensionReason", Model.SuspensionReason]</div>
+                            }
+                            @if (Model.CoolingPeriodEndsAt.HasValue)
+                            {
+                                <div class="alert alert-info mt-3 mb-0">@Localizer["Provider.Onboarding.CoolingPeriod", Date(Model.CoolingPeriodEndsAt.Value)]</div>
+                            }
 
-                            <div class="col-md-2">
-                                <label for="ExpiresAt" class="form-label">Expires at</label>
-                                <input id="ExpiresAt" name="ExpiresAt" type="date" class="form-control" />
-                            </div>
+                            @if (Model.CanReapply)
+                            {
+                                <permission require="@WebPermission.ProviderApplication.Update">
+                                    <form asp-action="Reapply" method="post" class="mt-3">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-rotate-right me-1" aria-hidden="true"></i>@Localizer["Provider.Onboarding.Reapply"]</button>
+                                        <div class="form-text">@Localizer["Provider.Onboarding.ReapplyNote", Model.ReapplyAttemptsRemaining, Model.ReapplyMaxAttempts]</div>
+                                    </form>
+                                </permission>
+                            }
+                            else if (Model.HasApplication && string.Equals(Model.Status, "Rejected", StringComparison.OrdinalIgnoreCase) && Model.ReapplyLimitReached)
+                            {
+                                <div class="alert alert-secondary mt-3 mb-0">@Localizer["Provider.Onboarding.ReapplyLimit", Model.ReapplyMaxAttempts]</div>
+                            }
+                        </div>
+                    </div>
 
-                            <div class="col-md-2 d-grid">
-                                <button type="submit" class="btn btn-outline-primary">Upload</button>
-                            </div>
-                        </form>
-                    </permission>
+                    <div class="card shadow-sm">
+                        <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.Onboarding.DocumentsHeading"]</h2></div>
+                        <div class="card-body">
+                            @if (!Model.HasDocuments)
+                            {
+                                <p class="small text-body-secondary mb-0">@Localizer["Provider.Onboarding.NoDocuments"]</p>
+                            }
+                            else
+                            {
+                                <ul class="list-group list-group-flush small mb-0">
+                                    @foreach (var doc in Model.Documents)
+                                    {
+                                        var replaceId = $"replace-{doc.DocumentId:N}";
+                                        <li class="list-group-item px-0">
+                                            <div class="d-flex justify-content-between align-items-center gap-2">
+                                                <span>
+                                                    <i class="fa-solid fa-file-lines me-1" aria-hidden="true"></i>
+                                                    <strong>@doc.DocumentTypeLabel</strong> &mdash; <bdi dir="ltr">@doc.FileName</bdi>
+                                                </span>
+                                                <span class="text-body-secondary">
+                                                    @if (doc.ExpiresAt.HasValue)
+                                                    {
+                                                        <text>@Localizer["Provider.Onboarding.ExpiresOn"] <bdi dir="ltr" class="font-data">@Date(doc.ExpiresAt.Value)</bdi></text>
+                                                    }
+                                                    @if (Model.CanUploadDocuments)
+                                                    {
+                                                        <permission require="@WebPermission.ProviderApplication.Update">
+                                                            <button type="button" class="btn btn-link btn-sm p-0 ms-2" data-bs-toggle="collapse" data-bs-target="#@replaceId">@Localizer["Provider.Onboarding.Replace"]</button>
+                                                        </permission>
+                                                    }
+                                                </span>
+                                            </div>
+
+                                            @if (Model.CanUploadDocuments)
+                                            {
+                                                <permission require="@WebPermission.ProviderApplication.Update">
+                                                    <div class="collapse mt-2" id="@replaceId">
+                                                        <form asp-action="ReplaceDocument" method="post" class="row g-2 align-items-end">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="DocumentId" value="@doc.DocumentId" />
+                                                            <div class="col-md-4">
+                                                                <label class="form-label" for="rfu-@doc.DocumentId">@Localizer["Provider.Onboarding.ReplaceFileUrl"]</label>
+                                                                <input id="rfu-@doc.DocumentId" name="FileUrl" type="url" dir="ltr" class="form-control" value="@doc.FileUrl" />
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <label class="form-label" for="rfn-@doc.DocumentId">@Localizer["Provider.Onboarding.ReplaceFileName"]</label>
+                                                                <input id="rfn-@doc.DocumentId" name="FileName" type="text" dir="ltr" class="form-control" value="@doc.FileName" />
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                <label class="form-label" for="rfs-@doc.DocumentId">@Localizer["Provider.Onboarding.ReplaceSize"]</label>
+                                                                <input id="rfs-@doc.DocumentId" name="FileSizeBytes" type="number" min="1" dir="ltr" class="form-control" />
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                <label class="form-label" for="rfe-@doc.DocumentId">@Localizer["Provider.Onboarding.ReplaceExpiry"]</label>
+                                                                <input id="rfe-@doc.DocumentId" name="ExpiresAt" type="date" dir="ltr" class="form-control" value="@(doc.ExpiresAt?.ToString("yyyy-MM-dd"))" />
+                                                            </div>
+                                                            <div class="col-md-1 d-grid">
+                                                                <button type="submit" class="btn btn-outline-primary btn-sm">@Localizer["Provider.Onboarding.Save"]</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </permission>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+
+                            @if (Model.CanUploadDocuments)
+                            {
+                                <permission require="@WebPermission.ProviderApplication.Create">
+                                    <hr />
+                                    <h3 class="h6 mb-2">@Localizer["Provider.Onboarding.UploadHeading"]</h3>
+                                    <p class="small text-body-secondary mb-2">@Localizer["Provider.Onboarding.UploadHelp"]</p>
+                                    <form asp-action="UploadDocument" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
+                                        @Html.AntiForgeryToken()
+                                        <div class="col-md-4">
+                                            <label for="DocumentType" class="form-label">@Localizer["Provider.Onboarding.DocumentType"]</label>
+                                            <select id="DocumentType" name="DocumentType" class="form-select">
+                                                <option value="">@Localizer["Provider.Onboarding.ChooseType"]</option>
+                                                @foreach (var opt in Model.UploadForm.DocumentTypeOptions)
+                                                {
+                                                    <option value="@opt.Value">@opt.Label</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="File" class="form-label">@Localizer["Provider.Onboarding.File"]</label>
+                                            <input id="File" name="File" type="file" class="form-control" accept="@ProviderDocumentUploadVm.AcceptAttribute" />
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="ExpiresAt" class="form-label">@Localizer["Provider.Onboarding.ExpiresAt"]</label>
+                                            <input id="ExpiresAt" name="ExpiresAt" type="date" dir="ltr" class="form-control" />
+                                        </div>
+                                        <div class="col-md-2 d-grid">
+                                            <button type="submit" class="btn btn-outline-primary"><i class="fa-solid fa-upload me-1" aria-hidden="true"></i>@Localizer["Provider.Onboarding.Upload"]</button>
+                                        </div>
+                                    </form>
+                                </permission>
+                            }
+                        </div>
+                    </div>
+
+                    @if (Model.CanSubmit)
+                    {
+                        <permission require="@WebPermission.ProviderApplication.Submit">
+                            <form asp-action="Submit" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success"><i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Provider.Onboarding.SubmitForReview"]</button>
+                            </form>
+                        </permission>
+                    }
                 }
-            </div>
-        </div>
-
-        @if (Model.CanSubmit)
-        {
-            <permission require="@WebPermission.ProviderApplication.Submit">
-                <form asp-area="Provider" asp-controller="Provider" asp-action="Submit" method="post">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-success">Submit for review</button>
-                </form>
-            </permission>
-        }
-    }
             </div>
         </div>
     </div>

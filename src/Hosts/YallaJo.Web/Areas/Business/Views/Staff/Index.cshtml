@@ -1,11 +1,17 @@
-@using YallaJo.Web.Areas.Business.Shared
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
-@model YallaJo.Web.Areas.Business.Models.Staff.StaffVm
+@using YallaJo.Web.Areas.Business.Shared
+@using YallaJo.Web.Areas.Business.Models.Staff
+@model StaffVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Staff";
+    ViewData["Title"] = Localizer["Business.Staff.Title"].Value;
     ViewData["BusinessNav"] = "Staff";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
+    var culture = CultureInfo.CurrentUICulture;
+    string Count(int n) => n.ToString("N0", culture);
 }
 
 <partial name="_BusinessSidebar" model="sidebar" />
@@ -14,101 +20,110 @@
     <div class="container">
         <div class="row g-4">
             <div class="col-lg-8 col-xl-9">
-                @if (TempData["Success"] is string ok)
+                @if (ViewBag.Error is string err && !string.IsNullOrEmpty(err))
                 {
-                    <div class="alert alert-success">@ok</div>
-                }
-                @if (TempData["Error"] is string err)
-                {
-                    <div class="alert alert-danger">@err</div>
+                    <div class="alert alert-danger" role="alert">@err</div>
                 }
 
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                     <div>
-                        <h1 class="h4 mb-0">Staff &mdash; @Model.BusinessName</h1>
-                        <p class="text-body-secondary mb-0">Manage the team that runs this business.</p>
+                        <h1 class="fs-4 mb-1"><i class="fa-solid fa-users me-2" aria-hidden="true"></i>@Localizer["Business.Staff.Heading"]</h1>
+                        <p class="small text-body-secondary mb-0"><bdi dir="ltr">@Model.BusinessName</bdi></p>
                     </div>
                     <a class="btn btn-sm btn-outline-secondary"
                        asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@Model.BusinessId">
-                        <i class="bi bi-arrow-left me-1"></i>Back to business
+                        <i class="fa-solid fa-arrow-left fa-fw me-1" aria-hidden="true"></i>@Localizer["Business.Staff.BackToProfile"]
                     </a>
                 </div>
 
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
                 <div class="row g-4">
                     <permission require="@WebPermission.BusinessStaff.Create">
-                        <div class="col-xl-5">
-                            <div class="card card-body border h-100">
-                                <h5 class="mb-3">Add a staff member</h5>
-                                <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <div class="mb-3">
-                                        <label asp-for="Form.UserId" class="form-label"></label>
-                                        <input asp-for="Form.UserId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
-                                        <span asp-validation-for="Form.UserId" class="text-danger small"></span>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label asp-for="Form.Role" class="form-label"></label>
-                                        <select asp-for="Form.Role" asp-items="Html.GetEnumSelectList<YallaJo.Web.Areas.Business.Models.Staff.BusinessStaffRole>()" class="form-select"></select>
-                                        <span asp-validation-for="Form.Role" class="text-danger small"></span>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary-soft">
-                                        <i class="bi bi-person-plus me-1"></i>Add staff
-                                    </button>
-                                </form>
+                        <div class="col-lg-5">
+                            <div class="card shadow h-100">
+                                <div class="card-header border-bottom">
+                                    <h2 class="card-header-title h5 mb-0">@Localizer["Business.Staff.AddHeading"]</h2>
+                                </div>
+                                <div class="card-body">
+                                    <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <div class="mb-3">
+                                            <label asp-for="Form.UserId" class="form-label">@Localizer["Business.Staff.UserId"]</label>
+                                            <input asp-for="Form.UserId" class="form-control font-data" dir="ltr" autocomplete="off"
+                                                   aria-describedby="staff-user-help" />
+                                            <small id="staff-user-help" class="form-text">@Localizer["Business.Staff.UserIdHelp"]</small>
+                                            <span asp-validation-for="Form.UserId" class="text-danger small" role="alert"></span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label asp-for="Form.Role" class="form-label">@Localizer["Business.Staff.Role"]</label>
+                                            <select asp-for="Form.Role" class="form-select">
+                                                @foreach (var r in Enum.GetValues<BusinessStaffRole>())
+                                                {
+                                                    <option value="@r">@Localizer["Business.Staff.Role." + r]</option>
+                                                }
+                                            </select>
+                                            <span asp-validation-for="Form.Role" class="text-danger small" role="alert"></span>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fa-solid fa-user-plus fa-fw me-1" aria-hidden="true"></i>@Localizer["Business.Staff.Add"]
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </permission>
 
-                    <div class="col-xl-7">
-                        <div class="card card-body border h-100">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">Current staff</h5>
-                                <span class="badge bg-primary bg-opacity-10 text-primary">@Model.Staff.Count</span>
+                    <div class="col-lg-7">
+                        <div class="card shadow h-100">
+                            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                                <h2 class="card-header-title h5 mb-0">@Localizer["Business.Staff.CurrentHeading"]</h2>
+                                <span class="badge bg-primary bg-opacity-10 text-primary"><bdi class="font-data">@Count(Model.Staff.Count)</bdi></span>
                             </div>
-
-                            @if (!Model.HasStaff)
-                            {
-                                <div class="text-center text-body-secondary py-4">
-                                    <i class="bi bi-people fs-1 d-block mb-2"></i>
-                                    No staff members yet.
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>User</th>
-                                                <th>Role</th>
-                                                <th class="text-end">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var s in Model.Staff)
-                                            {
+                            <div class="card-body">
+                                @if (!Model.HasStaff)
+                                {
+                                    <div class="text-center py-5">
+                                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                                        <p class="mb-0 text-body-secondary">@Localizer["Business.Staff.EmptyMsg"]</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    var ordinal = 0;
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead>
                                                 <tr>
-                                                    <td><code>@s.UserId.ToString("D")[..8]</code></td>
-                                                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@s.Role</span></td>
-                                                    <td class="text-end">
-                                                        <permission require="@WebPermission.BusinessStaff.Delete">
-                                                            <form asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-staffId="@s.Id" method="post"
-                                                                  onsubmit="return confirm('Remove this staff member?');">
-                                                                @Html.AntiForgeryToken()
-                                                                <button type="submit" class="btn btn-sm btn-danger-soft">
-                                                                    <i class="bi bi-trash"></i>
-                                                                </button>
-                                                            </form>
-                                                        </permission>
-                                                    </td>
+                                                    <th scope="col">@Localizer["Business.Staff.ColMember"]</th>
+                                                    <th scope="col">@Localizer["Business.Staff.ColRole"]</th>
+                                                    <th scope="col" class="text-end">@Localizer["Business.Staff.ColActions"]</th>
                                                 </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            }
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var s in Model.Staff)
+                                                {
+                                                    ordinal++;
+                                                    var memberLabel = Localizer["Business.Staff.StaffLabel", Count(ordinal)].Value;
+                                                    <tr>
+                                                        <td class="fw-semibold">@memberLabel</td>
+                                                        <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@Localizer["Business.Staff.Role." + s.Role]</span></td>
+                                                        <td class="text-end">
+                                                            <permission require="@WebPermission.BusinessStaff.Delete">
+                                                                <button type="button" class="btn btn-sm btn-danger-soft"
+                                                                        data-bs-toggle="modal" data-bs-target="#remove-staff-@s.Id"
+                                                                        aria-label="@Localizer["Business.Staff.Remove"]">
+                                                                    <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
+                                                                </button>
+                                                            </permission>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -116,6 +131,40 @@
         </div>
     </div>
 </section>
+
+@if (Model.HasStaff)
+{
+    var modalOrdinal = 0;
+    <permission require="@WebPermission.BusinessStaff.Delete">
+        @foreach (var s in Model.Staff)
+        {
+            modalOrdinal++;
+            var memberLabel = Localizer["Business.Staff.StaffLabel", Count(modalOrdinal)].Value;
+            <div class="modal fade" id="remove-staff-@s.Id" tabindex="-1" aria-labelledby="remove-staff-title-@s.Id"
+                 aria-describedby="remove-staff-body-@s.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form class="modal-content" role="dialog" aria-modal="true" aria-labelledby="remove-staff-title-@s.Id"
+                          asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-staffId="@s.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="remove-staff-title-@s.Id">@Localizer["Business.Staff.RemoveTitle"]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Business.Staff.Close"]"></button>
+                        </div>
+                        <div class="modal-body" id="remove-staff-body-@s.Id">
+                            @Localizer["Business.Staff.RemoveBody", memberLabel]
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Business.Staff.Cancel"]</button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fa-solid fa-trash fa-fw me-1" aria-hidden="true"></i>@Localizer["Business.Staff.RemoveConfirm"]
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </permission>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

@@ -1,33 +1,40 @@
-@using YallaJo.Web.Areas.Provider.Models.TourPricing
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Shared
+@using YallaJo.Web.Areas.Provider.Models.TourPricing
 @model TourPricingFormVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Add pricing tier";
+    ViewData["Title"] = Localizer["Provider.TourPricing.CreateTitle"].Value;
     ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
 }
 
-<partial name="_ProviderSidebar" model="@(new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" })" />
+<partial name="_ProviderSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-9 col-xl-8">
-                <h1 class="fs-4 mb-1"><i class="bi bi-tag me-2"></i>Add pricing tier</h1>
-                <p class="small text-body-secondary">
-                    @if (!string.IsNullOrWhiteSpace(Model.TourName)) { <bdi>@Model.TourName</bdi><text> · </text> }
-                    New tiers are created <strong>Active</strong>. An <strong>Adult</strong> tier is required to submit the listing.
-                </p>
+            <div class="col-lg-9 col-xl-8 vstack gap-4">
 
-                <div class="card border">
+                <div>
+                    <a asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-link text-body-secondary p-0 mb-2">
+                        <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.TourPricing.BackToList"]
+                    </a>
+                    <h1 class="fs-4 mb-1"><i class="fa-solid fa-tag me-2" aria-hidden="true"></i>@Localizer["Provider.TourPricing.CreateHeading"]</h1>
+                    <p class="text-body-secondary mb-0">@Localizer["Provider.TourPricing.CreateIntro"]</p>
+                </div>
+
+                <div class="card shadow">
                     <div class="card-body">
                         <form asp-area="Provider" asp-controller="TourPricing" asp-action="Create" asp-route-id="@Model.TourId" method="post">
                             @Html.AntiForgeryToken()
                             <partial name="_Form" model="Model" />
-                            <div class="mt-4 d-flex gap-2">
-                                <button type="submit" class="btn btn-primary">Create tier</button>
-                                <a asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@Model.TourId"
-                                   class="btn btn-link">Cancel</a>
+                            <div class="d-flex flex-wrap gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourPricing.CreateSubmit"]
+                                </button>
+                                <a asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-secondary">@Localizer["Provider.TourPricing.Cancel"]</a>
                             </div>
                         </form>
                     </div>

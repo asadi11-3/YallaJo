@@ -1,11 +1,28 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Provider.Shared
 @model YallaJo.Web.Areas.Provider.Models.TourApplications.TourApplicationsIndexVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = $"Guide applications — {Model.TourName}";
+    ViewData["Title"] = Localizer["Provider.TourApplications.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+
+    var culture = CultureInfo.CurrentUICulture;
+    string Money(decimal a) => a.ToString("N3", culture) + " JOD";
+    string Count(int n) => n.ToString("N0", culture);
+    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
+
+    (string Color, string Icon) AppBadge(string s) => (s ?? "").ToLowerInvariant() switch
+    {
+        "approved" => ("success", "circle-check"),
+        "rejected" => ("danger", "circle-xmark"),
+        "pending" or "submitted" => ("warning", "clock"),
+        _ => ("secondary", "circle-info"),
+    };
+    string StatusLabel(string s) => Localizer["Provider.Status." + s];
 }
 
 <partial name="_ProviderSidebar" model="sidebar" />
@@ -14,22 +31,20 @@
     <div class="container vstack gap-4">
         <div class="d-sm-flex justify-content-between align-items-center">
             <div>
-                <h1 class="fs-4 mb-0"><i class="bi bi-person-lines-fill me-2"></i>Guide Applications</h1>
-                <span class="small text-body-secondary"><bdi>@Model.TourName</bdi> · @Model.TourStatusLabel · @Model.TotalCount total</span>
+                <h1 class="fs-4 mb-0"><i class="fa-solid fa-user-check me-2" aria-hidden="true"></i>@Localizer["Provider.TourApplications.Heading"]</h1>
+                <span class="small text-body-secondary"><bdi dir="ltr">@Model.TourName</bdi> · @Model.TourStatusLabel · @Localizer["Provider.TourApplications.TotalCount", Count(Model.TotalCount)]</span>
             </div>
             <div class="mt-2 mt-sm-0 d-flex gap-2">
                 <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
-                   class="btn btn-sm btn-secondary-soft"><i class="bi bi-arrow-left me-1"></i>Back to listing</a>
+                   class="btn btn-sm btn-secondary-soft"><i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.TourApplications.BackToListing"]</a>
                 <permission require="@WebPermission.Tour.Update">
                     <form asp-area="Provider" asp-controller="TourApplications" asp-action="Open" asp-route-id="@Model.TourId" method="post" class="d-inline">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-success-soft"><i class="bi bi-unlock me-1"></i>Open applications</button>
+                        <button type="submit" class="btn btn-sm btn-success-soft"><i class="fa-solid fa-lock-open me-1" aria-hidden="true"></i>@Localizer["Provider.TourApplications.Open"]</button>
                     </form>
-                    <form asp-area="Provider" asp-controller="TourApplications" asp-action="Close" asp-route-id="@Model.TourId" method="post" class="d-inline"
-                          onsubmit="return confirm('Close this tour for new guide applications?');">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-secondary-soft"><i class="bi bi-lock me-1"></i>Close applications</button>
-                    </form>
+                    <button type="button" class="btn btn-sm btn-secondary-soft" data-bs-toggle="modal" data-bs-target="#close-apps-modal">
+                        <i class="fa-solid fa-lock me-1" aria-hidden="true"></i>@Localizer["Provider.TourApplications.Close"]
+                    </button>
                 </permission>
             </div>
         </div>
@@ -38,45 +53,48 @@
         {
             <div class="card border">
                 <div class="card-body text-center py-5">
-                    <h5 class="mb-1">No applications yet</h5>
-                    <p class="text-body-secondary mb-0">Open the tour for applications so guides can apply to run it.</p>
+                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                    <h2 class="h5 mb-1">@Localizer["Provider.TourApplications.EmptyTitle"]</h2>
+                    <p class="text-body-secondary mb-0">@Localizer["Provider.TourApplications.EmptyMsg"]</p>
                 </div>
             </div>
         }
         else
         {
+            var rowIndex = 0;
             <div class="vstack gap-3">
                 @foreach (var a in Model.Applications)
                 {
-                    var (badgeCss, badgeIcon) = a.StatusBadge;
+                    rowIndex++;
+                    var (badgeColor, badgeIcon) = AppBadge(a.Status);
                     <div class="card border">
                         <div class="card-body">
                             <div class="d-sm-flex justify-content-between">
                                 <div>
-                                    <div class="d-flex align-items-center gap-2 mb-1">
-                                        <span class="badge @badgeCss"><i class="bi @badgeIcon me-1" aria-hidden="true"></i>@a.Status</span>
+                                    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                        <span class="badge bg-@badgeColor bg-opacity-10 text-@badgeColor"><i class="fa-solid fa-@badgeIcon fa-fw me-1" aria-hidden="true"></i>@StatusLabel(a.Status)</span>
+                                        <span class="fw-semibold">@Localizer["Provider.TourApplications.ApplicationLabel", Count(rowIndex)]</span>
                                         @if (a.ResubmissionCount > 0)
                                         {
-                                            <span class="small text-body-secondary">Resubmitted @a.ResubmissionCount×</span>
+                                            <span class="small text-body-secondary">@Localizer["Provider.TourApplications.Resubmitted", Count(a.ResubmissionCount)]</span>
                                         }
-                                        <span class="small text-body-secondary">@a.CreatedAt.ToString("d MMM yyyy")</span>
+                                        <span class="small text-body-secondary"><bdi dir="ltr">@Date(a.CreatedAt)</bdi></span>
                                     </div>
-                                    <div class="small">Guide: <span dir="ltr">@a.GuideUserId</span></div>
-                                    @if (a.ProposedBasePrice is { } price)
+                                    @if (a.ProposedBasePrice.HasValue)
                                     {
-                                        <div class="small">Proposed base price: <bdi>@price.ToString("N3")</bdi></div>
+                                        <div class="small">@Localizer["Provider.TourApplications.ProposedPrice"]: <bdi dir="ltr" class="font-data">@Money(a.ProposedBasePrice.Value)</bdi></div>
                                     }
                                     @if (!string.IsNullOrWhiteSpace(a.Message))
                                     {
-                                        <p class="mb-1 mt-2"><span class="text-body-secondary">Message:</span> <bdi>@a.Message</bdi></p>
+                                        <p class="mb-1 mt-2"><span class="text-body-secondary">@Localizer["Provider.TourApplications.Message"]:</span> <bdi>@a.Message</bdi></p>
                                     }
                                     @if (!string.IsNullOrWhiteSpace(a.RelevantExperience))
                                     {
-                                        <p class="mb-0 small"><span class="text-body-secondary">Experience:</span> <bdi>@a.RelevantExperience</bdi></p>
+                                        <p class="mb-0 small"><span class="text-body-secondary">@Localizer["Provider.TourApplications.Experience"]:</span> <bdi>@a.RelevantExperience</bdi></p>
                                     }
                                     @if (a.IsRejected && !string.IsNullOrWhiteSpace(a.RejectionReason))
                                     {
-                                        <p class="mb-0 small text-danger"><i class="bi bi-x-circle me-1" aria-hidden="true"></i><bdi>@a.RejectionReason</bdi></p>
+                                        <p class="mb-0 small text-danger mt-2"><i class="fa-solid fa-circle-xmark me-1" aria-hidden="true"></i><bdi>@a.RejectionReason</bdi></p>
                                     }
                                 </div>
                                 @if (a.IsPending)
@@ -86,19 +104,13 @@
                                             <form asp-area="Provider" asp-controller="TourApplications" asp-action="Approve"
                                                   asp-route-id="@Model.TourId" asp-route-applicationId="@a.ApplicationId" method="post">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-success w-100"><i class="bi bi-check-lg me-1"></i>Approve</button>
+                                                <button type="submit" class="btn btn-sm btn-success w-100"><i class="fa-solid fa-check me-1" aria-hidden="true"></i>@Localizer["Provider.TourApplications.Approve"]</button>
                                             </form>
                                         </permission>
                                         <permission require="@WebPermission.GuideApplication.Reject">
-                                            <form asp-area="Provider" asp-controller="TourApplications" asp-action="Reject"
-                                                  asp-route-id="@Model.TourId" asp-route-applicationId="@a.ApplicationId" method="post"
-                                                  class="input-group input-group-sm"
-                                                  onsubmit="return confirm('Reject this application?');">
-                                                @Html.AntiForgeryToken()
-                                                <input type="text" name="reason" class="form-control" placeholder="Reason" required
-                                                       aria-label="Rejection reason" maxlength="500" />
-                                                <button type="submit" class="btn btn-danger-soft">Reject</button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-danger-soft w-100" data-bs-toggle="modal" data-bs-target="#reject-app-@a.ApplicationId">
+                                                <i class="fa-solid fa-xmark me-1" aria-hidden="true"></i>@Localizer["Provider.TourApplications.Reject"]
+                                            </button>
                                         </permission>
                                     </div>
                                 }
@@ -110,3 +122,62 @@
         }
     </div>
 </section>
+
+@* Close-applications confirm modal (MOD3 static + MOD4 role=dialog) *@
+<permission require="@WebPermission.Tour.Update">
+    <div class="modal fade" id="close-apps-modal" tabindex="-1" aria-labelledby="close-apps-title" aria-describedby="close-apps-body"
+         data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form asp-area="Provider" asp-controller="TourApplications" asp-action="Close" asp-route-id="@Model.TourId" method="post"
+                  class="modal-content" role="dialog" aria-modal="true">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="close-apps-title">@Localizer["Provider.TourApplications.CloseTitle"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourApplications.Dismiss"]"></button>
+                </div>
+                <div class="modal-body" id="close-apps-body">
+                    <p class="mb-0">@Localizer["Provider.TourApplications.CloseBody"]</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary-soft" data-bs-dismiss="modal">@Localizer["Provider.TourApplications.Cancel"]</button>
+                    <button type="submit" class="btn btn-warning">@Localizer["Provider.TourApplications.CloseConfirm"]</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</permission>
+
+@* Per-application reject reason modals (MOD3 static + MOD4 role=dialog) *@
+<permission require="@WebPermission.GuideApplication.Reject">
+    @foreach (var a in Model.Applications)
+    {
+        if (a.IsPending)
+        {
+            <div class="modal fade" id="reject-app-@a.ApplicationId" tabindex="-1" aria-labelledby="reject-title-@a.ApplicationId" aria-describedby="reject-body-@a.ApplicationId"
+                 data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form asp-area="Provider" asp-controller="TourApplications" asp-action="Reject"
+                          asp-route-id="@Model.TourId" asp-route-applicationId="@a.ApplicationId" method="post"
+                          class="modal-content" role="dialog" aria-modal="true">
+                        @Html.AntiForgeryToken()
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="reject-title-@a.ApplicationId">@Localizer["Provider.TourApplications.RejectTitle"]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourApplications.Dismiss"]"></button>
+                        </div>
+                        <div class="modal-body" id="reject-body-@a.ApplicationId">
+                            <p>@Localizer["Provider.TourApplications.RejectBody"]</p>
+                            <label class="form-label" for="reject-reason-@a.ApplicationId">@Localizer["Provider.TourApplications.ReasonLabel"]</label>
+                            <textarea id="reject-reason-@a.ApplicationId" name="reason" class="form-control" rows="3" required maxlength="500"
+                                      aria-describedby="reject-reason-help-@a.ApplicationId"></textarea>
+                            <div class="form-text" id="reject-reason-help-@a.ApplicationId">@Localizer["Provider.TourApplications.ReasonHelp"]</div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary-soft" data-bs-dismiss="modal">@Localizer["Provider.TourApplications.Cancel"]</button>
+                            <button type="submit" class="btn btn-danger">@Localizer["Provider.TourApplications.RejectConfirm"]</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    }
+</permission>

@@ -1,7 +1,9 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Shared
 @model YallaJo.Web.Areas.Provider.Models.TourWaypoints.TourWaypointFormVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Add waypoint";
+    ViewData["Title"] = Localizer["Provider.TourWaypoints.CreateTitle"].Value;
     ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
@@ -12,20 +14,24 @@
 <section class="pt-0">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-9 col-xl-8">
-                <h1 class="fs-4 mb-1"><i class="bi bi-geo-alt me-2"></i>Add waypoint</h1>
-                <p class="small text-body-secondary"><bdi>@Model.TourName</bdi></p>
+            <div class="col-lg-9 col-xl-8 vstack gap-3">
+                <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Index" asp-route-id="@Model.TourId"
+                   class="btn btn-sm btn-secondary-soft align-self-start"><i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.TourWaypoints.BackToWaypoints"]</a>
+                <div>
+                    <h1 class="fs-4 mb-1"><i class="fa-solid fa-location-dot me-2" aria-hidden="true"></i>@Localizer["Provider.TourWaypoints.CreateHeading"]</h1>
+                    <p class="small text-body-secondary mb-0"><bdi dir="ltr">@Model.TourName</bdi></p>
+                </div>
 
-                <div class="card border">
+                <div class="card border shadow">
                     <div class="card-body">
                         <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Create"
                               asp-route-id="@Model.TourId" method="post" class="vstack gap-2">
                             @Html.AntiForgeryToken()
                             <partial name="_Form" model="Model" />
                             <div class="d-flex gap-2 mt-3">
-                                <button type="submit" class="btn btn-primary">Add waypoint</button>
+                                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourWaypoints.AddWaypoint"]</button>
                                 <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Index" asp-route-id="@Model.TourId"
-                                   class="btn btn-link">Cancel</a>
+                                   class="btn btn-secondary-soft">@Localizer["Provider.TourWaypoints.Cancel"]</a>
                             </div>
                         </form>
                     </div>

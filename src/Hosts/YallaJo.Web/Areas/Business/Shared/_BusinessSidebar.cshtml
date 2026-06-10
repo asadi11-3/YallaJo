@@ -1,18 +1,21 @@
 @using YallaJo.Web.Areas.Business.Shared
 @using YallaJo.Web.Infrastructure.Authorization
+@using Microsoft.Extensions.Localization
 @model BusinessSidebarVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     var active = ViewData["BusinessNav"] as string ?? "MyBusinesses";
     string Nav(string key) => active == key ? "nav-link active" : "nav-link";
+    string Current(string key) => active == key ? "page" : null;
     var bizId = Model.BusinessId;
     var hasBiz = Model.HasBusiness;
 }
 
 <div class="col-lg-4 col-xl-3">
-    <div class="offcanvas-lg offcanvas-end" tabindex="-1" id="businessSidebar">
+    <div class="offcanvas-lg offcanvas-end" tabindex="-1" id="businessSidebar" aria-labelledby="businessSidebarTitle">
         <div class="offcanvas-header bg-light">
-            <h5 class="offcanvas-title">Business menu</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#businessSidebar"></button>
+            <h2 class="offcanvas-title h5 mb-0" id="businessSidebarTitle">@Localizer["Business.Nav.Menu"]</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#businessSidebar" aria-label="@Localizer["Business.Nav.Close"]"></button>
         </div>
         <div class="offcanvas-body p-3 p-lg-0 d-block">
             <div class="card bg-light w-100">
@@ -20,77 +23,79 @@
                     <div class="d-flex align-items-center mb-3">
                         @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
                         {
-                            <img src="@Model.AvatarUrl" class="avatar-img rounded-circle" width="48" height="48" alt="avatar" />
+                            <img src="@Model.AvatarUrl" class="avatar-img rounded-circle" width="48" height="48" alt="" />
                         }
                         else
                         {
                             <div class="icon-md bg-primary-soft text-primary rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
-                                <i class="bi bi-shop"></i>
+                                <i class="fa-solid fa-shop" aria-hidden="true"></i>
                             </div>
                         }
                         <div class="ms-2">
-                            <h6 class="mb-0">@Model.DisplayName</h6>
-                            <span class="badge bg-primary-soft text-primary">Business</span>
+                            <h3 class="h6 mb-0"><bdi dir="ltr">@Model.DisplayName</bdi></h3>
+                            <span class="badge bg-primary-soft text-primary">@Localizer["Business.Nav.Badge"]</span>
                         </div>
                     </div>
 
-                    <ul class="navbar-nav nav nav-pills nav-pills-primary-soft flex-column">
-                        <li class="nav-item">
-                            <a class="@Nav("MyBusinesses")" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">
-                                <i class="bi bi-shop fa-fw me-2"></i>My Businesses
-                            </a>
-                        </li>
-                        <permission require="@WebPermission.Business.Create">
+                    <nav aria-label="@Localizer["Business.Nav.Menu"]">
+                        <ul class="navbar-nav nav nav-pills nav-pills-primary-soft flex-column">
                             <li class="nav-item">
-                                <a class="@Nav("Register")" asp-area="Business" asp-controller="MyBusinesses" asp-action="Register">
-                                    <i class="bi bi-plus-circle fa-fw me-2"></i>Register a business
+                                <a class="@Nav("MyBusinesses")" aria-current="@Current("MyBusinesses")" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">
+                                    <i class="fa-solid fa-shop fa-fw me-2" aria-hidden="true"></i>@Localizer["Business.Nav.MyBusinesses"]
                                 </a>
                             </li>
-                        </permission>
+                            <permission require="@WebPermission.Business.Create">
+                                <li class="nav-item">
+                                    <a class="@Nav("Register")" aria-current="@Current("Register")" asp-area="Business" asp-controller="MyBusinesses" asp-action="Register">
+                                        <i class="fa-solid fa-circle-plus fa-fw me-2" aria-hidden="true"></i>@Localizer["Business.Nav.Register"]
+                                    </a>
+                                </li>
+                            </permission>
 
-                        @if (hasBiz)
-                        {
-                            <li class="nav-item">
-                                <a class="@Nav("Manage")" asp-area="Business" asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@bizId">
-                                    <i class="bi bi-pencil-square fa-fw me-2"></i>Business profile
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="@Nav("Hours")" asp-area="Business" asp-controller="Hours" asp-action="Index" asp-route-id="@bizId">
-                                    <i class="bi bi-clock fa-fw me-2"></i>Opening hours
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="@Nav("Amenities")" asp-area="Business" asp-controller="Amenities" asp-action="Index" asp-route-id="@bizId">
-                                    <i class="bi bi-stars fa-fw me-2"></i>Amenities
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="@Nav("Services")" asp-area="Business" asp-controller="Services" asp-action="Index" asp-route-id="@bizId">
-                                    <i class="bi bi-list-check fa-fw me-2"></i>Services
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="@Nav("Staff")" asp-area="Business" asp-controller="Staff" asp-action="Index" asp-route-id="@bizId">
-                                    <i class="bi bi-people fa-fw me-2"></i>Staff
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="@Nav("Accessibility")" asp-area="Business" asp-controller="Accessibility" asp-action="Index" asp-route-id="@bizId">
-                                    <i class="bi bi-universal-access fa-fw me-2"></i>Accessibility
-                                </a>
-                            </li>
-                        }
+                            @if (hasBiz)
+                            {
+                                <li class="nav-item">
+                                    <a class="@Nav("Manage")" aria-current="@Current("Manage")" asp-area="Business" asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@bizId">
+                                        <i class="fa-solid fa-pen-to-square fa-fw me-2" aria-hidden="true"></i>@Localizer["Business.Nav.Profile"]
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="@Nav("Hours")" aria-current="@Current("Hours")" asp-area="Business" asp-controller="Hours" asp-action="Index" asp-route-id="@bizId">
+                                        <i class="fa-solid fa-clock fa-fw me-2" aria-hidden="true"></i>@Localizer["Business.Nav.Hours"]
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="@Nav("Amenities")" aria-current="@Current("Amenities")" asp-area="Business" asp-controller="Amenities" asp-action="Index" asp-route-id="@bizId">
+                                        <i class="fa-solid fa-star fa-fw me-2" aria-hidden="true"></i>@Localizer["Business.Nav.Amenities"]
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="@Nav("Services")" aria-current="@Current("Services")" asp-area="Business" asp-controller="Services" asp-action="Index" asp-route-id="@bizId">
+                                        <i class="fa-solid fa-list-check fa-fw me-2" aria-hidden="true"></i>@Localizer["Business.Nav.Services"]
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="@Nav("Staff")" aria-current="@Current("Staff")" asp-area="Business" asp-controller="Staff" asp-action="Index" asp-route-id="@bizId">
+                                        <i class="fa-solid fa-users fa-fw me-2" aria-hidden="true"></i>@Localizer["Business.Nav.Staff"]
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="@Nav("Accessibility")" aria-current="@Current("Accessibility")" asp-area="Business" asp-controller="Accessibility" asp-action="Index" asp-route-id="@bizId">
+                                        <i class="fa-solid fa-universal-access fa-fw me-2" aria-hidden="true"></i>@Localizer["Business.Nav.Accessibility"]
+                                    </a>
+                                </li>
+                            }
 
-                        <li class="nav-item mt-2 border-top pt-2">
-                            <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="nav-link border-0 bg-transparent text-danger w-100 text-start">
-                                    <i class="bi bi-box-arrow-right fa-fw me-2"></i>Sign Out
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
+                            <li class="nav-item mt-2 border-top pt-2">
+                                <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="nav-link border-0 bg-transparent text-danger w-100 text-start">
+                                        <i class="fa-solid fa-right-from-bracket fa-fw me-2" aria-hidden="true"></i>@Localizer["Business.Nav.SignOut"]
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>

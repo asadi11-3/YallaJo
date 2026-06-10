@@ -1,65 +1,70 @@
-@model YallaJo.Web.Areas.Provider.Models.TourPricing.TourPricingFormVm
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Provider.Models.TourPricing
+@model TourPricingFormVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+
+<input type="hidden" asp-for="TourId" />
+<input type="hidden" asp-for="TierId" />
+<input type="hidden" asp-for="IsEdit" />
 
 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
 <div class="row g-3">
-    <div class="col-md-8">
-        <label asp-for="Name" class="form-label"></label>
-        <input asp-for="Name" class="form-control" placeholder="e.g. Adult" />
-        <span asp-validation-for="Name" class="text-danger small"></span>
+    <div class="col-md-7">
+        <label asp-for="Name" class="form-label">@Localizer["Provider.TourPricing.Form.Name"]</label>
+        <input asp-for="Name" class="form-control" autocomplete="off" placeholder="@Localizer["Provider.TourPricing.Form.NamePlaceholder"]" />
+        <span asp-validation-for="Name" class="text-danger small" role="alert"></span>
     </div>
 
-    <div class="col-md-4">
-        <label asp-for="ParticipantType" class="form-label"></label>
+    <div class="col-md-5">
+        <label asp-for="ParticipantType" class="form-label">@Localizer["Provider.TourPricing.Form.ParticipantType"]</label>
         <select asp-for="ParticipantType" class="form-select">
             @foreach (var pt in Model.ParticipantTypeOptions)
             {
-                <option value="@pt">@pt</option>
+                <option value="@pt">@Localizer["Provider.TourPricing.PType." + pt]</option>
             }
         </select>
-        <span asp-validation-for="ParticipantType" class="text-danger small"></span>
+        <span asp-validation-for="ParticipantType" class="text-danger small" role="alert"></span>
     </div>
 
     <div class="col-md-4">
-        <label asp-for="Price" class="form-label"></label>
-        <input asp-for="Price" type="number" step="0.01" min="0" class="form-control" />
-        <span asp-validation-for="Price" class="text-danger small"></span>
+        <label asp-for="Price" class="form-label">@Localizer["Provider.TourPricing.Form.Price"]</label>
+        <input asp-for="Price" type="number" step="0.001" min="0" inputmode="decimal" class="form-control font-data" dir="ltr" />
+        <span asp-validation-for="Price" class="text-danger small" role="alert"></span>
     </div>
 
     <div class="col-md-4">
-        <label asp-for="Currency" class="form-label"></label>
-        @* Locked to the tour currency (backend requires a match). A readonly input still
-           posts its value, so no separate hidden field is needed. *@
-        <input asp-for="Currency" class="form-control" readonly />
-        <div class="form-text">Matches the listing currency.</div>
+        <label asp-for="Currency" class="form-label">@Localizer["Provider.TourPricing.Form.Currency"]</label>
+        <input asp-for="Currency" class="form-control font-data" dir="ltr" maxlength="3" readonly aria-describedby="pricing-currency-help" />
+        <div id="pricing-currency-help" class="form-text">@Localizer["Provider.TourPricing.Form.CurrencyHelp"]</div>
     </div>
 
     <div class="col-md-2">
-        <label asp-for="MinParticipants" class="form-label"></label>
-        <input asp-for="MinParticipants" type="number" min="1" class="form-control" />
-        <span asp-validation-for="MinParticipants" class="text-danger small"></span>
+        <label asp-for="MinParticipants" class="form-label">@Localizer["Provider.TourPricing.Form.MinParticipants"]</label>
+        <input asp-for="MinParticipants" type="number" min="1" inputmode="numeric" class="form-control" dir="ltr" />
+        <span asp-validation-for="MinParticipants" class="text-danger small" role="alert"></span>
     </div>
 
     <div class="col-md-2">
-        <label asp-for="MaxParticipants" class="form-label"></label>
-        <input asp-for="MaxParticipants" type="number" min="1" class="form-control" />
-        <span asp-validation-for="MaxParticipants" class="text-danger small"></span>
+        <label asp-for="MaxParticipants" class="form-label">@Localizer["Provider.TourPricing.Form.MaxParticipants"]</label>
+        <input asp-for="MaxParticipants" type="number" min="1" inputmode="numeric" class="form-control" dir="ltr" />
+        <span asp-validation-for="MaxParticipants" class="text-danger small" role="alert"></span>
     </div>
 
-    <div class="col-md-12">
-        <label asp-for="Description" class="form-label"></label>
+    <div class="col-12">
+        <label asp-for="Description" class="form-label">@Localizer["Provider.TourPricing.Form.Description"]</label>
         <textarea asp-for="Description" class="form-control" rows="2"></textarea>
-        <span asp-validation-for="Description" class="text-danger small"></span>
+        <span asp-validation-for="Description" class="text-danger small" role="alert"></span>
     </div>
 
     @if (Model.IsEdit)
     {
-        <div class="col-md-12">
+        <div class="col-12">
             <div class="form-check">
-                <input asp-for="IsActive" class="form-check-input" />
-                <label asp-for="IsActive" class="form-check-label"></label>
+                <input asp-for="IsActive" class="form-check-input" aria-describedby="pricing-active-help" />
+                <label asp-for="IsActive" class="form-check-label">@Localizer["Provider.TourPricing.Form.IsActive"]</label>
             </div>
-            <div class="form-text">A listing must keep at least one active Adult tier to be submitted.</div>
+            <div id="pricing-active-help" class="form-text">@Localizer["Provider.TourPricing.Form.IsActiveHelp"]</div>
         </div>
     }
 </div>

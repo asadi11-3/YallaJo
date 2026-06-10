@@ -1,117 +1,159 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
-@using YallaJo.Web.Areas.Provider.Models.TourPricing
 @using YallaJo.Web.Areas.Provider.Shared
+@using YallaJo.Web.Areas.Provider.Models.Tours
+@using YallaJo.Web.Areas.Provider.Models.TourPricing
 @model TourPricingIndexVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = $"Pricing — {Model.TourName}";
+    ViewData["Title"] = Localizer["Provider.TourPricing.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
+
+    var culture = CultureInfo.CurrentUICulture;
+    string Money(decimal a, string? c = null) => a.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(c) ? "JOD" : c);
 }
 
-<partial name="_ProviderSidebar" model="@(new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" })" />
+<partial name="_ProviderSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container vstack gap-4">
-        <div class="d-sm-flex justify-content-between align-items-center">
+
+        <div class="d-sm-flex justify-content-between align-items-start gap-3">
             <div>
-                <h1 class="fs-4 mb-0"><i class="bi bi-tag me-2"></i>Pricing tiers</h1>
-                <span class="small text-body-secondary"><bdi>@Model.TourName</bdi>@(string.IsNullOrWhiteSpace(Model.TourStatusLabel) ? "" : $" · {Model.TourStatusLabel}")</span>
+                <h1 class="fs-4 mb-1"><i class="fa-solid fa-tag me-2" aria-hidden="true"></i>@Localizer["Provider.TourPricing.Heading"]</h1>
+                <p class="text-body-secondary mb-0">
+                    <bdi dir="ltr">@Model.TourName</bdi>
+                    @if (!string.IsNullOrWhiteSpace(Model.TourStatusLabel))
+                    {
+                        <span class="ms-1">&middot; @Model.TourStatusLabel</span>
+                    }
+                </p>
             </div>
-            <div class="mt-2 mt-sm-0 d-flex gap-2">
-                <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
-                   class="btn btn-sm btn-secondary-soft"><i class="bi bi-arrow-left me-1"></i>Back to listing</a>
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId" class="btn btn-sm btn-secondary-soft">
+                    <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.TourPricing.BackToListing"]
+                </a>
                 <permission require="@WebPermission.TourPricingTier.Create">
-                    <a asp-area="Provider" asp-controller="TourPricing" asp-action="Create" asp-route-id="@Model.TourId"
-                       class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add tier</a>
+                    <a asp-area="Provider" asp-controller="TourPricing" asp-action="Create" asp-route-id="@Model.TourId" class="btn btn-sm btn-primary">
+                        <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourPricing.AddTier"]
+                    </a>
                 </permission>
             </div>
         </div>
 
-        <partial name="_TourWizardSteps" model="@(new YallaJo.Web.Areas.Provider.Models.Tours.TourWizardStepsVm { TourId = Model.TourId, CurrentStep = 2 })" />
+        <partial name="_TourWizardSteps" model="new TourWizardStepsVm { TourId = Model.TourId, CurrentStep = 2 }" />
 
-        @if (!Model.HasActiveAdultTier)
+        @if (Model.HasTiers && !Model.HasActiveAdultTier)
         {
-            <div class="alert alert-info mb-0" role="status">
-                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
-                A listing needs at least one <strong>active Adult</strong> pricing tier before it can be submitted for review.
+            <div class="alert alert-info d-flex align-items-start gap-2 mb-0" role="status">
+                <i class="fa-solid fa-circle-info mt-1" aria-hidden="true"></i>
+                <span>@Localizer["Provider.TourPricing.AdultRequired"]</span>
             </div>
         }
 
-        @if (!Model.HasTiers)
-        {
-            <div class="card border">
-                <div class="card-body text-center py-5">
-                    <i class="bi bi-tag fs-1 text-body-secondary d-block mb-2" aria-hidden="true"></i>
-                    <h2 class="h6 mb-1">No pricing tiers yet</h2>
-                    <p class="text-body-secondary mb-3">Add an Adult tier to set the base price travelers pay.</p>
-                    <permission require="@WebPermission.TourPricingTier.Create">
-                        <a asp-area="Provider" asp-controller="TourPricing" asp-action="Create" asp-route-id="@Model.TourId"
-                           class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add a pricing tier</a>
-                    </permission>
-                </div>
+        <section class="card shadow" aria-labelledby="pricing-heading">
+            <div class="card-header border-bottom">
+                <h2 id="pricing-heading" class="card-header-title h5 mb-0">@Localizer["Provider.TourPricing.TableCaption"]</h2>
             </div>
-        }
-        else
-        {
-            <div class="card border">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <caption class="visually-hidden">Pricing tiers</caption>
-                        <thead class="table-light">
-                            <tr>
-                                <th scope="col">Name</th>
-                                <th scope="col">Type</th>
-                                <th scope="col" class="text-end">Price</th>
-                                <th scope="col">Participants</th>
-                                <th scope="col">Status</th>
-                                <th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var tier in Model.Tiers)
-                            {
+            <div class="card-body">
+                @if (!Model.HasTiers)
+                {
+                    <div class="text-center py-5">
+                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                        <h3 class="h5">@Localizer["Provider.TourPricing.EmptyTitle"]</h3>
+                        <p class="text-body-secondary mb-3">@Localizer["Provider.TourPricing.EmptyMsg"]</p>
+                        <permission require="@WebPermission.TourPricingTier.Create">
+                            <a asp-area="Provider" asp-controller="TourPricing" asp-action="Create" asp-route-id="@Model.TourId" class="btn btn-sm btn-primary-soft">
+                                <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourPricing.AddFirst"]
+                            </a>
+                        </permission>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <caption class="visually-hidden">@Localizer["Provider.TourPricing.TableCaption"]</caption>
+                            <thead>
                                 <tr>
-                                    <td class="fw-semibold"><bdi>@tier.Name</bdi></td>
-                                    <td>
-                                        @tier.ParticipantTypeLabel
-                                        @if (tier.IsAdult) { <span class="badge text-bg-light ms-1">Adult</span> }
-                                    </td>
-                                    <td class="text-end"><span dir="ltr">@tier.Price.ToString("0.##") @tier.Currency</span></td>
-                                    <td>@tier.ParticipantsLabel</td>
-                                    <td>
-                                        @if (tier.IsActive)
-                                        {
-                                            <span class="badge text-bg-success"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>Active</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge text-bg-secondary"><i class="bi bi-slash-circle me-1" aria-hidden="true"></i>Inactive</span>
-                                        }
-                                    </td>
-                                    <td class="text-end">
-                                        <div class="d-inline-flex justify-content-end gap-1">
-                                            <permission require="@WebPermission.TourPricingTier.Update">
-                                                <a asp-area="Provider" asp-controller="TourPricing" asp-action="Edit"
-                                                   asp-route-id="@Model.TourId" asp-route-tierId="@tier.Id"
-                                                   class="btn btn-sm btn-outline-secondary" aria-label="Edit @tier.Name"><i class="bi bi-pencil" aria-hidden="true"></i></a>
-                                            </permission>
-                                            <permission require="@WebPermission.TourPricingTier.Delete">
-                                                <form asp-area="Provider" asp-controller="TourPricing" asp-action="Delete"
-                                                      asp-route-id="@Model.TourId" asp-route-tierId="@tier.Id"
-                                                      method="post" class="d-inline"
-                                                      onsubmit="return confirm('Delete the &quot;@tier.Name&quot; pricing tier?');">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="Delete @tier.Name"><i class="bi bi-trash" aria-hidden="true"></i></button>
-                                                </form>
-                                            </permission>
-                                        </div>
-                                    </td>
+                                    <th scope="col">@Localizer["Provider.TourPricing.ColName"]</th>
+                                    <th scope="col">@Localizer["Provider.TourPricing.ColType"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Provider.TourPricing.ColPrice"]</th>
+                                    <th scope="col">@Localizer["Provider.TourPricing.ColParticipants"]</th>
+                                    <th scope="col">@Localizer["Provider.TourPricing.ColStatus"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Provider.TourPricing.ColActions"]</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                @foreach (var tier in Model.Tiers)
+                                {
+                                    <tr>
+                                        <td><span class="fw-semibold"><bdi dir="ltr">@tier.Name</bdi></span></td>
+                                        <td>
+                                            @tier.ParticipantTypeLabel
+                                            @if (tier.IsAdult)
+                                            {
+                                                <span class="badge bg-primary bg-opacity-10 text-primary ms-1">@Localizer["Provider.TourPricing.Adult"]</span>
+                                            }
+                                        </td>
+                                        <td class="text-end"><bdi dir="ltr" class="font-data">@Money(tier.Price, tier.Currency)</bdi></td>
+                                        <td><bdi dir="ltr" class="font-data">@tier.ParticipantsLabel</bdi></td>
+                                        <td>
+                                            @if (tier.IsActive)
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Provider.TourPricing.Active"]</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Provider.TourPricing.Inactive"]</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-1">
+                                                <permission require="@WebPermission.TourPricingTier.Update">
+                                                    <a asp-area="Provider" asp-controller="TourPricing" asp-action="Edit" asp-route-id="@Model.TourId" asp-route-tierId="@tier.Id" class="btn btn-sm btn-outline-secondary" aria-label="@Localizer["Provider.TourPricing.Edit", tier.Name]">
+                                                        <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i>
+                                                    </a>
+                                                </permission>
+                                                <permission require="@WebPermission.TourPricingTier.Delete">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-tier-@tier.Id" aria-label="@Localizer["Provider.TourPricing.Delete", tier.Name]">
+                                                        <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
+                                                    </button>
+                                                </permission>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
-        }
+        </section>
     </div>
 </section>
+
+<permission require="@WebPermission.TourPricingTier.Delete">
+    @foreach (var tier in Model.Tiers)
+    {
+        <div class="modal fade" id="delete-tier-@tier.Id" tabindex="-1" aria-labelledby="delete-tier-title-@tier.Id" aria-describedby="delete-tier-body-@tier.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-area="Provider" asp-controller="TourPricing" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-tierId="@tier.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="delete-tier-title-@tier.Id">@Localizer["Provider.TourPricing.DeleteTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourPricing.Close"]"></button>
+                    </div>
+                    <div class="modal-body" id="delete-tier-body-@tier.Id">@Localizer["Provider.TourPricing.DeleteBody", tier.Name]</div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.TourPricing.Cancel"]</button>
+                        <button type="submit" class="btn btn-danger">@Localizer["Provider.TourPricing.DeleteConfirm"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</permission>

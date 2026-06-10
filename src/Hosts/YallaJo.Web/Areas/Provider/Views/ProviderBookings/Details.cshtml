@@ -1,86 +1,129 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Provider.Models.Bookings
 @using YallaJo.Web.Areas.Provider.Shared
 @model ProviderBookingDetailsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Booking details";
+    ViewData["Title"] = Localizer["Provider.ProviderBookings.DetailsTitle"].Value;
+    ViewData["ProviderNav"] = "Bookings";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
-    string Money(decimal amount) => $"{amount.ToString("0.##")} {Model.Currency}";
+
+    var culture = CultureInfo.CurrentUICulture;
+    string Money(decimal a, string? c = null) => a.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(c) ? Model.Currency : c);
+    string Count(int n) => n.ToString("N0", culture);
+    string DateTimeF(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
+
+    (string Color, string Icon) StatusBadge(string s) => (s ?? "").ToLowerInvariant() switch
+    {
+        "confirmed" => ("success", "circle-check"),
+        "completed" => ("primary", "flag-checkered"),
+        "awaitingpayment" => ("warning", "hourglass-half"),
+        "pendingconfirmation" => ("warning", "clock"),
+        "cancelled" => ("secondary", "ban"),
+        "rejected" => ("danger", "circle-xmark"),
+        _ => ("secondary", "circle-info"),
+    };
+    var badge = StatusBadge(Model.Status);
 }
 
 <partial name="_ProviderSidebar" model="sidebar" />
 
 <section class="pt-0">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
             <div>
-                <h2 class="mb-1">Booking <code>@Model.Reference</code></h2>
-                <span class="badge @Model.StatusBadgeClass">@Model.Status</span>
+                <h1 class="fs-4 mb-1">@Localizer["Provider.ProviderBookings.BookingHeading"] <bdi dir="ltr" class="font-data">@Model.Reference</bdi></h1>
+                <span class="badge bg-@badge.Color bg-opacity-10 text-@badge.Color"><i class="fa-solid fa-@badge.Icon fa-fw" aria-hidden="true"></i> @Localizer["Provider.Status." + Model.Status]</span>
             </div>
-            <a asp-area="Provider" asp-controller="ProviderBookings" asp-action="Index" class="btn btn-sm btn-outline-secondary">Back to bookings</a>
+            <a asp-action="Index" class="btn btn-sm btn-outline-secondary mt-2 mt-sm-0"><i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.ProviderBookings.Back"]</a>
         </div>
 
         <div class="row g-4">
-            <div class="col-lg-8">
-                <div class="card border mb-3">
-                    <div class="card-header"><strong>Overview</strong></div>
+            <div class="col-lg-8 vstack gap-4">
+                <div class="card shadow-sm">
+                    <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.ProviderBookings.OverviewHeading"]</h2></div>
                     <div class="card-body">
                         <dl class="row mb-0">
-                            <dt class="col-sm-4">Tour</dt>
-                            <dd class="col-sm-8">@Model.TourName</dd>
+                            <dt class="col-sm-4">@Localizer["Provider.ProviderBookings.Tour"]</dt>
+                            <dd class="col-sm-8 fw-semibold">@Model.TourName</dd>
 
-                            <dt class="col-sm-4">Traveler</dt>
-                            <dd class="col-sm-8">@Model.TravelerHandle</dd>
+                            <dt class="col-sm-4">@Localizer["Provider.ProviderBookings.Traveler"]</dt>
+                            <dd class="col-sm-8"><bdi dir="ltr">@Model.TravelerHandle</bdi></dd>
 
-                            <dt class="col-sm-4">Guests</dt>
-                            <dd class="col-sm-8">@Model.ParticipantCount</dd>
+                            <dt class="col-sm-4">@Localizer["Provider.ProviderBookings.Guests"]</dt>
+                            <dd class="col-sm-8"><bdi dir="ltr" class="font-data">@Count(Model.ParticipantCount)</bdi></dd>
 
-                            <dt class="col-sm-4">Instant booking</dt>
-                            <dd class="col-sm-8">@(Model.IsInstantBooking ? "Yes" : "No")</dd>
+                            <dt class="col-sm-4">@Localizer["Provider.ProviderBookings.Instant"]</dt>
+                            <dd class="col-sm-8">@(Model.IsInstantBooking ? Localizer["Provider.ProviderBookings.Yes"] : Localizer["Provider.ProviderBookings.No"])</dd>
 
-                            <dt class="col-sm-4">Created</dt>
-                            <dd class="col-sm-8">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd>
+                            <dt class="col-sm-4">@Localizer["Provider.ProviderBookings.Created"]</dt>
+                            <dd class="col-sm-8"><bdi dir="ltr" class="font-data">@DateTimeF(Model.CreatedAt)</bdi></dd>
 
-                            <dt class="col-sm-4">Special requests</dt>
-                            <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.SpecialRequests) ? "—" : Model.SpecialRequests)</dd>
+                            <dt class="col-sm-4">@Localizer["Provider.ProviderBookings.SpecialRequests"]</dt>
+                            <dd class="col-sm-8">
+                                @if (string.IsNullOrWhiteSpace(Model.SpecialRequests))
+                                {
+                                    <span class="text-secondary">&mdash;</span>
+                                }
+                                else
+                                {
+                                    <span>@Model.SpecialRequests</span>
+                                }
+                            </dd>
                         </dl>
                     </div>
                 </div>
 
-                <div class="card border">
-                    <div class="card-header"><strong>Pricing</strong></div>
+                <div class="card shadow-sm">
+                    <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.ProviderBookings.PricingHeading"]</h2></div>
                     <div class="card-body">
                         @if (Model.LineItems.Count > 0)
                         {
-                            <table class="table table-sm mb-3">
-                                <thead><tr><th>Tier</th><th class="text-end">Qty</th><th class="text-end">Unit</th></tr></thead>
-                                <tbody>
-                                    @foreach (var li in Model.LineItems)
-                                    {
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-3">
+                                    <thead>
                                         <tr>
-                                            <td>@li.TierType</td>
-                                            <td class="text-end">@li.Count</td>
-                                            <td class="text-end">@li.UnitPrice.ToString("0.##") @li.Currency</td>
+                                            <th scope="col">@Localizer["Provider.ProviderBookings.ColTier"]</th>
+                                            <th scope="col" class="text-end">@Localizer["Provider.ProviderBookings.ColQty"]</th>
+                                            <th scope="col" class="text-end">@Localizer["Provider.ProviderBookings.ColUnit"]</th>
                                         </tr>
-                                    }
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var li in Model.LineItems)
+                                        {
+                                            <tr>
+                                                <td>@li.TierType</td>
+                                                <td class="text-end"><bdi dir="ltr" class="font-data">@Count(li.Count)</bdi></td>
+                                                <td class="text-end"><bdi dir="ltr" class="font-data">@Money(li.UnitPrice, li.Currency)</bdi></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
                         }
-                        <div class="d-flex justify-content-between"><span>Subtotal</span><span>@Money(Model.Subtotal)</span></div>
+                        <div class="d-flex justify-content-between"><span>@Localizer["Provider.ProviderBookings.Subtotal"]</span><bdi dir="ltr" class="font-data">@Money(Model.Subtotal)</bdi></div>
                         @if (Model.DiscountAmount > 0)
                         {
-                            <div class="d-flex justify-content-between text-success"><span>Discount</span><span>-@Money(Model.DiscountAmount)</span></div>
+                            <div class="d-flex justify-content-between text-success"><span>@Localizer["Provider.ProviderBookings.Discount"]</span><bdi dir="ltr" class="font-data">-@Money(Model.DiscountAmount)</bdi></div>
                         }
                         <hr class="my-2" />
-                        <div class="d-flex justify-content-between fw-bold"><span>Total</span><span>@Money(Model.TotalAmount)</span></div>
+                        <div class="d-flex justify-content-between fw-bold"><span>@Localizer["Provider.ProviderBookings.Total"]</span><bdi dir="ltr" class="font-data">@Money(Model.TotalAmount)</bdi></div>
 
                         @if (Model.IsCancelled)
                         {
                             <div class="alert alert-secondary mt-3 mb-0">
-                                <strong>Cancelled.</strong>
-                                @if (!string.IsNullOrWhiteSpace(Model.CancellationReason)) { <span>Reason: @Model.CancellationReason</span> }
-                                @if (Model.RefundAmount is { } r) { <span class="d-block">Refund: @Money(r)</span> }
+                                <strong>@Localizer["Provider.ProviderBookings.CancelledLabel"]</strong>
+                                @if (!string.IsNullOrWhiteSpace(Model.CancellationReason))
+                                {
+                                    <span class="d-block">@Localizer["Provider.ProviderBookings.CancelReasonLabel", Model.CancellationReason]</span>
+                                }
+                                @if (Model.RefundAmount.HasValue)
+                                {
+                                    <span class="d-block">@Localizer["Provider.ProviderBookings.RefundLabel"] <bdi dir="ltr" class="font-data">@Money(Model.RefundAmount.Value)</bdi></span>
+                                }
                             </div>
                         }
                     </div>
@@ -88,20 +131,20 @@
             </div>
 
             <div class="col-lg-4">
-                <div class="card border">
-                    <div class="card-header"><strong>Actions</strong></div>
+                <div class="card shadow-sm">
+                    <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.ProviderBookings.ActionsHeading"]</h2></div>
                     <div class="card-body d-grid gap-3">
                         @if (!Model.HasAnyAction)
                         {
-                            <p class="text-muted mb-0">No actions are available for a booking in <strong>@Model.Status</strong> status.</p>
+                            <p class="text-secondary mb-0">@Localizer["Provider.ProviderBookings.NoAction", Localizer["Provider.Status." + Model.Status].Value]</p>
                         }
 
                         @if (Model.CanConfirm)
                         {
                             <permission require="@WebPermission.TourBooking.Confirm">
-                                <form asp-area="Provider" asp-controller="ProviderBookings" asp-action="Confirm" asp-route-id="@Model.Id" method="post">
+                                <form asp-action="Confirm" asp-route-id="@Model.Id" method="post">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-success w-100">Confirm booking</button>
+                                    <button type="submit" class="btn btn-success w-100"><i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>@Localizer["Provider.ProviderBookings.Confirm"]</button>
                                 </form>
                             </permission>
                         }
@@ -109,44 +152,22 @@
                         @if (Model.CanComplete)
                         {
                             <permission require="@WebPermission.TourBooking.Complete">
-                                <form asp-area="Provider" asp-controller="ProviderBookings" asp-action="Complete" asp-route-id="@Model.Id" method="post"
-                                      onsubmit="return confirm('Mark this booking as completed? This starts the customer\u0027s 48-hour dispute window.');">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="bi bi-check2-circle me-1"></i>Mark as completed
-                                    </button>
-                                    <small class="text-muted d-block mt-1">
-                                        Only after the tour has started. This opens the customer's 48-hour dispute window.
-                                    </small>
-                                </form>
+                                <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#completeModal"><i class="fa-solid fa-flag-checkered me-1" aria-hidden="true"></i>@Localizer["Provider.ProviderBookings.Complete"]</button>
+                                <small class="text-secondary d-block">@Localizer["Provider.ProviderBookings.CompleteNote"]</small>
                             </permission>
                         }
 
                         @if (Model.CanReject)
                         {
                             <permission require="@WebPermission.TourBooking.Reject">
-                                <form asp-area="Provider" asp-controller="ProviderBookings" asp-action="Reject" asp-route-id="@Model.Id" method="post"
-                                      onsubmit="return confirm('Reject this booking? The traveler is refunded in full.');">
-                                    @Html.AntiForgeryToken()
-                                    <label class="form-label small mb-1">Rejection reason</label>
-                                    <textarea name="reason" class="form-control mb-2" rows="2" minlength="10" maxlength="500"
-                                              placeholder="Reason (min 10 characters). Rejecting refunds the traveler in full." required></textarea>
-                                    <button type="submit" class="btn btn-outline-danger w-100">Reject booking</button>
-                                </form>
+                                <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal"><i class="fa-solid fa-circle-xmark me-1" aria-hidden="true"></i>@Localizer["Provider.ProviderBookings.Reject"]</button>
                             </permission>
                         }
 
                         @if (Model.CanCancel)
                         {
                             <permission require="@WebPermission.TourBooking.Cancel">
-                                <form asp-area="Provider" asp-controller="ProviderBookings" asp-action="Cancel" asp-route-id="@Model.Id" method="post"
-                                      onsubmit="return confirm('Cancel this booking? The traveler is refunded in full.');">
-                                    @Html.AntiForgeryToken()
-                                    <label class="form-label small mb-1">Cancellation reason</label>
-                                    <textarea name="reason" class="form-control mb-2" rows="2" minlength="10" maxlength="500"
-                                              placeholder="Reason (min 10 characters). Cancelling refunds the traveler in full." required></textarea>
-                                    <button type="submit" class="btn btn-outline-danger w-100">Cancel booking</button>
-                                </form>
+                                <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#cancelModal"><i class="fa-solid fa-ban me-1" aria-hidden="true"></i>@Localizer["Provider.ProviderBookings.Cancel"]</button>
                             </permission>
                         }
                     </div>
@@ -155,3 +176,77 @@
         </div>
     </div>
 </section>
+
+@if (Model.CanComplete)
+{
+    <permission require="@WebPermission.TourBooking.Complete">
+        <div class="modal fade" id="completeModal" tabindex="-1" aria-labelledby="complete-title" aria-describedby="complete-body" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-action="Complete" asp-route-id="@Model.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="complete-title">@Localizer["Provider.ProviderBookings.CompleteTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.ProviderBookings.Dismiss"]"></button>
+                    </div>
+                    <div class="modal-body" id="complete-body">@Localizer["Provider.ProviderBookings.CompleteBody"]</div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.ProviderBookings.Dismiss"]</button>
+                        <button type="submit" class="btn btn-primary">@Localizer["Provider.ProviderBookings.CompleteConfirm"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+}
+
+@if (Model.CanReject)
+{
+    <permission require="@WebPermission.TourBooking.Reject">
+        <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="reject-title" aria-describedby="reject-help" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-action="Reject" asp-route-id="@Model.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="reject-title">@Localizer["Provider.ProviderBookings.RejectTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.ProviderBookings.Dismiss"]"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label" for="reject-reason">@Localizer["Provider.ProviderBookings.RejectReasonLabel"]</label>
+                        <textarea id="reject-reason" name="reason" class="form-control" rows="3" minlength="10" maxlength="500" required aria-describedby="reject-help"></textarea>
+                        <small id="reject-help" class="form-text">@Localizer["Provider.ProviderBookings.RejectReasonHelp"]</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.ProviderBookings.Dismiss"]</button>
+                        <button type="submit" class="btn btn-danger">@Localizer["Provider.ProviderBookings.RejectConfirm"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+}
+
+@if (Model.CanCancel)
+{
+    <permission require="@WebPermission.TourBooking.Cancel">
+        <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancel-title" aria-describedby="cancel-help" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="cancel-title">@Localizer["Provider.ProviderBookings.CancelTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.ProviderBookings.Dismiss"]"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label" for="cancel-reason">@Localizer["Provider.ProviderBookings.CancelReasonLabel2"]</label>
+                        <textarea id="cancel-reason" name="reason" class="form-control" rows="3" minlength="10" maxlength="500" required aria-describedby="cancel-help"></textarea>
+                        <small id="cancel-help" class="form-text">@Localizer["Provider.ProviderBookings.CancelReasonHelp"]</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.ProviderBookings.Dismiss"]</button>
+                        <button type="submit" class="btn btn-danger">@Localizer["Provider.ProviderBookings.CancelConfirm"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+}

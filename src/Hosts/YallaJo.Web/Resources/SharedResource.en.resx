@@ -8719,4 +8719,2881 @@
   <data name="Guide.Reviews.Pagination" xml:space="preserve">
     <value>Review pages</value>
   </data>
+  <data name="Provider.Common.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.Common.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Provider.Nav.AvatarAlt" xml:space="preserve">
+    <value>Avatar</value>
+  </data>
+  <data name="Provider.Nav.Greeting" xml:space="preserve">
+    <value>Hi,</value>
+  </data>
+  <data name="Provider.Nav.DefaultName" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="Provider.Nav.AddListing" xml:space="preserve">
+    <value>Add New Listing</value>
+  </data>
+  <data name="Provider.Nav.Menu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="Provider.Nav.Aria" xml:space="preserve">
+    <value>Provider menu</value>
+  </data>
+  <data name="Provider.Nav.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Provider.Nav.Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="Provider.Nav.Listings" xml:space="preserve">
+    <value>Listings</value>
+  </data>
+  <data name="Provider.Nav.Packages" xml:space="preserve">
+    <value>Packages</value>
+  </data>
+  <data name="Provider.Nav.Bookings" xml:space="preserve">
+    <value>Bookings</value>
+  </data>
+  <data name="Provider.Nav.Finance" xml:space="preserve">
+    <value>Finance</value>
+  </data>
+  <data name="Provider.Nav.Reviews" xml:space="preserve">
+    <value>Reviews</value>
+  </data>
+  <data name="Provider.Nav.Documents" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Provider.Nav.Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Provider.Nav.SignOut" xml:space="preserve">
+    <value>Sign Out</value>
+  </data>
+  <data name="Provider.Status.Draft" xml:space="preserve">
+    <value>Draft</value>
+  </data>
+  <data name="Provider.Status.Pending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="Provider.Status.PendingConfirmation" xml:space="preserve">
+    <value>Pending confirmation</value>
+  </data>
+  <data name="Provider.Status.AwaitingPayment" xml:space="preserve">
+    <value>Awaiting payment</value>
+  </data>
+  <data name="Provider.Status.Approved" xml:space="preserve">
+    <value>Approved</value>
+  </data>
+  <data name="Provider.Status.Confirmed" xml:space="preserve">
+    <value>Confirmed</value>
+  </data>
+  <data name="Provider.Status.Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Provider.Status.Rejected" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
+  <data name="Provider.Status.Declined" xml:space="preserve">
+    <value>Declined</value>
+  </data>
+  <data name="Provider.Status.Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Provider.Status.Expired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="Provider.Status.Published" xml:space="preserve">
+    <value>Published</value>
+  </data>
+  <data name="Provider.Dashboard.Title" xml:space="preserve">
+    <value>Provider Dashboard</value>
+  </data>
+  <data name="Provider.Dashboard.Heading" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="Provider.Dashboard.AddListing" xml:space="preserve">
+    <value>Add New Listing</value>
+  </data>
+  <data name="Provider.Dashboard.Approved" xml:space="preserve">
+    <value>Approved</value>
+  </data>
+  <data name="Provider.Dashboard.PendingReview" xml:space="preserve">
+    <value>Pending Review</value>
+  </data>
+  <data name="Provider.Dashboard.ReviewBy" xml:space="preserve">
+    <value>Review by {0}</value>
+  </data>
+  <data name="Provider.Dashboard.DocumentsCount" xml:space="preserve">
+    <value>{0} document(s)</value>
+  </data>
+  <data name="Provider.Dashboard.DocAlerts" xml:space="preserve">
+    <value>{0} expired · {1} expiring soon</value>
+  </data>
+  <data name="Provider.Dashboard.TotalListings" xml:space="preserve">
+    <value>Total Listings</value>
+  </data>
+  <data name="Provider.Dashboard.NetEarnings" xml:space="preserve">
+    <value>Net Earnings</value>
+  </data>
+  <data name="Provider.Dashboard.PaidBookings" xml:space="preserve">
+    <value>Paid Bookings</value>
+  </data>
+  <data name="Provider.Dashboard.PendingJoinRequests" xml:space="preserve">
+    <value>Pending Join Requests</value>
+  </data>
+  <data name="Provider.Dashboard.RecentListings" xml:space="preserve">
+    <value>Recent Listings</value>
+  </data>
+  <data name="Provider.Dashboard.RecentJoinRequests" xml:space="preserve">
+    <value>Recent Join Requests</value>
+  </data>
+  <data name="Provider.Dashboard.ViewAll" xml:space="preserve">
+    <value>View all</value>
+  </data>
+  <data name="Provider.Dashboard.NoListings" xml:space="preserve">
+    <value>No listings yet.</value>
+  </data>
+  <data name="Provider.Dashboard.NoJoinRequests" xml:space="preserve">
+    <value>No join requests yet.</value>
+  </data>
+  <data name="Provider.Dashboard.Participants" xml:space="preserve">
+    <value>{0} participant(s)</value>
+  </data>
+  <data name="Provider.Dashboard.EmptyTitle" xml:space="preserve">
+    <value>Your provider workspace is ready</value>
+  </data>
+  <data name="Provider.Dashboard.EmptyMsg" xml:space="preserve">
+    <value>Create your first tour listing to start receiving bookings.</value>
+  </data>
+  <data name="Provider.Dashboard.PendingActions" xml:space="preserve">
+    <value>Pending Actions</value>
+  </data>
+  <data name="Provider.Dashboard.Notifications" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Provider.Bookings.Title" xml:space="preserve">
+    <value>Bookings</value>
+  </data>
+  <data name="Provider.Bookings.Heading" xml:space="preserve">
+    <value>Bookings</value>
+  </data>
+  <data name="Provider.Bookings.PendingCount" xml:space="preserve">
+    <value>{0} pending join request(s)</value>
+  </data>
+  <data name="Provider.Bookings.ManageBookings" xml:space="preserve">
+    <value>Manage bookings</value>
+  </data>
+  <data name="Provider.Bookings.JoinRequests" xml:space="preserve">
+    <value>Join requests</value>
+  </data>
+  <data name="Provider.Bookings.JoinRequestsSubtitle" xml:space="preserve">
+    <value>Travellers asking to join group bookings.</value>
+  </data>
+  <data name="Provider.Bookings.NoJoinRequestsTitle" xml:space="preserve">
+    <value>No join requests yet</value>
+  </data>
+  <data name="Provider.Bookings.NoJoinRequestsMsg" xml:space="preserve">
+    <value>Requests to join your group tours will appear here.</value>
+  </data>
+  <data name="Provider.Bookings.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Provider.Bookings.ColGuests" xml:space="preserve">
+    <value>Guests</value>
+  </data>
+  <data name="Provider.Bookings.ColMessage" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Provider.Bookings.ColRequested" xml:space="preserve">
+    <value>Requested</value>
+  </data>
+  <data name="Provider.Bookings.ColAction" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="Provider.Bookings.Reply" xml:space="preserve">
+    <value>Reply</value>
+  </data>
+  <data name="Provider.Bookings.Approve" xml:space="preserve">
+    <value>Approve</value>
+  </data>
+  <data name="Provider.Bookings.Decline" xml:space="preserve">
+    <value>Decline</value>
+  </data>
+  <data name="Provider.Bookings.Resolved" xml:space="preserve">
+    <value>Resolved</value>
+  </data>
+  <data name="Provider.Bookings.LookupHeading" xml:space="preserve">
+    <value>Look up a booking</value>
+  </data>
+  <data name="Provider.Bookings.LookupSubtitle" xml:space="preserve">
+    <value>Enter a booking identifier to review and confirm or reject it.</value>
+  </data>
+  <data name="Provider.Bookings.LookupLabel" xml:space="preserve">
+    <value>Booking identifier</value>
+  </data>
+  <data name="Provider.Bookings.LookupHelp" xml:space="preserve">
+    <value>Paste the booking identifier from its detail page or confirmation email.</value>
+  </data>
+  <data name="Provider.Bookings.LookUp" xml:space="preserve">
+    <value>Look up</value>
+  </data>
+  <data name="Provider.Bookings.BookingRef" xml:space="preserve">
+    <value>Booking</value>
+  </data>
+  <data name="Provider.Bookings.GuestsCount" xml:space="preserve">
+    <value>{0} guest(s)</value>
+  </data>
+  <data name="Provider.Bookings.ColTier" xml:space="preserve">
+    <value>Tier</value>
+  </data>
+  <data name="Provider.Bookings.ColQty" xml:space="preserve">
+    <value>Qty</value>
+  </data>
+  <data name="Provider.Bookings.ColUnit" xml:space="preserve">
+    <value>Unit</value>
+  </data>
+  <data name="Provider.Bookings.ColTotal" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Provider.Bookings.Subtotal" xml:space="preserve">
+    <value>Subtotal</value>
+  </data>
+  <data name="Provider.Bookings.Discount" xml:space="preserve">
+    <value>Discount</value>
+  </data>
+  <data name="Provider.Bookings.Loyalty" xml:space="preserve">
+    <value>Loyalty</value>
+  </data>
+  <data name="Provider.Bookings.Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Provider.Bookings.SpecialRequests" xml:space="preserve">
+    <value>Special requests</value>
+  </data>
+  <data name="Provider.Bookings.RejectedPrefix" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
+  <data name="Provider.Bookings.CancelledOn" xml:space="preserve">
+    <value>Cancelled on {0}</value>
+  </data>
+  <data name="Provider.Bookings.ConfirmBooking" xml:space="preserve">
+    <value>Confirm booking</value>
+  </data>
+  <data name="Provider.Bookings.RejectBooking" xml:space="preserve">
+    <value>Reject booking</value>
+  </data>
+  <data name="Provider.Bookings.RejectModalTitle" xml:space="preserve">
+    <value>Reject this booking?</value>
+  </data>
+  <data name="Provider.Bookings.RejectReasonLabel" xml:space="preserve">
+    <value>Reason for rejection</value>
+  </data>
+  <data name="Provider.Bookings.RejectReasonHelp" xml:space="preserve">
+    <value>The traveller is notified with this reason.</value>
+  </data>
+  <data name="Provider.Bookings.RejectSubmit" xml:space="preserve">
+    <value>Reject booking</value>
+  </data>
+  <data name="Provider.Bookings.DeclineModalTitle" xml:space="preserve">
+    <value>Decline this join request?</value>
+  </data>
+  <data name="Provider.Bookings.DeclineModalBody" xml:space="preserve">
+    <value>The traveller will be notified that their request to join was declined.</value>
+  </data>
+  <data name="Provider.Bookings.DeclineMsgLabel" xml:space="preserve">
+    <value>Message (optional)</value>
+  </data>
+  <data name="Provider.Bookings.DeclineMsgHelp" xml:space="preserve">
+    <value>Add an optional note for the traveller.</value>
+  </data>
+  <data name="Provider.Bookings.DeclineSubmit" xml:space="preserve">
+    <value>Decline request</value>
+  </data>
+  <data name="Provider.Invoices.Title" xml:space="preserve">
+    <value>Invoices</value>
+  </data>
+  <data name="Provider.Invoices.Heading" xml:space="preserve">
+    <value>Invoices</value>
+  </data>
+  <data name="Provider.Invoices.Subtitle" xml:space="preserve">
+    <value>Invoices issued for your bookings.</value>
+  </data>
+  <data name="Provider.Invoices.EmptyTitle" xml:space="preserve">
+    <value>No invoices yet</value>
+  </data>
+  <data name="Provider.Invoices.EmptyMsg" xml:space="preserve">
+    <value>Invoices appear here after your bookings are paid.</value>
+  </data>
+  <data name="Provider.Invoices.ColNumber" xml:space="preserve">
+    <value>Invoice #</value>
+  </data>
+  <data name="Provider.Invoices.ColCustomer" xml:space="preserve">
+    <value>Customer</value>
+  </data>
+  <data name="Provider.Invoices.ColIssued" xml:space="preserve">
+    <value>Issued</value>
+  </data>
+  <data name="Provider.Invoices.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Provider.Invoices.ColTotal" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Provider.Invoices.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Provider.Invoices.ItemsCount" xml:space="preserve">
+    <value>{0} item(s)</value>
+  </data>
+  <data name="Provider.Invoices.Pdf" xml:space="preserve">
+    <value>PDF</value>
+  </data>
+  <data name="Provider.Invoices.NoPdf" xml:space="preserve">
+    <value>No PDF available</value>
+  </data>
+  <data name="Provider.Finance.Title" xml:space="preserve">
+    <value>Finance</value>
+  </data>
+  <data name="Provider.Finance.Heading" xml:space="preserve">
+    <value>Finance</value>
+  </data>
+  <data name="Provider.Finance.GrossTotal" xml:space="preserve">
+    <value>Gross total</value>
+  </data>
+  <data name="Provider.Finance.NetEstimate" xml:space="preserve">
+    <value>Net estimate</value>
+  </data>
+  <data name="Provider.Finance.PaidBookings" xml:space="preserve">
+    <value>Paid bookings</value>
+  </data>
+  <data name="Provider.Finance.TabPayouts" xml:space="preserve">
+    <value>Payouts</value>
+  </data>
+  <data name="Provider.Finance.TabInvoices" xml:space="preserve">
+    <value>Invoices</value>
+  </data>
+  <data name="Provider.Finance.TabMethods" xml:space="preserve">
+    <value>Methods</value>
+  </data>
+  <data name="Provider.Finance.NoPayouts" xml:space="preserve">
+    <value>No payouts have been issued yet.</value>
+  </data>
+  <data name="Provider.Finance.ColPeriod" xml:space="preserve">
+    <value>Period</value>
+  </data>
+  <data name="Provider.Finance.ColGross" xml:space="preserve">
+    <value>Gross</value>
+  </data>
+  <data name="Provider.Finance.ColCommission" xml:space="preserve">
+    <value>Commission</value>
+  </data>
+  <data name="Provider.Finance.ColNet" xml:space="preserve">
+    <value>Net</value>
+  </data>
+  <data name="Provider.Finance.ColItems" xml:space="preserve">
+    <value>Items</value>
+  </data>
+  <data name="Provider.Finance.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Provider.Finance.ColCreated" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="Provider.Finance.Disputes" xml:space="preserve">
+    <value>Disputes</value>
+  </data>
+  <data name="Provider.Finance.ColReason" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="Provider.Finance.ColResolved" xml:space="preserve">
+    <value>Resolved</value>
+  </data>
+  <data name="Provider.Finance.NoInvoices" xml:space="preserve">
+    <value>No invoices yet. They appear here after your bookings are paid.</value>
+  </data>
+  <data name="Provider.Finance.ColInvoiceNumber" xml:space="preserve">
+    <value>Invoice #</value>
+  </data>
+  <data name="Provider.Finance.ColCustomer" xml:space="preserve">
+    <value>Customer</value>
+  </data>
+  <data name="Provider.Finance.ColIssued" xml:space="preserve">
+    <value>Issued</value>
+  </data>
+  <data name="Provider.Finance.ColTotal" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Provider.Finance.ItemsCount" xml:space="preserve">
+    <value>{0} item(s)</value>
+  </data>
+  <data name="Provider.Finance.Download" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="Provider.Finance.Pdf" xml:space="preserve">
+    <value>PDF</value>
+  </data>
+  <data name="Provider.Finance.DisplayNamePlaceholder" xml:space="preserve">
+    <value>e.g. Main bank account</value>
+  </data>
+  <data name="Provider.Finance.AddMethod" xml:space="preserve">
+    <value>Add payment method</value>
+  </data>
+  <data name="Provider.Finance.NoMethods" xml:space="preserve">
+    <value>No payout methods yet. Add one above to receive payouts.</value>
+  </data>
+  <data name="Provider.Finance.ColName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Provider.Finance.ColType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Provider.Finance.ColAccount" xml:space="preserve">
+    <value>Account</value>
+  </data>
+  <data name="Provider.Finance.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Provider.Finance.Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="Provider.Finance.Verified" xml:space="preserve">
+    <value>Verified</value>
+  </data>
+  <data name="Provider.Finance.Unverified" xml:space="preserve">
+    <value>Unverified</value>
+  </data>
+  <data name="Provider.Finance.EditMethod" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="Provider.Finance.DeleteMethod" xml:space="preserve">
+    <value>Delete {0}</value>
+  </data>
+  <data name="Provider.Finance.Bank" xml:space="preserve">
+    <value>Bank</value>
+  </data>
+  <data name="Provider.Finance.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Provider.Finance.DeleteModalTitle" xml:space="preserve">
+    <value>Delete this payment method?</value>
+  </data>
+  <data name="Provider.Finance.DeleteModalBody" xml:space="preserve">
+    <value>"{0}" will be removed and can no longer receive payouts.</value>
+  </data>
+  <data name="Provider.Finance.DeleteConfirm" xml:space="preserve">
+    <value>Delete method</value>
+  </data>
+  <data name="Provider.Finance.MethodType.BankAccount" xml:space="preserve">
+    <value>Bank account</value>
+  </data>
+  <data name="Provider.Finance.MethodType.JoMoPay" xml:space="preserve">
+    <value>JoMoPay</value>
+  </data>
+  <data name="Provider.Finance.MethodType.OrangeMoney" xml:space="preserve">
+    <value>Orange Money</value>
+  </data>
+  <data name="Provider.Finance.MethodType.ZainCash" xml:space="preserve">
+    <value>ZainCash</value>
+  </data>
+  <data name="Provider.Status.Submitted" xml:space="preserve">
+    <value>Submitted</value>
+  </data>
+  <data name="Provider.Status.MoreDocsNeeded" xml:space="preserve">
+    <value>More documents needed</value>
+  </data>
+  <data name="Provider.Status.Suspended" xml:space="preserve">
+    <value>Suspended</value>
+  </data>
+  <data name="Provider.Packages.Title" xml:space="preserve">
+    <value>Tour Packages</value>
+  </data>
+  <data name="Provider.Packages.Heading" xml:space="preserve">
+    <value>Tour Packages</value>
+  </data>
+  <data name="Provider.Packages.CountLabel" xml:space="preserve">
+    <value>total</value>
+  </data>
+  <data name="Provider.Packages.CreateHeading" xml:space="preserve">
+    <value>Create a package</value>
+  </data>
+  <data name="Provider.Packages.NameLabel" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Provider.Packages.DescriptionLabel" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Provider.Packages.PriceLabel" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Provider.Packages.CurrencyLabel" xml:space="preserve">
+    <value>Currency</value>
+  </data>
+  <data name="Provider.Packages.MaxParticipantsLabel" xml:space="preserve">
+    <value>Max participants</value>
+  </data>
+  <data name="Provider.Packages.ValidFromLabel" xml:space="preserve">
+    <value>Valid from</value>
+  </data>
+  <data name="Provider.Packages.ValidToLabel" xml:space="preserve">
+    <value>Valid to</value>
+  </data>
+  <data name="Provider.Packages.IncludedToursLabel" xml:space="preserve">
+    <value>Included tours</value>
+  </data>
+  <data name="Provider.Packages.IncludedToursHelp" xml:space="preserve">
+    <value>Paste the tour identifiers this package bundles, separated by commas.</value>
+  </data>
+  <data name="Provider.Packages.InclusionsLabel" xml:space="preserve">
+    <value>Inclusions</value>
+  </data>
+  <data name="Provider.Packages.InclusionsHelp" xml:space="preserve">
+    <value>One inclusion per line.</value>
+  </data>
+  <data name="Provider.Packages.CreateSubmit" xml:space="preserve">
+    <value>Create package</value>
+  </data>
+  <data name="Provider.Packages.DirectoryHeading" xml:space="preserve">
+    <value>My packages</value>
+  </data>
+  <data name="Provider.Packages.EmptyTitle" xml:space="preserve">
+    <value>No packages yet</value>
+  </data>
+  <data name="Provider.Packages.EmptyMessage" xml:space="preserve">
+    <value>Create one to bundle several tours at a single price.</value>
+  </data>
+  <data name="Provider.Packages.ColName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Provider.Packages.ColPrice" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Provider.Packages.ColTours" xml:space="preserve">
+    <value>Tours</value>
+  </data>
+  <data name="Provider.Packages.ColValidity" xml:space="preserve">
+    <value>Validity</value>
+  </data>
+  <data name="Provider.Packages.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Provider.Packages.CreatedOn" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="Provider.Packages.Manage" xml:space="preserve">
+    <value>Manage</value>
+  </data>
+  <data name="Provider.Packages.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Provider.Packages.DeleteTitle" xml:space="preserve">
+    <value>Delete this package?</value>
+  </data>
+  <data name="Provider.Packages.DeleteBody" xml:space="preserve">
+    <value>"{0}" will be permanently deleted. This cannot be undone.</value>
+  </data>
+  <data name="Provider.Packages.DeleteConfirm" xml:space="preserve">
+    <value>Delete package</value>
+  </data>
+  <data name="Provider.Packages.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.Packages.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Provider.Packages.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Provider.Packages.PageLabel" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="Provider.Packages.ManageTitle" xml:space="preserve">
+    <value>Package — {0}</value>
+  </data>
+  <data name="Provider.Packages.MaxParticipants" xml:space="preserve">
+    <value>max {0}</value>
+  </data>
+  <data name="Provider.Packages.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Provider.Packages.Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Provider.Packages.AllPackages" xml:space="preserve">
+    <value>All packages</value>
+  </data>
+  <data name="Provider.Packages.SubmitReview" xml:space="preserve">
+    <value>Submit for review</value>
+  </data>
+  <data name="Provider.Packages.IncludedToursHeading" xml:space="preserve">
+    <value>Included tours</value>
+  </data>
+  <data name="Provider.Packages.NoTours" xml:space="preserve">
+    <value>No tours bundled in this package.</value>
+  </data>
+  <data name="Provider.Packages.InclusionsHeading" xml:space="preserve">
+    <value>Inclusions</value>
+  </data>
+  <data name="Provider.Packages.NoInclusions" xml:space="preserve">
+    <value>No inclusions listed yet.</value>
+  </data>
+  <data name="Provider.Packages.AddInclusionLabel" xml:space="preserve">
+    <value>Add inclusion</value>
+  </data>
+  <data name="Provider.Packages.AddInclusionPlaceholder" xml:space="preserve">
+    <value>Add an inclusion…</value>
+  </data>
+  <data name="Provider.Packages.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Provider.Packages.ManageNote" xml:space="preserve">
+    <value>Editing a package's core fields in place isn't available yet. Manage inclusions here, or recreate the package if core details change.</value>
+  </data>
+  <data name="Provider.PaymentMethods.Title" xml:space="preserve">
+    <value>Payment Methods</value>
+  </data>
+  <data name="Provider.PaymentMethods.Heading" xml:space="preserve">
+    <value>Payment Methods</value>
+  </data>
+  <data name="Provider.PaymentMethods.AddHeading" xml:space="preserve">
+    <value>Add a payment method</value>
+  </data>
+  <data name="Provider.PaymentMethods.AddSubmit" xml:space="preserve">
+    <value>Add payment method</value>
+  </data>
+  <data name="Provider.PaymentMethods.DirectoryHeading" xml:space="preserve">
+    <value>My payment methods</value>
+  </data>
+  <data name="Provider.PaymentMethods.EmptyTitle" xml:space="preserve">
+    <value>No payment methods yet</value>
+  </data>
+  <data name="Provider.PaymentMethods.EmptyMessage" xml:space="preserve">
+    <value>Add one to receive payouts.</value>
+  </data>
+  <data name="Provider.PaymentMethods.ColName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Provider.PaymentMethods.ColType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Provider.PaymentMethods.ColAccount" xml:space="preserve">
+    <value>Account</value>
+  </data>
+  <data name="Provider.PaymentMethods.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Provider.PaymentMethods.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Provider.PaymentMethods.Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="Provider.PaymentMethods.Verified" xml:space="preserve">
+    <value>Verified</value>
+  </data>
+  <data name="Provider.PaymentMethods.Unverified" xml:space="preserve">
+    <value>Unverified</value>
+  </data>
+  <data name="Provider.PaymentMethods.EditLabel" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="Provider.PaymentMethods.DeleteLabel" xml:space="preserve">
+    <value>Delete {0}</value>
+  </data>
+  <data name="Provider.PaymentMethods.EditDisplayName" xml:space="preserve">
+    <value>Display name</value>
+  </data>
+  <data name="Provider.PaymentMethods.EditBank" xml:space="preserve">
+    <value>Bank</value>
+  </data>
+  <data name="Provider.PaymentMethods.Save" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Provider.PaymentMethods.DeleteTitle" xml:space="preserve">
+    <value>Delete this payment method?</value>
+  </data>
+  <data name="Provider.PaymentMethods.DeleteBody" xml:space="preserve">
+    <value>"{0}" will be removed and can no longer receive payouts.</value>
+  </data>
+  <data name="Provider.PaymentMethods.DeleteConfirm" xml:space="preserve">
+    <value>Delete method</value>
+  </data>
+  <data name="Provider.PaymentMethods.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.Documents.Title" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Provider.Documents.Heading" xml:space="preserve">
+    <value>Compliance Documents</value>
+  </data>
+  <data name="Provider.Documents.UploadHeading" xml:space="preserve">
+    <value>Upload a document</value>
+  </data>
+  <data name="Provider.Documents.FileHelp" xml:space="preserve">
+    <value>PDF or image. Files are validated and scanned server-side.</value>
+  </data>
+  <data name="Provider.Documents.UploadSubmit" xml:space="preserve">
+    <value>Upload document</value>
+  </data>
+  <data name="Provider.Documents.DirectoryHeading" xml:space="preserve">
+    <value>My documents</value>
+  </data>
+  <data name="Provider.Documents.EmptyTitle" xml:space="preserve">
+    <value>No documents yet</value>
+  </data>
+  <data name="Provider.Documents.EmptyMessage" xml:space="preserve">
+    <value>Upload your compliance documents to keep your provider account in good standing.</value>
+  </data>
+  <data name="Provider.Documents.ExpiresOn" xml:space="preserve">
+    <value>expires</value>
+  </data>
+  <data name="Provider.Documents.ExpiringSoon" xml:space="preserve">
+    <value>Expiring soon</value>
+  </data>
+  <data name="Provider.Documents.ViewFile" xml:space="preserve">
+    <value>View file</value>
+  </data>
+  <data name="Provider.Documents.Replace" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="Provider.Documents.ReplaceNewFile" xml:space="preserve">
+    <value>New file</value>
+  </data>
+  <data name="Provider.Documents.ReplaceExpiry" xml:space="preserve">
+    <value>Expiry</value>
+  </data>
+  <data name="Provider.Documents.ReplaceSubmit" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="Provider.Documents.Status.Pending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="Provider.Documents.Status.Approved" xml:space="preserve">
+    <value>Approved</value>
+  </data>
+  <data name="Provider.Documents.Status.Rejected" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
+  <data name="Provider.Documents.Status.Expired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="Provider.Documents.Type.License" xml:space="preserve">
+    <value>License</value>
+  </data>
+  <data name="Provider.Documents.Type.Insurance" xml:space="preserve">
+    <value>Insurance</value>
+  </data>
+  <data name="Provider.Documents.Type.Certificate" xml:space="preserve">
+    <value>Certificate</value>
+  </data>
+  <data name="Provider.Documents.Type.Identity" xml:space="preserve">
+    <value>Identity</value>
+  </data>
+  <data name="Provider.Documents.Type.Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Provider.Documents.Type.IndependentGuideID" xml:space="preserve">
+    <value>Independent guide ID</value>
+  </data>
+  <data name="Provider.Documents.Type.GovernmentID" xml:space="preserve">
+    <value>Government ID</value>
+  </data>
+  <data name="Provider.Documents.Type.MoTALicense" xml:space="preserve">
+    <value>MoTA license</value>
+  </data>
+  <data name="Provider.Documents.Type.TourismAuthorityLicense" xml:space="preserve">
+    <value>Tourism authority license</value>
+  </data>
+  <data name="Provider.Documents.Type.InsuranceCertificate" xml:space="preserve">
+    <value>Insurance certificate</value>
+  </data>
+  <data name="Provider.Documents.Type.BusinessLicense" xml:space="preserve">
+    <value>Business license</value>
+  </data>
+  <data name="Provider.Documents.Type.TaxRegistration" xml:space="preserve">
+    <value>Tax registration</value>
+  </data>
+  <data name="Provider.Documents.Type.FirstAidCertification" xml:space="preserve">
+    <value>First aid certification</value>
+  </data>
+  <data name="Provider.Documents.Type.HealthSafetyCertificate" xml:space="preserve">
+    <value>Health &amp; safety certificate</value>
+  </data>
+  <data name="Provider.Documents.Type.FireSafetyCertificate" xml:space="preserve">
+    <value>Fire safety certificate</value>
+  </data>
+  <data name="Provider.Documents.Type.ActivityCertification" xml:space="preserve">
+    <value>Activity certification</value>
+  </data>
+  <data name="Provider.Documents.Type.LiabilityInsurance" xml:space="preserve">
+    <value>Liability insurance</value>
+  </data>
+  <data name="Provider.Documents.Type.ProofOfOwnership" xml:space="preserve">
+    <value>Proof of ownership</value>
+  </data>
+  <data name="Provider.Documents.Type.AffiliatedGuideList" xml:space="preserve">
+    <value>Affiliated guide list</value>
+  </data>
+  <data name="Provider.Documents.Type.AgencyRegistration" xml:space="preserve">
+    <value>Agency registration</value>
+  </data>
+  <data name="Provider.ProviderBookings.Title" xml:space="preserve">
+    <value>Manage bookings</value>
+  </data>
+  <data name="Provider.ProviderBookings.Heading" xml:space="preserve">
+    <value>Manage bookings</value>
+  </data>
+  <data name="Provider.ProviderBookings.JoinRequests" xml:space="preserve">
+    <value>Join requests</value>
+  </data>
+  <data name="Provider.ProviderBookings.DirectoryHeading" xml:space="preserve">
+    <value>Bookings for your tours</value>
+  </data>
+  <data name="Provider.ProviderBookings.StatusFilter" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Provider.ProviderBookings.AllStatuses" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Provider.ProviderBookings.Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="Provider.ProviderBookings.EmptyMessage" xml:space="preserve">
+    <value>No bookings yet.</value>
+  </data>
+  <data name="Provider.ProviderBookings.ColReference" xml:space="preserve">
+    <value>Reference</value>
+  </data>
+  <data name="Provider.ProviderBookings.ColTour" xml:space="preserve">
+    <value>Tour</value>
+  </data>
+  <data name="Provider.ProviderBookings.ColTraveler" xml:space="preserve">
+    <value>Traveler</value>
+  </data>
+  <data name="Provider.ProviderBookings.ColSlot" xml:space="preserve">
+    <value>Slot</value>
+  </data>
+  <data name="Provider.ProviderBookings.ColGuests" xml:space="preserve">
+    <value>Guests</value>
+  </data>
+  <data name="Provider.ProviderBookings.ColTotal" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Provider.ProviderBookings.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Provider.ProviderBookings.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Provider.ProviderBookings.Manage" xml:space="preserve">
+    <value>Manage</value>
+  </data>
+  <data name="Provider.ProviderBookings.DetailsTitle" xml:space="preserve">
+    <value>Booking details</value>
+  </data>
+  <data name="Provider.ProviderBookings.BookingHeading" xml:space="preserve">
+    <value>Booking</value>
+  </data>
+  <data name="Provider.ProviderBookings.Back" xml:space="preserve">
+    <value>Back to bookings</value>
+  </data>
+  <data name="Provider.ProviderBookings.OverviewHeading" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="Provider.ProviderBookings.Tour" xml:space="preserve">
+    <value>Tour</value>
+  </data>
+  <data name="Provider.ProviderBookings.Traveler" xml:space="preserve">
+    <value>Traveler</value>
+  </data>
+  <data name="Provider.ProviderBookings.Guests" xml:space="preserve">
+    <value>Guests</value>
+  </data>
+  <data name="Provider.ProviderBookings.Instant" xml:space="preserve">
+    <value>Instant booking</value>
+  </data>
+  <data name="Provider.ProviderBookings.Created" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="Provider.ProviderBookings.SpecialRequests" xml:space="preserve">
+    <value>Special requests</value>
+  </data>
+  <data name="Provider.ProviderBookings.Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Provider.ProviderBookings.No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Provider.ProviderBookings.PricingHeading" xml:space="preserve">
+    <value>Pricing</value>
+  </data>
+  <data name="Provider.ProviderBookings.ColTier" xml:space="preserve">
+    <value>Tier</value>
+  </data>
+  <data name="Provider.ProviderBookings.ColQty" xml:space="preserve">
+    <value>Qty</value>
+  </data>
+  <data name="Provider.ProviderBookings.ColUnit" xml:space="preserve">
+    <value>Unit</value>
+  </data>
+  <data name="Provider.ProviderBookings.Subtotal" xml:space="preserve">
+    <value>Subtotal</value>
+  </data>
+  <data name="Provider.ProviderBookings.Discount" xml:space="preserve">
+    <value>Discount</value>
+  </data>
+  <data name="Provider.ProviderBookings.Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Provider.ProviderBookings.CancelledLabel" xml:space="preserve">
+    <value>Cancelled.</value>
+  </data>
+  <data name="Provider.ProviderBookings.CancelReasonLabel" xml:space="preserve">
+    <value>Reason: {0}</value>
+  </data>
+  <data name="Provider.ProviderBookings.RefundLabel" xml:space="preserve">
+    <value>Refund:</value>
+  </data>
+  <data name="Provider.ProviderBookings.ActionsHeading" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Provider.ProviderBookings.NoAction" xml:space="preserve">
+    <value>No actions are available for a booking in {0} status.</value>
+  </data>
+  <data name="Provider.ProviderBookings.Confirm" xml:space="preserve">
+    <value>Confirm booking</value>
+  </data>
+  <data name="Provider.ProviderBookings.Complete" xml:space="preserve">
+    <value>Mark as completed</value>
+  </data>
+  <data name="Provider.ProviderBookings.CompleteNote" xml:space="preserve">
+    <value>Only after the tour has started. This opens the customer's 48-hour dispute window.</value>
+  </data>
+  <data name="Provider.ProviderBookings.CompleteTitle" xml:space="preserve">
+    <value>Mark booking as completed?</value>
+  </data>
+  <data name="Provider.ProviderBookings.CompleteBody" xml:space="preserve">
+    <value>This starts the customer's 48-hour dispute window. Only mark a booking complete after the tour has taken place.</value>
+  </data>
+  <data name="Provider.ProviderBookings.CompleteConfirm" xml:space="preserve">
+    <value>Mark completed</value>
+  </data>
+  <data name="Provider.ProviderBookings.Reject" xml:space="preserve">
+    <value>Reject booking</value>
+  </data>
+  <data name="Provider.ProviderBookings.RejectTitle" xml:space="preserve">
+    <value>Reject this booking?</value>
+  </data>
+  <data name="Provider.ProviderBookings.RejectReasonLabel" xml:space="preserve">
+    <value>Rejection reason</value>
+  </data>
+  <data name="Provider.ProviderBookings.RejectReasonHelp" xml:space="preserve">
+    <value>Minimum 10 characters. Rejecting refunds the traveler in full.</value>
+  </data>
+  <data name="Provider.ProviderBookings.RejectConfirm" xml:space="preserve">
+    <value>Reject booking</value>
+  </data>
+  <data name="Provider.ProviderBookings.Cancel" xml:space="preserve">
+    <value>Cancel booking</value>
+  </data>
+  <data name="Provider.ProviderBookings.CancelTitle" xml:space="preserve">
+    <value>Cancel this booking?</value>
+  </data>
+  <data name="Provider.ProviderBookings.CancelReasonLabel2" xml:space="preserve">
+    <value>Cancellation reason</value>
+  </data>
+  <data name="Provider.ProviderBookings.CancelReasonHelp" xml:space="preserve">
+    <value>Minimum 10 characters. Cancelling refunds the traveler in full.</value>
+  </data>
+  <data name="Provider.ProviderBookings.CancelConfirm" xml:space="preserve">
+    <value>Cancel booking</value>
+  </data>
+  <data name="Provider.ProviderBookings.Dismiss" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Provider.Apply.Title" xml:space="preserve">
+    <value>Become a provider</value>
+  </data>
+  <data name="Provider.Apply.Heading" xml:space="preserve">
+    <value>Become a provider</value>
+  </data>
+  <data name="Provider.Apply.Intro" xml:space="preserve">
+    <value>Tell us about your business. You can submit your application for review on the next step.</value>
+  </data>
+  <data name="Provider.Apply.BackToStatus" xml:space="preserve">
+    <value>My application</value>
+  </data>
+  <data name="Provider.Apply.ChooseType" xml:space="preserve">
+    <value>— choose —</value>
+  </data>
+  <data name="Provider.Apply.Start" xml:space="preserve">
+    <value>Start application</value>
+  </data>
+  <data name="Provider.Apply.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.Apply.DocNote" xml:space="preserve">
+    <value>Document upload becomes available after you start the application.</value>
+  </data>
+  <data name="Provider.Onboarding.Title" xml:space="preserve">
+    <value>My provider application</value>
+  </data>
+  <data name="Provider.Onboarding.Heading" xml:space="preserve">
+    <value>My provider application</value>
+  </data>
+  <data name="Provider.Onboarding.NotAppliedMsg" xml:space="preserve">
+    <value>You haven't applied to become a provider yet.</value>
+  </data>
+  <data name="Provider.Onboarding.BecomeProvider" xml:space="preserve">
+    <value>Become a provider</value>
+  </data>
+  <data name="Provider.Onboarding.BecomeGuide" xml:space="preserve">
+    <value>Become a guide</value>
+  </data>
+  <data name="Provider.Onboarding.GuideNote" xml:space="preserve">
+    <value>Independent guides apply through the same form with the guide type pre-selected.</value>
+  </data>
+  <data name="Provider.Onboarding.GoToDashboard" xml:space="preserve">
+    <value>Go to Provider Dashboard</value>
+  </data>
+  <data name="Provider.Onboarding.Submitted" xml:space="preserve">
+    <value>Submitted</value>
+  </data>
+  <data name="Provider.Onboarding.Reviewed" xml:space="preserve">
+    <value>Reviewed</value>
+  </data>
+  <data name="Provider.Onboarding.Reapplications" xml:space="preserve">
+    <value>Reapplications</value>
+  </data>
+  <data name="Provider.Onboarding.RejectionReason" xml:space="preserve">
+    <value>Rejection reason: {0}</value>
+  </data>
+  <data name="Provider.Onboarding.SuspensionReason" xml:space="preserve">
+    <value>Suspension reason: {0}</value>
+  </data>
+  <data name="Provider.Onboarding.CoolingPeriod" xml:space="preserve">
+    <value>You may reapply after {0}.</value>
+  </data>
+  <data name="Provider.Onboarding.Reapply" xml:space="preserve">
+    <value>Reapply</value>
+  </data>
+  <data name="Provider.Onboarding.ReapplyNote" xml:space="preserve">
+    <value>Reapplying reopens your application as a draft so you can update it and submit again ({0} of {1} attempts remaining).</value>
+  </data>
+  <data name="Provider.Onboarding.ReapplyLimit" xml:space="preserve">
+    <value>You have reached the maximum number of reapplications ({0}).</value>
+  </data>
+  <data name="Provider.Onboarding.DocumentsHeading" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Provider.Onboarding.NoDocuments" xml:space="preserve">
+    <value>No documents attached yet.</value>
+  </data>
+  <data name="Provider.Onboarding.ExpiresOn" xml:space="preserve">
+    <value>expires</value>
+  </data>
+  <data name="Provider.Onboarding.Replace" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="Provider.Onboarding.ReplaceFileUrl" xml:space="preserve">
+    <value>New file URL</value>
+  </data>
+  <data name="Provider.Onboarding.ReplaceFileName" xml:space="preserve">
+    <value>File name</value>
+  </data>
+  <data name="Provider.Onboarding.ReplaceSize" xml:space="preserve">
+    <value>Size (bytes)</value>
+  </data>
+  <data name="Provider.Onboarding.ReplaceExpiry" xml:space="preserve">
+    <value>Expires at</value>
+  </data>
+  <data name="Provider.Onboarding.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Provider.Onboarding.UploadHeading" xml:space="preserve">
+    <value>Upload a document</value>
+  </data>
+  <data name="Provider.Onboarding.UploadHelp" xml:space="preserve">
+    <value>Accepted formats: PDF, JPG or PNG, up to 10 MB. Upload all required documents for your provider type, then submit your application for review.</value>
+  </data>
+  <data name="Provider.Onboarding.DocumentType" xml:space="preserve">
+    <value>Document type</value>
+  </data>
+  <data name="Provider.Onboarding.ChooseType" xml:space="preserve">
+    <value>— choose —</value>
+  </data>
+  <data name="Provider.Onboarding.File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Provider.Onboarding.ExpiresAt" xml:space="preserve">
+    <value>Expires at</value>
+  </data>
+  <data name="Provider.Onboarding.Upload" xml:space="preserve">
+    <value>Upload</value>
+  </data>
+  <data name="Provider.Onboarding.SubmitForReview" xml:space="preserve">
+    <value>Submit for review</value>
+  </data>
+  <data name="Provider.TourGuides.Title" xml:space="preserve">
+    <value>Assigned guides</value>
+  </data>
+  <data name="Provider.TourGuides.Heading" xml:space="preserve">
+    <value>Assigned guides</value>
+  </data>
+  <data name="Provider.TourGuides.BackToListing" xml:space="preserve">
+    <value>Back to listing</value>
+  </data>
+  <data name="Provider.TourGuides.AssignHeading" xml:space="preserve">
+    <value>Assign a guide</value>
+  </data>
+  <data name="Provider.TourGuides.GuideIdLabel" xml:space="preserve">
+    <value>Guide user ID</value>
+  </data>
+  <data name="Provider.TourGuides.GuideIdHelp" xml:space="preserve">
+    <value>Paste the guide's user identifier. A guide picker can replace this field later.</value>
+  </data>
+  <data name="Provider.TourGuides.MakePrimary" xml:space="preserve">
+    <value>Make primary guide</value>
+  </data>
+  <data name="Provider.TourGuides.Assign" xml:space="preserve">
+    <value>Assign</value>
+  </data>
+  <data name="Provider.TourGuides.CurrentHeading" xml:space="preserve">
+    <value>Current guides</value>
+  </data>
+  <data name="Provider.TourGuides.Empty" xml:space="preserve">
+    <value>No guides are assigned to this tour yet.</value>
+  </data>
+  <data name="Provider.TourGuides.Primary" xml:space="preserve">
+    <value>Primary</value>
+  </data>
+  <data name="Provider.TourGuides.Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Provider.TourGuides.RemoveAria" xml:space="preserve">
+    <value>Remove {0}</value>
+  </data>
+  <data name="Provider.TourGuides.RemoveTitle" xml:space="preserve">
+    <value>Remove guide?</value>
+  </data>
+  <data name="Provider.TourGuides.RemoveBody" xml:space="preserve">
+    <value>Remove {0} from this tour? They will no longer be assigned to lead it.</value>
+  </data>
+  <data name="Provider.TourGuides.RemoveConfirm" xml:space="preserve">
+    <value>Remove guide</value>
+  </data>
+  <data name="Provider.TourGuides.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.TourGuides.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Provider.TourApplications.Title" xml:space="preserve">
+    <value>Guide applications</value>
+  </data>
+  <data name="Provider.TourApplications.Heading" xml:space="preserve">
+    <value>Guide applications</value>
+  </data>
+  <data name="Provider.TourApplications.TotalCount" xml:space="preserve">
+    <value>{0} total</value>
+  </data>
+  <data name="Provider.TourApplications.BackToListing" xml:space="preserve">
+    <value>Back to listing</value>
+  </data>
+  <data name="Provider.TourApplications.Open" xml:space="preserve">
+    <value>Open applications</value>
+  </data>
+  <data name="Provider.TourApplications.Close" xml:space="preserve">
+    <value>Close applications</value>
+  </data>
+  <data name="Provider.TourApplications.CloseTitle" xml:space="preserve">
+    <value>Close applications?</value>
+  </data>
+  <data name="Provider.TourApplications.CloseBody" xml:space="preserve">
+    <value>Close this tour for new guide applications? Guides will no longer be able to apply.</value>
+  </data>
+  <data name="Provider.TourApplications.CloseConfirm" xml:space="preserve">
+    <value>Close applications</value>
+  </data>
+  <data name="Provider.TourApplications.EmptyTitle" xml:space="preserve">
+    <value>No applications yet</value>
+  </data>
+  <data name="Provider.TourApplications.EmptyMsg" xml:space="preserve">
+    <value>Open the tour for applications so guides can apply to run it.</value>
+  </data>
+  <data name="Provider.TourApplications.ApplicationLabel" xml:space="preserve">
+    <value>Application #{0}</value>
+  </data>
+  <data name="Provider.TourApplications.Resubmitted" xml:space="preserve">
+    <value>Resubmitted {0}×</value>
+  </data>
+  <data name="Provider.TourApplications.ProposedPrice" xml:space="preserve">
+    <value>Proposed base price</value>
+  </data>
+  <data name="Provider.TourApplications.Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Provider.TourApplications.Experience" xml:space="preserve">
+    <value>Experience</value>
+  </data>
+  <data name="Provider.TourApplications.Approve" xml:space="preserve">
+    <value>Approve</value>
+  </data>
+  <data name="Provider.TourApplications.Reject" xml:space="preserve">
+    <value>Reject</value>
+  </data>
+  <data name="Provider.TourApplications.RejectTitle" xml:space="preserve">
+    <value>Reject application?</value>
+  </data>
+  <data name="Provider.TourApplications.RejectBody" xml:space="preserve">
+    <value>Tell the guide why their application was rejected.</value>
+  </data>
+  <data name="Provider.TourApplications.ReasonLabel" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="Provider.TourApplications.ReasonHelp" xml:space="preserve">
+    <value>This is shared with the applicant. Up to 500 characters.</value>
+  </data>
+  <data name="Provider.TourApplications.RejectConfirm" xml:space="preserve">
+    <value>Reject application</value>
+  </data>
+  <data name="Provider.TourApplications.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.TourApplications.Dismiss" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Provider.Reviews.Title" xml:space="preserve">
+    <value>Reviews</value>
+  </data>
+  <data name="Provider.Reviews.Heading" xml:space="preserve">
+    <value>Reviews</value>
+  </data>
+  <data name="Provider.Reviews.NoListingsTitle" xml:space="preserve">
+    <value>No listings yet</value>
+  </data>
+  <data name="Provider.Reviews.NoListingsMsg" xml:space="preserve">
+    <value>Publish a tour to start collecting reviews from your guests.</value>
+  </data>
+  <data name="Provider.Reviews.AddListing" xml:space="preserve">
+    <value>Add new listing</value>
+  </data>
+  <data name="Provider.Reviews.ChooseListing" xml:space="preserve">
+    <value>Choose a listing</value>
+  </data>
+  <data name="Provider.Reviews.View" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="Provider.Reviews.RatingAria" xml:space="preserve">
+    <value>Rated {0} out of 5</value>
+  </data>
+  <data name="Provider.Reviews.ReviewsFor" xml:space="preserve">
+    <value>{0} reviews for</value>
+  </data>
+  <data name="Provider.Reviews.NoReviewsTitle" xml:space="preserve">
+    <value>No reviews yet for this listing</value>
+  </data>
+  <data name="Provider.Reviews.NoReviewsMsg" xml:space="preserve">
+    <value>Reviews appear here once guests complete and rate their tour.</value>
+  </data>
+  <data name="Provider.Reviews.VerifiedBooking" xml:space="preserve">
+    <value>Verified booking</value>
+  </data>
+  <data name="Provider.Reviews.HelpfulVotes" xml:space="preserve">
+    <value>{0} found this helpful</value>
+  </data>
+  <data name="Provider.Reviews.YourReply" xml:space="preserve">
+    <value>Your reply</value>
+  </data>
+  <data name="Provider.Reviews.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Provider.Reviews.EditReplyLabel" xml:space="preserve">
+    <value>Edit your reply</value>
+  </data>
+  <data name="Provider.Reviews.SaveReply" xml:space="preserve">
+    <value>Save reply</value>
+  </data>
+  <data name="Provider.Reviews.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Provider.Reviews.DeleteReplyTitle" xml:space="preserve">
+    <value>Delete reply?</value>
+  </data>
+  <data name="Provider.Reviews.DeleteReplyBody" xml:space="preserve">
+    <value>Delete your reply? This cannot be undone.</value>
+  </data>
+  <data name="Provider.Reviews.DeleteReplyConfirm" xml:space="preserve">
+    <value>Delete reply</value>
+  </data>
+  <data name="Provider.Reviews.Reply" xml:space="preserve">
+    <value>Reply</value>
+  </data>
+  <data name="Provider.Reviews.ReplyPlaceholder" xml:space="preserve">
+    <value>Write a public reply to this review...</value>
+  </data>
+  <data name="Provider.Reviews.PostReply" xml:space="preserve">
+    <value>Post reply</value>
+  </data>
+  <data name="Provider.Reviews.Report" xml:space="preserve">
+    <value>Report</value>
+  </data>
+  <data name="Provider.Reviews.ReportReasonLabel" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="Provider.Reviews.ReportDescLabel" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Provider.Reviews.ReportDescPlaceholder" xml:space="preserve">
+    <value>Add details (optional)</value>
+  </data>
+  <data name="Provider.Reviews.SubmitReport" xml:space="preserve">
+    <value>Submit report</value>
+  </data>
+  <data name="Provider.Reviews.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.Reviews.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Provider.Reviews.Reason.Spam" xml:space="preserve">
+    <value>Spam</value>
+  </data>
+  <data name="Provider.Reviews.Reason.Inappropriate" xml:space="preserve">
+    <value>Inappropriate</value>
+  </data>
+  <data name="Provider.Reviews.Reason.Misleading" xml:space="preserve">
+    <value>Misleading</value>
+  </data>
+  <data name="Provider.Reviews.Reason.Harassment" xml:space="preserve">
+    <value>Harassment</value>
+  </data>
+  <data name="Provider.Reviews.Reason.FakeReview" xml:space="preserve">
+    <value>Fake review</value>
+  </data>
+  <data name="Provider.Reviews.Reason.Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Provider.Settings.Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Provider.Settings.Heading" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Provider.Settings.BusinessHeading" xml:space="preserve">
+    <value>Business information</value>
+  </data>
+  <data name="Provider.Settings.BusinessName" xml:space="preserve">
+    <value>Business name</value>
+  </data>
+  <data name="Provider.Settings.ContactEmail" xml:space="preserve">
+    <value>Contact email</value>
+  </data>
+  <data name="Provider.Settings.ContactPhone" xml:space="preserve">
+    <value>Contact phone</value>
+  </data>
+  <data name="Provider.Settings.Address" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="Provider.Settings.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Provider.Settings.PersonalHeading" xml:space="preserve">
+    <value>Personal information</value>
+  </data>
+  <data name="Provider.Settings.Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Provider.Settings.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Provider.Settings.PhoneHeading" xml:space="preserve">
+    <value>Phone number</value>
+  </data>
+  <data name="Provider.Settings.UpdatePhone" xml:space="preserve">
+    <value>Update phone</value>
+  </data>
+  <data name="Provider.Settings.PasswordHeading" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="Provider.Settings.ChangePassword" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="Provider.Settings.PreferNotToSay" xml:space="preserve">
+    <value>Prefer not to say</value>
+  </data>
+  <data name="Provider.TourAvailability.Title" xml:space="preserve">
+    <value>Availability</value>
+  </data>
+  <data name="Provider.TourAvailability.Heading" xml:space="preserve">
+    <value>Availability</value>
+  </data>
+  <data name="Provider.TourAvailability.BackToListing" xml:space="preserve">
+    <value>Back to listing</value>
+  </data>
+  <data name="Provider.TourAvailability.AddSlot" xml:space="preserve">
+    <value>Add slot</value>
+  </data>
+  <data name="Provider.TourAvailability.BulkAdd" xml:space="preserve">
+    <value>Bulk add</value>
+  </data>
+  <data name="Provider.TourAvailability.Intro" xml:space="preserve">
+    <value>Availability slots are the specific dates &amp; times travelers can book. The guide is assigned automatically for this version.</value>
+  </data>
+  <data name="Provider.TourAvailability.BulkHeading" xml:space="preserve">
+    <value>Add recurring slots</value>
+  </data>
+  <data name="Provider.TourAvailability.StartDate" xml:space="preserve">
+    <value>Start date</value>
+  </data>
+  <data name="Provider.TourAvailability.EndDate" xml:space="preserve">
+    <value>End date</value>
+  </data>
+  <data name="Provider.TourAvailability.Recurrence" xml:space="preserve">
+    <value>Recurrence</value>
+  </data>
+  <data name="Provider.TourAvailability.CapacityPerSlot" xml:space="preserve">
+    <value>Capacity per slot</value>
+  </data>
+  <data name="Provider.TourAvailability.StartTime" xml:space="preserve">
+    <value>Start time</value>
+  </data>
+  <data name="Provider.TourAvailability.EndTime" xml:space="preserve">
+    <value>End time</value>
+  </data>
+  <data name="Provider.TourAvailability.DaysOfWeek" xml:space="preserve">
+    <value>Days of week</value>
+  </data>
+  <data name="Provider.TourAvailability.DaysHint" xml:space="preserve">
+    <value>(used when recurrence is Custom)</value>
+  </data>
+  <data name="Provider.TourAvailability.SkipExisting" xml:space="preserve">
+    <value>Skip dates that already have a slot</value>
+  </data>
+  <data name="Provider.TourAvailability.Generate" xml:space="preserve">
+    <value>Generate slots</value>
+  </data>
+  <data name="Provider.TourAvailability.EmptyTitle" xml:space="preserve">
+    <value>No availability slots yet</value>
+  </data>
+  <data name="Provider.TourAvailability.EmptyMsg" xml:space="preserve">
+    <value>Add a slot (or bulk-add recurring slots) so travelers can book this tour.</value>
+  </data>
+  <data name="Provider.TourAvailability.TableCaption" xml:space="preserve">
+    <value>Bookable availability slots</value>
+  </data>
+  <data name="Provider.TourAvailability.ColDate" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Provider.TourAvailability.ColTime" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="Provider.TourAvailability.ColCapacity" xml:space="preserve">
+    <value>Capacity</value>
+  </data>
+  <data name="Provider.TourAvailability.ColAvailable" xml:space="preserve">
+    <value>Available</value>
+  </data>
+  <data name="Provider.TourAvailability.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Provider.TourAvailability.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Provider.TourAvailability.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Provider.TourAvailability.Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Provider.TourAvailability.EditSlot" xml:space="preserve">
+    <value>Edit slot</value>
+  </data>
+  <data name="Provider.TourAvailability.RemoveSlot" xml:space="preserve">
+    <value>Remove slot</value>
+  </data>
+  <data name="Provider.TourAvailability.DeleteTitle" xml:space="preserve">
+    <value>Remove slot?</value>
+  </data>
+  <data name="Provider.TourAvailability.DeleteBody" xml:space="preserve">
+    <value>Remove the slot on {0}? Travelers will no longer be able to book it.</value>
+  </data>
+  <data name="Provider.TourAvailability.DeleteHeldWarning" xml:space="preserve">
+    <value>This slot has held or booked seats and may not be removable.</value>
+  </data>
+  <data name="Provider.TourAvailability.DeleteConfirm" xml:space="preserve">
+    <value>Remove slot</value>
+  </data>
+  <data name="Provider.TourAvailability.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.TourAvailability.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Provider.TourAvailability.Recurrence.Daily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="Provider.TourAvailability.Recurrence.Weekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
+  <data name="Provider.TourAvailability.Recurrence.Custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="Provider.TourAvailability.Day.Monday" xml:space="preserve">
+    <value>Mon</value>
+  </data>
+  <data name="Provider.TourAvailability.Day.Tuesday" xml:space="preserve">
+    <value>Tue</value>
+  </data>
+  <data name="Provider.TourAvailability.Day.Wednesday" xml:space="preserve">
+    <value>Wed</value>
+  </data>
+  <data name="Provider.TourAvailability.Day.Thursday" xml:space="preserve">
+    <value>Thu</value>
+  </data>
+  <data name="Provider.TourAvailability.Day.Friday" xml:space="preserve">
+    <value>Fri</value>
+  </data>
+  <data name="Provider.TourAvailability.Day.Saturday" xml:space="preserve">
+    <value>Sat</value>
+  </data>
+  <data name="Provider.TourAvailability.Day.Sunday" xml:space="preserve">
+    <value>Sun</value>
+  </data>
+  <data name="Provider.TourAvailability.Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Provider.TourAvailability.Capacity" xml:space="preserve">
+    <value>Capacity</value>
+  </data>
+  <data name="Provider.TourAvailability.EditNote" xml:space="preserve">
+    <value>Only capacity can be changed after a slot is created. To change the date/time, remove this slot and add a new one.</value>
+  </data>
+  <data name="Provider.TourAvailability.CreateTitle" xml:space="preserve">
+    <value>Add availability slot</value>
+  </data>
+  <data name="Provider.TourAvailability.CreateHeading" xml:space="preserve">
+    <value>Add availability slot</value>
+  </data>
+  <data name="Provider.TourAvailability.CreateIntro" xml:space="preserve">
+    <value>A slot is a specific date and time travelers can book. The guide is assigned automatically.</value>
+  </data>
+  <data name="Provider.TourAvailability.CreateSubmit" xml:space="preserve">
+    <value>Create slot</value>
+  </data>
+  <data name="Provider.TourAvailability.EditTitle" xml:space="preserve">
+    <value>Edit availability slot</value>
+  </data>
+  <data name="Provider.TourAvailability.EditHeading" xml:space="preserve">
+    <value>Edit availability slot</value>
+  </data>
+  <data name="Provider.TourAvailability.EditSubmit" xml:space="preserve">
+    <value>Save slot</value>
+  </data>
+  <data name="Provider.Tours.Title" xml:space="preserve">
+    <value>My listings</value>
+  </data>
+  <data name="Provider.Tours.Heading" xml:space="preserve">
+    <value>My listings</value>
+  </data>
+  <data name="Provider.Tours.Create" xml:space="preserve">
+    <value>Create listing</value>
+  </data>
+  <data name="Provider.Tours.FilterStatus" xml:space="preserve">
+    <value>Filter by status</value>
+  </data>
+  <data name="Provider.Tours.AllStatuses" xml:space="preserve">
+    <value>All statuses</value>
+  </data>
+  <data name="Provider.Tours.Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="Provider.Tours.Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Provider.Tours.EmptyTitle" xml:space="preserve">
+    <value>No listings yet</value>
+  </data>
+  <data name="Provider.Tours.EmptyMsg" xml:space="preserve">
+    <value>Create your first tour listing to start receiving bookings.</value>
+  </data>
+  <data name="Provider.Tours.CreateFirst" xml:space="preserve">
+    <value>Create your first listing</value>
+  </data>
+  <data name="Provider.Tours.TableCaption" xml:space="preserve">
+    <value>Your tour listings</value>
+  </data>
+  <data name="Provider.Tours.ColName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Provider.Tours.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Provider.Tours.ColPrice" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Provider.Tours.ColCreated" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="Provider.Tours.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Provider.Tours.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Provider.Tours.Manage" xml:space="preserve">
+    <value>Manage</value>
+  </data>
+  <data name="Provider.Tours.ManageAria" xml:space="preserve">
+    <value>Manage {0}</value>
+  </data>
+  <data name="Provider.Tours.NavPricing" xml:space="preserve">
+    <value>Pricing</value>
+  </data>
+  <data name="Provider.Tours.NavSchedules" xml:space="preserve">
+    <value>Schedules</value>
+  </data>
+  <data name="Provider.Tours.NavWaypoints" xml:space="preserve">
+    <value>Route &amp; waypoints</value>
+  </data>
+  <data name="Provider.Tours.NavGuides" xml:space="preserve">
+    <value>Guides</value>
+  </data>
+  <data name="Provider.Tours.NavApplications" xml:space="preserve">
+    <value>Applications</value>
+  </data>
+  <data name="Provider.Tours.NavImages" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="Provider.Tours.NavAvailability" xml:space="preserve">
+    <value>Availability</value>
+  </data>
+  <data name="Provider.Tours.Submit" xml:space="preserve">
+    <value>Submit</value>
+  </data>
+  <data name="Provider.Tours.Archive" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="Provider.Tours.ArchiveTitle" xml:space="preserve">
+    <value>Archive listing?</value>
+  </data>
+  <data name="Provider.Tours.ArchiveBody" xml:space="preserve">
+    <value>Archive "{0}"? It will be hidden from travelers but kept for your records.</value>
+  </data>
+  <data name="Provider.Tours.ArchiveConfirm" xml:space="preserve">
+    <value>Archive listing</value>
+  </data>
+  <data name="Provider.Tours.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Provider.Tours.DeleteTitle" xml:space="preserve">
+    <value>Delete listing?</value>
+  </data>
+  <data name="Provider.Tours.DeleteBody" xml:space="preserve">
+    <value>Delete "{0}"? This cannot be undone.</value>
+  </data>
+  <data name="Provider.Tours.DeleteConfirm" xml:space="preserve">
+    <value>Delete listing</value>
+  </data>
+  <data name="Provider.Tours.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.Tours.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Provider.Tours.Pagination" xml:space="preserve">
+    <value>Listings pagination</value>
+  </data>
+  <data name="Provider.Tours.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Provider.Tours.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Provider.Tours.PageOf" xml:space="preserve">
+    <value>Page {0} of {1}</value>
+  </data>
+  <data name="Provider.Tours.CreateTitle" xml:space="preserve">
+    <value>Create listing</value>
+  </data>
+  <data name="Provider.Tours.CreateHeading" xml:space="preserve">
+    <value>Create listing</value>
+  </data>
+  <data name="Provider.Tours.CreateIntro" xml:space="preserve">
+    <value>New listings start as a draft. Edit and submit them for review afterwards.</value>
+  </data>
+  <data name="Provider.Tours.CreateSubmit" xml:space="preserve">
+    <value>Create draft</value>
+  </data>
+  <data name="Provider.Tours.BackToList" xml:space="preserve">
+    <value>Back to listings</value>
+  </data>
+  <data name="Provider.Tours.EditTitle" xml:space="preserve">
+    <value>Edit listing</value>
+  </data>
+  <data name="Provider.Tours.EditHeading" xml:space="preserve">
+    <value>Edit listing</value>
+  </data>
+  <data name="Provider.Tours.StatusPrefix" xml:space="preserve">
+    <value>Status:</value>
+  </data>
+  <data name="Provider.Tours.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Provider.Tours.SubmitRequirements" xml:space="preserve">
+    <value>Submitting requires a complete listing: a description of at least 100 characters, a meeting point, and at least one image, one active Adult pricing tier, and one active schedule. Use the Manage links above to add them.</value>
+  </data>
+  <data name="Provider.TourForm.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Provider.TourForm.Slug" xml:space="preserve">
+    <value>URL slug</value>
+  </data>
+  <data name="Provider.TourForm.SlugHelp" xml:space="preserve">
+    <value>Lowercase letters, numbers and dashes only.</value>
+  </data>
+  <data name="Provider.TourForm.Difficulty" xml:space="preserve">
+    <value>Difficulty</value>
+  </data>
+  <data name="Provider.TourForm.Difficulty.Easy" xml:space="preserve">
+    <value>Easy</value>
+  </data>
+  <data name="Provider.TourForm.Difficulty.Moderate" xml:space="preserve">
+    <value>Moderate</value>
+  </data>
+  <data name="Provider.TourForm.Difficulty.Hard" xml:space="preserve">
+    <value>Hard</value>
+  </data>
+  <data name="Provider.TourForm.Difficulty.Expert" xml:space="preserve">
+    <value>Expert</value>
+  </data>
+  <data name="Provider.TourForm.Duration" xml:space="preserve">
+    <value>Duration (minutes)</value>
+  </data>
+  <data name="Provider.TourForm.MaxGroup" xml:space="preserve">
+    <value>Max group size</value>
+  </data>
+  <data name="Provider.TourForm.BasePrice" xml:space="preserve">
+    <value>Base price</value>
+  </data>
+  <data name="Provider.TourForm.Currency" xml:space="preserve">
+    <value>Currency</value>
+  </data>
+  <data name="Provider.TourForm.CancellationHours" xml:space="preserve">
+    <value>Cancellation policy (hours)</value>
+  </data>
+  <data name="Provider.TourForm.Latitude" xml:space="preserve">
+    <value>Latitude</value>
+  </data>
+  <data name="Provider.TourForm.Longitude" xml:space="preserve">
+    <value>Longitude</value>
+  </data>
+  <data name="Provider.TourForm.MeetingLat" xml:space="preserve">
+    <value>Meeting point latitude</value>
+  </data>
+  <data name="Provider.TourForm.MeetingLng" xml:space="preserve">
+    <value>Meeting point longitude</value>
+  </data>
+  <data name="Provider.TourForm.MeetingHelp" xml:space="preserve">
+    <value>Set both meeting-point coordinates together. Required before a listing can be submitted.</value>
+  </data>
+  <data name="Provider.TourForm.Place" xml:space="preserve">
+    <value>Place</value>
+  </data>
+  <data name="Provider.TourForm.PlaceSelect" xml:space="preserve">
+    <value>Select a place</value>
+  </data>
+  <data name="Provider.TourForm.NoPlaces" xml:space="preserve">
+    <value>No places are available yet. An administrator must add a place before it can be linked to a listing.</value>
+  </data>
+  <data name="Provider.TourForm.ShortDescription" xml:space="preserve">
+    <value>Short description</value>
+  </data>
+  <data name="Provider.TourForm.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Provider.TourForm.DescriptionHelp" xml:space="preserve">
+    <value>A description of at least 100 characters is required before a listing can be submitted.</value>
+  </data>
+  <data name="Provider.TourForm.ChildFriendly" xml:space="preserve">
+    <value>Child friendly</value>
+  </data>
+  <data name="Provider.TourForm.Accessible" xml:space="preserve">
+    <value>Accessible</value>
+  </data>
+  <data name="Provider.TourWizard.Progress" xml:space="preserve">
+    <value>Listing setup progress</value>
+  </data>
+  <data name="Provider.TourWizard.Step1" xml:space="preserve">
+    <value>Basics</value>
+  </data>
+  <data name="Provider.TourWizard.Step2" xml:space="preserve">
+    <value>Pricing</value>
+  </data>
+  <data name="Provider.TourWizard.Step3" xml:space="preserve">
+    <value>Schedule</value>
+  </data>
+  <data name="Provider.TourWizard.Step4" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="Provider.TourWizard.Step5" xml:space="preserve">
+    <value>Review &amp; submit</value>
+  </data>
+  <data name="Provider.TourWizard.Done" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Provider.TourWizard.StepAria" xml:space="preserve">
+    <value>Step {0}: {1}</value>
+  </data>
+  <data name="Provider.TourImages.Title" xml:space="preserve">
+    <value>Listing images</value>
+  </data>
+  <data name="Provider.TourImages.Heading" xml:space="preserve">
+    <value>Listing images</value>
+  </data>
+  <data name="Provider.TourImages.BackToListing" xml:space="preserve">
+    <value>Back to listing</value>
+  </data>
+  <data name="Provider.TourImages.UploadHeading" xml:space="preserve">
+    <value>Upload an image</value>
+  </data>
+  <data name="Provider.TourImages.FileLabel" xml:space="preserve">
+    <value>Image file</value>
+  </data>
+  <data name="Provider.TourImages.Upload" xml:space="preserve">
+    <value>Upload image</value>
+  </data>
+  <data name="Provider.TourImages.UploadHelp" xml:space="preserve">
+    <value>Accepted formats: JPG or PNG. The server validates the file type and signature.</value>
+  </data>
+  <data name="Provider.TourImages.GalleryHeading" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="Provider.TourImages.EmptyMsg" xml:space="preserve">
+    <value>No images uploaded yet. Upload at least one image before submitting your listing for review.</value>
+  </data>
+  <data name="Provider.TourImages.UnnamedImage" xml:space="preserve">
+    <value>image</value>
+  </data>
+  <data name="Provider.TourImages.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Provider.TourImages.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Provider.TourImages.DeleteTitle" xml:space="preserve">
+    <value>Delete image?</value>
+  </data>
+  <data name="Provider.TourImages.DeleteBody" xml:space="preserve">
+    <value>Delete "{0}"? This cannot be undone.</value>
+  </data>
+  <data name="Provider.TourImages.DeleteConfirm" xml:space="preserve">
+    <value>Delete image</value>
+  </data>
+  <data name="Provider.TourImages.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.TourImages.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Provider.TourWaypoints.Title" xml:space="preserve">
+    <value>Route &amp; waypoints</value>
+  </data>
+  <data name="Provider.TourWaypoints.Heading" xml:space="preserve">
+    <value>Route &amp; waypoints</value>
+  </data>
+  <data name="Provider.TourWaypoints.BackToListing" xml:space="preserve">
+    <value>Back to listing</value>
+  </data>
+  <data name="Provider.TourWaypoints.BackToWaypoints" xml:space="preserve">
+    <value>Back to route</value>
+  </data>
+  <data name="Provider.TourWaypoints.AddWaypoint" xml:space="preserve">
+    <value>Add waypoint</value>
+  </data>
+  <data name="Provider.TourWaypoints.EmptyTitle" xml:space="preserve">
+    <value>No waypoints yet</value>
+  </data>
+  <data name="Provider.TourWaypoints.EmptyMsg" xml:space="preserve">
+    <value>Add stops to build the tour route. The first stop is usually the meeting point.</value>
+  </data>
+  <data name="Provider.TourWaypoints.AddFirst" xml:space="preserve">
+    <value>Add the first waypoint</value>
+  </data>
+  <data name="Provider.TourWaypoints.TableCaption" xml:space="preserve">
+    <value>Tour waypoints in route order</value>
+  </data>
+  <data name="Provider.TourWaypoints.ColStop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="Provider.TourWaypoints.ColCoordinates" xml:space="preserve">
+    <value>Coordinates</value>
+  </data>
+  <data name="Provider.TourWaypoints.ColStopTime" xml:space="preserve">
+    <value>Stop time</value>
+  </data>
+  <data name="Provider.TourWaypoints.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Provider.TourWaypoints.MeetingPoint" xml:space="preserve">
+    <value>Meeting point</value>
+  </data>
+  <data name="Provider.TourWaypoints.Minutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="Provider.TourWaypoints.MoveUp" xml:space="preserve">
+    <value>Move {0} up</value>
+  </data>
+  <data name="Provider.TourWaypoints.MoveDown" xml:space="preserve">
+    <value>Move {0} down</value>
+  </data>
+  <data name="Provider.TourWaypoints.Edit" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="Provider.TourWaypoints.Delete" xml:space="preserve">
+    <value>Delete {0}</value>
+  </data>
+  <data name="Provider.TourWaypoints.DeleteTitle" xml:space="preserve">
+    <value>Delete waypoint?</value>
+  </data>
+  <data name="Provider.TourWaypoints.DeleteBody" xml:space="preserve">
+    <value>Delete "{0}"? This cannot be undone.</value>
+  </data>
+  <data name="Provider.TourWaypoints.DeleteConfirm" xml:space="preserve">
+    <value>Delete waypoint</value>
+  </data>
+  <data name="Provider.TourWaypoints.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.TourWaypoints.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Provider.TourWaypoints.CreateTitle" xml:space="preserve">
+    <value>Add waypoint</value>
+  </data>
+  <data name="Provider.TourWaypoints.CreateHeading" xml:space="preserve">
+    <value>Add waypoint</value>
+  </data>
+  <data name="Provider.TourWaypoints.EditTitle" xml:space="preserve">
+    <value>Edit waypoint</value>
+  </data>
+  <data name="Provider.TourWaypoints.EditHeading" xml:space="preserve">
+    <value>Edit waypoint</value>
+  </data>
+  <data name="Provider.TourWaypoints.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Provider.TourWaypoints.FormName" xml:space="preserve">
+    <value>Stop name</value>
+  </data>
+  <data name="Provider.TourWaypoints.FormMeetingPoint" xml:space="preserve">
+    <value>Meeting point</value>
+  </data>
+  <data name="Provider.TourWaypoints.FormDescription" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Provider.TourWaypoints.FormDescriptionHelp" xml:space="preserve">
+    <value>Optional. What travellers do or see at this stop.</value>
+  </data>
+  <data name="Provider.TourWaypoints.FormLatitude" xml:space="preserve">
+    <value>Latitude</value>
+  </data>
+  <data name="Provider.TourWaypoints.FormLongitude" xml:space="preserve">
+    <value>Longitude</value>
+  </data>
+  <data name="Provider.TourWaypoints.FormStopDuration" xml:space="preserve">
+    <value>Stop duration (minutes)</value>
+  </data>
+  <data name="Provider.TourPricing.Title" xml:space="preserve">
+    <value>Pricing tiers</value>
+  </data>
+  <data name="Provider.TourPricing.Heading" xml:space="preserve">
+    <value>Pricing tiers</value>
+  </data>
+  <data name="Provider.TourPricing.BackToListing" xml:space="preserve">
+    <value>Back to listing</value>
+  </data>
+  <data name="Provider.TourPricing.AddTier" xml:space="preserve">
+    <value>Add pricing tier</value>
+  </data>
+  <data name="Provider.TourPricing.AdultRequired" xml:space="preserve">
+    <value>Add at least one active Adult pricing tier before submitting this listing for review.</value>
+  </data>
+  <data name="Provider.TourPricing.TableCaption" xml:space="preserve">
+    <value>Pricing tiers</value>
+  </data>
+  <data name="Provider.TourPricing.EmptyTitle" xml:space="preserve">
+    <value>No pricing tiers yet</value>
+  </data>
+  <data name="Provider.TourPricing.EmptyMsg" xml:space="preserve">
+    <value>Add at least one Adult pricing tier so travelers can book this tour.</value>
+  </data>
+  <data name="Provider.TourPricing.AddFirst" xml:space="preserve">
+    <value>Add the first tier</value>
+  </data>
+  <data name="Provider.TourPricing.ColName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Provider.TourPricing.ColType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Provider.TourPricing.ColPrice" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Provider.TourPricing.ColParticipants" xml:space="preserve">
+    <value>Participants</value>
+  </data>
+  <data name="Provider.TourPricing.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Provider.TourPricing.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Provider.TourPricing.Adult" xml:space="preserve">
+    <value>Adult</value>
+  </data>
+  <data name="Provider.TourPricing.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Provider.TourPricing.Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Provider.TourPricing.Edit" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="Provider.TourPricing.Delete" xml:space="preserve">
+    <value>Delete {0}</value>
+  </data>
+  <data name="Provider.TourPricing.DeleteTitle" xml:space="preserve">
+    <value>Delete pricing tier?</value>
+  </data>
+  <data name="Provider.TourPricing.DeleteBody" xml:space="preserve">
+    <value>Delete "{0}"? This cannot be undone.</value>
+  </data>
+  <data name="Provider.TourPricing.DeleteConfirm" xml:space="preserve">
+    <value>Delete tier</value>
+  </data>
+  <data name="Provider.TourPricing.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.TourPricing.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Provider.TourPricing.BackToList" xml:space="preserve">
+    <value>Back to pricing</value>
+  </data>
+  <data name="Provider.TourPricing.CreateTitle" xml:space="preserve">
+    <value>Add pricing tier</value>
+  </data>
+  <data name="Provider.TourPricing.CreateHeading" xml:space="preserve">
+    <value>Add pricing tier</value>
+  </data>
+  <data name="Provider.TourPricing.CreateIntro" xml:space="preserve">
+    <value>Define a price for a participant type. Adult is required; add Child, Senior, etc. as needed.</value>
+  </data>
+  <data name="Provider.TourPricing.CreateSubmit" xml:space="preserve">
+    <value>Create tier</value>
+  </data>
+  <data name="Provider.TourPricing.EditTitle" xml:space="preserve">
+    <value>Edit pricing tier</value>
+  </data>
+  <data name="Provider.TourPricing.EditHeading" xml:space="preserve">
+    <value>Edit pricing tier</value>
+  </data>
+  <data name="Provider.TourPricing.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Provider.TourPricing.Form.Name" xml:space="preserve">
+    <value>Tier name</value>
+  </data>
+  <data name="Provider.TourPricing.Form.NamePlaceholder" xml:space="preserve">
+    <value>e.g. Adult standard</value>
+  </data>
+  <data name="Provider.TourPricing.Form.ParticipantType" xml:space="preserve">
+    <value>Participant type</value>
+  </data>
+  <data name="Provider.TourPricing.Form.Price" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Provider.TourPricing.Form.Currency" xml:space="preserve">
+    <value>Currency</value>
+  </data>
+  <data name="Provider.TourPricing.Form.CurrencyHelp" xml:space="preserve">
+    <value>Matches the listing currency.</value>
+  </data>
+  <data name="Provider.TourPricing.Form.MinParticipants" xml:space="preserve">
+    <value>Min participants</value>
+  </data>
+  <data name="Provider.TourPricing.Form.MaxParticipants" xml:space="preserve">
+    <value>Max participants</value>
+  </data>
+  <data name="Provider.TourPricing.Form.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Provider.TourPricing.Form.IsActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Provider.TourPricing.Form.IsActiveHelp" xml:space="preserve">
+    <value>Inactive tiers are hidden from travelers and ignored at booking.</value>
+  </data>
+  <data name="Provider.TourPricing.PType.Adult" xml:space="preserve">
+    <value>Adult</value>
+  </data>
+  <data name="Provider.TourPricing.PType.Child" xml:space="preserve">
+    <value>Child</value>
+  </data>
+  <data name="Provider.TourPricing.PType.Senior" xml:space="preserve">
+    <value>Senior</value>
+  </data>
+  <data name="Provider.TourPricing.PType.Student" xml:space="preserve">
+    <value>Student</value>
+  </data>
+  <data name="Provider.TourPricing.PType.Infant" xml:space="preserve">
+    <value>Infant</value>
+  </data>
+  <data name="Provider.TourPricing.PType.Group" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="Provider.TourPricing.PType.Family" xml:space="preserve">
+    <value>Family</value>
+  </data>
+  <data name="Provider.TourPricing.PType.Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Provider.TourSchedules.Title" xml:space="preserve">
+    <value>Schedules</value>
+  </data>
+  <data name="Provider.TourSchedules.Heading" xml:space="preserve">
+    <value>Schedules</value>
+  </data>
+  <data name="Provider.TourSchedules.BackToListing" xml:space="preserve">
+    <value>Back to listing</value>
+  </data>
+  <data name="Provider.TourSchedules.AddSchedule" xml:space="preserve">
+    <value>Add schedule</value>
+  </data>
+  <data name="Provider.TourSchedules.ActiveRequired" xml:space="preserve">
+    <value>Add at least one active schedule before submitting this listing for review.</value>
+  </data>
+  <data name="Provider.TourSchedules.TableCaption" xml:space="preserve">
+    <value>Tour schedules</value>
+  </data>
+  <data name="Provider.TourSchedules.EmptyTitle" xml:space="preserve">
+    <value>No schedules yet</value>
+  </data>
+  <data name="Provider.TourSchedules.EmptyMsg" xml:space="preserve">
+    <value>Add a weekly schedule so travelers know when the tour runs.</value>
+  </data>
+  <data name="Provider.TourSchedules.AddFirst" xml:space="preserve">
+    <value>Add the first schedule</value>
+  </data>
+  <data name="Provider.TourSchedules.ColDay" xml:space="preserve">
+    <value>Day</value>
+  </data>
+  <data name="Provider.TourSchedules.ColTime" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="Provider.TourSchedules.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Provider.TourSchedules.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Provider.TourSchedules.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Provider.TourSchedules.Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Provider.TourSchedules.Edit" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="Provider.TourSchedules.Delete" xml:space="preserve">
+    <value>Delete {0}</value>
+  </data>
+  <data name="Provider.TourSchedules.DeleteTitle" xml:space="preserve">
+    <value>Delete schedule?</value>
+  </data>
+  <data name="Provider.TourSchedules.DeleteBody" xml:space="preserve">
+    <value>Delete the {0} schedule? This cannot be undone.</value>
+  </data>
+  <data name="Provider.TourSchedules.DeleteConfirm" xml:space="preserve">
+    <value>Delete schedule</value>
+  </data>
+  <data name="Provider.TourSchedules.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Provider.TourSchedules.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Provider.TourSchedules.BackToList" xml:space="preserve">
+    <value>Back to schedules</value>
+  </data>
+  <data name="Provider.TourSchedules.CreateTitle" xml:space="preserve">
+    <value>Add schedule</value>
+  </data>
+  <data name="Provider.TourSchedules.CreateHeading" xml:space="preserve">
+    <value>Add schedule</value>
+  </data>
+  <data name="Provider.TourSchedules.CreateIntro" xml:space="preserve">
+    <value>Schedules repeat weekly on the selected day. New schedules are active.</value>
+  </data>
+  <data name="Provider.TourSchedules.CreateSubmit" xml:space="preserve">
+    <value>Create schedule</value>
+  </data>
+  <data name="Provider.TourSchedules.EditTitle" xml:space="preserve">
+    <value>Edit schedule</value>
+  </data>
+  <data name="Provider.TourSchedules.EditHeading" xml:space="preserve">
+    <value>Edit schedule</value>
+  </data>
+  <data name="Provider.TourSchedules.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Provider.TourSchedules.Form.DayOfWeek" xml:space="preserve">
+    <value>Day of week</value>
+  </data>
+  <data name="Provider.TourSchedules.Form.StartTime" xml:space="preserve">
+    <value>Start time</value>
+  </data>
+  <data name="Provider.TourSchedules.Form.EndTime" xml:space="preserve">
+    <value>End time</value>
+  </data>
+  <data name="Provider.TourSchedules.Form.EndTimeHelp" xml:space="preserve">
+    <value>Optional. If set, it must be after the start time.</value>
+  </data>
+  <data name="Provider.TourSchedules.Form.IsActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Provider.TourSchedules.Form.IsActiveHelp" xml:space="preserve">
+    <value>A listing must keep at least one active schedule to be submitted.</value>
+  </data>
+  <data name="Provider.TourSchedules.Day.Sunday" xml:space="preserve">
+    <value>Sunday</value>
+  </data>
+  <data name="Provider.TourSchedules.Day.Monday" xml:space="preserve">
+    <value>Monday</value>
+  </data>
+  <data name="Provider.TourSchedules.Day.Tuesday" xml:space="preserve">
+    <value>Tuesday</value>
+  </data>
+  <data name="Provider.TourSchedules.Day.Wednesday" xml:space="preserve">
+    <value>Wednesday</value>
+  </data>
+  <data name="Provider.TourSchedules.Day.Thursday" xml:space="preserve">
+    <value>Thursday</value>
+  </data>
+  <data name="Provider.TourSchedules.Day.Friday" xml:space="preserve">
+    <value>Friday</value>
+  </data>
+  <data name="Provider.TourSchedules.Day.Saturday" xml:space="preserve">
+    <value>Saturday</value>
+  </data>
+  <data name="Business.Nav.Menu" xml:space="preserve">
+    <value>Business menu</value>
+  </data>
+  <data name="Business.Nav.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Business.Nav.Badge" xml:space="preserve">
+    <value>Business</value>
+  </data>
+  <data name="Business.Nav.MyBusinesses" xml:space="preserve">
+    <value>My Businesses</value>
+  </data>
+  <data name="Business.Nav.Register" xml:space="preserve">
+    <value>Register a business</value>
+  </data>
+  <data name="Business.Nav.Profile" xml:space="preserve">
+    <value>Business profile</value>
+  </data>
+  <data name="Business.Nav.Hours" xml:space="preserve">
+    <value>Opening hours</value>
+  </data>
+  <data name="Business.Nav.Amenities" xml:space="preserve">
+    <value>Amenities</value>
+  </data>
+  <data name="Business.Nav.Services" xml:space="preserve">
+    <value>Services</value>
+  </data>
+  <data name="Business.Nav.Staff" xml:space="preserve">
+    <value>Staff</value>
+  </data>
+  <data name="Business.Nav.Accessibility" xml:space="preserve">
+    <value>Accessibility</value>
+  </data>
+  <data name="Business.Nav.SignOut" xml:space="preserve">
+    <value>Sign Out</value>
+  </data>
+  <data name="Business.Status.Draft" xml:space="preserve">
+    <value>Draft</value>
+  </data>
+  <data name="Business.Status.Pending" xml:space="preserve">
+    <value>Pending review</value>
+  </data>
+  <data name="Business.Status.PendingReview" xml:space="preserve">
+    <value>Pending review</value>
+  </data>
+  <data name="Business.Status.Submitted" xml:space="preserve">
+    <value>Submitted</value>
+  </data>
+  <data name="Business.Status.Approved" xml:space="preserve">
+    <value>Approved</value>
+  </data>
+  <data name="Business.Status.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Business.Status.Published" xml:space="preserve">
+    <value>Published</value>
+  </data>
+  <data name="Business.Status.Rejected" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
+  <data name="Business.Status.Suspended" xml:space="preserve">
+    <value>Suspended</value>
+  </data>
+  <data name="Business.Status.MoreDocsNeeded" xml:space="preserve">
+    <value>More info needed</value>
+  </data>
+  <data name="Business.Status.MoreInfoNeeded" xml:space="preserve">
+    <value>More info needed</value>
+  </data>
+  <data name="Business.MyBusinesses.Title" xml:space="preserve">
+    <value>My Businesses</value>
+  </data>
+  <data name="Business.MyBusinesses.Heading" xml:space="preserve">
+    <value>My Businesses</value>
+  </data>
+  <data name="Business.MyBusinesses.Subtitle" xml:space="preserve">
+    <value>Manage the businesses you own, edit their profiles, and resubmit rejected listings.</value>
+  </data>
+  <data name="Business.MyBusinesses.Register" xml:space="preserve">
+    <value>Register a business</value>
+  </data>
+  <data name="Business.MyBusinesses.EmptyTitle" xml:space="preserve">
+    <value>No businesses yet</value>
+  </data>
+  <data name="Business.MyBusinesses.EmptyMsg" xml:space="preserve">
+    <value>You do not own any businesses on the platform yet.</value>
+  </data>
+  <data name="Business.MyBusinesses.Directory" xml:space="preserve">
+    <value>Your businesses</value>
+  </data>
+  <data name="Business.MyBusinesses.TableCaption" xml:space="preserve">
+    <value>Businesses you own</value>
+  </data>
+  <data name="Business.MyBusinesses.ColBusiness" xml:space="preserve">
+    <value>Business</value>
+  </data>
+  <data name="Business.MyBusinesses.ColType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Business.MyBusinesses.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Business.MyBusinesses.ColLocation" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="Business.MyBusinesses.ColRating" xml:space="preserve">
+    <value>Rating</value>
+  </data>
+  <data name="Business.MyBusinesses.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Business.MyBusinesses.Verified" xml:space="preserve">
+    <value>Verified</value>
+  </data>
+  <data name="Business.MyBusinesses.Manage" xml:space="preserve">
+    <value>Manage</value>
+  </data>
+  <data name="Business.Register.Title" xml:space="preserve">
+    <value>Register a business</value>
+  </data>
+  <data name="Business.Register.BackToList" xml:space="preserve">
+    <value>All businesses</value>
+  </data>
+  <data name="Business.Register.Heading" xml:space="preserve">
+    <value>Register a business</value>
+  </data>
+  <data name="Business.Register.Intro" xml:space="preserve">
+    <value>Add your business so travellers can find it. After you submit, it is reviewed before it goes live. You can add opening hours, services and staff afterwards.</value>
+  </data>
+  <data name="Business.Register.NoPlacesTitle" xml:space="preserve">
+    <value>No places available yet</value>
+  </data>
+  <data name="Business.Register.NoPlacesMsg" xml:space="preserve">
+    <value>A business must be attached to a place, but none are available right now. Please check back later or contact support.</value>
+  </data>
+  <data name="Business.Register.DetailsHeading" xml:space="preserve">
+    <value>Business details</value>
+  </data>
+  <data name="Business.Register.Name" xml:space="preserve">
+    <value>Business name</value>
+  </data>
+  <data name="Business.Register.Type" xml:space="preserve">
+    <value>Business type</value>
+  </data>
+  <data name="Business.Register.TypeChoose" xml:space="preserve">
+    <value>Choose a type</value>
+  </data>
+  <data name="Business.Register.Place" xml:space="preserve">
+    <value>Place</value>
+  </data>
+  <data name="Business.Register.PlaceChoose" xml:space="preserve">
+    <value>Choose a place</value>
+  </data>
+  <data name="Business.Register.PlaceHelp" xml:space="preserve">
+    <value>The location your business sits within.</value>
+  </data>
+  <data name="Business.Register.Latitude" xml:space="preserve">
+    <value>Latitude</value>
+  </data>
+  <data name="Business.Register.Longitude" xml:space="preserve">
+    <value>Longitude</value>
+  </data>
+  <data name="Business.Register.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Business.Register.Address" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="Business.Register.City" xml:space="preserve">
+    <value>City</value>
+  </data>
+  <data name="Business.Register.Country" xml:space="preserve">
+    <value>Country</value>
+  </data>
+  <data name="Business.Register.PostalCode" xml:space="preserve">
+    <value>Postal code</value>
+  </data>
+  <data name="Business.Register.Phone" xml:space="preserve">
+    <value>Phone</value>
+  </data>
+  <data name="Business.Register.Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Business.Register.Website" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="Business.Register.LicenseNumber" xml:space="preserve">
+    <value>License number</value>
+  </data>
+  <data name="Business.Register.TaxId" xml:space="preserve">
+    <value>Tax ID</value>
+  </data>
+  <data name="Business.Register.DietaryLegend" xml:space="preserve">
+    <value>Dietary options</value>
+  </data>
+  <data name="Business.Register.IsHalal" xml:space="preserve">
+    <value>Halal</value>
+  </data>
+  <data name="Business.Register.Vegetarian" xml:space="preserve">
+    <value>Vegetarian options</value>
+  </data>
+  <data name="Business.Register.AlcoholFree" xml:space="preserve">
+    <value>Alcohol-free area</value>
+  </data>
+  <data name="Business.Register.Submit" xml:space="preserve">
+    <value>Register business</value>
+  </data>
+  <data name="Business.Register.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Business.Manage.Title" xml:space="preserve">
+    <value>Business profile</value>
+  </data>
+  <data name="Business.Manage.BackToList" xml:space="preserve">
+    <value>All businesses</value>
+  </data>
+  <data name="Business.Manage.CreatedOn" xml:space="preserve">
+    <value>created</value>
+  </data>
+  <data name="Business.Manage.Verified" xml:space="preserve">
+    <value>Verified</value>
+  </data>
+  <data name="Business.Manage.RejectedTitle" xml:space="preserve">
+    <value>This business was rejected</value>
+  </data>
+  <data name="Business.Manage.RejectedReason" xml:space="preserve">
+    <value>Reason:</value>
+  </data>
+  <data name="Business.Manage.RejectedHint" xml:space="preserve">
+    <value>Make any corrections below, then resubmit for review.</value>
+  </data>
+  <data name="Business.Manage.Resubmit" xml:space="preserve">
+    <value>Resubmit for review</value>
+  </data>
+  <data name="Business.Manage.ManageServices" xml:space="preserve">
+    <value>Manage services</value>
+  </data>
+  <data name="Business.Manage.ManageStaff" xml:space="preserve">
+    <value>Manage staff</value>
+  </data>
+  <data name="Business.Manage.ManageAmenities" xml:space="preserve">
+    <value>Manage amenities</value>
+  </data>
+  <data name="Business.Manage.ManageHours" xml:space="preserve">
+    <value>Opening hours</value>
+  </data>
+  <data name="Business.Manage.ManageAccessibility" xml:space="preserve">
+    <value>Accessibility</value>
+  </data>
+  <data name="Business.Manage.ProfileHeading" xml:space="preserve">
+    <value>Business profile</value>
+  </data>
+  <data name="Business.Manage.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Business.Manage.ResubmitTitle" xml:space="preserve">
+    <value>Resubmit business?</value>
+  </data>
+  <data name="Business.Manage.ResubmitBody" xml:space="preserve">
+    <value>Resubmit this business for review? An administrator will re-check the corrected profile.</value>
+  </data>
+  <data name="Business.Manage.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Business.Manage.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Business.Days.0" xml:space="preserve">
+    <value>Sunday</value>
+  </data>
+  <data name="Business.Days.1" xml:space="preserve">
+    <value>Monday</value>
+  </data>
+  <data name="Business.Days.2" xml:space="preserve">
+    <value>Tuesday</value>
+  </data>
+  <data name="Business.Days.3" xml:space="preserve">
+    <value>Wednesday</value>
+  </data>
+  <data name="Business.Days.4" xml:space="preserve">
+    <value>Thursday</value>
+  </data>
+  <data name="Business.Days.5" xml:space="preserve">
+    <value>Friday</value>
+  </data>
+  <data name="Business.Days.6" xml:space="preserve">
+    <value>Saturday</value>
+  </data>
+  <data name="Business.Hours.Title" xml:space="preserve">
+    <value>Opening hours</value>
+  </data>
+  <data name="Business.Hours.Heading" xml:space="preserve">
+    <value>Opening hours</value>
+  </data>
+  <data name="Business.Hours.Breadcrumb" xml:space="preserve">
+    <value>Business</value>
+  </data>
+  <data name="Business.Hours.WeeklyHeading" xml:space="preserve">
+    <value>Weekly hours</value>
+  </data>
+  <data name="Business.Hours.Intro" xml:space="preserve">
+    <value>Set your weekly opening hours. Mark a day as closed to hide its times.</value>
+  </data>
+  <data name="Business.Hours.TableCaption" xml:space="preserve">
+    <value>Weekly opening hours</value>
+  </data>
+  <data name="Business.Hours.ColDay" xml:space="preserve">
+    <value>Day</value>
+  </data>
+  <data name="Business.Hours.ColClosed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="Business.Hours.ColOpens" xml:space="preserve">
+    <value>Opens</value>
+  </data>
+  <data name="Business.Hours.ColCloses" xml:space="preserve">
+    <value>Closes</value>
+  </data>
+  <data name="Business.Hours.ClosedAria" xml:space="preserve">
+    <value>Closed on {0}</value>
+  </data>
+  <data name="Business.Hours.OpensAria" xml:space="preserve">
+    <value>Opening time on {0}</value>
+  </data>
+  <data name="Business.Hours.ClosesAria" xml:space="preserve">
+    <value>Closing time on {0}</value>
+  </data>
+  <data name="Business.Hours.Save" xml:space="preserve">
+    <value>Save hours</value>
+  </data>
+  <data name="Business.Accessibility.Title" xml:space="preserve">
+    <value>Accessibility</value>
+  </data>
+  <data name="Business.Accessibility.Heading" xml:space="preserve">
+    <value>Accessibility</value>
+  </data>
+  <data name="Business.Accessibility.BackToProfile" xml:space="preserve">
+    <value>Back to business</value>
+  </data>
+  <data name="Business.Accessibility.FeaturesHeading" xml:space="preserve">
+    <value>Accessibility features</value>
+  </data>
+  <data name="Business.Accessibility.FeaturesHint" xml:space="preserve">
+    <value>Mark which features your venue offers. Saving replaces the full set.</value>
+  </data>
+  <data name="Business.Accessibility.Available" xml:space="preserve">
+    <value>Available</value>
+  </data>
+  <data name="Business.Accessibility.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Business.Accessibility.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Business.Accessibility.Save" xml:space="preserve">
+    <value>Save accessibility</value>
+  </data>
+  <data name="Business.Amenities.Title" xml:space="preserve">
+    <value>Amenities</value>
+  </data>
+  <data name="Business.Amenities.Heading" xml:space="preserve">
+    <value>Amenities</value>
+  </data>
+  <data name="Business.Amenities.BackToProfile" xml:space="preserve">
+    <value>Back to business</value>
+  </data>
+  <data name="Business.Amenities.AddHeading" xml:space="preserve">
+    <value>Add an amenity</value>
+  </data>
+  <data name="Business.Amenities.Name" xml:space="preserve">
+    <value>Amenity name</value>
+  </data>
+  <data name="Business.Amenities.Icon" xml:space="preserve">
+    <value>Icon (optional)</value>
+  </data>
+  <data name="Business.Amenities.IconHelp" xml:space="preserve">
+    <value>Optional Font Awesome icon class, e.g. fa-wifi.</value>
+  </data>
+  <data name="Business.Amenities.SortOrder" xml:space="preserve">
+    <value>Sort order</value>
+  </data>
+  <data name="Business.Amenities.Add" xml:space="preserve">
+    <value>Add amenity</value>
+  </data>
+  <data name="Business.Amenities.CurrentHeading" xml:space="preserve">
+    <value>Current amenities</value>
+  </data>
+  <data name="Business.Amenities.EmptyMsg" xml:space="preserve">
+    <value>No amenities added yet.</value>
+  </data>
+  <data name="Business.Amenities.ColAmenity" xml:space="preserve">
+    <value>Amenity</value>
+  </data>
+  <data name="Business.Amenities.ColOrder" xml:space="preserve">
+    <value>Order</value>
+  </data>
+  <data name="Business.Amenities.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Business.Amenities.Remove" xml:space="preserve">
+    <value>Remove {0}</value>
+  </data>
+  <data name="Business.Amenities.RemoveTitle" xml:space="preserve">
+    <value>Remove amenity?</value>
+  </data>
+  <data name="Business.Amenities.RemoveBody" xml:space="preserve">
+    <value>Remove "{0}"? This cannot be undone.</value>
+  </data>
+  <data name="Business.Amenities.RemoveConfirm" xml:space="preserve">
+    <value>Remove amenity</value>
+  </data>
+  <data name="Business.Amenities.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Business.Amenities.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Business.Services.Title" xml:space="preserve">
+    <value>Services</value>
+  </data>
+  <data name="Business.Services.Heading" xml:space="preserve">
+    <value>Services</value>
+  </data>
+  <data name="Business.Services.BackToProfile" xml:space="preserve">
+    <value>Back to business</value>
+  </data>
+  <data name="Business.Services.AddHeading" xml:space="preserve">
+    <value>Add a service</value>
+  </data>
+  <data name="Business.Services.Name" xml:space="preserve">
+    <value>Service name</value>
+  </data>
+  <data name="Business.Services.Price" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Business.Services.Currency" xml:space="preserve">
+    <value>Currency</value>
+  </data>
+  <data name="Business.Services.Duration" xml:space="preserve">
+    <value>Duration (minutes)</value>
+  </data>
+  <data name="Business.Services.MaxCapacity" xml:space="preserve">
+    <value>Max capacity</value>
+  </data>
+  <data name="Business.Services.Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="Business.Services.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Business.Services.SortOrder" xml:space="preserve">
+    <value>Sort order</value>
+  </data>
+  <data name="Business.Services.Add" xml:space="preserve">
+    <value>Add service</value>
+  </data>
+  <data name="Business.Services.CurrentHeading" xml:space="preserve">
+    <value>Current services</value>
+  </data>
+  <data name="Business.Services.EmptyMsg" xml:space="preserve">
+    <value>No services added yet.</value>
+  </data>
+  <data name="Business.Services.ColService" xml:space="preserve">
+    <value>Service</value>
+  </data>
+  <data name="Business.Services.ColPrice" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Business.Services.ColDuration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="Business.Services.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Business.Services.Minutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="Business.Services.Edit" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="Business.Services.Remove" xml:space="preserve">
+    <value>Remove {0}</value>
+  </data>
+  <data name="Business.Services.RemoveTitle" xml:space="preserve">
+    <value>Remove service?</value>
+  </data>
+  <data name="Business.Services.RemoveBody" xml:space="preserve">
+    <value>Remove "{0}"? This cannot be undone.</value>
+  </data>
+  <data name="Business.Services.RemoveConfirm" xml:space="preserve">
+    <value>Remove service</value>
+  </data>
+  <data name="Business.Services.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Business.Services.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Business.Services.BackToServices" xml:space="preserve">
+    <value>Back to services</value>
+  </data>
+  <data name="Business.Services.EditTitle" xml:space="preserve">
+    <value>Edit service</value>
+  </data>
+  <data name="Business.Services.EditHeading" xml:space="preserve">
+    <value>Edit service</value>
+  </data>
+  <data name="Business.Services.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Business.Services.Category.Food" xml:space="preserve">
+    <value>Food</value>
+  </data>
+  <data name="Business.Services.Category.Room" xml:space="preserve">
+    <value>Room</value>
+  </data>
+  <data name="Business.Services.Category.Ticket" xml:space="preserve">
+    <value>Ticket</value>
+  </data>
+  <data name="Business.Services.Category.Spa" xml:space="preserve">
+    <value>Spa</value>
+  </data>
+  <data name="Business.Services.Category.Rental" xml:space="preserve">
+    <value>Rental</value>
+  </data>
+  <data name="Business.Services.Category.Activity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="Business.Services.Category.Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Business.Staff.Title" xml:space="preserve">
+    <value>Staff</value>
+  </data>
+  <data name="Business.Staff.Heading" xml:space="preserve">
+    <value>Staff</value>
+  </data>
+  <data name="Business.Staff.BackToProfile" xml:space="preserve">
+    <value>Back to business</value>
+  </data>
+  <data name="Business.Staff.AddHeading" xml:space="preserve">
+    <value>Add a staff member</value>
+  </data>
+  <data name="Business.Staff.UserId" xml:space="preserve">
+    <value>User identifier</value>
+  </data>
+  <data name="Business.Staff.UserIdHelp" xml:space="preserve">
+    <value>Paste the user identifier of the person to add.</value>
+  </data>
+  <data name="Business.Staff.Role" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="Business.Staff.Add" xml:space="preserve">
+    <value>Add staff</value>
+  </data>
+  <data name="Business.Staff.CurrentHeading" xml:space="preserve">
+    <value>Current staff</value>
+  </data>
+  <data name="Business.Staff.EmptyMsg" xml:space="preserve">
+    <value>No staff added yet.</value>
+  </data>
+  <data name="Business.Staff.ColMember" xml:space="preserve">
+    <value>Member</value>
+  </data>
+  <data name="Business.Staff.ColRole" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="Business.Staff.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Business.Staff.StaffLabel" xml:space="preserve">
+    <value>Staff member #{0}</value>
+  </data>
+  <data name="Business.Staff.Remove" xml:space="preserve">
+    <value>Remove staff member</value>
+  </data>
+  <data name="Business.Staff.RemoveTitle" xml:space="preserve">
+    <value>Remove staff member?</value>
+  </data>
+  <data name="Business.Staff.RemoveBody" xml:space="preserve">
+    <value>Remove {0}? They will lose access to this business.</value>
+  </data>
+  <data name="Business.Staff.RemoveConfirm" xml:space="preserve">
+    <value>Remove staff</value>
+  </data>
+  <data name="Business.Staff.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Business.Staff.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Business.Staff.Role.Owner" xml:space="preserve">
+    <value>Owner</value>
+  </data>
+  <data name="Business.Staff.Role.Manager" xml:space="preserve">
+    <value>Manager</value>
+  </data>
+  <data name="Business.Staff.Role.Receptionist" xml:space="preserve">
+    <value>Receptionist</value>
+  </data>
+  <data name="Business.Staff.Role.Staff" xml:space="preserve">
+    <value>Staff</value>
+  </data>
 </root>

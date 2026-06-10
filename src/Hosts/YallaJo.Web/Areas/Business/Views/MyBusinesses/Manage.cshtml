@@ -1,53 +1,86 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Business.Models.MyBusinesses
 @using YallaJo.Web.Areas.Business.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @model ManageBusinessVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Business profile";
+    ViewData["Title"] = Localizer["Business.Manage.Title"].Value;
+    ViewData["BusinessNav"] = "Manage";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
+
+    var culture = CultureInfo.CurrentUICulture;
+    string Count(int n) => n.ToString("N0", culture);
+    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
+
+    var color = MyBusinessesMapper.StatusColor(Model.Status);
+    string StatusText(string s)
+    {
+        var v = Localizer["Business.Status." + s];
+        return v.ResourceNotFound ? s : v.Value;
+    }
+    string StatusIcon(string s) => s.ToLowerInvariant() switch
+    {
+        "approved" or "published" or "active" => "circle-check",
+        "pending" or "pendingreview" or "submitted" => "clock",
+        "rejected" => "circle-xmark",
+        "suspended" => "circle-pause",
+        "moredocsneeded" or "moreinfoneeded" => "circle-question",
+        "draft" => "pen-ruler",
+        _ => "circle-info",
+    };
 }
 
 <partial name="_BusinessSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container vstack gap-4">
-        <div class="row align-items-center">
-            <div class="col">
-                <a class="small text-body-secondary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">
-                    <i class="bi bi-arrow-left me-1"></i>All businesses
+        <div class="d-sm-flex justify-content-between align-items-start gap-3">
+            <div>
+                <a class="small text-body-secondary text-decoration-none" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">
+                    <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Business.Manage.BackToList"]
                 </a>
-                <h1 class="h3 mb-0 mt-1">@Model.Name</h1>
+                <h1 class="fs-4 mb-0 mt-1"><i class="fa-solid fa-shop me-2" aria-hidden="true"></i>@Model.Name</h1>
+                <p class="text-body-secondary small mb-0 mt-1">
+                    <bdi dir="ltr">@Model.Slug</bdi> · @Localizer["Business.Manage.CreatedOn"] <bdi dir="ltr">@Date(Model.CreatedAt)</bdi>
+                </p>
             </div>
-            <div class="col-auto">
-                <span class="badge bg-@MyBusinessesMapper.StatusColor(Model.Status)-soft text-@MyBusinessesMapper.StatusColor(Model.Status) fs-6">@Model.Status</span>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span class="badge bg-@color bg-opacity-10 text-@color">
+                    <i class="fa-solid fa-@StatusIcon(Model.Status) fa-fw" aria-hidden="true"></i> @StatusText(Model.Status)
+                </span>
+                @if (Model.IsVerified)
+                {
+                    <span class="badge bg-primary bg-opacity-10 text-primary">
+                        <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Business.Manage.Verified"]
+                    </span>
+                }
             </div>
         </div>
 
-        @if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
-        @if (TempData["Error"] is string err) { <div class="alert alert-danger">@err</div> }
+        @if (ViewBag.Error is string err) { <div class="alert alert-danger" role="alert">@err</div> }
 
-        @* §0.2 Place-contextual weather widget (renders only when data is available). *@
+        @* Place-contextual weather widget (renders only when data is available). *@
         @await Component.InvokeAsync("WeatherWidget", new { placeId = Model.Form.PlaceId })
 
         @if (Model.CanResubmit)
         {
             <div class="card border-danger">
-                <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div>
-                        <h6 class="mb-1 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>This business was rejected</h6>
+                        <h2 class="h6 mb-1 text-danger"><i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>@Localizer["Business.Manage.RejectedTitle"]</h2>
                         @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
                         {
-                            <p class="mb-0 text-body-secondary">Reason: @Model.RejectionReason</p>
+                            <p class="mb-1 text-body-secondary">@Localizer["Business.Manage.RejectedReason"] @Model.RejectionReason</p>
                         }
-                        <p class="mb-0 small text-body-secondary">Make any corrections below, then resubmit for review.</p>
+                        <p class="mb-0 small text-body-secondary">@Localizer["Business.Manage.RejectedHint"]</p>
                     </div>
                     <permission require="@WebPermission.Business.Submit">
-                        <form asp-area="Business" asp-controller="MyBusinesses" asp-action="Resubmit" asp-route-id="@Model.Id" method="post"
-                              onsubmit="return confirm('Resubmit this business for review?');">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-danger"><i class="bi bi-send me-1"></i>Resubmit for review</button>
-                        </form>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#resubmit-modal">
+                            <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Business.Manage.Resubmit"]
+                        </button>
                     </permission>
                 </div>
             </div>
@@ -56,122 +89,170 @@
         <div class="row g-4">
             <div class="col-sm-6 col-xl-3">
                 <div class="card card-body border h-100">
-                    <h6 class="text-body-secondary mb-1">Services</h6>
-                    <h4 class="mb-0">@Model.ServiceItemCount</h4>
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-info bg-opacity-10 rounded-3 text-info"><i class="fa-solid fa-list-check fs-5" aria-hidden="true"></i></div>
+                        <div class="ms-3">
+                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Count(Model.ServiceItemCount)</bdi></p>
+                            <a class="small text-decoration-none" asp-area="Business" asp-controller="Services" asp-action="Index" asp-route-id="@Model.Id">@Localizer["Business.Manage.ManageServices"]</a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-3">
                 <div class="card card-body border h-100">
-                    <h6 class="text-body-secondary mb-1">Staff</h6>
-                    <h4 class="mb-0">@Model.StaffCount</h4>
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-primary bg-opacity-10 rounded-3 text-primary"><i class="fa-solid fa-users fs-5" aria-hidden="true"></i></div>
+                        <div class="ms-3">
+                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Count(Model.StaffCount)</bdi></p>
+                            <a class="small text-decoration-none" asp-area="Business" asp-controller="Staff" asp-action="Index" asp-route-id="@Model.Id">@Localizer["Business.Manage.ManageStaff"]</a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-3">
                 <div class="card card-body border h-100">
-                    <h6 class="text-body-secondary mb-1">Amenities</h6>
-                    <h4 class="mb-0">@Model.AmenityCount</h4>
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-warning bg-opacity-10 rounded-3 text-warning"><i class="fa-solid fa-star fs-5" aria-hidden="true"></i></div>
+                        <div class="ms-3">
+                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Count(Model.AmenityCount)</bdi></p>
+                            <a class="small text-decoration-none" asp-area="Business" asp-controller="Amenities" asp-action="Index" asp-route-id="@Model.Id">@Localizer["Business.Manage.ManageAmenities"]</a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-3">
                 <div class="card card-body border h-100">
-                    <h6 class="text-body-secondary mb-1">Verified</h6>
-                    <h4 class="mb-0">@(Model.IsVerified ? "Yes" : "No")</h4>
+                    <div class="d-flex flex-column justify-content-center h-100 gap-2">
+                        <a class="btn btn-sm btn-primary-soft" asp-area="Business" asp-controller="Hours" asp-action="Index" asp-route-id="@Model.Id">
+                            <i class="fa-solid fa-clock me-1" aria-hidden="true"></i>@Localizer["Business.Manage.ManageHours"]
+                        </a>
+                        <a class="btn btn-sm btn-primary-soft" asp-area="Business" asp-controller="Accessibility" asp-action="Index" asp-route-id="@Model.Id">
+                            <i class="fa-solid fa-universal-access me-1" aria-hidden="true"></i>@Localizer["Business.Manage.ManageAccessibility"]
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
         <permission require="@WebPermission.Business.Update">
-            <div class="card border">
+            <section class="card shadow" aria-labelledby="biz-profile-heading">
                 <div class="card-header border-bottom">
-                    <h5 class="card-header-title mb-0">Business profile</h5>
+                    <h2 id="biz-profile-heading" class="card-header-title h5 mb-0">@Localizer["Business.Manage.ProfileHeading"]</h2>
                 </div>
                 <div class="card-body">
                     <form asp-area="Business" asp-controller="MyBusinesses" asp-action="Update" asp-route-id="@Model.Id" method="post">
                         @Html.AntiForgeryToken()
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                         <input type="hidden" asp-for="Form.Id" />
                         <input type="hidden" asp-for="Form.PlaceId" />
 
                         <div class="row g-3">
                             <div class="col-md-8">
-                                <label asp-for="Form.Name" class="form-label"></label>
+                                <label asp-for="Form.Name" class="form-label">@Localizer["Business.Register.Name"]</label>
                                 <input asp-for="Form.Name" class="form-control" />
-                                <span asp-validation-for="Form.Name" class="text-danger small"></span>
+                                <span asp-validation-for="Form.Name" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Type</label>
-                                <input class="form-control" value="@Model.BusinessType" disabled />
+                                <label class="form-label" for="biz-type-display">@Localizer["Business.Register.Type"]</label>
+                                <input id="biz-type-display" class="form-control" value="@Model.BusinessType" disabled />
                             </div>
 
                             <div class="col-12">
-                                <label asp-for="Form.Description" class="form-label"></label>
+                                <label asp-for="Form.Description" class="form-label">@Localizer["Business.Register.Description"]</label>
                                 <textarea asp-for="Form.Description" class="form-control" rows="3"></textarea>
-                                <span asp-validation-for="Form.Description" class="text-danger small"></span>
+                                <span asp-validation-for="Form.Description" class="text-danger small" role="alert"></span>
                             </div>
 
                             <div class="col-md-6">
-                                <label asp-for="Form.Address" class="form-label"></label>
+                                <label asp-for="Form.Address" class="form-label">@Localizer["Business.Register.Address"]</label>
                                 <input asp-for="Form.Address" class="form-control" />
                             </div>
                             <div class="col-md-3">
-                                <label asp-for="Form.City" class="form-label"></label>
+                                <label asp-for="Form.City" class="form-label">@Localizer["Business.Register.City"]</label>
                                 <input asp-for="Form.City" class="form-control" />
                             </div>
                             <div class="col-md-3">
-                                <label asp-for="Form.Country" class="form-label"></label>
+                                <label asp-for="Form.Country" class="form-label">@Localizer["Business.Register.Country"]</label>
                                 <input asp-for="Form.Country" class="form-control" />
                             </div>
 
                             <div class="col-md-3">
-                                <label asp-for="Form.Latitude" class="form-label"></label>
-                                <input asp-for="Form.Latitude" class="form-control" type="number" step="any" />
-                                <span asp-validation-for="Form.Latitude" class="text-danger small"></span>
+                                <label asp-for="Form.Latitude" class="form-label">@Localizer["Business.Register.Latitude"]</label>
+                                <input asp-for="Form.Latitude" class="form-control font-data" type="number" step="any" dir="ltr" />
+                                <span asp-validation-for="Form.Latitude" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-md-3">
-                                <label asp-for="Form.Longitude" class="form-label"></label>
-                                <input asp-for="Form.Longitude" class="form-control" type="number" step="any" />
-                                <span asp-validation-for="Form.Longitude" class="text-danger small"></span>
+                                <label asp-for="Form.Longitude" class="form-label">@Localizer["Business.Register.Longitude"]</label>
+                                <input asp-for="Form.Longitude" class="form-control font-data" type="number" step="any" dir="ltr" />
+                                <span asp-validation-for="Form.Longitude" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-md-3">
-                                <label asp-for="Form.Phone" class="form-label"></label>
-                                <input asp-for="Form.Phone" class="form-control" />
+                                <label asp-for="Form.Phone" class="form-label">@Localizer["Business.Register.Phone"]</label>
+                                <input asp-for="Form.Phone" class="form-control font-data" type="tel" dir="ltr" />
                             </div>
                             <div class="col-md-3">
-                                <label asp-for="Form.Email" class="form-label"></label>
-                                <input asp-for="Form.Email" class="form-control" />
-                                <span asp-validation-for="Form.Email" class="text-danger small"></span>
+                                <label asp-for="Form.Email" class="form-label">@Localizer["Business.Register.Email"]</label>
+                                <input asp-for="Form.Email" class="form-control font-data" type="email" dir="ltr" />
+                                <span asp-validation-for="Form.Email" class="text-danger small" role="alert"></span>
                             </div>
 
                             <div class="col-md-6">
-                                <label asp-for="Form.Website" class="form-label"></label>
-                                <input asp-for="Form.Website" class="form-control" />
+                                <label asp-for="Form.Website" class="form-label">@Localizer["Business.Register.Website"]</label>
+                                <input asp-for="Form.Website" class="form-control font-data" type="url" dir="ltr" />
                             </div>
 
-                            <div class="col-12 d-flex flex-wrap gap-4">
-                                <div class="form-check">
-                                    <input asp-for="Form.IsHalal" class="form-check-input" />
-                                    <label asp-for="Form.IsHalal" class="form-check-label"></label>
+                            <fieldset class="col-12">
+                                <legend class="form-label">@Localizer["Business.Register.DietaryLegend"]</legend>
+                                <div class="d-flex flex-wrap gap-4">
+                                    <div class="form-check">
+                                        <input asp-for="Form.IsHalal" class="form-check-input" />
+                                        <label asp-for="Form.IsHalal" class="form-check-label">@Localizer["Business.Register.IsHalal"]</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input asp-for="Form.HasVegetarianOptions" class="form-check-input" />
+                                        <label asp-for="Form.HasVegetarianOptions" class="form-check-label">@Localizer["Business.Register.Vegetarian"]</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input asp-for="Form.HasAlcoholFreeArea" class="form-check-input" />
+                                        <label asp-for="Form.HasAlcoholFreeArea" class="form-check-label">@Localizer["Business.Register.AlcoholFree"]</label>
+                                    </div>
                                 </div>
-                                <div class="form-check">
-                                    <input asp-for="Form.HasVegetarianOptions" class="form-check-input" />
-                                    <label asp-for="Form.HasVegetarianOptions" class="form-check-label"></label>
-                                </div>
-                                <div class="form-check">
-                                    <input asp-for="Form.HasAlcoholFreeArea" class="form-check-input" />
-                                    <label asp-for="Form.HasAlcoholFreeArea" class="form-check-label"></label>
-                                </div>
-                            </div>
+                            </fieldset>
                         </div>
 
-                        <div class="mt-3">
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save changes</button>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>@Localizer["Business.Manage.SaveChanges"]</button>
                         </div>
                     </form>
                 </div>
-            </div>
+            </section>
         </permission>
     </div>
 </section>
+
+@if (Model.CanResubmit)
+{
+    <permission require="@WebPermission.Business.Submit">
+        <div class="modal fade" id="resubmit-modal" tabindex="-1" aria-labelledby="resubmit-modal-title" aria-describedby="resubmit-modal-body" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form class="modal-content" role="dialog" aria-modal="true" aria-labelledby="resubmit-modal-title" asp-area="Business" asp-controller="MyBusinesses" asp-action="Resubmit" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="resubmit-modal-title">@Localizer["Business.Manage.ResubmitTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Business.Manage.Close"]"></button>
+                    </div>
+                    <div class="modal-body" id="resubmit-modal-body">
+                        <p class="mb-0">@Localizer["Business.Manage.ResubmitBody"]</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Business.Manage.Cancel"]</button>
+                        <button type="submit" class="btn btn-danger">@Localizer["Business.Manage.Resubmit"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

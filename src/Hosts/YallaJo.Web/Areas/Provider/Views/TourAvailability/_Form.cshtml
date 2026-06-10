@@ -1,7 +1,9 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Models.TourAvailability
 @model AvailabilitySlotFormVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 
-<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert" style="display:none"></div>
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
 <input type="hidden" asp-for="TourId" />
 <input type="hidden" asp-for="SlotId" />
@@ -10,28 +12,28 @@
 
 <div class="row g-3">
     <div class="col-md-4">
-        <label asp-for="Date" class="form-label"></label>
-        <input asp-for="Date" type="date" class="form-control" readonly="@Model.IsEdit" />
-        <span asp-validation-for="Date" class="text-danger small"></span>
+        <label asp-for="Date" class="form-label">@Localizer["Provider.TourAvailability.Date"]</label>
+        <input asp-for="Date" type="date" class="form-control" dir="ltr" readonly="@Model.IsEdit" />
+        <span asp-validation-for="Date" class="text-danger small" role="alert"></span>
     </div>
     <div class="col-md-4">
-        <label asp-for="StartTime" class="form-label"></label>
-        <input asp-for="StartTime" type="time" class="form-control" readonly="@Model.IsEdit" />
-        <span asp-validation-for="StartTime" class="text-danger small"></span>
+        <label asp-for="StartTime" class="form-label">@Localizer["Provider.TourAvailability.StartTime"]</label>
+        <input asp-for="StartTime" type="time" class="form-control" dir="ltr" readonly="@Model.IsEdit" />
+        <span asp-validation-for="StartTime" class="text-danger small" role="alert"></span>
     </div>
     <div class="col-md-4">
-        <label asp-for="EndTime" class="form-label"></label>
-        <input asp-for="EndTime" type="time" class="form-control" readonly="@Model.IsEdit" />
-        <span asp-validation-for="EndTime" class="text-danger small"></span>
+        <label asp-for="EndTime" class="form-label">@Localizer["Provider.TourAvailability.EndTime"]</label>
+        <input asp-for="EndTime" type="time" class="form-control" dir="ltr" readonly="@Model.IsEdit" />
+        <span asp-validation-for="EndTime" class="text-danger small" role="alert"></span>
     </div>
     <div class="col-md-4">
-        <label asp-for="MaxCapacity" class="form-label"></label>
-        <input asp-for="MaxCapacity" type="number" min="1" max="1000" class="form-control" />
-        <span asp-validation-for="MaxCapacity" class="text-danger small"></span>
+        <label asp-for="MaxCapacity" class="form-label">@Localizer["Provider.TourAvailability.Capacity"]</label>
+        <input asp-for="MaxCapacity" type="number" min="1" max="1000" class="form-control" dir="ltr" aria-describedby="capacity-help" />
+        <span asp-validation-for="MaxCapacity" class="text-danger small" role="alert"></span>
     </div>
 </div>
 
 @if (Model.IsEdit)
 {
-    <p class="text-muted small mt-3 mb-0">Only capacity can be changed after a slot is created. To change the date/time, remove this slot and add a new one.</p>
+    <p id="capacity-help" class="text-body-secondary small mt-3 mb-0">@Localizer["Provider.TourAvailability.EditNote"]</p>
 }

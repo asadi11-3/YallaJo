@@ -1,81 +1,128 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Business.Models.MyBusinesses
 @using YallaJo.Web.Areas.Business.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @model MyBusinessesVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "My Businesses";
+    ViewData["Title"] = Localizer["Business.MyBusinesses.Title"].Value;
+    ViewData["BusinessNav"] = "MyBusinesses";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
+
+    var culture = CultureInfo.CurrentUICulture;
+    string Rating(decimal r) => r.ToString("0.0", culture);
+    string Count(int n) => n.ToString("N0", culture);
+
+    string StatusText(string s)
+    {
+        var v = Localizer["Business.Status." + s];
+        return v.ResourceNotFound ? s : v.Value;
+    }
+    string StatusIcon(string s) => s.ToLowerInvariant() switch
+    {
+        "approved" or "published" or "active" => "circle-check",
+        "pending" or "pendingreview" or "submitted" => "clock",
+        "rejected" => "circle-xmark",
+        "suspended" => "circle-pause",
+        "moredocsneeded" or "moreinfoneeded" => "circle-question",
+        "draft" => "pen-ruler",
+        _ => "circle-info",
+    };
 }
 
 <partial name="_BusinessSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container vstack gap-4">
-        <div class="row align-items-center">
-            <div class="col">
-                <h1 class="h3 mb-1"><i class="bi bi-shop me-2"></i>My Businesses</h1>
-                <p class="text-body-secondary mb-0">Manage the businesses you own, edit their profiles, and resubmit rejected listings.</p>
+        <div class="d-sm-flex justify-content-between align-items-start gap-3">
+            <div>
+                <h1 class="fs-4 mb-1"><i class="fa-solid fa-shop me-2" aria-hidden="true"></i>@Localizer["Business.MyBusinesses.Heading"]</h1>
+                <p class="text-body-secondary mb-0">@Localizer["Business.MyBusinesses.Subtitle"]</p>
             </div>
             <permission require="@WebPermission.Business.Create">
-                <div class="col-auto">
-                    <a class="btn btn-primary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Register">
-                        <i class="bi bi-plus-circle me-1"></i>Register a business
-                    </a>
-                </div>
+                <a class="btn btn-primary flex-shrink-0" asp-area="Business" asp-controller="MyBusinesses" asp-action="Register">
+                    <i class="fa-solid fa-circle-plus me-1" aria-hidden="true"></i>@Localizer["Business.MyBusinesses.Register"]
+                </a>
             </permission>
         </div>
 
-        @if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
-        @if (TempData["Error"] is string err) { <div class="alert alert-danger">@err</div> }
+        @if (ViewBag.Error is string err) { <div class="alert alert-danger" role="alert">@err</div> }
 
         @if (!Model.HasBusinesses)
         {
             <div class="card card-body border text-center py-5">
-                <i class="bi bi-shop fs-1 d-block mb-2 text-body-secondary"></i>
-                <h6 class="mb-1">No businesses yet</h6>
-                <p class="text-body-secondary mb-3">You do not own any businesses on the platform.</p>
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3 mx-auto" />
+                <h2 class="h5 mb-1">@Localizer["Business.MyBusinesses.EmptyTitle"]</h2>
+                <p class="text-body-secondary mb-3">@Localizer["Business.MyBusinesses.EmptyMsg"]</p>
                 <permission require="@WebPermission.Business.Create">
-                    <a class="btn btn-primary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Register">
-                        <i class="bi bi-plus-circle me-1"></i>Register a business
-                    </a>
+                    <div>
+                        <a class="btn btn-primary-soft" asp-area="Business" asp-controller="MyBusinesses" asp-action="Register">
+                            <i class="fa-solid fa-circle-plus me-1" aria-hidden="true"></i>@Localizer["Business.MyBusinesses.Register"]
+                        </a>
+                    </div>
                 </permission>
             </div>
         }
         else
         {
-            <div class="card border">
+            <section class="card shadow" aria-labelledby="biz-list-heading">
+                <div class="card-header border-bottom">
+                    <h2 id="biz-list-heading" class="card-header-title h5 mb-0">@Localizer["Business.MyBusinesses.Directory"]</h2>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
+                        <caption class="visually-hidden">@Localizer["Business.MyBusinesses.TableCaption"]</caption>
                         <thead>
                             <tr>
-                                <th>Business</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                                <th>Location</th>
-                                <th class="text-end">Rating</th>
-                                <th class="text-end">Manage</th>
+                                <th scope="col">@Localizer["Business.MyBusinesses.ColBusiness"]</th>
+                                <th scope="col">@Localizer["Business.MyBusinesses.ColType"]</th>
+                                <th scope="col">@Localizer["Business.MyBusinesses.ColStatus"]</th>
+                                <th scope="col">@Localizer["Business.MyBusinesses.ColLocation"]</th>
+                                <th scope="col" class="text-end">@Localizer["Business.MyBusinesses.ColRating"]</th>
+                                <th scope="col" class="text-end">@Localizer["Business.MyBusinesses.ColActions"]</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var b in Model.Businesses)
                             {
+                                var color = MyBusinessesMapper.StatusColor(b.Status);
+                                var location = string.Join(", ", new[] { b.City, b.Country }.Where(x => !string.IsNullOrWhiteSpace(x)));
                                 <tr>
                                     <td>
                                         <span class="fw-semibold">@b.Name</span>
                                         @if (b.IsVerified)
                                         {
-                                            <i class="bi bi-patch-check-fill text-primary ms-1" title="Verified"></i>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary ms-1">
+                                                <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Business.MyBusinesses.Verified"]
+                                            </span>
                                         }
-                                        <div class="small text-body-secondary">@b.Slug</div>
+                                        <div class="small text-body-secondary"><bdi dir="ltr">@b.Slug</bdi></div>
                                     </td>
                                     <td>@b.BusinessType</td>
-                                    <td><span class="badge bg-@MyBusinessesMapper.StatusColor(b.Status)-soft text-@MyBusinessesMapper.StatusColor(b.Status)">@b.Status</span></td>
-                                    <td>@(string.Join(", ", new[] { b.City, b.Country }.Where(x => !string.IsNullOrWhiteSpace(x))))</td>
-                                    <td class="text-end">@b.AverageRating.ToString("0.0") <span class="text-body-secondary small">(@b.ReviewCount)</span></td>
+                                    <td>
+                                        <span class="badge bg-@color bg-opacity-10 text-@color">
+                                            <i class="fa-solid fa-@StatusIcon(b.Status) fa-fw" aria-hidden="true"></i> @StatusText(b.Status)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (string.IsNullOrWhiteSpace(location))
+                                        {
+                                            <span class="text-body-secondary">&mdash;</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@location</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <bdi dir="ltr" class="font-data">@Rating(b.AverageRating)</bdi>
+                                        <span class="text-body-secondary small">(<bdi dir="ltr">@Count(b.ReviewCount)</bdi>)</span>
+                                    </td>
                                     <td class="text-end">
                                         <a class="btn btn-sm btn-primary-soft" asp-area="Business" asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@b.Id">
-                                            <i class="bi bi-pencil-square me-1"></i>Manage
+                                            <i class="fa-solid fa-pen-to-square me-1" aria-hidden="true"></i>@Localizer["Business.MyBusinesses.Manage"]
                                         </a>
                                     </td>
                                 </tr>
@@ -83,7 +130,7 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </section>
         }
     </div>
 </section>

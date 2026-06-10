@@ -1,12 +1,19 @@
 @model YallaJo.Web.Areas.Provider.Models.Dashboard.DashboardVm
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Shared
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Provider Dashboard";
+    ViewData["Title"] = Localizer["Provider.Dashboard.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
 
+    var culture = CultureInfo.CurrentUICulture;
     string Money(decimal amount, string? currency) =>
-        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+        amount.ToString("N0", culture) + (string.IsNullOrWhiteSpace(currency) ? "" : " " + currency);
+    string Count(int n) => n.ToString("N0", culture);
+    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
+    string StatusLabel(string? s) => Localizer["Provider.Status." + (string.IsNullOrWhiteSpace(s) ? "Draft" : s)];
 }
 
 <partial name="_ProviderSidebar" model="sidebar" />
@@ -14,34 +21,40 @@
 <section class="pt-0">
     <div class="container vstack gap-4">
         <div class="d-sm-flex justify-content-between align-items-center">
-            <h1 class="fs-4 mb-0"><i class="bi bi-house-door me-2"></i>Dashboard</h1>
+            <h1 class="fs-4 mb-0"><i class="fa-solid fa-house me-2" aria-hidden="true"></i>@Localizer["Provider.Dashboard.Heading"]</h1>
             <a asp-area="Provider" asp-controller="Tours" asp-action="Create" class="btn btn-sm btn-primary mt-2 mt-sm-0">
-                <i class="bi bi-plus-lg me-1"></i>Add New Listing
+                <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.Dashboard.AddListing"]
             </a>
         </div>
 
-        @if (Model.Overview is { } overview)
+        @if (Model.Overview is not null)
         {
+            var overview = Model.Overview;
             <div class="card border">
                 <div class="card-body d-sm-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="mb-1">@overview.BusinessName</h5>
-                        <span class="badge @(overview.IsApproved ? "text-bg-success" : "text-bg-warning")">
-                            @(overview.IsApproved ? "Approved" : "Pending Review")
-                        </span>
-                        @if (overview.ReviewDeadline is { } deadline)
+                        <h2 class="h5 mb-1"><bdi>@overview.BusinessName</bdi></h2>
+                        @if (overview.IsApproved)
+                        {
+                            <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Provider.Dashboard.Approved"]</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-clock fa-fw" aria-hidden="true"></i> @Localizer["Provider.Dashboard.PendingReview"]</span>
+                        }
+                        @if (overview.ReviewDeadline is not null)
                         {
                             <span class="small text-body-secondary ms-2">
-                                <i class="bi bi-clock me-1"></i>Review by @deadline.ToString("d MMM yyyy")
+                                <i class="fa-solid fa-clock me-1" aria-hidden="true"></i>@Localizer["Provider.Dashboard.ReviewBy", Date(overview.ReviewDeadline.Value)]
                             </span>
                         }
                     </div>
                     <div class="mt-2 mt-sm-0 text-sm-end">
-                        <span class="small text-body-secondary d-block">@overview.TotalDocuments document(s)</span>
+                        <span class="small text-body-secondary d-block">@Localizer["Provider.Dashboard.DocumentsCount", Count(overview.TotalDocuments)]</span>
                         @if (overview.HasDocumentAlerts)
                         {
-                            <span class="badge text-bg-danger">
-                                <i class="bi bi-exclamation-triangle me-1"></i>@overview.ExpiredDocuments expired · @overview.ExpiringIn30DaysDocuments expiring soon
+                            <span class="badge bg-danger bg-opacity-10 text-danger">
+                                <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>@Localizer["Provider.Dashboard.DocAlerts", Count(overview.ExpiredDocuments), Count(overview.ExpiringIn30DaysDocuments)]
                             </span>
                         }
                     </div>
@@ -54,11 +67,11 @@
                 <div class="card card-body border h-100">
                     <div class="d-flex align-items-center">
                         <div class="icon-xl bg-success bg-opacity-10 rounded-3 text-success">
-                            <i class="bi bi-journals fs-5"></i>
+                            <i class="fa-solid fa-map fs-5" aria-hidden="true"></i>
                         </div>
                         <div class="ms-3">
-                            <h4 class="mb-0">@Model.TotalListings</h4>
-                            <span class="small text-body-secondary">Total Listings</span>
+                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Count(Model.TotalListings)</bdi></p>
+                            <span class="small text-body-secondary">@Localizer["Provider.Dashboard.TotalListings"]</span>
                         </div>
                     </div>
                 </div>
@@ -67,11 +80,11 @@
                 <div class="card card-body border h-100">
                     <div class="d-flex align-items-center">
                         <div class="icon-xl bg-info bg-opacity-10 rounded-3 text-info">
-                            <i class="bi bi-graph-up-arrow fs-5"></i>
+                            <i class="fa-solid fa-arrow-trend-up fs-5" aria-hidden="true"></i>
                         </div>
                         <div class="ms-3">
-                            <h4 class="mb-0">@Money(Model.NetEarnings, Model.EarningsCurrency)</h4>
-                            <span class="small text-body-secondary">Net Earnings</span>
+                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Money(Model.NetEarnings, Model.EarningsCurrency)</bdi></p>
+                            <span class="small text-body-secondary">@Localizer["Provider.Dashboard.NetEarnings"]</span>
                         </div>
                     </div>
                 </div>
@@ -80,11 +93,11 @@
                 <div class="card card-body border h-100">
                     <div class="d-flex align-items-center">
                         <div class="icon-xl bg-warning bg-opacity-10 rounded-3 text-warning">
-                            <i class="bi bi-bookmark-heart fs-5"></i>
+                            <i class="fa-solid fa-bookmark fs-5" aria-hidden="true"></i>
                         </div>
                         <div class="ms-3">
-                            <h4 class="mb-0">@Model.PaymentCount</h4>
-                            <span class="small text-body-secondary">Paid Bookings</span>
+                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Count(Model.PaymentCount)</bdi></p>
+                            <span class="small text-body-secondary">@Localizer["Provider.Dashboard.PaidBookings"]</span>
                         </div>
                     </div>
                 </div>
@@ -93,11 +106,11 @@
                 <div class="card card-body border h-100">
                     <div class="d-flex align-items-center">
                         <div class="icon-xl bg-primary bg-opacity-10 rounded-3 text-primary">
-                            <i class="bi bi-people fs-5"></i>
+                            <i class="fa-solid fa-users fs-5" aria-hidden="true"></i>
                         </div>
                         <div class="ms-3">
-                            <h4 class="mb-0">@Model.PendingJoinRequests</h4>
-                            <span class="small text-body-secondary">Pending Join Requests</span>
+                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Count(Model.PendingJoinRequests)</bdi></p>
+                            <span class="small text-body-secondary">@Localizer["Provider.Dashboard.PendingJoinRequests"]</span>
                         </div>
                     </div>
                 </div>
@@ -110,13 +123,13 @@
                 <div class="col-lg-6">
                     <div class="card border h-100">
                         <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                            <h5 class="card-header-title mb-0">Recent Listings</h5>
-                            <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-primary-soft">View all</a>
+                            <h2 class="card-header-title h5 mb-0">@Localizer["Provider.Dashboard.RecentListings"]</h2>
+                            <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-primary-soft">@Localizer["Provider.Dashboard.ViewAll"]</a>
                         </div>
                         <div class="card-body">
                             @if (Model.RecentListings.Count == 0)
                             {
-                                <p class="text-body-secondary small mb-0">No listings yet.</p>
+                                <p class="text-body-secondary small mb-0">@Localizer["Provider.Dashboard.NoListings"]</p>
                             }
                             else
                             {
@@ -125,10 +138,10 @@
                                     {
                                         <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                             <div>
-                                                <h6 class="mb-0">@listing.Name</h6>
-                                                <span class="small text-body-secondary">@Money(listing.BasePrice, listing.Currency) · @listing.CreatedAt.ToString("d MMM yyyy")</span>
+                                                <p class="fw-semibold mb-0"><bdi>@listing.Name</bdi></p>
+                                                <span class="small text-body-secondary"><bdi dir="ltr">@Money(listing.BasePrice, listing.Currency)</bdi> · <bdi dir="ltr">@Date(listing.CreatedAt)</bdi></span>
                                             </div>
-                                            <span class="badge text-bg-light">@(listing.Status ?? "Draft")</span>
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary">@StatusLabel(listing.Status)</span>
                                         </li>
                                     }
                                 </ul>
@@ -139,13 +152,13 @@
                 <div class="col-lg-6">
                     <div class="card border h-100">
                         <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                            <h5 class="card-header-title mb-0">Recent Join Requests</h5>
-                            <a asp-area="Provider" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-primary-soft">View all</a>
+                            <h2 class="card-header-title h5 mb-0">@Localizer["Provider.Dashboard.RecentJoinRequests"]</h2>
+                            <a asp-area="Provider" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-primary-soft">@Localizer["Provider.Dashboard.ViewAll"]</a>
                         </div>
                         <div class="card-body">
                             @if (Model.RecentJoinRequests.Count == 0)
                             {
-                                <p class="text-body-secondary small mb-0">No join requests yet.</p>
+                                <p class="text-body-secondary small mb-0">@Localizer["Provider.Dashboard.NoJoinRequests"]</p>
                             }
                             else
                             {
@@ -154,10 +167,17 @@
                                     {
                                         <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                             <div>
-                                                <h6 class="mb-0">@jr.ParticipantCount participant(s)</h6>
-                                                <span class="small text-body-secondary">@jr.CreatedAt.ToString("d MMM yyyy")@(string.IsNullOrWhiteSpace(jr.Message) ? "" : " · " + jr.Message)</span>
+                                                <p class="fw-semibold mb-0">@Localizer["Provider.Dashboard.Participants", Count(jr.ParticipantCount)]</p>
+                                                <span class="small text-body-secondary"><bdi dir="ltr">@Date(jr.CreatedAt)</bdi>@(string.IsNullOrWhiteSpace(jr.Message) ? "" : " · " + jr.Message)</span>
                                             </div>
-                                            <span class="badge @(jr.IsPending ? "text-bg-warning" : "text-bg-light")">@jr.Status</span>
+                                            @if (jr.IsPending)
+                                            {
+                                                <span class="badge bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-clock fa-fw" aria-hidden="true"></i> @StatusLabel(jr.Status)</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary">@StatusLabel(jr.Status)</span>
+                                            }
                                         </li>
                                     }
                                 </ul>
@@ -171,11 +191,11 @@
         {
             <div class="card border">
                 <div class="card-body text-center py-5">
-                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="">
-                    <h5>Your provider workspace is ready</h5>
-                    <p class="text-body-secondary mb-3">Create your first tour listing to start receiving bookings.</p>
+                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                    <h2 class="h5">@Localizer["Provider.Dashboard.EmptyTitle"]</h2>
+                    <p class="text-body-secondary mb-3">@Localizer["Provider.Dashboard.EmptyMsg"]</p>
                     <a asp-area="Provider" asp-controller="Tours" asp-action="Create" class="btn btn-primary">
-                        <i class="bi bi-plus-lg me-1"></i>Add New Listing
+                        <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.Dashboard.AddListing"]
                     </a>
                 </div>
             </div>
@@ -189,7 +209,7 @@
                     <div class="col-lg-6">
                         <div class="card border h-100">
                             <div class="card-header border-bottom">
-                                <h5 class="card-header-title mb-0"><i class="bi bi-list-check me-2"></i>Pending Actions</h5>
+                                <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-list-check me-2" aria-hidden="true"></i>@Localizer["Provider.Dashboard.PendingActions"]</h2>
                             </div>
                             <div class="card-body">
                                 <ul class="list-group list-group-borderless">
@@ -198,12 +218,12 @@
                                         <li class="list-group-item px-0">
                                             <div class="d-flex justify-content-between align-items-start">
                                                 <div>
-                                                    <h6 class="mb-0">@action.ActionType</h6>
+                                                    <p class="fw-semibold mb-0">@action.ActionType</p>
                                                     <span class="small text-body-secondary">@action.Description</span>
                                                 </div>
-                                                @if (action.Deadline is { } actionDeadline)
+                                                @if (action.Deadline is not null)
                                                 {
-                                                    <span class="badge text-bg-warning ms-2">@actionDeadline.ToString("d MMM")</span>
+                                                    <span class="badge bg-warning bg-opacity-10 text-warning ms-2"><bdi dir="ltr">@action.Deadline.Value.ToString("d MMM", culture)</bdi></span>
                                                 }
                                             </div>
                                         </li>
@@ -218,15 +238,15 @@
                     <div class="col-lg-6">
                         <div class="card border h-100">
                             <div class="card-header border-bottom">
-                                <h5 class="card-header-title mb-0"><i class="bi bi-bell me-2"></i>Notifications</h5>
+                                <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-bell me-2" aria-hidden="true"></i>@Localizer["Provider.Dashboard.Notifications"]</h2>
                             </div>
                             <div class="card-body">
                                 <ul class="list-group list-group-borderless">
                                     @foreach (var note in Model.Notifications)
                                     {
                                         <li class="list-group-item px-0 @(note.IsRead ? "text-body-secondary" : "")">
-                                            <h6 class="mb-0 @(note.IsRead ? "fw-normal" : "")">@note.Title</h6>
-                                            <span class="small text-body-secondary">@note.Description · @note.OccurredAt.ToString("d MMM yyyy HH:mm")</span>
+                                            <p class="mb-0 @(note.IsRead ? "fw-normal" : "fw-semibold")">@note.Title</p>
+                                            <span class="small text-body-secondary">@note.Description · <bdi dir="ltr">@note.OccurredAt.ToString("d MMM yyyy HH:mm", culture)</bdi></span>
                                         </li>
                                     }
                                 </ul>

@@ -1,40 +1,47 @@
-@model YallaJo.Web.Areas.Provider.Models.TourSchedules.TourScheduleFormVm
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Provider.Models.TourSchedules
+@model TourScheduleFormVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+
+<input type="hidden" asp-for="TourId" />
+<input type="hidden" asp-for="ScheduleId" />
+<input type="hidden" asp-for="IsEdit" />
 
 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
 <div class="row g-3">
-    <div class="col-md-4">
-        <label asp-for="DayOfWeek" class="form-label"></label>
+    <div class="col-md-6">
+        <label asp-for="DayOfWeek" class="form-label">@Localizer["Provider.TourSchedules.Form.DayOfWeek"]</label>
         <select asp-for="DayOfWeek" class="form-select">
-            @foreach (var (value, label) in YallaJo.Web.Areas.Provider.Models.TourSchedules.TourScheduleFormVm.DayOptions)
+            @foreach (var day in TourScheduleFormVm.DayOptions)
             {
-                <option value="@value">@label</option>
+                <option value="@day.Value">@Localizer["Provider.TourSchedules.Day." + day.Label]</option>
             }
         </select>
-        <span asp-validation-for="DayOfWeek" class="text-danger small"></span>
+        <span asp-validation-for="DayOfWeek" class="text-danger small" role="alert"></span>
     </div>
 
-    <div class="col-md-4">
-        <label asp-for="StartTime" class="form-label"></label>
-        <input asp-for="StartTime" type="time" class="form-control" />
-        <span asp-validation-for="StartTime" class="text-danger small"></span>
+    <div class="col-md-3">
+        <label asp-for="StartTime" class="form-label">@Localizer["Provider.TourSchedules.Form.StartTime"]</label>
+        <input asp-for="StartTime" type="time" class="form-control font-data" dir="ltr" />
+        <span asp-validation-for="StartTime" class="text-danger small" role="alert"></span>
     </div>
 
-    <div class="col-md-4">
-        <label asp-for="EndTime" class="form-label"></label>
-        <input asp-for="EndTime" type="time" class="form-control" />
-        <span asp-validation-for="EndTime" class="text-danger small"></span>
-        <div class="form-text">Optional. If set, must be after the start time.</div>
+    <div class="col-md-3">
+        <label asp-for="EndTime" class="form-label">@Localizer["Provider.TourSchedules.Form.EndTime"]</label>
+        <input asp-for="EndTime" type="time" class="form-control font-data" dir="ltr" aria-describedby="schedule-end-help" />
+        <div id="schedule-end-help" class="form-text">@Localizer["Provider.TourSchedules.Form.EndTimeHelp"]</div>
+        <span asp-validation-for="EndTime" class="text-danger small" role="alert"></span>
     </div>
 
     @if (Model.IsEdit)
     {
-        <div class="col-md-12">
+        <div class="col-12">
             <div class="form-check">
-                <input asp-for="IsActive" class="form-check-input" />
-                <label asp-for="IsActive" class="form-check-label"></label>
+                <input asp-for="IsActive" class="form-check-input" aria-describedby="schedule-active-help" />
+                <label asp-for="IsActive" class="form-check-label">@Localizer["Provider.TourSchedules.Form.IsActive"]</label>
             </div>
-            <div class="form-text">A listing must keep at least one active schedule to be submitted.</div>
+            <div id="schedule-active-help" class="form-text">@Localizer["Provider.TourSchedules.Form.IsActiveHelp"]</div>
         </div>
     }
 </div>

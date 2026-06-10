@@ -1,109 +1,115 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Provider.Models.TourAvailability
 @using YallaJo.Web.Areas.Provider.Shared
 @model TourAvailabilityIndexVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = $"Availability — {Model.TourName}";
+    ViewData["Title"] = Localizer["Provider.TourAvailability.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
+    var culture = CultureInfo.CurrentUICulture;
+    string Count(int n) => n.ToString("N0", culture);
 }
 
-<partial name="_ProviderSidebar" model="@(new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" })" />
+<partial name="_ProviderSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container vstack gap-4">
         <div class="d-sm-flex justify-content-between align-items-center">
             <div>
-                <h1 class="fs-4 mb-0"><i class="bi bi-calendar2-week me-2"></i>Availability</h1>
-                <span class="small text-body-secondary"><bdi>@Model.TourName</bdi>@(string.IsNullOrWhiteSpace(Model.TourStatusLabel) ? "" : $" · {Model.TourStatusLabel}")</span>
+                <h1 class="fs-4 mb-0"><i class="fa-solid fa-calendar-week me-2" aria-hidden="true"></i>@Localizer["Provider.TourAvailability.Heading"]</h1>
+                <span class="small text-body-secondary"><bdi dir="ltr">@Model.TourName</bdi>@(string.IsNullOrWhiteSpace(Model.TourStatusLabel) ? "" : $" · {Model.TourStatusLabel}")</span>
             </div>
             <div class="mt-2 mt-sm-0 d-flex gap-2">
                 <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
-                   class="btn btn-sm btn-secondary-soft"><i class="bi bi-arrow-left me-1"></i>Back to listing</a>
+                   class="btn btn-sm btn-secondary-soft"><i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.TourAvailability.BackToListing"]</a>
                 <permission require="@WebPermission.AvailabilitySlot.Create">
                     <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Create" asp-route-id="@Model.TourId"
-                       class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add slot</a>
+                       class="btn btn-sm btn-primary"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourAvailability.AddSlot"]</a>
                     <button type="button" class="btn btn-sm btn-primary-soft" data-bs-toggle="collapse" data-bs-target="#bulk-slots"
-                            aria-expanded="false" aria-controls="bulk-slots"><i class="bi bi-calendar-plus me-1"></i>Bulk add</button>
+                            aria-expanded="false" aria-controls="bulk-slots"><i class="fa-solid fa-calendar-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourAvailability.BulkAdd"]</button>
                 </permission>
             </div>
         </div>
 
-    <div class="alert alert-info">
-        Availability slots are the specific dates &amp; times travelers can book. The guide is assigned automatically for this version.
-    </div>
+        <div class="alert alert-info" role="status">
+            <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>@Localizer["Provider.TourAvailability.Intro"]
+        </div>
 
-    <permission require="@WebPermission.AvailabilitySlot.Create">
-        <div class="collapse mb-3" id="bulk-slots">
-            <div class="card border">
-                <div class="card-header border-bottom"><h2 class="h6 mb-0">Add recurring slots</h2></div>
-                <div class="card-body">
-                    <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Bulk" asp-route-id="@Model.TourId" method="post" class="row g-3">
-                        @Html.AntiForgeryToken()
-                        <div class="col-md-3">
-                            <label class="form-label" for="bulk-start">Start date</label>
-                            <input id="bulk-start" name="StartDate" type="date" class="form-control" required />
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label" for="bulk-end">End date</label>
-                            <input id="bulk-end" name="EndDate" type="date" class="form-control" required />
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label" for="bulk-rec">Recurrence</label>
-                            <select id="bulk-rec" name="Recurrence" class="form-select">
-                                @foreach (var r in BulkAvailabilitySlotFormVm.RecurrenceOptions)
-                                {
-                                    <option value="@r">@r</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label" for="bulk-cap">Capacity per slot</label>
-                            <input id="bulk-cap" name="MaxCapacity" type="number" min="1" value="1" class="form-control" required />
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label" for="bulk-stime">Start time</label>
-                            <input id="bulk-stime" name="StartTime" type="time" class="form-control" dir="ltr" required />
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label" for="bulk-etime">End time</label>
-                            <input id="bulk-etime" name="EndTime" type="time" class="form-control" dir="ltr" required />
-                        </div>
-                        <div class="col-md-6">
-                            <span class="form-label d-block">Days of week <span class="text-body-secondary small">(used when recurrence is Custom)</span></span>
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach (var (val, label) in BulkAvailabilitySlotFormVm.DayOptions)
-                                {
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="DaysOfWeek" value="@val" id="day-@val" />
-                                        <label class="form-check-label" for="day-@val">@label</label>
-                                    </div>
-                                }
+        <permission require="@WebPermission.AvailabilitySlot.Create">
+            <div class="collapse" id="bulk-slots">
+                <div class="card border">
+                    <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.TourAvailability.BulkHeading"]</h2></div>
+                    <div class="card-body">
+                        <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Bulk" asp-route-id="@Model.TourId" method="post" class="row g-3">
+                            @Html.AntiForgeryToken()
+                            <div class="col-md-3">
+                                <label class="form-label" for="bulk-start">@Localizer["Provider.TourAvailability.StartDate"]</label>
+                                <input id="bulk-start" name="StartDate" type="date" class="form-control" dir="ltr" required />
                             </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check">
-                                <input type="hidden" name="SkipExisting" value="false" />
-                                <input class="form-check-input" type="checkbox" name="SkipExisting" value="true" id="bulk-skip" checked />
-                                <label class="form-check-label" for="bulk-skip">Skip dates that already have a slot</label>
+                            <div class="col-md-3">
+                                <label class="form-label" for="bulk-end">@Localizer["Provider.TourAvailability.EndDate"]</label>
+                                <input id="bulk-end" name="EndDate" type="date" class="form-control" dir="ltr" required />
                             </div>
-                        </div>
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-primary">Generate slots</button>
-                        </div>
-                    </form>
+                            <div class="col-md-3">
+                                <label class="form-label" for="bulk-rec">@Localizer["Provider.TourAvailability.Recurrence"]</label>
+                                <select id="bulk-rec" name="Recurrence" class="form-select">
+                                    @foreach (var r in BulkAvailabilitySlotFormVm.RecurrenceOptions)
+                                    {
+                                        <option value="@r">@Localizer["Provider.TourAvailability.Recurrence." + r]</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" for="bulk-cap">@Localizer["Provider.TourAvailability.CapacityPerSlot"]</label>
+                                <input id="bulk-cap" name="MaxCapacity" type="number" min="1" value="1" class="form-control" dir="ltr" required />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" for="bulk-stime">@Localizer["Provider.TourAvailability.StartTime"]</label>
+                                <input id="bulk-stime" name="StartTime" type="time" class="form-control" dir="ltr" required />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" for="bulk-etime">@Localizer["Provider.TourAvailability.EndTime"]</label>
+                                <input id="bulk-etime" name="EndTime" type="time" class="form-control" dir="ltr" required />
+                            </div>
+                            <div class="col-md-6">
+                                <span class="form-label d-block" id="bulk-days-label">@Localizer["Provider.TourAvailability.DaysOfWeek"] <span class="text-body-secondary small">@Localizer["Provider.TourAvailability.DaysHint"]</span></span>
+                                <div class="d-flex flex-wrap gap-2" role="group" aria-labelledby="bulk-days-label">
+                                    @foreach (var (val, label) in BulkAvailabilitySlotFormVm.DayOptions)
+                                    {
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" name="DaysOfWeek" value="@val" id="day-@val" />
+                                            <label class="form-check-label" for="day-@val">@Localizer["Provider.TourAvailability.Day." + val]</label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input type="hidden" name="SkipExisting" value="false" />
+                                    <input class="form-check-input" type="checkbox" name="SkipExisting" value="true" id="bulk-skip" checked />
+                                    <label class="form-check-label" for="bulk-skip">@Localizer["Provider.TourAvailability.SkipExisting"]</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">@Localizer["Provider.TourAvailability.Generate"]</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-    </permission>
+        </permission>
 
         @if (!Model.HasSlots)
         {
             <div class="card border">
                 <div class="card-body text-center py-5">
-                    <i class="bi bi-calendar2-week fs-1 text-body-secondary d-block mb-2" aria-hidden="true"></i>
-                    <h2 class="h6 mb-1">No availability slots yet</h2>
-                    <p class="text-body-secondary mb-0">Add a slot (or bulk-add recurring slots) so travelers can book this tour.</p>
+                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                    <h2 class="h5 mb-1">@Localizer["Provider.TourAvailability.EmptyTitle"]</h2>
+                    <p class="text-body-secondary mb-0">@Localizer["Provider.TourAvailability.EmptyMsg"]</p>
                 </div>
             </div>
         }
@@ -112,33 +118,33 @@
             <div class="card border">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <caption class="visually-hidden">Bookable availability slots</caption>
+                        <caption class="visually-hidden">@Localizer["Provider.TourAvailability.TableCaption"]</caption>
                         <thead class="table-light">
                             <tr>
-                                <th scope="col">Date</th>
-                                <th scope="col">Time</th>
-                                <th scope="col" class="text-end">Capacity</th>
-                                <th scope="col" class="text-end">Available</th>
-                                <th scope="col">Status</th>
-                                <th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th>
+                                <th scope="col">@Localizer["Provider.TourAvailability.ColDate"]</th>
+                                <th scope="col">@Localizer["Provider.TourAvailability.ColTime"]</th>
+                                <th scope="col" class="text-end">@Localizer["Provider.TourAvailability.ColCapacity"]</th>
+                                <th scope="col" class="text-end">@Localizer["Provider.TourAvailability.ColAvailable"]</th>
+                                <th scope="col">@Localizer["Provider.TourAvailability.ColStatus"]</th>
+                                <th scope="col" class="text-end"><span class="visually-hidden">@Localizer["Provider.TourAvailability.ColActions"]</span></th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var s in Model.Slots)
                             {
                                 <tr>
-                                    <td class="fw-semibold">@s.DateLabel</td>
-                                    <td><span dir="ltr">@s.StartTime – @s.EndTime</span></td>
-                                    <td class="text-end">@s.MaxCapacity</td>
-                                    <td class="text-end">@s.AvailableCount</td>
+                                    <td class="fw-semibold"><bdi dir="ltr" class="font-data">@s.DateLabel</bdi></td>
+                                    <td><bdi dir="ltr" class="font-data">@s.StartTime – @s.EndTime</bdi></td>
+                                    <td class="text-end"><bdi dir="ltr" class="font-data">@Count(s.MaxCapacity)</bdi></td>
+                                    <td class="text-end"><bdi dir="ltr" class="font-data">@Count(s.AvailableCount)</bdi></td>
                                     <td>
                                         @if (s.IsActive)
                                         {
-                                            <span class="badge text-bg-success"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>Active</span>
+                                            <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check fa-fw me-1" aria-hidden="true"></i>@Localizer["Provider.TourAvailability.Active"]</span>
                                         }
                                         else
                                         {
-                                            <span class="badge text-bg-secondary"><i class="bi bi-slash-circle me-1" aria-hidden="true"></i>Inactive</span>
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-circle-minus fa-fw me-1" aria-hidden="true"></i>@Localizer["Provider.TourAvailability.Inactive"]</span>
                                         }
                                     </td>
                                     <td class="text-end">
@@ -146,16 +152,11 @@
                                             <permission require="@WebPermission.AvailabilitySlot.Update">
                                                 <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Edit"
                                                    asp-route-id="@Model.TourId" asp-route-slotId="@s.Id"
-                                                   class="btn btn-sm btn-outline-secondary" aria-label="Edit slot"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                                                   class="btn btn-sm btn-outline-secondary" aria-label="@Localizer["Provider.TourAvailability.EditSlot"]"><i class="fa-solid fa-pen" aria-hidden="true"></i></a>
                                             </permission>
                                             <permission require="@WebPermission.AvailabilitySlot.Delete">
-                                                <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Delete"
-                                                      asp-route-id="@Model.TourId" asp-route-slotId="@s.Id"
-                                                      method="post" class="d-inline"
-                                                      onsubmit="return confirm('Remove this slot?');">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="Remove slot"><i class="bi bi-trash" aria-hidden="true"></i></button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#delete-slot-@s.Id"
+                                                        aria-label="@Localizer["Provider.TourAvailability.RemoveSlot"]"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
                                             </permission>
                                         </div>
                                     </td>
@@ -168,3 +169,36 @@
         }
     </div>
 </section>
+
+@if (Model.HasSlots)
+{
+    <permission require="@WebPermission.AvailabilitySlot.Delete">
+        @foreach (var s in Model.Slots)
+        {
+            <div class="modal fade" id="delete-slot-@s.Id" tabindex="-1" aria-labelledby="delete-slot-title-@s.Id" aria-describedby="delete-slot-body-@s.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-slotId="@s.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                        @Html.AntiForgeryToken()
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="delete-slot-title-@s.Id">@Localizer["Provider.TourAvailability.DeleteTitle"]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourAvailability.Close"]"></button>
+                        </div>
+                        <div class="modal-body" id="delete-slot-body-@s.Id">
+                            <p class="mb-0">@Localizer["Provider.TourAvailability.DeleteBody", s.DateLabel]</p>
+                            @if (s.HasHeldSeats)
+                            {
+                                <div class="alert alert-warning mt-3 mb-0" role="alert">
+                                    <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>@Localizer["Provider.TourAvailability.DeleteHeldWarning"]
+                                </div>
+                            }
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary-soft" data-bs-dismiss="modal">@Localizer["Provider.TourAvailability.Cancel"]</button>
+                            <button type="submit" class="btn btn-danger">@Localizer["Provider.TourAvailability.DeleteConfirm"]</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </permission>
+}

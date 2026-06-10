@@ -1,8 +1,10 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Business.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Business.Models.Amenities.AmenitiesVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Amenities";
+    ViewData["Title"] = Localizer["Business.Amenities.Title"].Value;
     ViewData["BusinessNav"] = "Amenities";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
@@ -14,55 +16,53 @@
     <div class="container">
         <div class="row g-4">
             <div class="col-lg-8 col-xl-9">
-                @if (TempData["Success"] is string ok)
+                @if (ViewBag.Error is string err)
                 {
-                    <div class="alert alert-success">@ok</div>
-                }
-                @if (TempData["Error"] is string err)
-                {
-                    <div class="alert alert-danger">@err</div>
+                    <div class="alert alert-danger" role="alert">@err</div>
                 }
 
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h1 class="h3 mb-1">Amenities</h1>
-                        <p class="text-muted mb-0">@Model.BusinessName</p>
+                        <h1 class="fs-4 mb-1">
+                            <i class="fa-solid fa-star me-2" aria-hidden="true"></i>@Localizer["Business.Amenities.Heading"]
+                        </h1>
+                        <p class="text-body-secondary mb-0"><bdi dir="ltr">@Model.BusinessName</bdi></p>
                     </div>
-                    <a class="btn btn-sm btn-outline-secondary"
-                       asp-area="Business" asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@Model.BusinessId">
-                        <i class="bi bi-arrow-left me-1"></i>Back to business
+                    <a class="btn btn-sm btn-outline-secondary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@Model.BusinessId">
+                        <i class="fa-solid fa-arrow-left fa-fw me-1" aria-hidden="true"></i>@Localizer["Business.Amenities.BackToProfile"]
                     </a>
                 </div>
 
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
                 <div class="row g-4">
                     <permission require="@WebPermission.BusinessAmenity.Create">
                         <div class="col-lg-5">
-                            <div class="card border h-100">
+                            <div class="card shadow h-100">
                                 <div class="card-header border-bottom">
-                                    <h5 class="card-header-title mb-0">Add an amenity</h5>
+                                    <h2 class="card-header-title h5 mb-0">@Localizer["Business.Amenities.AddHeading"]</h2>
                                 </div>
                                 <div class="card-body">
                                     <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post">
                                         @Html.AntiForgeryToken()
                                         <div class="mb-3">
-                                            <label asp-for="Form.Name" class="form-label"></label>
+                                            <label asp-for="Form.Name" class="form-label">@Localizer["Business.Amenities.Name"]</label>
                                             <input asp-for="Form.Name" class="form-control" />
-                                            <span asp-validation-for="Form.Name" class="text-danger small"></span>
+                                            <span asp-validation-for="Form.Name" class="text-danger small" role="alert"></span>
                                         </div>
                                         <div class="mb-3">
-                                            <label asp-for="Form.Icon" class="form-label"></label>
-                                            <input asp-for="Form.Icon" class="form-control" placeholder="bi-wifi" />
-                                            <span asp-validation-for="Form.Icon" class="text-danger small"></span>
+                                            <label asp-for="Form.Icon" class="form-label">@Localizer["Business.Amenities.Icon"]</label>
+                                            <input asp-for="Form.Icon" class="form-control" dir="ltr" placeholder="fa-wifi" aria-describedby="amenity-icon-help" />
+                                            <div id="amenity-icon-help" class="form-text">@Localizer["Business.Amenities.IconHelp"]</div>
+                                            <span asp-validation-for="Form.Icon" class="text-danger small" role="alert"></span>
                                         </div>
                                         <div class="mb-3">
-                                            <label asp-for="Form.SortOrder" class="form-label"></label>
-                                            <input asp-for="Form.SortOrder" class="form-control" type="number" min="0" />
-                                            <span asp-validation-for="Form.SortOrder" class="text-danger small"></span>
+                                            <label asp-for="Form.SortOrder" class="form-label">@Localizer["Business.Amenities.SortOrder"]</label>
+                                            <input asp-for="Form.SortOrder" class="form-control" type="number" min="0" dir="ltr" />
+                                            <span asp-validation-for="Form.SortOrder" class="text-danger small" role="alert"></span>
                                         </div>
-                                        <button type="submit" class="btn btn-primary-soft">
-                                            <i class="bi bi-plus-lg me-1"></i>Add amenity
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Business.Amenities.Add"]
                                         </button>
                                     </form>
                                 </div>
@@ -71,28 +71,29 @@
                     </permission>
 
                     <div class="col-lg-7">
-                        <div class="card border h-100">
+                        <div class="card shadow h-100">
                             <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                                <h5 class="card-header-title mb-0">Current amenities</h5>
-                                <span class="badge bg-primary bg-opacity-10 text-primary">@Model.Amenities.Count</span>
+                                <h2 class="card-header-title h5 mb-0">@Localizer["Business.Amenities.CurrentHeading"]</h2>
+                                <span class="badge bg-primary bg-opacity-10 text-primary"><bdi dir="ltr">@Model.Amenities.Count</bdi></span>
                             </div>
                             <div class="card-body">
                                 @if (!Model.HasAmenities)
                                 {
-                                    <div class="text-center text-body-secondary py-4">
-                                        <i class="bi bi-stars fs-1 d-block mb-2"></i>
-                                        No amenities added yet.
+                                    <div class="text-center py-5">
+                                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                                        <p class="mb-0 text-body-secondary">@Localizer["Business.Amenities.EmptyMsg"]</p>
                                     </div>
                                 }
                                 else
                                 {
                                     <div class="table-responsive">
                                         <table class="table table-hover align-middle mb-0">
+                                            <caption class="visually-hidden">@Localizer["Business.Amenities.CurrentHeading"]</caption>
                                             <thead>
                                                 <tr>
-                                                    <th>Amenity</th>
-                                                    <th>Order</th>
-                                                    <th class="text-end">Actions</th>
+                                                    <th scope="col">@Localizer["Business.Amenities.ColAmenity"]</th>
+                                                    <th scope="col" class="text-end">@Localizer["Business.Amenities.ColOrder"]</th>
+                                                    <th scope="col" class="text-end">@Localizer["Business.Amenities.ColActions"]</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -102,21 +103,17 @@
                                                         <td>
                                                             @if (!string.IsNullOrWhiteSpace(item.Icon))
                                                             {
-                                                                <i class="bi @item.Icon me-2"></i>
+                                                                <i class="fa-solid @item.Icon me-2" aria-hidden="true"></i>
                                                             }
-                                                            @item.Name
+                                                            <span class="fw-semibold">@item.Name</span>
                                                         </td>
-                                                        <td>@item.SortOrder</td>
+                                                        <td class="text-end"><bdi dir="ltr" class="font-data">@item.SortOrder</bdi></td>
                                                         <td class="text-end">
                                                             <permission require="@WebPermission.BusinessAmenity.Delete">
-                                                                <form asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-amenityId="@item.Id"
-                                                                      method="post" class="d-inline"
-                                                                      onsubmit="return confirm('Remove this amenity?');">
-                                                                    @Html.AntiForgeryToken()
-                                                                    <button type="submit" class="btn btn-sm btn-danger-soft">
-                                                                        <i class="bi bi-trash"></i>
-                                                                    </button>
-                                                                </form>
+                                                                <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#remove-amenity-@item.Id">
+                                                                    <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
+                                                                    <span class="visually-hidden">@Localizer["Business.Amenities.Remove", item.Name]</span>
+                                                                </button>
                                                             </permission>
                                                         </td>
                                                     </tr>
@@ -133,6 +130,33 @@
         </div>
     </div>
 </section>
+
+@if (Model.HasAmenities)
+{
+    <permission require="@WebPermission.BusinessAmenity.Delete">
+        @foreach (var item in Model.Amenities)
+        {
+            <div class="modal fade" id="remove-amenity-@item.Id" tabindex="-1" aria-labelledby="remove-amenity-title-@item.Id" aria-describedby="remove-amenity-body-@item.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-amenityId="@item.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                        @Html.AntiForgeryToken()
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="remove-amenity-title-@item.Id">@Localizer["Business.Amenities.RemoveTitle"]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Business.Amenities.Close"]"></button>
+                        </div>
+                        <div class="modal-body" id="remove-amenity-body-@item.Id">
+                            @Localizer["Business.Amenities.RemoveBody", item.Name]
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Business.Amenities.Cancel"]</button>
+                            <button type="submit" class="btn btn-danger">@Localizer["Business.Amenities.RemoveConfirm"]</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </permission>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

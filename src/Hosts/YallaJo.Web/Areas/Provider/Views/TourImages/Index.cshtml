@@ -1,95 +1,142 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Provider.Models.TourImages
 @using YallaJo.Web.Areas.Provider.Shared
 @model TourImagesVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Listing images";
+    ViewData["Title"] = Localizer["Provider.TourImages.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
+    var culture = CultureInfo.CurrentUICulture;
+    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
 }
 
-<partial name="_ProviderSidebar" model="@(new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" })" />
+<partial name="_ProviderSidebar" model="sidebar" />
 
 <section class="pt-0">
-<div class="container vstack gap-4">
-    <div class="d-sm-flex justify-content-between align-items-center">
-        <h1 class="fs-4 mb-0"><i class="bi bi-images me-2"></i>Listing images</h1>
-        <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
-           class="btn btn-sm btn-secondary-soft mt-2 mt-sm-0"><i class="bi bi-arrow-left me-1"></i>Back to listing</a>
-    </div>
-
-    <partial name="_TourWizardSteps" model="@(new YallaJo.Web.Areas.Provider.Models.Tours.TourWizardStepsVm { TourId = Model.TourId, CurrentStep = 4 })" />
-
-    <permission require="@WebPermission.Attachment.Create">
-        <div class="card border">
-            <div class="card-header border-bottom"><strong>Upload an image</strong></div>
-            <div class="card-body">
-                <form asp-area="Provider" asp-controller="TourImages" asp-action="Upload"
-                      asp-route-id="@Model.TourId" method="post" enctype="multipart/form-data"
-                      class="row g-2 align-items-end">
-                    @Html.AntiForgeryToken()
-                    <div class="col-md-8">
-                        <label for="File" class="form-label">Image file</label>
-                        <input id="File" name="File" type="file" class="form-control"
-                               accept="@TourImageUploadVm.AcceptAttribute" />
-                    </div>
-                    <div class="col-md-4 d-grid">
-                        <button type="submit" class="btn btn-primary">Upload image</button>
-                    </div>
-                </form>
-                <div class="form-text mt-2">
-                    Accepted formats: JPG or PNG. The server validates the file type and signature.
-                </div>
-            </div>
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <h1 class="fs-4 mb-0"><i class="fa-solid fa-images me-2" aria-hidden="true"></i>@Localizer["Provider.TourImages.Heading"]</h1>
+            <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
+               class="btn btn-sm btn-secondary-soft mt-2 mt-sm-0">
+                <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.TourImages.BackToListing"]
+            </a>
         </div>
-    </permission>
 
-    <div class="card">
-        <div class="card-header"><strong>Images</strong></div>
-        <div class="card-body">
-            @if (!Model.HasImages)
-            {
-                <p class="small text-muted mb-0">No images uploaded yet. Upload at least one image before submitting your listing for review.</p>
-            }
-            else
-            {
-                <div class="row g-3">
-                    @foreach (var img in Model.Images)
-                    {
-                        <div class="col-sm-6 col-md-4 col-lg-3">
-                            <div class="card border h-100">
-                                <div class="ratio ratio-4x3">
-                                    <img src="@img.Url" class="card-img-top object-fit-cover" alt="Listing image" loading="lazy" />
-                                </div>
-                                <div class="card-body p-2">
-                                    <div class="small text-truncate" title="@img.FileName">@(img.FileName ?? "image")</div>
-                                    <div class="small text-muted">
-                                        @img.UploadedAt.ToString("yyyy-MM-dd")
-                                        @if (!string.IsNullOrEmpty(img.FileSizeLabel))
-                                        {
-                                            <span>· @img.FileSizeLabel</span>
-                                        }
+        <partial name="_TourWizardSteps" model="@(new YallaJo.Web.Areas.Provider.Models.Tours.TourWizardStepsVm { TourId = Model.TourId, CurrentStep = 4 })" />
+
+        <permission require="@WebPermission.Attachment.Create">
+            <section class="card border" aria-labelledby="upload-heading">
+                <div class="card-header border-bottom">
+                    <h2 id="upload-heading" class="card-header-title h5 mb-0">@Localizer["Provider.TourImages.UploadHeading"]</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-area="Provider" asp-controller="TourImages" asp-action="Upload"
+                          asp-route-id="@Model.TourId" method="post" enctype="multipart/form-data"
+                          class="row g-2 align-items-end">
+                        @Html.AntiForgeryToken()
+                        <div class="col-md-8">
+                            <label for="File" class="form-label">@Localizer["Provider.TourImages.FileLabel"]</label>
+                            <input id="File" name="File" type="file" class="form-control"
+                                   accept="@TourImageUploadVm.AcceptAttribute" aria-describedby="image-help" />
+                        </div>
+                        <div class="col-md-4 d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-upload me-1" aria-hidden="true"></i>@Localizer["Provider.TourImages.Upload"]
+                            </button>
+                        </div>
+                    </form>
+                    <div id="image-help" class="form-text mt-2">@Localizer["Provider.TourImages.UploadHelp"]</div>
+                </div>
+            </section>
+        </permission>
+
+        <section class="card shadow" aria-labelledby="images-heading">
+            <div class="card-header border-bottom">
+                <h2 id="images-heading" class="card-header-title h5 mb-0">@Localizer["Provider.TourImages.GalleryHeading"]</h2>
+            </div>
+            <div class="card-body">
+                @if (!Model.HasImages)
+                {
+                    <div class="text-center py-5">
+                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                        <p class="mb-0 text-secondary">@Localizer["Provider.TourImages.EmptyMsg"]</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        @foreach (var img in Model.Images)
+                        {
+                            var imgName = string.IsNullOrEmpty(img.FileName) ? Localizer["Provider.TourImages.UnnamedImage"].Value : img.FileName;
+                            <div class="col-sm-6 col-md-4 col-lg-3">
+                                <div class="card border h-100">
+                                    <div class="ratio ratio-4x3">
+                                        <img src="@img.Url" width="400" height="300" class="card-img-top object-fit-cover"
+                                             alt="@imgName" loading="lazy" />
+                                    </div>
+                                    <div class="card-body p-2">
+                                        <div class="small text-truncate" title="@imgName"><bdi dir="ltr">@imgName</bdi></div>
+                                        <div class="small text-body-secondary">
+                                            <bdi dir="ltr">@Date(img.UploadedAt)</bdi>
+                                            @if (!string.IsNullOrEmpty(img.FileSizeLabel))
+                                            {
+                                                <span> &middot; <bdi dir="ltr">@img.FileSizeLabel</bdi></span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="card-footer p-2 d-flex justify-content-between align-items-center">
+                                        <a href="@img.Url" target="_blank" rel="noopener noreferrer"
+                                           class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa-solid fa-up-right-from-square me-1" aria-hidden="true"></i>@Localizer["Provider.TourImages.Open"]
+                                        </a>
+                                        <permission require="@WebPermission.Attachment.Delete">
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#delete-image-@img.Id">
+                                                <i class="fa-solid fa-trash me-1" aria-hidden="true"></i>@Localizer["Provider.TourImages.Delete"]
+                                            </button>
+                                        </permission>
                                     </div>
                                 </div>
-                                <div class="card-footer p-2 d-flex justify-content-between align-items-center">
-                                    <a href="@img.Url" target="_blank" rel="noopener noreferrer"
-                                       class="btn btn-sm btn-outline-secondary">Open</a>
-                                    <permission require="@WebPermission.Attachment.Delete">
-                                        <form asp-area="Provider" asp-controller="TourImages" asp-action="Delete"
-                                              asp-route-id="@Model.TourId" asp-route-attachmentId="@img.Id"
-                                              method="post" class="d-inline"
-                                              onsubmit="return confirm('Delete this image?');">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                        </form>
-                                    </permission>
-                                </div>
                             </div>
-                        </div>
-                    }
-                </div>
-            }
-        </div>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
     </div>
-</div>
 </section>
+
+<permission require="@WebPermission.Attachment.Delete">
+    @foreach (var img in Model.Images)
+    {
+        var imgName = string.IsNullOrEmpty(img.FileName) ? Localizer["Provider.TourImages.UnnamedImage"].Value : img.FileName;
+        <div class="modal fade" id="delete-image-@img.Id" tabindex="-1"
+             aria-labelledby="delete-image-title-@img.Id" aria-describedby="delete-image-body-@img.Id"
+             aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-area="Provider" asp-controller="TourImages" asp-action="Delete"
+                      asp-route-id="@Model.TourId" asp-route-attachmentId="@img.Id"
+                      method="post" class="modal-content" role="dialog" aria-modal="true">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="delete-image-title-@img.Id">@Localizer["Provider.TourImages.DeleteTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourImages.Close"]"></button>
+                    </div>
+                    <div class="modal-body" id="delete-image-body-@img.Id">
+                        <p class="mb-0">@Localizer["Provider.TourImages.DeleteBody", imgName]</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary-soft" data-bs-dismiss="modal">@Localizer["Provider.TourImages.Cancel"]</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fa-solid fa-trash me-1" aria-hidden="true"></i>@Localizer["Provider.TourImages.DeleteConfirm"]
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</permission>

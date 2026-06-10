@@ -1,53 +1,72 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Models.Bookings
 @using YallaJo.Web.Areas.Provider.Shared
 @model ProviderBookingsIndexVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Manage bookings";
+    ViewData["Title"] = Localizer["Provider.ProviderBookings.Title"].Value;
+    ViewData["ProviderNav"] = "Bookings";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
 
-    string Money(decimal amount, string? currency) =>
-        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+    var culture = CultureInfo.CurrentUICulture;
+    string Money(decimal a, string? c = null) => a.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(c) ? "JOD" : c);
+    string Count(int n) => n.ToString("N0", culture);
+
+    (string Color, string Icon) StatusBadge(string s) => (s ?? "").ToLowerInvariant() switch
+    {
+        "confirmed" => ("success", "circle-check"),
+        "completed" => ("primary", "flag-checkered"),
+        "awaitingpayment" => ("warning", "hourglass-half"),
+        "pendingconfirmation" => ("warning", "clock"),
+        "cancelled" => ("secondary", "ban"),
+        "rejected" => ("danger", "circle-xmark"),
+        _ => ("secondary", "circle-info"),
+    };
 }
 
 <partial name="_ProviderSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container vstack gap-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1 class="fs-4 mb-0"><i class="bi bi-bookmark-check me-2"></i>Manage bookings</h1>
-            <a asp-area="Provider" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-people me-1"></i>Join requests
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <h1 class="fs-4 mb-0"><i class="fa-solid fa-bookmark me-2" aria-hidden="true"></i>@Localizer["Provider.ProviderBookings.Heading"]</h1>
+            <a asp-area="Provider" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-outline-secondary mt-2 mt-sm-0">
+                <i class="fa-solid fa-user-group me-1" aria-hidden="true"></i>@Localizer["Provider.ProviderBookings.JoinRequests"]
             </a>
         </div>
 
-        <div class="card border">
+        <div class="card shadow-sm">
             <div class="card-header border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h5 class="card-header-title mb-0">Bookings for your tours</h5>
-                <form method="get" asp-action="Index" class="d-flex align-items-center gap-2">
-                    <label class="form-label small mb-0">Status</label>
-                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-                        <option value="">All</option>
-                        @foreach (var s in ProviderBookingsIndexVm.StatusFilters)
-                        {
-                            if (Model.Status == s)
+                <h2 class="card-header-title h5 mb-0">@Localizer["Provider.ProviderBookings.DirectoryHeading"]</h2>
+                <form method="get" asp-action="Index" class="d-flex align-items-end gap-2">
+                    <div>
+                        <label class="form-label small mb-1" for="bk-status">@Localizer["Provider.ProviderBookings.StatusFilter"]</label>
+                        <select id="bk-status" name="status" class="form-select form-select-sm">
+                            <option value="">@Localizer["Provider.ProviderBookings.AllStatuses"]</option>
+                            @foreach (var s in ProviderBookingsIndexVm.StatusFilters)
                             {
-                                <option value="@s" selected>@s</option>
+                                if (Model.Status == s)
+                                {
+                                    <option value="@s" selected>@Localizer["Provider.Status." + s]</option>
+                                }
+                                else
+                                {
+                                    <option value="@s">@Localizer["Provider.Status." + s]</option>
+                                }
                             }
-                            else
-                            {
-                                <option value="@s">@s</option>
-                            }
-                        }
-                    </select>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary">@Localizer["Provider.ProviderBookings.Apply"]</button>
                 </form>
             </div>
             <div class="card-body">
                 @if (!Model.HasItems)
                 {
-                    <div class="text-center text-muted py-5">
-                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                        <p class="mb-0">No bookings@(string.IsNullOrWhiteSpace(Model.Status) ? "" : $" in {Model.Status} status") yet.</p>
+                    <div class="text-center py-5">
+                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                        <p class="mb-0 text-secondary">@Localizer["Provider.ProviderBookings.EmptyMessage"]</p>
                     </div>
                 }
                 else
@@ -56,31 +75,30 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th>Reference</th>
-                                    <th>Tour</th>
-                                    <th>Traveler</th>
-                                    <th>Slot</th>
-                                    <th class="text-end">Guests</th>
-                                    <th class="text-end">Total</th>
-                                    <th>Status</th>
-                                    <th class="text-end">Actions</th>
+                                    <th scope="col">@Localizer["Provider.ProviderBookings.ColReference"]</th>
+                                    <th scope="col">@Localizer["Provider.ProviderBookings.ColTour"]</th>
+                                    <th scope="col">@Localizer["Provider.ProviderBookings.ColTraveler"]</th>
+                                    <th scope="col">@Localizer["Provider.ProviderBookings.ColSlot"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Provider.ProviderBookings.ColGuests"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Provider.ProviderBookings.ColTotal"]</th>
+                                    <th scope="col">@Localizer["Provider.ProviderBookings.ColStatus"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Provider.ProviderBookings.ColActions"]</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var b in Model.Items)
                                 {
+                                    var badge = StatusBadge(b.Status);
                                     <tr>
-                                        <td><code>@b.Reference</code></td>
-                                        <td>@b.TourName</td>
-                                        <td>@b.TravelerHandle</td>
-                                        <td class="small">@b.SlotLabel</td>
-                                        <td class="text-end">@b.ParticipantCount</td>
-                                        <td class="text-end">@Money(b.TotalAmount, b.Currency)</td>
-                                        <td><span class="badge @b.StatusBadgeClass">@b.Status</span></td>
+                                        <td><bdi dir="ltr" class="font-data">@b.Reference</bdi></td>
+                                        <td class="fw-semibold">@b.TourName</td>
+                                        <td><bdi dir="ltr">@b.TravelerHandle</bdi></td>
+                                        <td class="small"><bdi dir="ltr">@b.SlotLabel</bdi></td>
+                                        <td class="text-end"><bdi dir="ltr" class="font-data">@Count(b.ParticipantCount)</bdi></td>
+                                        <td class="text-end"><bdi dir="ltr" class="font-data">@Money(b.TotalAmount, b.Currency)</bdi></td>
+                                        <td><span class="badge bg-@badge.Color bg-opacity-10 text-@badge.Color"><i class="fa-solid fa-@badge.Icon fa-fw" aria-hidden="true"></i> @Localizer["Provider.Status." + b.Status]</span></td>
                                         <td class="text-end">
-                                            <a asp-action="Details" asp-route-id="@b.Id" class="btn btn-sm btn-outline-primary">
-                                                Manage
-                                            </a>
+                                            <a asp-action="Details" asp-route-id="@b.Id" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-gear me-1" aria-hidden="true"></i>@Localizer["Provider.ProviderBookings.Manage"]</a>
                                         </td>
                                     </tr>
                                 }

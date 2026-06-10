@@ -1,18 +1,27 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Models.Invoices
 @using YallaJo.Web.Areas.Provider.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @model ProviderInvoicesVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Invoices";
+    ViewData["Title"] = Localizer["Provider.Invoices.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
 
-    string StatusBadge(string status) => status?.ToLowerInvariant() switch
+    var culture = CultureInfo.CurrentUICulture;
+    string Money(decimal amount, string? currency) =>
+        amount.ToString("N3", culture) + (string.IsNullOrWhiteSpace(currency) ? "" : " " + currency);
+    string Count(int n) => n.ToString("N0", culture);
+    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
+
+    (string Color, string Icon) StatusBadge(string status) => status?.ToLowerInvariant() switch
     {
-        "paid" or "issued" or "settled" => "badge text-bg-success",
-        "pending" or "draft" => "badge text-bg-warning",
-        "void" or "cancelled" or "refunded" => "badge text-bg-danger",
-        _ => "badge text-bg-secondary",
+        "paid" or "issued" or "settled" => ("success", "circle-check"),
+        "pending" or "draft" => ("warning", "clock"),
+        "void" or "cancelled" or "refunded" => ("danger", "circle-xmark"),
+        _ => ("secondary", "circle-info"),
     };
 }
 
@@ -22,57 +31,59 @@
     <div class="container">
         <div class="card border">
             <div class="card-header border-bottom">
-                <h1 class="fs-5 mb-0"><i class="bi bi-receipt me-2"></i>Invoices</h1>
-                <small class="text-body-secondary">Invoices issued for your bookings.</small>
+                <h1 class="card-header-title h5 mb-0"><i class="fa-solid fa-receipt me-2" aria-hidden="true"></i>@Localizer["Provider.Invoices.Heading"]</h1>
+                <small class="text-body-secondary">@Localizer["Provider.Invoices.Subtitle"]</small>
             </div>
             <div class="card-body">
                 @if (!Model.HasInvoices)
                 {
-                    <div class="text-center text-muted py-5">
-                        <i class="bi bi-receipt fs-1 d-block mb-2"></i>
-                        <p class="mb-0">No invoices yet.</p>
-                        <p class="small mb-0">Invoices appear here after your bookings are paid.</p>
+                    <div class="text-center py-5">
+                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                        <p class="mb-1 fw-semibold">@Localizer["Provider.Invoices.EmptyTitle"]</p>
+                        <p class="small text-body-secondary mb-0">@Localizer["Provider.Invoices.EmptyMsg"]</p>
                     </div>
                 }
                 else
                 {
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead>
+                            <caption class="visually-hidden">@Localizer["Provider.Invoices.Heading"]</caption>
+                            <thead class="table-light">
                                 <tr>
-                                    <th>Invoice #</th>
-                                    <th>Customer</th>
-                                    <th>Issued</th>
-                                    <th>Status</th>
-                                    <th class="text-end">Total</th>
-                                    <th class="text-end">Actions</th>
+                                    <th scope="col">@Localizer["Provider.Invoices.ColNumber"]</th>
+                                    <th scope="col">@Localizer["Provider.Invoices.ColCustomer"]</th>
+                                    <th scope="col">@Localizer["Provider.Invoices.ColIssued"]</th>
+                                    <th scope="col">@Localizer["Provider.Invoices.ColStatus"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Provider.Invoices.ColTotal"]</th>
+                                    <th scope="col" class="text-end"><span class="visually-hidden">@Localizer["Provider.Invoices.ColActions"]</span></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var inv in Model.Invoices)
                                 {
+                                    var sb = StatusBadge(inv.Status);
                                     <tr>
                                         <td>
-                                            <span class="d-block"><code>@inv.InvoiceNumber</code></span>
-                                            <span class="small text-body-secondary">@inv.ItemCount item@(inv.ItemCount == 1 ? "" : "s")</span>
+                                            <span class="d-block fw-semibold"><bdi dir="ltr" class="font-data">@inv.InvoiceNumber</bdi></span>
+                                            <span class="small text-body-secondary">@Localizer["Provider.Invoices.ItemsCount", Count(inv.ItemCount)]</span>
                                         </td>
-                                        <td>@inv.BuyerName</td>
-                                        <td>@inv.IssuedAt.ToString("yyyy-MM-dd")</td>
-                                        <td><span class="@StatusBadge(inv.Status)">@inv.Status</span></td>
-                                        <td class="text-end">@inv.AmountTotal.ToString("0.##") @inv.Currency</td>
+                                        <td><bdi>@inv.BuyerName</bdi></td>
+                                        <td class="small"><bdi dir="ltr">@Date(inv.IssuedAt)</bdi></td>
+                                        <td><span class="badge bg-@sb.Color bg-opacity-10 text-@sb.Color"><i class="fa-solid fa-@sb.Icon fa-fw" aria-hidden="true"></i> @inv.Status</span></td>
+                                        <td class="text-end"><bdi dir="ltr" class="font-data">@Money(inv.AmountTotal, inv.Currency)</bdi></td>
                                         <td class="text-end">
                                             @if (inv.PdfAvailable)
                                             {
                                                 <permission require="@WebPermission.Invoice.Download">
                                                     <a class="btn btn-sm btn-primary-soft" asp-area="Provider" asp-controller="Invoices"
                                                        asp-action="Download" asp-route-id="@inv.Id">
-                                                        <i class="bi bi-download me-1"></i>PDF
+                                                        <i class="fa-solid fa-download me-1" aria-hidden="true"></i>@Localizer["Provider.Invoices.Pdf"]
                                                     </a>
                                                 </permission>
                                             }
                                             else
                                             {
-                                                <span class="text-body-secondary small">—</span>
+                                                <span class="text-body-secondary small" aria-label="@Localizer["Provider.Invoices.NoPdf"]">&mdash;</span>
                                             }
                                         </td>
                                     </tr>

@@ -1,8 +1,11 @@
-@model YallaJo.Web.Areas.Provider.Models.Settings.ProviderSettingsVm
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Accounts.Models.Profile
 @using YallaJo.Web.Areas.Provider.Shared
+@model YallaJo.Web.Areas.Provider.Models.Settings.ProviderSettingsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Provider Settings";
+    ViewData["Title"] = Localizer["Provider.Settings.Title"].Value;
+    ViewData["ProviderNav"] = "Settings";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
     var avatar = string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl;
@@ -15,46 +18,52 @@
 
         <div class="d-flex align-items-center">
             <div class="avatar avatar-lg me-3">
-                <img class="avatar-img rounded-circle border border-2 border-white" src="@avatar" alt="Avatar">
+                <img class="avatar-img rounded-circle border border-2 border-white" src="@avatar" width="64" height="64" alt="@Model.DisplayName">
             </div>
             <div>
-                <h1 class="fs-4 mb-0"><i class="bi bi-gear me-1"></i>Settings</h1>
-                <p class="mb-0 small text-secondary">@Model.DisplayName @(string.IsNullOrWhiteSpace(Model.Email) ? "" : "· " + Model.Email)</p>
+                <h1 class="fs-4 mb-0"><i class="fa-solid fa-gear me-2" aria-hidden="true"></i>@Localizer["Provider.Settings.Heading"]</h1>
+                <p class="mb-0 small text-secondary">
+                    @Model.DisplayName
+                    @if (!string.IsNullOrWhiteSpace(Model.Email))
+                    {
+                        <span>· <bdi dir="ltr">@Model.Email</bdi></span>
+                    }
+                </p>
             </div>
         </div>
 
         <div class="row g-4">
-            @if (Model.Business is { } biz)
+            @if (Model.Business is not null)
             {
-                <!-- Business information (read-only) -->
+                var biz = Model.Business;
                 <div class="col-12">
-                    <div class="card border">
+                    <div class="card border shadow-sm">
                         <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                            <h5 class="card-header-title mb-0"><i class="bi bi-building me-1"></i>Business information</h5>
-                            <span class="badge text-bg-light">@biz.ProviderType</span>
+                            <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-building me-2" aria-hidden="true"></i>@Localizer["Provider.Settings.BusinessHeading"]</h2>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">@biz.ProviderType</span>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label small text-secondary mb-0">Business name</label>
+                                    <span class="form-label small text-secondary mb-0 d-block">@Localizer["Provider.Settings.BusinessName"]</span>
                                     <p class="mb-0 fw-semibold">@biz.BusinessName</p>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label small text-secondary mb-0">Contact email</label>
-                                    <p class="mb-0">@biz.ContactEmail</p>
+                                    <span class="form-label small text-secondary mb-0 d-block">@Localizer["Provider.Settings.ContactEmail"]</span>
+                                    <p class="mb-0"><bdi dir="ltr">@biz.ContactEmail</bdi></p>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label small text-secondary mb-0">Contact phone</label>
-                                    <p class="mb-0">@biz.ContactPhone</p>
+                                    <span class="form-label small text-secondary mb-0 d-block">@Localizer["Provider.Settings.ContactPhone"]</span>
+                                    <p class="mb-0"><bdi dir="ltr">@biz.ContactPhone</bdi></p>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label small text-secondary mb-0">Address</label>
+                                    <span class="form-label small text-secondary mb-0 d-block">@Localizer["Provider.Settings.Address"]</span>
                                     <p class="mb-0">@biz.Address</p>
                                 </div>
                                 @if (!string.IsNullOrWhiteSpace(biz.Description))
                                 {
                                     <div class="col-12">
-                                        <label class="form-label small text-secondary mb-0">Description</label>
+                                        <span class="form-label small text-secondary mb-0 d-block">@Localizer["Provider.Settings.Description"]</span>
                                         <p class="mb-0">@biz.Description</p>
                                     </div>
                                 }
@@ -64,11 +73,11 @@
                 </div>
             }
 
-            <!-- Profile -->
+            @* Personal information *@
             <div class="col-12">
-                <div class="card border">
+                <div class="card border shadow-sm">
                     <div class="card-header border-bottom">
-                        <h5 class="card-header-title mb-0"><i class="bi bi-person me-1"></i>Personal information</h5>
+                        <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-user me-2" aria-hidden="true"></i>@Localizer["Provider.Settings.PersonalHeading"]</h2>
                     </div>
                     <div class="card-body">
                         <form method="post" asp-area="Provider" asp-controller="Settings" asp-action="UpdateProfile" class="row g-3">
@@ -76,79 +85,79 @@
                             <div class="col-md-6">
                                 <label asp-for="Profile.FirstName" class="form-label"></label>
                                 <input asp-for="Profile.FirstName" class="form-control">
-                                <span asp-validation-for="Profile.FirstName" class="text-danger small"></span>
+                                <span asp-validation-for="Profile.FirstName" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Profile.LastName" class="form-label"></label>
                                 <input asp-for="Profile.LastName" class="form-control">
-                                <span asp-validation-for="Profile.LastName" class="text-danger small"></span>
+                                <span asp-validation-for="Profile.LastName" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Email</label>
-                                <input class="form-control" value="@Model.Email" readonly disabled>
+                                <label for="settings-email" class="form-label">@Localizer["Provider.Settings.Email"]</label>
+                                <input id="settings-email" class="form-control" dir="ltr" value="@Model.Email" readonly disabled>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Profile.DateOfBirth" class="form-label"></label>
-                                <input asp-for="Profile.DateOfBirth" type="date" class="form-control">
-                                <span asp-validation-for="Profile.DateOfBirth" class="text-danger small"></span>
+                                <input asp-for="Profile.DateOfBirth" type="date" dir="ltr" class="form-control">
+                                <span asp-validation-for="Profile.DateOfBirth" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Profile.Gender" class="form-label"></label>
                                 <select asp-for="Profile.Gender" asp-items="Html.GetEnumSelectList<GenderOption>()" class="form-select">
-                                    <option value="">Prefer not to say</option>
+                                    <option value="">@Localizer["Provider.Settings.PreferNotToSay"]</option>
                                 </select>
-                                <span asp-validation-for="Profile.Gender" class="text-danger small"></span>
+                                <span asp-validation-for="Profile.Gender" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Profile.Country" class="form-label"></label>
                                 <input asp-for="Profile.Country" class="form-control">
-                                <span asp-validation-for="Profile.Country" class="text-danger small"></span>
+                                <span asp-validation-for="Profile.Country" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Profile.City" class="form-label"></label>
                                 <input asp-for="Profile.City" class="form-control">
-                                <span asp-validation-for="Profile.City" class="text-danger small"></span>
+                                <span asp-validation-for="Profile.City" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-12">
                                 <label asp-for="Profile.AddressLine" class="form-label"></label>
                                 <input asp-for="Profile.AddressLine" class="form-control">
-                                <span asp-validation-for="Profile.AddressLine" class="text-danger small"></span>
+                                <span asp-validation-for="Profile.AddressLine" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-12 text-end">
-                                <button type="submit" class="btn btn-primary mb-0">Save changes</button>
+                                <button type="submit" class="btn btn-primary mb-0">@Localizer["Provider.Settings.SaveChanges"]</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- Phone -->
+            @* Phone number *@
             <div class="col-md-6">
-                <div class="card border h-100">
+                <div class="card border shadow-sm h-100">
                     <div class="card-header border-bottom">
-                        <h5 class="card-header-title mb-0"><i class="bi bi-telephone me-1"></i>Phone number</h5>
+                        <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-phone me-2" aria-hidden="true"></i>@Localizer["Provider.Settings.PhoneHeading"]</h2>
                     </div>
                     <div class="card-body">
                         <form method="post" asp-area="Provider" asp-controller="Settings" asp-action="UpdatePhone" class="vstack gap-3">
                             @Html.AntiForgeryToken()
                             <div>
                                 <label asp-for="Phone.PhoneNumber" class="form-label"></label>
-                                <input asp-for="Phone.PhoneNumber" type="tel" class="form-control" placeholder="+1 555 123 4567">
-                                <span asp-validation-for="Phone.PhoneNumber" class="text-danger small"></span>
+                                <input asp-for="Phone.PhoneNumber" type="tel" dir="ltr" class="form-control" placeholder="+962 7 9999 9999">
+                                <span asp-validation-for="Phone.PhoneNumber" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="text-end">
-                                <button type="submit" class="btn btn-primary-soft mb-0">Update phone</button>
+                                <button type="submit" class="btn btn-primary-soft mb-0">@Localizer["Provider.Settings.UpdatePhone"]</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- Password -->
+            @* Change password *@
             <div class="col-md-6">
-                <div class="card border h-100">
+                <div class="card border shadow-sm h-100">
                     <div class="card-header border-bottom">
-                        <h5 class="card-header-title mb-0"><i class="bi bi-shield-lock me-1"></i>Change password</h5>
+                        <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-shield-halved me-2" aria-hidden="true"></i>@Localizer["Provider.Settings.PasswordHeading"]</h2>
                     </div>
                     <div class="card-body">
                         <form method="post" asp-area="Provider" asp-controller="Settings" asp-action="ChangePassword" class="vstack gap-3">
@@ -156,20 +165,20 @@
                             <div>
                                 <label asp-for="Password.CurrentPassword" class="form-label"></label>
                                 <input asp-for="Password.CurrentPassword" type="password" class="form-control" autocomplete="current-password">
-                                <span asp-validation-for="Password.CurrentPassword" class="text-danger small"></span>
+                                <span asp-validation-for="Password.CurrentPassword" class="text-danger small" role="alert"></span>
                             </div>
                             <div>
                                 <label asp-for="Password.NewPassword" class="form-label"></label>
                                 <input asp-for="Password.NewPassword" type="password" class="form-control" autocomplete="new-password">
-                                <span asp-validation-for="Password.NewPassword" class="text-danger small"></span>
+                                <span asp-validation-for="Password.NewPassword" class="text-danger small" role="alert"></span>
                             </div>
                             <div>
                                 <label asp-for="Password.ConfirmNewPassword" class="form-label"></label>
                                 <input asp-for="Password.ConfirmNewPassword" type="password" class="form-control" autocomplete="new-password">
-                                <span asp-validation-for="Password.ConfirmNewPassword" class="text-danger small"></span>
+                                <span asp-validation-for="Password.ConfirmNewPassword" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="text-end">
-                                <button type="submit" class="btn btn-primary-soft mb-0">Change password</button>
+                                <button type="submit" class="btn btn-primary-soft mb-0">@Localizer["Provider.Settings.ChangePassword"]</button>
                             </div>
                         </form>
                     </div>

@@ -1,12 +1,18 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Provider.Shared
 @model YallaJo.Web.Areas.Provider.Models.TourWaypoints.TourWaypointsIndexVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = $"Route — {Model.TourName}";
+    ViewData["Title"] = Localizer["Provider.TourWaypoints.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
     var ids = Model.Waypoints.Select(w => w.Id).ToList();
+    var culture = CultureInfo.CurrentUICulture;
+    string Coord(double lat, double lng) => lat.ToString("0.#####", culture) + ", " + lng.ToString("0.#####", culture);
+    string StopTime(int? m) => m is > 0 ? Localizer["Provider.TourWaypoints.Minutes", m.Value.ToString("N0", culture)].Value : "—";
 }
 
 <partial name="_ProviderSidebar" model="sidebar" />
@@ -15,15 +21,15 @@
     <div class="container vstack gap-4">
         <div class="d-sm-flex justify-content-between align-items-center">
             <div>
-                <h1 class="fs-4 mb-0"><i class="bi bi-geo-alt me-2"></i>Route &amp; Waypoints</h1>
-                <span class="small text-body-secondary"><bdi>@Model.TourName</bdi> · @Model.TourStatusLabel</span>
+                <h1 class="fs-4 mb-0"><i class="fa-solid fa-location-dot me-2" aria-hidden="true"></i>@Localizer["Provider.TourWaypoints.Heading"]</h1>
+                <span class="small text-body-secondary"><bdi dir="ltr">@Model.TourName</bdi> · @Model.TourStatusLabel</span>
             </div>
             <div class="mt-2 mt-sm-0 d-flex gap-2">
                 <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
-                   class="btn btn-sm btn-secondary-soft"><i class="bi bi-arrow-left me-1"></i>Back to listing</a>
+                   class="btn btn-sm btn-secondary-soft"><i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.TourWaypoints.BackToListing"]</a>
                 <permission require="@WebPermission.TourWaypoint.Create">
                     <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Create" asp-route-id="@Model.TourId"
-                       class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add waypoint</a>
+                       class="btn btn-sm btn-primary"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourWaypoints.AddWaypoint"]</a>
                 </permission>
             </div>
         </div>
@@ -32,28 +38,29 @@
         {
             <div class="card border">
                 <div class="card-body text-center py-5">
-                    <h5 class="mb-1">No waypoints yet</h5>
-                    <p class="text-body-secondary mb-3">Add stops to build the tour route. The first stop is usually the meeting point.</p>
+                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                    <h2 class="h5 mb-1">@Localizer["Provider.TourWaypoints.EmptyTitle"]</h2>
+                    <p class="text-body-secondary mb-3">@Localizer["Provider.TourWaypoints.EmptyMsg"]</p>
                     <permission require="@WebPermission.TourWaypoint.Create">
                         <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Create" asp-route-id="@Model.TourId"
-                           class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add the first waypoint</a>
+                           class="btn btn-sm btn-primary"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourWaypoints.AddFirst"]</a>
                     </permission>
                 </div>
             </div>
         }
         else
         {
-            <div class="card border">
+            <div class="card border shadow">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <caption class="visually-hidden">Tour waypoints in route order</caption>
+                        <caption class="visually-hidden">@Localizer["Provider.TourWaypoints.TableCaption"]</caption>
                         <thead class="table-light">
                             <tr>
                                 <th scope="col">#</th>
-                                <th scope="col">Stop</th>
-                                <th scope="col">Coordinates</th>
-                                <th scope="col">Stop time</th>
-                                <th scope="col"><span class="visually-hidden">Reorder &amp; actions</span></th>
+                                <th scope="col">@Localizer["Provider.TourWaypoints.ColStop"]</th>
+                                <th scope="col">@Localizer["Provider.TourWaypoints.ColCoordinates"]</th>
+                                <th scope="col">@Localizer["Provider.TourWaypoints.ColStopTime"]</th>
+                                <th scope="col" class="text-end">@Localizer["Provider.TourWaypoints.ColActions"]</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -61,20 +68,20 @@
                             {
                                 var w = Model.Waypoints[i];
                                 <tr>
-                                    <td>@(i + 1)</td>
+                                    <td><bdi class="font-data">@((i + 1).ToString("N0", culture))</bdi></td>
                                     <td>
-                                        <span class="fw-semibold"><bdi>@w.Name</bdi></span>
+                                        <span class="fw-semibold"><bdi dir="ltr">@w.Name</bdi></span>
                                         @if (w.IsMeetingPoint)
                                         {
-                                            <span class="badge text-bg-primary ms-1"><i class="bi bi-flag-fill me-1" aria-hidden="true"></i>Meeting point</span>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary ms-1"><i class="fa-solid fa-flag fa-fw" aria-hidden="true"></i> @Localizer["Provider.TourWaypoints.MeetingPoint"]</span>
                                         }
                                         @if (!string.IsNullOrWhiteSpace(w.Description))
                                         {
-                                            <div class="small text-body-secondary"><bdi>@w.Description</bdi></div>
+                                            <div class="small text-body-secondary"><bdi dir="ltr">@w.Description</bdi></div>
                                         }
                                     </td>
-                                    <td><span dir="ltr">@w.CoordinatesLabel</span></td>
-                                    <td>@w.StopDurationLabel</td>
+                                    <td><bdi dir="ltr" class="font-data">@Coord(w.Latitude, w.Longitude)</bdi></td>
+                                    <td><bdi dir="ltr">@StopTime(w.StopDurationMinutes)</bdi></td>
                                     <td class="text-end">
                                         <div class="d-inline-flex gap-1">
                                             <permission require="@WebPermission.TourWaypoint.Update">
@@ -88,7 +95,7 @@
                                                         {
                                                             <input type="hidden" name="waypointIds" value="@wid" />
                                                         }
-                                                        <button type="submit" class="btn btn-sm btn-light" aria-label="Move @w.Name up"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
+                                                        <button type="submit" class="btn btn-sm btn-light" aria-label="@Localizer["Provider.TourWaypoints.MoveUp", w.Name]"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i></button>
                                                     </form>
                                                 }
                                                 @if (i < Model.Waypoints.Count - 1)
@@ -101,18 +108,15 @@
                                                         {
                                                             <input type="hidden" name="waypointIds" value="@wid" />
                                                         }
-                                                        <button type="submit" class="btn btn-sm btn-light" aria-label="Move @w.Name down"><i class="bi bi-arrow-down" aria-hidden="true"></i></button>
+                                                        <button type="submit" class="btn btn-sm btn-light" aria-label="@Localizer["Provider.TourWaypoints.MoveDown", w.Name]"><i class="fa-solid fa-arrow-down" aria-hidden="true"></i></button>
                                                     </form>
                                                 }
                                                 <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Edit" asp-route-id="@Model.TourId" asp-route-waypointId="@w.Id"
-                                                   class="btn btn-sm btn-light" aria-label="Edit @w.Name"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                                                   class="btn btn-sm btn-light" aria-label="@Localizer["Provider.TourWaypoints.Edit", w.Name]"><i class="fa-solid fa-pen" aria-hidden="true"></i></a>
                                             </permission>
                                             <permission require="@WebPermission.TourWaypoint.Delete">
-                                                <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-waypointId="@w.Id"
-                                                      method="post" class="d-inline" onsubmit="return confirm('Delete waypoint &quot;@w.Name&quot;? This cannot be undone.');">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="Delete @w.Name"><i class="bi bi-trash" aria-hidden="true"></i></button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#delete-waypoint-@w.Id"
+                                                        aria-label="@Localizer["Provider.TourWaypoints.Delete", w.Name]"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
                                             </permission>
                                         </div>
                                     </td>
@@ -125,3 +129,27 @@
         }
     </div>
 </section>
+
+<permission require="@WebPermission.TourWaypoint.Delete">
+    @foreach (var w in Model.Waypoints)
+    {
+        <div class="modal fade" id="delete-waypoint-@w.Id" tabindex="-1" aria-labelledby="delete-waypoint-title-@w.Id" aria-describedby="delete-waypoint-body-@w.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-waypointId="@w.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="delete-waypoint-title-@w.Id">@Localizer["Provider.TourWaypoints.DeleteTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourWaypoints.Close"]"></button>
+                    </div>
+                    <div class="modal-body" id="delete-waypoint-body-@w.Id">
+                        <p class="mb-0">@Localizer["Provider.TourWaypoints.DeleteBody", w.Name]</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary-soft" data-bs-dismiss="modal">@Localizer["Provider.TourWaypoints.Cancel"]</button>
+                        <button type="submit" class="btn btn-danger">@Localizer["Provider.TourWaypoints.DeleteConfirm"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</permission>

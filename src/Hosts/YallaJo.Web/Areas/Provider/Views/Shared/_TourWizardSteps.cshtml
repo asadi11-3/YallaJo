@@ -1,41 +1,49 @@
-@model YallaJo.Web.Areas.Provider.Models.Tours.TourWizardStepsVm
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Provider.Models.Tours
+@model TourWizardStepsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    var steps = YallaJo.Web.Areas.Provider.Models.Tours.TourWizardStepsVm.Steps;
+    string StepIcon(int n) => n switch
+    {
+        1 => "fa-circle-info",
+        2 => "fa-tag",
+        3 => "fa-calendar-days",
+        4 => "fa-images",
+        5 => "fa-paper-plane",
+        _ => "fa-circle",
+    };
+    var total = TourWizardStepsVm.Steps.Count;
 }
-
-<nav aria-label="Listing setup progress" class="card border">
-    <ol class="list-unstyled d-flex flex-wrap align-items-center gap-1 gap-md-2 mb-0 p-3">
-        @foreach (var s in steps)
+<nav aria-label="@Localizer["Provider.TourWizard.Progress"]" class="card border mb-0">
+    <ol class="list-unstyled d-flex flex-wrap align-items-center gap-1 gap-md-2 p-3 mb-0">
+        @foreach (var s in TourWizardStepsVm.Steps)
         {
-            var state = s.Number < Model.CurrentStep ? "done"
-                : s.Number == Model.CurrentStep ? "active" : "upcoming";
-            var badgeCss = state switch
-            {
-                "done" => "text-bg-success",
-                "active" => "text-bg-primary",
-                _ => "text-bg-light border",
-            };
-            <li class="d-flex align-items-center" aria-current="@(state == "active" ? "step" : null)">
-                <a class="text-decoration-none d-flex align-items-center"
+            var isDone = s.Number < Model.CurrentStep;
+            var isActive = s.Number == Model.CurrentStep;
+            var badgeCss = isDone ? "text-bg-success" : isActive ? "text-bg-primary" : "text-bg-light border";
+            var label = Localizer["Provider.TourWizard.Step" + s.Number].Value;
+            <li class="d-flex align-items-center" aria-current="@(isActive ? "step" : null)">
+                <a class="d-inline-flex align-items-center gap-2 text-decoration-none"
                    asp-area="Provider" asp-controller="@s.Controller" asp-action="@s.Action" asp-route-id="@Model.TourId"
-                   aria-label="Step @s.Number: @s.Label@(state == "done" ? " (done)" : "")">
-                    <span class="badge rounded-pill @badgeCss me-1">
-                        @if (state == "done")
+                   aria-label="@Localizer["Provider.TourWizard.StepAria", s.Number, label]">
+                    <span class="badge rounded-pill @badgeCss">
+                        @if (isDone)
                         {
-                            <i class="bi bi-check-lg" aria-hidden="true"></i>
+                            <i class="fa-solid fa-check" aria-hidden="true"></i>
+                            <span class="visually-hidden">@Localizer["Provider.TourWizard.Done"]</span>
                         }
                         else
                         {
-                            @s.Number
+                            <bdi>@s.Number</bdi>
                         }
                     </span>
-                    <span class="small @(state == "active" ? "fw-semibold" : "text-body-secondary")">
-                        <i class="bi @s.Icon me-1" aria-hidden="true"></i>@s.Label
+                    <span class="small @(isActive ? "fw-semibold" : "text-body-secondary")">
+                        <i class="fa-solid @StepIcon(s.Number) me-1" aria-hidden="true"></i>@label
                     </span>
                 </a>
-                @if (s.Number < steps.Count)
+                @if (s.Number < total)
                 {
-                    <i class="bi bi-chevron-right text-body-secondary mx-1 mx-md-2 d-none d-sm-inline" aria-hidden="true"></i>
+                    <i class="fa-solid fa-chevron-right text-body-secondary mx-1 mx-md-2 d-none d-sm-inline" aria-hidden="true"></i>
                 }
             </li>
         }

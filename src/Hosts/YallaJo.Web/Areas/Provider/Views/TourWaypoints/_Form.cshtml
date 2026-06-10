@@ -1,40 +1,42 @@
+@using Microsoft.Extensions.Localization
 @model YallaJo.Web.Areas.Provider.Models.TourWaypoints.TourWaypointFormVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 
-<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
 <div class="row g-3">
     <div class="col-md-8">
-        <label asp-for="Name" class="form-label">Stop name <span class="text-danger">*</span></label>
+        <label asp-for="Name" class="form-label">@Localizer["Provider.TourWaypoints.FormName"] <span class="text-danger">*</span></label>
         <input asp-for="Name" class="form-control" autocomplete="off" />
-        <span asp-validation-for="Name" class="text-danger small"></span>
+        <span asp-validation-for="Name" class="text-danger small" role="alert"></span>
     </div>
     <div class="col-md-4 d-flex align-items-end">
         <div class="form-check">
             <input asp-for="IsMeetingPoint" class="form-check-input" />
-            <label asp-for="IsMeetingPoint" class="form-check-label"></label>
+            <label asp-for="IsMeetingPoint" class="form-check-label">@Localizer["Provider.TourWaypoints.FormMeetingPoint"]</label>
         </div>
     </div>
 
     <div class="col-12">
-        <label asp-for="Description" class="form-label"></label>
-        <textarea asp-for="Description" class="form-control" rows="2"></textarea>
-        <small class="form-text">Optional — what travellers do or see at this stop.</small>
-        <span asp-validation-for="Description" class="text-danger small"></span>
+        <label asp-for="Description" class="form-label">@Localizer["Provider.TourWaypoints.FormDescription"]</label>
+        <textarea asp-for="Description" class="form-control" rows="2" aria-describedby="waypoint-desc-help"></textarea>
+        <small id="waypoint-desc-help" class="form-text">@Localizer["Provider.TourWaypoints.FormDescriptionHelp"]</small>
+        <span asp-validation-for="Description" class="text-danger small" role="alert"></span>
     </div>
 
     <div class="col-md-4">
-        <label asp-for="Latitude" class="form-label">Latitude <span class="text-danger">*</span></label>
-        <input asp-for="Latitude" class="form-control" type="number" step="any" dir="ltr" inputmode="decimal" />
-        <span asp-validation-for="Latitude" class="text-danger small"></span>
+        <label asp-for="Latitude" class="form-label">@Localizer["Provider.TourWaypoints.FormLatitude"] <span class="text-danger">*</span></label>
+        <input asp-for="Latitude" class="form-control font-data" type="number" step="any" dir="ltr" inputmode="decimal" />
+        <span asp-validation-for="Latitude" class="text-danger small" role="alert"></span>
     </div>
     <div class="col-md-4">
-        <label asp-for="Longitude" class="form-label">Longitude <span class="text-danger">*</span></label>
-        <input asp-for="Longitude" class="form-control" type="number" step="any" dir="ltr" inputmode="decimal" />
-        <span asp-validation-for="Longitude" class="text-danger small"></span>
+        <label asp-for="Longitude" class="form-label">@Localizer["Provider.TourWaypoints.FormLongitude"] <span class="text-danger">*</span></label>
+        <input asp-for="Longitude" class="form-control font-data" type="number" step="any" dir="ltr" inputmode="decimal" />
+        <span asp-validation-for="Longitude" class="text-danger small" role="alert"></span>
     </div>
     <div class="col-md-4">
-        <label asp-for="StopDurationMinutes" class="form-label"></label>
-        <input asp-for="StopDurationMinutes" class="form-control" type="number" min="0" inputmode="numeric" />
-        <span asp-validation-for="StopDurationMinutes" class="text-danger small"></span>
+        <label asp-for="StopDurationMinutes" class="form-label">@Localizer["Provider.TourWaypoints.FormStopDuration"]</label>
+        <input asp-for="StopDurationMinutes" class="form-control" type="number" min="0" dir="ltr" inputmode="numeric" />
+        <span asp-validation-for="StopDurationMinutes" class="text-danger small" role="alert"></span>
     </div>
 </div>

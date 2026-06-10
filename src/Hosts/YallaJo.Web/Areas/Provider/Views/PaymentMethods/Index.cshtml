@@ -1,20 +1,16 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Models.PaymentMethods
 @using YallaJo.Web.Areas.Provider.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @model PaymentMethodsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Payment Methods";
+    ViewData["Title"] = Localizer["Provider.PaymentMethods.Title"].Value;
+    ViewData["ProviderNav"] = "PaymentMethods";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
 
-    string TypeLabel(ProviderPaymentMethodType t) => t switch
-    {
-        ProviderPaymentMethodType.BankAccount => "Bank account",
-        ProviderPaymentMethodType.JoMoPay => "JoMoPay",
-        ProviderPaymentMethodType.OrangeMoney => "Orange Money",
-        ProviderPaymentMethodType.ZainCash => "ZainCash",
-        _ => t.ToString()
-    };
+    string TypeLabel(ProviderPaymentMethodType t) => Localizer["Provider.Finance.MethodType." + t.ToString()];
 }
 
 <partial name="_ProviderSidebar" model="sidebar" />
@@ -22,53 +18,47 @@
 <section class="pt-0">
     <div class="container vstack gap-4">
 
-        <h1 class="fs-4 mb-0"><i class="bi bi-credit-card-2-back me-1"></i>Payment Methods</h1>
-
-        @if (TempData["Success"] is string okMsg)
-        {
-            <div class="alert alert-success mb-0">@okMsg</div>
-        }
-        @if (TempData["Error"] is string errMsg)
-        {
-            <div class="alert alert-danger mb-0">@errMsg</div>
-        }
+        <h1 class="fs-4 mb-0"><i class="fa-solid fa-credit-card me-2" aria-hidden="true"></i>@Localizer["Provider.PaymentMethods.Heading"]</h1>
 
         <div class="row g-4">
-            <div class="col-lg-5">
-                <permission require="@WebPermission.ProviderPaymentMethod.Create">
-                    <div class="card border h-100">
+            <permission require="@WebPermission.ProviderPaymentMethod.Create">
+                <div class="col-lg-5">
+                    <div class="card shadow-sm h-100">
                         <div class="card-header border-bottom">
-                            <h5 class="card-header-title mb-0">Add a payment method</h5>
+                            <h2 class="card-header-title h5 mb-0">@Localizer["Provider.PaymentMethods.AddHeading"]</h2>
                         </div>
                         <div class="card-body">
-                            <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Create" method="post" class="vstack gap-3">
+                            <form asp-action="Create" method="post" class="vstack gap-3">
                                 @Html.AntiForgeryToken()
-                                <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+                                <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
 
                                 <div>
                                     <label asp-for="Form.PaymentMethodType" class="form-label"></label>
-                                    <select asp-for="Form.PaymentMethodType"
-                                            asp-items="Html.GetEnumSelectList<ProviderPaymentMethodType>()"
-                                            class="form-select"></select>
-                                    <span asp-validation-for="Form.PaymentMethodType" class="text-danger small"></span>
+                                    <select asp-for="Form.PaymentMethodType" class="form-select">
+                                        @foreach (var t in Enum.GetValues<ProviderPaymentMethodType>())
+                                        {
+                                            <option value="@t">@TypeLabel(t)</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="Form.PaymentMethodType" class="text-danger small" role="alert"></span>
                                 </div>
 
                                 <div>
                                     <label asp-for="Form.DisplayName" class="form-label"></label>
-                                    <input asp-for="Form.DisplayName" class="form-control" placeholder="e.g. Main bank account" />
-                                    <span asp-validation-for="Form.DisplayName" class="text-danger small"></span>
+                                    <input asp-for="Form.DisplayName" class="form-control" />
+                                    <span asp-validation-for="Form.DisplayName" class="text-danger small" role="alert"></span>
                                 </div>
 
                                 <div>
                                     <label asp-for="Form.AccountIdentifier" class="form-label"></label>
-                                    <input asp-for="Form.AccountIdentifier" class="form-control" />
-                                    <span asp-validation-for="Form.AccountIdentifier" class="text-danger small"></span>
+                                    <input asp-for="Form.AccountIdentifier" dir="ltr" class="form-control font-data" />
+                                    <span asp-validation-for="Form.AccountIdentifier" class="text-danger small" role="alert"></span>
                                 </div>
 
                                 <div>
                                     <label asp-for="Form.BankName" class="form-label"></label>
                                     <input asp-for="Form.BankName" class="form-control" />
-                                    <span asp-validation-for="Form.BankName" class="text-danger small"></span>
+                                    <span asp-validation-for="Form.BankName" class="text-danger small" role="alert"></span>
                                 </div>
 
                                 <div class="form-check">
@@ -77,28 +67,27 @@
                                 </div>
 
                                 <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-plus-lg me-1"></i>Add payment method
-                                    </button>
+                                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.PaymentMethods.AddSubmit"]</button>
                                 </div>
                             </form>
                         </div>
                     </div>
-                </permission>
-            </div>
+                </div>
+            </permission>
 
             <div class="col-lg-7">
-                <div class="card border h-100">
+                <div class="card shadow-sm h-100">
                     <div class="card-header border-bottom d-flex align-items-center justify-content-between">
-                        <h5 class="card-header-title mb-0">My payment methods</h5>
-                        <span class="badge text-bg-light">@Model.Methods.Count</span>
+                        <h2 class="card-header-title h5 mb-0">@Localizer["Provider.PaymentMethods.DirectoryHeading"]</h2>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary"><bdi dir="ltr" class="font-data">@Model.Methods.Count</bdi></span>
                     </div>
                     <div class="card-body">
                         @if (!Model.HasMethods)
                         {
-                            <div class="text-center text-body-secondary py-4">
-                                <i class="bi bi-credit-card-2-back fs-1 d-block mb-2"></i>
-                                No payment methods yet. Add one to receive payouts.
+                            <div class="text-center py-5">
+                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                                <p class="mb-1 fw-semibold">@Localizer["Provider.PaymentMethods.EmptyTitle"]</p>
+                                <p class="mb-0 text-secondary">@Localizer["Provider.PaymentMethods.EmptyMessage"]</p>
                             </div>
                         }
                         else
@@ -107,11 +96,11 @@
                                 <table class="table table-hover align-middle mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Name</th>
-                                            <th>Type</th>
-                                            <th>Account</th>
-                                            <th>Status</th>
-                                            <th class="text-end">Actions</th>
+                                            <th scope="col">@Localizer["Provider.PaymentMethods.ColName"]</th>
+                                            <th scope="col">@Localizer["Provider.PaymentMethods.ColType"]</th>
+                                            <th scope="col">@Localizer["Provider.PaymentMethods.ColAccount"]</th>
+                                            <th scope="col">@Localizer["Provider.PaymentMethods.ColStatus"]</th>
+                                            <th scope="col" class="text-end">@Localizer["Provider.PaymentMethods.ColActions"]</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -119,10 +108,10 @@
                                         {
                                             <tr>
                                                 <td>
-                                                    @m.DisplayName
+                                                    <span class="fw-semibold">@m.DisplayName</span>
                                                     @if (m.IsDefault)
                                                     {
-                                                        <span class="badge text-bg-primary ms-1">Default</span>
+                                                        <span class="badge bg-primary bg-opacity-10 text-primary ms-1"><i class="fa-solid fa-star fa-fw" aria-hidden="true"></i> @Localizer["Provider.PaymentMethods.Default"]</span>
                                                     }
                                                     @if (!string.IsNullOrWhiteSpace(m.BankName))
                                                     {
@@ -130,73 +119,64 @@
                                                     }
                                                 </td>
                                                 <td>@TypeLabel(m.PaymentMethodType)</td>
-                                                <td><span class="font-monospace small">@m.AccountIdentifier</span></td>
+                                                <td><bdi dir="ltr" class="font-data small">@m.AccountIdentifier</bdi></td>
                                                 <td>
                                                     @if (m.IsVerified)
                                                     {
-                                                        <span class="badge text-bg-success">Verified</span>
+                                                        <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Provider.PaymentMethods.Verified"]</span>
                                                     }
                                                     else
                                                     {
-                                                        <span class="badge text-bg-secondary">Unverified</span>
+                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-clock fa-fw" aria-hidden="true"></i> @Localizer["Provider.PaymentMethods.Unverified"]</span>
                                                     }
                                                 </td>
                                                 <td class="text-end">
                                                     <permission require="@WebPermission.ProviderPaymentMethod.Update">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                                data-bs-toggle="collapse" data-bs-target="#edit-pm-@m.Id"
-                                                                aria-expanded="false" aria-controls="edit-pm-@m.Id"
-                                                                aria-label="Edit @m.DisplayName">
-                                                            <i class="bi bi-pencil" aria-hidden="true"></i>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#edit-pm-@m.Id" aria-expanded="false" aria-controls="edit-pm-@m.Id" aria-label="@Localizer["Provider.PaymentMethods.EditLabel", m.DisplayName]">
+                                                            <i class="fa-solid fa-pen" aria-hidden="true"></i>
                                                         </button>
                                                     </permission>
                                                     <permission require="@WebPermission.ProviderPaymentMethod.Delete">
-                                                        <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Delete"
-                                                              asp-route-id="@m.Id" method="post" class="d-inline"
-                                                              onsubmit="return confirm('Delete this payment method?');">
-                                                            @Html.AntiForgeryToken()
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete @m.DisplayName">
-                                                                <i class="bi bi-trash" aria-hidden="true"></i>
-                                                            </button>
-                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#del-pm-@m.Id.ToString("N")" aria-label="@Localizer["Provider.PaymentMethods.DeleteLabel", m.DisplayName]">
+                                                            <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                                        </button>
                                                     </permission>
                                                 </td>
                                             </tr>
                                             <permission require="@WebPermission.ProviderPaymentMethod.Update">
                                                 <tr class="collapse" id="edit-pm-@m.Id">
                                                     <td colspan="5">
-                                                        <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Edit"
-                                                              asp-route-id="@m.Id" method="post" class="row g-2 align-items-end">
+                                                        <form asp-action="Edit" asp-route-id="@m.Id" method="post" class="row g-2 align-items-end">
                                                             @Html.AntiForgeryToken()
                                                             <div class="col-md-3">
-                                                                <label class="form-label small mb-1" for="pmtype-@m.Id">Type</label>
+                                                                <label class="form-label small mb-1" for="pmtype-@m.Id">@Localizer["Provider.PaymentMethods.ColType"]</label>
                                                                 <select id="pmtype-@m.Id" name="PaymentMethodType" class="form-select form-select-sm">
-                                                                    @foreach (ProviderPaymentMethodType t in Enum.GetValues<ProviderPaymentMethodType>())
+                                                                    @foreach (var t in Enum.GetValues<ProviderPaymentMethodType>())
                                                                     {
                                                                         <option value="@((int)t)" selected="@(m.PaymentMethodType == t)">@TypeLabel(t)</option>
                                                                     }
                                                                 </select>
                                                             </div>
                                                             <div class="col-md-3">
-                                                                <label class="form-label small mb-1" for="pmname-@m.Id">Display name</label>
+                                                                <label class="form-label small mb-1" for="pmname-@m.Id">@Localizer["Provider.PaymentMethods.EditDisplayName"]</label>
                                                                 <input id="pmname-@m.Id" name="DisplayName" value="@m.DisplayName" class="form-control form-control-sm" maxlength="100" required />
                                                             </div>
                                                             <div class="col-md-3">
-                                                                <label class="form-label small mb-1" for="pmacct-@m.Id">Account</label>
-                                                                <input id="pmacct-@m.Id" name="AccountIdentifier" value="@m.AccountIdentifier" class="form-control form-control-sm" dir="ltr" maxlength="100" required />
+                                                                <label class="form-label small mb-1" for="pmacct-@m.Id">@Localizer["Provider.PaymentMethods.ColAccount"]</label>
+                                                                <input id="pmacct-@m.Id" name="AccountIdentifier" value="@m.AccountIdentifier" class="form-control form-control-sm font-data" dir="ltr" maxlength="100" required />
                                                             </div>
                                                             <div class="col-md-2">
-                                                                <label class="form-label small mb-1" for="pmbank-@m.Id">Bank</label>
+                                                                <label class="form-label small mb-1" for="pmbank-@m.Id">@Localizer["Provider.PaymentMethods.EditBank"]</label>
                                                                 <input id="pmbank-@m.Id" name="BankName" value="@m.BankName" class="form-control form-control-sm" maxlength="100" />
                                                             </div>
                                                             <div class="col-md-1">
                                                                 <div class="form-check">
                                                                     <input type="checkbox" name="IsDefault" value="true" class="form-check-input" id="pmdef-@m.Id" @(m.IsDefault ? "checked" : "") />
-                                                                    <label class="form-check-label small" for="pmdef-@m.Id">Default</label>
+                                                                    <label class="form-check-label small" for="pmdef-@m.Id">@Localizer["Provider.PaymentMethods.Default"]</label>
                                                                 </div>
                                                             </div>
                                                             <div class="col-12">
-                                                                <button type="submit" class="btn btn-sm btn-primary">Save changes</button>
+                                                                <button type="submit" class="btn btn-sm btn-primary">@Localizer["Provider.PaymentMethods.Save"]</button>
                                                             </div>
                                                         </form>
                                                     </td>
@@ -213,6 +193,28 @@
         </div>
     </div>
 </section>
+
+<permission require="@WebPermission.ProviderPaymentMethod.Delete">
+    @foreach (var m in Model.Methods)
+    {
+        <div class="modal fade" id="del-pm-@m.Id.ToString("N")" tabindex="-1" aria-labelledby="del-pm-title-@m.Id.ToString("N")" aria-describedby="del-pm-body-@m.Id.ToString("N")" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-action="Delete" asp-route-id="@m.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="del-pm-title-@m.Id.ToString("N")">@Localizer["Provider.PaymentMethods.DeleteTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.PaymentMethods.Cancel"]"></button>
+                    </div>
+                    <div class="modal-body" id="del-pm-body-@m.Id.ToString("N")">@Localizer["Provider.PaymentMethods.DeleteBody", m.DisplayName]</div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.PaymentMethods.Cancel"]</button>
+                        <button type="submit" class="btn btn-danger">@Localizer["Provider.PaymentMethods.DeleteConfirm"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</permission>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

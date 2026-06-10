@@ -1,110 +1,140 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
-@using YallaJo.Web.Areas.Provider.Models.TourSchedules
 @using YallaJo.Web.Areas.Provider.Shared
+@using YallaJo.Web.Areas.Provider.Models.Tours
+@using YallaJo.Web.Areas.Provider.Models.TourSchedules
 @model TourSchedulesIndexVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = $"Schedules — {Model.TourName}";
+    ViewData["Title"] = Localizer["Provider.TourSchedules.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
 }
 
-<partial name="_ProviderSidebar" model="@(new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" })" />
+<partial name="_ProviderSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container vstack gap-4">
-        <div class="d-sm-flex justify-content-between align-items-center">
+        <div class="d-sm-flex justify-content-between align-items-start gap-3">
             <div>
-                <h1 class="fs-4 mb-0"><i class="bi bi-calendar-event me-2"></i>Schedules</h1>
-                <span class="small text-body-secondary"><bdi>@Model.TourName</bdi>@(string.IsNullOrWhiteSpace(Model.TourStatusLabel) ? "" : $" · {Model.TourStatusLabel}")</span>
+                <h1 class="fs-4 mb-1"><i class="fa-solid fa-calendar-days me-2" aria-hidden="true"></i>@Localizer["Provider.TourSchedules.Heading"]</h1>
+                <p class="text-body-secondary mb-0"><bdi dir="ltr">@Model.TourName</bdi> <span class="badge bg-secondary bg-opacity-10 text-secondary ms-1">@Model.TourStatusLabel</span></p>
             </div>
-            <div class="mt-2 mt-sm-0 d-flex gap-2">
-                <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
-                   class="btn btn-sm btn-secondary-soft"><i class="bi bi-arrow-left me-1"></i>Back to listing</a>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-sm btn-secondary-soft" asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId">
+                    <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.TourSchedules.BackToListing"]
+                </a>
                 <permission require="@WebPermission.TourSchedule.Create">
-                    <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId"
-                       class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add schedule</a>
+                    <a class="btn btn-sm btn-primary" asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId">
+                        <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourSchedules.AddSchedule"]
+                    </a>
                 </permission>
             </div>
         </div>
 
-        <partial name="_TourWizardSteps" model="@(new YallaJo.Web.Areas.Provider.Models.Tours.TourWizardStepsVm { TourId = Model.TourId, CurrentStep = 3 })" />
+        <partial name="_TourWizardSteps" model="new TourWizardStepsVm { TourId = Model.TourId, CurrentStep = 3 }" />
 
-        @if (!Model.HasActiveSchedule)
+        @if (Model.HasSchedules && !Model.HasActiveSchedule)
         {
-            <div class="alert alert-info mb-0" role="status">
-                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
-                A listing needs at least one <strong>active schedule</strong> before it can be submitted for review.
+            <div class="alert alert-info d-flex align-items-center gap-2 mb-0" role="status">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                <span>@Localizer["Provider.TourSchedules.ActiveRequired"]</span>
             </div>
         }
 
-        @if (!Model.HasSchedules)
-        {
-            <div class="card border">
-                <div class="card-body text-center py-5">
-                    <i class="bi bi-calendar-event fs-1 text-body-secondary d-block mb-2" aria-hidden="true"></i>
-                    <h2 class="h6 mb-1">No schedules yet</h2>
-                    <p class="text-body-secondary mb-3">Add a weekly schedule so travelers know when the tour runs.</p>
-                    <permission require="@WebPermission.TourSchedule.Create">
-                        <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId"
-                           class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add a schedule</a>
-                    </permission>
-                </div>
+        <section class="card shadow" aria-labelledby="schedules-heading">
+            <div class="card-header border-bottom">
+                <h2 id="schedules-heading" class="card-header-title h5 mb-0">@Localizer["Provider.TourSchedules.Heading"]</h2>
             </div>
-        }
-        else
-        {
-            <div class="card border">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <caption class="visually-hidden">Tour schedules</caption>
-                        <thead class="table-light">
-                            <tr>
-                                <th scope="col">Day</th>
-                                <th scope="col">Time</th>
-                                <th scope="col">Status</th>
-                                <th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var s in Model.Schedules)
-                            {
+            <div class="card-body">
+                @if (!Model.HasSchedules)
+                {
+                    <div class="text-center py-5">
+                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                        <h3 class="h5">@Localizer["Provider.TourSchedules.EmptyTitle"]</h3>
+                        <p class="mb-3 text-body-secondary">@Localizer["Provider.TourSchedules.EmptyMsg"]</p>
+                        <permission require="@WebPermission.TourSchedule.Create">
+                            <a class="btn btn-sm btn-primary-soft" asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId">
+                                <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourSchedules.AddFirst"]
+                            </a>
+                        </permission>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <caption class="visually-hidden">@Localizer["Provider.TourSchedules.TableCaption"]</caption>
+                            <thead>
                                 <tr>
-                                    <td class="fw-semibold">@s.DayLabel</td>
-                                    <td><span dir="ltr">@s.TimeRangeLabel</span></td>
-                                    <td>
-                                        @if (s.IsActive)
-                                        {
-                                            <span class="badge text-bg-success"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>Active</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge text-bg-secondary"><i class="bi bi-slash-circle me-1" aria-hidden="true"></i>Inactive</span>
-                                        }
-                                    </td>
-                                    <td class="text-end">
-                                        <div class="d-inline-flex justify-content-end gap-1">
-                                            <permission require="@WebPermission.TourSchedule.Update">
-                                                <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Edit"
-                                                   asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id"
-                                                   class="btn btn-sm btn-outline-secondary" aria-label="Edit schedule"><i class="bi bi-pencil" aria-hidden="true"></i></a>
-                                            </permission>
-                                            <permission require="@WebPermission.TourSchedule.Delete">
-                                                <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Delete"
-                                                      asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id"
-                                                      method="post" class="d-inline"
-                                                      onsubmit="return confirm('Delete this schedule?');">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="Delete schedule"><i class="bi bi-trash" aria-hidden="true"></i></button>
-                                                </form>
-                                            </permission>
-                                        </div>
-                                    </td>
+                                    <th scope="col">@Localizer["Provider.TourSchedules.ColDay"]</th>
+                                    <th scope="col">@Localizer["Provider.TourSchedules.ColTime"]</th>
+                                    <th scope="col">@Localizer["Provider.TourSchedules.ColStatus"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Provider.TourSchedules.ColActions"]</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in Model.Schedules)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@s.DayLabel</td>
+                                        <td><bdi dir="ltr" class="font-data">@s.TimeRangeLabel</bdi></td>
+                                        <td>
+                                            @if (s.IsActive)
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Provider.TourSchedules.Active"]</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Provider.TourSchedules.Inactive"]</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-2">
+                                                <permission require="@WebPermission.TourSchedule.Update">
+                                                    <a class="btn btn-sm btn-outline-secondary" asp-area="Provider" asp-controller="TourSchedules" asp-action="Edit" asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id" aria-label="@Localizer["Provider.TourSchedules.Edit", s.DayLabel]">
+                                                        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                                    </a>
+                                                </permission>
+                                                <permission require="@WebPermission.TourSchedule.Delete">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-schedule-@s.Id" aria-label="@Localizer["Provider.TourSchedules.Delete", s.DayLabel]">
+                                                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                                    </button>
+                                                </permission>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
-        }
+        </section>
     </div>
 </section>
+
+<permission require="@WebPermission.TourSchedule.Delete">
+    @foreach (var s in Model.Schedules)
+    {
+        var titleId = "delete-schedule-title-" + s.Id;
+        var bodyId = "delete-schedule-body-" + s.Id;
+        <div class="modal fade" id="delete-schedule-@s.Id" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bodyId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form class="modal-content" role="dialog" aria-modal="true" asp-area="Provider" asp-controller="TourSchedules" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="@titleId">@Localizer["Provider.TourSchedules.DeleteTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourSchedules.Close"]"></button>
+                    </div>
+                    <div class="modal-body" id="@bodyId">@Localizer["Provider.TourSchedules.DeleteBody", s.DayLabel]</div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.TourSchedules.Cancel"]</button>
+                        <button type="submit" class="btn btn-danger">@Localizer["Provider.TourSchedules.DeleteConfirm"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</permission>

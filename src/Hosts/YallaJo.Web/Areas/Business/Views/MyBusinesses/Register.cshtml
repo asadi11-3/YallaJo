@@ -1,9 +1,12 @@
+@using System.Text.Json
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Business.Models.MyBusinesses
 @using YallaJo.Web.Areas.Business.Shared
-@using YallaJo.Web.Infrastructure.Authorization
 @model RegisterBusinessVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Register a business";
+    ViewData["Title"] = Localizer["Business.Register.Title"].Value;
+    ViewData["BusinessNav"] = "Register";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
 }
@@ -11,177 +14,157 @@
 <partial name="_BusinessSidebar" model="sidebar" />
 
 <section class="pt-0">
-    <div class="container vstack gap-4">
-        <div class="row align-items-center">
-            <div class="col">
-                <a class="small text-body-secondary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">
-                    <i class="bi bi-arrow-left me-1"></i>All businesses
-                </a>
-                <h1 class="h3 mb-0 mt-1">Register a business</h1>
-                <p class="text-body-secondary mb-0 mt-1">
-                    Add your business so travellers can find it. After you submit, it is reviewed
-                    before it goes live. You can add opening hours, services and staff afterwards.
-                </p>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-9 vstack gap-4">
+                <div>
+                    <a class="small text-body-secondary text-decoration-none" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">
+                        <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Business.Register.BackToList"]
+                    </a>
+                    <h1 class="fs-4 mb-1 mt-1"><i class="fa-solid fa-circle-plus me-2" aria-hidden="true"></i>@Localizer["Business.Register.Heading"]</h1>
+                    <p class="text-body-secondary mb-0">@Localizer["Business.Register.Intro"]</p>
+                </div>
+
+                @if (ViewBag.Error is string err) { <div class="alert alert-danger" role="alert">@err</div> }
+
+                @if (!Model.HasPlaces)
+                {
+                    <div class="card card-body border text-center py-5">
+                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3 mx-auto" />
+                        <h2 class="h5 mb-1">@Localizer["Business.Register.NoPlacesTitle"]</h2>
+                        <p class="text-body-secondary mb-0">@Localizer["Business.Register.NoPlacesMsg"]</p>
+                    </div>
+                }
+                else
+                {
+                    <section class="card shadow" aria-labelledby="register-heading">
+                        <div class="card-header border-bottom">
+                            <h2 id="register-heading" class="card-header-title h5 mb-0">@Localizer["Business.Register.DetailsHeading"]</h2>
+                        </div>
+                        <div class="card-body">
+                            <form asp-area="Business" asp-controller="MyBusinesses" asp-action="Register" method="post" data-yj-component="business-register-form">
+                                @Html.AntiForgeryToken()
+                                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <label asp-for="Form.Name" class="form-label">@Localizer["Business.Register.Name"]</label>
+                                        <input asp-for="Form.Name" class="form-control" autocomplete="off" />
+                                        <span asp-validation-for="Form.Name" class="text-danger small" role="alert"></span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="Form.BusinessType" class="form-label">@Localizer["Business.Register.Type"]</label>
+                                        <select asp-for="Form.BusinessType" asp-items="@(new SelectList(Model.BusinessTypes, "Value", "Text"))" class="form-select">
+                                            <option value="">@Localizer["Business.Register.TypeChoose"]</option>
+                                        </select>
+                                        <span asp-validation-for="Form.BusinessType" class="text-danger small" role="alert"></span>
+                                    </div>
+
+                                    <div class="col-md-8">
+                                        <label asp-for="Form.PlaceId" class="form-label">@Localizer["Business.Register.Place"]</label>
+                                        <select asp-for="Form.PlaceId" id="placeSelect" class="form-select" aria-describedby="place-help">
+                                            <option value="">@Localizer["Business.Register.PlaceChoose"]</option>
+                                            @foreach (var p in Model.Places)
+                                            {
+                                                <option value="@p.Value" selected="@p.Selected">@p.Text</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="Form.PlaceId" class="text-danger small" role="alert"></span>
+                                        <div class="form-text" id="place-help">@Localizer["Business.Register.PlaceHelp"]</div>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label asp-for="Form.Latitude" class="form-label">@Localizer["Business.Register.Latitude"]</label>
+                                        <input asp-for="Form.Latitude" class="form-control font-data" type="number" step="any" dir="ltr" />
+                                        <span asp-validation-for="Form.Latitude" class="text-danger small" role="alert"></span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label asp-for="Form.Longitude" class="form-label">@Localizer["Business.Register.Longitude"]</label>
+                                        <input asp-for="Form.Longitude" class="form-control font-data" type="number" step="any" dir="ltr" />
+                                        <span asp-validation-for="Form.Longitude" class="text-danger small" role="alert"></span>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label asp-for="Form.Description" class="form-label">@Localizer["Business.Register.Description"]</label>
+                                        <textarea asp-for="Form.Description" class="form-control" rows="3"></textarea>
+                                        <span asp-validation-for="Form.Description" class="text-danger small" role="alert"></span>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label asp-for="Form.Address" class="form-label">@Localizer["Business.Register.Address"]</label>
+                                        <input asp-for="Form.Address" class="form-control" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label asp-for="Form.City" class="form-label">@Localizer["Business.Register.City"]</label>
+                                        <input asp-for="Form.City" class="form-control" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label asp-for="Form.Country" class="form-label">@Localizer["Business.Register.Country"]</label>
+                                        <input asp-for="Form.Country" class="form-control" />
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label asp-for="Form.PostalCode" class="form-label">@Localizer["Business.Register.PostalCode"]</label>
+                                        <input asp-for="Form.PostalCode" class="form-control font-data" dir="ltr" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label asp-for="Form.Phone" class="form-label">@Localizer["Business.Register.Phone"]</label>
+                                        <input asp-for="Form.Phone" class="form-control font-data" type="tel" dir="ltr" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="Form.Email" class="form-label">@Localizer["Business.Register.Email"]</label>
+                                        <input asp-for="Form.Email" class="form-control font-data" type="email" dir="ltr" />
+                                        <span asp-validation-for="Form.Email" class="text-danger small" role="alert"></span>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label asp-for="Form.Website" class="form-label">@Localizer["Business.Register.Website"]</label>
+                                        <input asp-for="Form.Website" class="form-control font-data" type="url" dir="ltr" placeholder="https://" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label asp-for="Form.LicenseNumber" class="form-label">@Localizer["Business.Register.LicenseNumber"]</label>
+                                        <input asp-for="Form.LicenseNumber" class="form-control font-data" dir="ltr" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label asp-for="Form.TaxId" class="form-label">@Localizer["Business.Register.TaxId"]</label>
+                                        <input asp-for="Form.TaxId" class="form-control font-data" dir="ltr" />
+                                    </div>
+
+                                    <fieldset class="col-12">
+                                        <legend class="form-label">@Localizer["Business.Register.DietaryLegend"]</legend>
+                                        <div class="d-flex flex-wrap gap-4">
+                                            <div class="form-check">
+                                                <input asp-for="Form.IsHalal" class="form-check-input" />
+                                                <label asp-for="Form.IsHalal" class="form-check-label">@Localizer["Business.Register.IsHalal"]</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input asp-for="Form.HasVegetarianOptions" class="form-check-input" />
+                                                <label asp-for="Form.HasVegetarianOptions" class="form-check-label">@Localizer["Business.Register.Vegetarian"]</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input asp-for="Form.HasAlcoholFreeArea" class="form-check-input" />
+                                                <label asp-for="Form.HasAlcoholFreeArea" class="form-check-label">@Localizer["Business.Register.AlcoholFree"]</label>
+                                            </div>
+                                        </div>
+                                    </fieldset>
+                                </div>
+
+                                <div class="mt-4 d-flex flex-wrap gap-2">
+                                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>@Localizer["Business.Register.Submit"]</button>
+                                    <a class="btn btn-primary-soft" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">@Localizer["Business.Register.Cancel"]</a>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <script type="application/json" data-yj-component="business-register">@Html.Raw(JsonSerializer.Serialize(Model.PlaceCoordinates))</script>
+                }
             </div>
         </div>
-
-        @if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
-        @if (TempData["Error"] is string err) { <div class="alert alert-danger">@err</div> }
-
-        @if (!Model.HasPlaces)
-        {
-            <div class="card border">
-                <div class="card-body text-center py-5">
-                    <div class="icon-lg bg-warning-soft text-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:56px;height:56px;">
-                        <i class="bi bi-geo-alt fs-4"></i>
-                    </div>
-                    <h5 class="mb-1">No places available yet</h5>
-                    <p class="text-body-secondary mb-0">
-                        A business must be attached to a place, but none are available right now.
-                        Please check back later or contact support.
-                    </p>
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="card border">
-                <div class="card-header border-bottom">
-                    <h5 class="card-header-title mb-0">Business details</h5>
-                </div>
-                <div class="card-body">
-                    <form asp-area="Business" asp-controller="MyBusinesses" asp-action="Register" method="post">
-                        @Html.AntiForgeryToken()
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-                        <div class="row g-3">
-                            <div class="col-md-8">
-                                <label asp-for="Form.Name" class="form-label"></label>
-                                <input asp-for="Form.Name" class="form-control" autocomplete="off" />
-                                <span asp-validation-for="Form.Name" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-4">
-                                <label asp-for="Form.BusinessType" class="form-label"></label>
-                                <select asp-for="Form.BusinessType" asp-items="@(new SelectList(Model.BusinessTypes, "Value", "Text"))" class="form-select">
-                                    <option value="">Choose a type</option>
-                                </select>
-                                <span asp-validation-for="Form.BusinessType" class="text-danger small"></span>
-                            </div>
-
-                            <div class="col-md-8">
-                                <label asp-for="Form.PlaceId" class="form-label"></label>
-                                <select asp-for="Form.PlaceId" id="placeSelect" class="form-select">
-                                    <option value="">Choose a place</option>
-                                    @foreach (var p in Model.Places)
-                                    {
-                                        <option value="@p.Value" selected="@p.Selected">@p.Text</option>
-                                    }
-                                </select>
-                                <span asp-validation-for="Form.PlaceId" class="text-danger small"></span>
-                                <div class="form-text">The location your business sits within.</div>
-                            </div>
-
-                            <div class="col-md-2">
-                                <label asp-for="Form.Latitude" class="form-label"></label>
-                                <input asp-for="Form.Latitude" class="form-control" type="number" step="any" />
-                                <span asp-validation-for="Form.Latitude" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-2">
-                                <label asp-for="Form.Longitude" class="form-label"></label>
-                                <input asp-for="Form.Longitude" class="form-control" type="number" step="any" />
-                                <span asp-validation-for="Form.Longitude" class="text-danger small"></span>
-                            </div>
-
-                            <div class="col-12">
-                                <label asp-for="Form.Description" class="form-label"></label>
-                                <textarea asp-for="Form.Description" class="form-control" rows="3"></textarea>
-                                <span asp-validation-for="Form.Description" class="text-danger small"></span>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label asp-for="Form.Address" class="form-label"></label>
-                                <input asp-for="Form.Address" class="form-control" />
-                            </div>
-                            <div class="col-md-3">
-                                <label asp-for="Form.City" class="form-label"></label>
-                                <input asp-for="Form.City" class="form-control" />
-                            </div>
-                            <div class="col-md-3">
-                                <label asp-for="Form.Country" class="form-label"></label>
-                                <input asp-for="Form.Country" class="form-control" />
-                            </div>
-
-                            <div class="col-md-3">
-                                <label asp-for="Form.PostalCode" class="form-label"></label>
-                                <input asp-for="Form.PostalCode" class="form-control" />
-                            </div>
-                            <div class="col-md-3">
-                                <label asp-for="Form.Phone" class="form-label"></label>
-                                <input asp-for="Form.Phone" class="form-control" />
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="Form.Email" class="form-label"></label>
-                                <input asp-for="Form.Email" class="form-control" />
-                                <span asp-validation-for="Form.Email" class="text-danger small"></span>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label asp-for="Form.Website" class="form-label"></label>
-                                <input asp-for="Form.Website" class="form-control" placeholder="https://" />
-                            </div>
-                            <div class="col-md-3">
-                                <label asp-for="Form.LicenseNumber" class="form-label"></label>
-                                <input asp-for="Form.LicenseNumber" class="form-control" />
-                            </div>
-                            <div class="col-md-3">
-                                <label asp-for="Form.TaxId" class="form-label"></label>
-                                <input asp-for="Form.TaxId" class="form-control" />
-                            </div>
-
-                            <div class="col-12 d-flex flex-wrap gap-4">
-                                <div class="form-check">
-                                    <input asp-for="Form.IsHalal" class="form-check-input" />
-                                    <label asp-for="Form.IsHalal" class="form-check-label"></label>
-                                </div>
-                                <div class="form-check">
-                                    <input asp-for="Form.HasVegetarianOptions" class="form-check-input" />
-                                    <label asp-for="Form.HasVegetarianOptions" class="form-check-label"></label>
-                                </div>
-                                <div class="form-check">
-                                    <input asp-for="Form.HasAlcoholFreeArea" class="form-check-input" />
-                                    <label asp-for="Form.HasAlcoholFreeArea" class="form-check-label"></label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 d-flex flex-wrap gap-2">
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Register business</button>
-                            <a class="btn btn-primary-soft" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">Cancel</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        }
     </div>
 </section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        (function () {
-            // Pre-fill latitude/longitude from the chosen place's coordinates, but
-            // only when the owner has not already typed their own values.
-            var coords = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PlaceCoordinates));
-            var select = document.getElementById("placeSelect");
-            var lat = document.getElementById("Form_Latitude");
-            var lng = document.getElementById("Form_Longitude");
-            if (!select || !lat || !lng) return;
-            select.addEventListener("change", function () {
-                var c = coords[select.value];
-                if (!c) return;
-                if (!lat.value || lat.value === "0") lat.value = c.Lat;
-                if (!lng.value || lng.value === "0") lng.value = c.Lng;
-            });
-        })();
-    </script>
+    <script src="~/assets/js/business-register.js" asp-append-version="true" defer></script>
 }
