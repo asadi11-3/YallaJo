@@ -11596,4 +11596,157 @@
   <data name="Business.Staff.Role.Staff" xml:space="preserve">
     <value>موظف</value>
   </data>
+<data name="Navbar.Menu" xml:space="preserve">
+<value>القائمة</value>
+</data>
+<data name="Navbar.Explore" xml:space="preserve">
+<value>استكشف</value>
+</data>
+<data name="Navbar.Tours" xml:space="preserve">
+<value>الجولات</value>
+</data>
+<data name="Navbar.Destinations" xml:space="preserve">
+<value>الوجهات</value>
+</data>
+<data name="Navbar.Packages" xml:space="preserve">
+<value>الباقات</value>
+</data>
+<data name="Navbar.Guides" xml:space="preserve">
+<value>المرشدون</value>
+</data>
+<data name="Navbar.Directory" xml:space="preserve">
+<value>الأنشطة التجارية</value>
+</data>
+<data name="Navbar.Stories" xml:space="preserve">
+<value>القصص</value>
+</data>
+<data name="Navbar.More" xml:space="preserve">
+<value>المزيد</value>
+</data>
+<data name="Navbar.Help" xml:space="preserve">
+<value>مركز المساعدة</value>
+</data>
+<data name="Navbar.Faq" xml:space="preserve">
+<value>الأسئلة الشائعة</value>
+</data>
+<data name="Navbar.Contact" xml:space="preserve">
+<value>اتصل بنا</value>
+</data>
+<data name="Navbar.Agencies" xml:space="preserve">
+<value>الوكالات</value>
+</data>
+<data name="Navbar.ListExperience" xml:space="preserve">
+<value>أضف تجربتك</value>
+</data>
+<data name="Navbar.SignIn" xml:space="preserve">
+<value>تسجيل الدخول</value>
+</data>
+<data name="Navbar.Register" xml:space="preserve">
+<value>إنشاء حساب</value>
+</data>
+<data name="Navbar.MyProfile" xml:space="preserve">
+<value>ملفي الشخصي</value>
+</data>
+<data name="Navbar.MyBookings" xml:space="preserve">
+<value>حجوزاتي</value>
+</data>
+<data name="Navbar.Wishlist" xml:space="preserve">
+<value>المفضلة</value>
+</data>
+<data name="Navbar.Settings" xml:space="preserve">
+<value>الإعدادات</value>
+</data>
+<data name="Navbar.SignOut" xml:space="preserve">
+<value>تسجيل الخروج</value>
+</data>
+<data name="Navbar.AdminDashboard" xml:space="preserve">
+<value>لوحة تحكم المشرف</value>
+</data>
+<data name="Navbar.GuideDashboard" xml:space="preserve">
+<value>لوحة تحكم المرشد</value>
+</data>
+<data name="Navbar.ProviderDashboard" xml:space="preserve">
+<value>لوحة تحكم المزوّد</value>
+</data>
+<data name="Navbar.CreatorDashboard" xml:space="preserve">
+<value>استوديو صانع المحتوى</value>
+</data>
+<data name="Navbar.Mode" xml:space="preserve">
+<value>الوضع</value>
+</data>
+<data name="Navbar.ModeLight" xml:space="preserve">
+<value>فاتح</value>
+</data>
+<data name="Navbar.ModeDark" xml:space="preserve">
+<value>داكن</value>
+</data>
+<data name="Navbar.ModeAuto" xml:space="preserve">
+<value>تلقائي</value>
+</data>
+<data name="Navbar.Search" xml:space="preserve">
+<value>بحث</value>
+</data>
+<data name="Navbar.Account" xml:space="preserve">
+<value>الحساب</value>
+</data>
+<data name="Footer.Tagline" xml:space="preserve">
+<value>اكتشف واحجز جولات وتجارب أصيلة في جميع أنحاء الأردن.</value>
+</data>
+<data name="Footer.Explore" xml:space="preserve">
+<value>استكشف</value>
+</data>
+<data name="Footer.Company" xml:space="preserve">
+<value>الشركة</value>
+</data>
+<data name="Footer.Support" xml:space="preserve">
+<value>الدعم</value>
+</data>
+<data name="Footer.Blog" xml:space="preserve">
+<value>المدونة</value>
+</data>
+<data name="Footer.Privacy" xml:space="preserve">
+<value>سياسة الخصوصية</value>
+</data>
+<data name="Footer.Terms" xml:space="preserve">
+<value>شروط الخدمة</value>
+</data>
+<data name="Footer.Rights" xml:space="preserve">
+<value>جميع الحقوق محفوظة.</value>
+</data>
+<data name="MobileNav.Browse" xml:space="preserve">
+<value>تصفح</value>
+</data>
+<data name="MobileNav.Search" xml:space="preserve">
+<value>بحث</value>
+</data>
+<data name="MobileNav.Wishlist" xml:space="preserve">
+<value>المفضلة</value>
+</data>
+<data name="MobileNav.Bookings" xml:space="preserve">
+<value>الحجوزات</value>
+</data>
+<data name="MobileNav.Profile" xml:space="preserve">
+<value>حسابي</value>
+</data>
+<data name="Search.Overlay.Title" xml:space="preserve">
+<value>ابحث في YallaJo</value>
+</data>
+<data name="Search.Overlay.Placeholder" xml:space="preserve">
+<value>ابحث عن جولات ووجهات وتجارب…</value>
+</data>
+<data name="Search.Overlay.Close" xml:space="preserve">
+<value>إغلاق</value>
+</data>
+<data name="Search.Overlay.Recent" xml:space="preserve">
+<value>عمليات البحث الأخيرة</value>
+</data>
+<data name="Search.Overlay.Clear" xml:space="preserve">
+<value>مسح</value>
+</data>
+<data name="Search.Overlay.ViewAll" xml:space="preserve">
+<value>عرض كل النتائج</value>
+</data>
+<data name="Search.Overlay.NoResults" xml:space="preserve">
+<value>لا توجد نتائج مطابقة</value>
+</data>
 </root>

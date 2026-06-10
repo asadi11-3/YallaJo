@@ -3,7 +3,7 @@
 @inject ICurrentUser CurrentUser
 @inject Microsoft.Extensions.Localization.IStringLocalizer<YallaJo.Web.Resources.SharedResource> L
 @{
-    var displayName = User.Identity?.Name ?? "Account";
+    var displayName = User.Identity?.Name ?? L["Navbar.Account"].Value;
 }
 
 <header class="navbar-light header-sticky">
@@ -17,60 +17,61 @@
             </a>
             <!-- Logo END -->
             <!-- Responsive navbar toggler -->
-            <button class="navbar-toggler ms-auto p-0 p-sm-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler ms-auto p-0 p-sm-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="@L["Navbar.Menu"]">
                 <span class="navbar-toggler-animation">
                     <span></span>
                     <span></span>
                     <span></span>
                 </span>
-                <span class="d-none d-sm-inline-block small">Menu</span>
+                <span class="d-none d-sm-inline-block small">@L["Navbar.Menu"]</span>
             </button>
 
             <!-- Main navbar START -->
             <div class="navbar-collapse collapse" id="navbarCollapse">
                 <ul class="navbar-nav navbar-nav-scroll me-auto">
 
-                    <!-- Nav item Tours -->
-                    <li class="nav-item">
-                        <a class="nav-link" asp-action="Index" asp-controller="Tours" asp-area="Public">Explore</a>
+                    <!-- Nav item: Explore dropdown (Tours / Packages / Guides / Directory) -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="exploreDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">@L["Navbar.Explore"]</a>
+                        <ul class="dropdown-menu" aria-labelledby="exploreDropdown">
+                            <li><a class="dropdown-item" asp-area="Public" asp-controller="Tours" asp-action="Index">@L["Navbar.Tours"]</a></li>
+                            <li><a class="dropdown-item" asp-area="Public" asp-controller="Packages" asp-action="Index">@L["Navbar.Packages"]</a></li>
+                            <li><a class="dropdown-item" asp-area="Public" asp-controller="Guides" asp-action="Index">@L["Navbar.Guides"]</a></li>
+                            <li><a class="dropdown-item" asp-area="Public" asp-controller="Directory" asp-action="Index">@L["Navbar.Directory"]</a></li>
+                        </ul>
                     </li>
 
                     <!-- Nav item Places -->
                     <li class="nav-item">
-                        <a class="nav-link" asp-action="Index" asp-controller="Places" asp-area="Public">
-                            Destinations
-                        </a>
+                        <a class="nav-link" asp-action="Index" asp-controller="Places" asp-area="Public">@L["Navbar.Destinations"]</a>
                     </li>
 
-                    <!-- Nav item Experiences -->
+                    <!-- Nav item Blog -->
                     <li class="nav-item">
-                        <a class="nav-link" asp-action="Index" asp-controller="Blog" asp-area="Public">
-                            Stories
-                        </a>
+                        <a class="nav-link" asp-action="Index" asp-controller="Blog" asp-area="Public">@L["Navbar.Stories"]</a>
+                    </li>
+
+                    <!-- Nav item: More dropdown (Help / Contact / Agencies) -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="moreDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">@L["Navbar.More"]</a>
+                        <ul class="dropdown-menu" aria-labelledby="moreDropdown">
+                            <li><a class="dropdown-item" asp-area="Public" asp-controller="Help" asp-action="Index">@L["Navbar.Help"]</a></li>
+                            <li><a class="dropdown-item" asp-area="Public" asp-controller="Contact" asp-action="Index">@L["Navbar.Contact"]</a></li>
+                            <li><a class="dropdown-item" asp-area="Public" asp-controller="Agencies" asp-action="Index">@L["Navbar.Agencies"]</a></li>
+                        </ul>
                     </li>
 
                     <!-- Nav item: provider onboarding CTA. Authenticated users go to the provider application; guests sign up first. -->
                     <li class="nav-item">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <a class="nav-link" asp-area="Provider" asp-controller="Provider" asp-action="Apply">
-                                List your experience
-                            </a>
+                            <a class="nav-link" asp-area="Provider" asp-controller="Provider" asp-action="Apply">@L["Navbar.ListExperience"]</a>
                         }
                         else
                         {
                             @* TODO(backend): SignUp does not honor returnUrl today (only SignIn does); once it does, pass returnUrl=/provider/apply. *@
-                            <a class="nav-link" asp-area="Auth" asp-controller="Auth" asp-action="SignUp">
-                                List your experience
-                            </a>
+                            <a class="nav-link" asp-area="Auth" asp-controller="Auth" asp-action="SignUp">@L["Navbar.ListExperience"]</a>
                         }
-                    </li>
-
-                    <!-- Nav item Help / FAQ -->
-                    <li class="nav-item">
-                        <a class="nav-link" asp-action="Index" asp-controller="Help" asp-area="Public">
-                            FAQ
-                        </a>
                     </li>
 
                 </ul>
@@ -79,10 +80,17 @@
             <!-- Profile and Notification START -->
             <ul class="nav flex-row align-items-center list-unstyled ms-xl-auto">
 
-                <!-- List your experience CTA -->
+                <!-- Search trigger START (PE1: plain link to Tours when JS is off; search-overlay.js intercepts) -->
+                <li class="nav-item">
+                    <a class="nav-link p-2 js-search-toggle" asp-area="Public" asp-controller="Tours" asp-action="Index" aria-label="@L["Navbar.Search"]">
+                        <i class="bi bi-search fs-5" aria-hidden="true"></i>
+                    </a>
+                </li>
+                <!-- Search trigger END -->
+
                 <!-- Language toggle START -->
                 <li class="nav-item ms-0 ms-md-2">
-                    <div class="lang-toggle" role="group" aria-label="Language switch">
+                    <div class="lang-toggle" role="group" aria-label="@L["Nav.Language"]">
                         <button type="button" class="lang-toggle-btn active" data-lang="en" data-dir="ltr">EN</button>
                         <button type="button" class="lang-toggle-btn" data-lang="ar" data-dir="rtl">عربي</button>
                     </div>
@@ -117,14 +125,14 @@
 
                             <!-- Links -->
                             <li> <hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Profile" asp-action="Index"><i class="bi bi-person fa-fw me-2"></i>My Profile</a></li>
-                            <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Bookings" asp-action="Index"><i class="bi bi-bookmark-check fa-fw me-2"></i>My Bookings</a></li>
-                            <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Wishlist" asp-action="Index"><i class="bi bi-heart fa-fw me-2"></i>Wishlist</a></li>
+                            <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Profile" asp-action="Index"><i class="bi bi-person fa-fw me-2"></i>@L["Navbar.MyProfile"]</a></li>
+                            <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Bookings" asp-action="Index"><i class="bi bi-bookmark-check fa-fw me-2"></i>@L["Navbar.MyBookings"]</a></li>
+                            <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Wishlist" asp-action="Index"><i class="bi bi-heart fa-fw me-2"></i>@L["Navbar.Wishlist"]</a></li>
                             <li> <hr class="dropdown-divider"></li>
                             <role require="Admin,SuperAdmin,Owner">
                                 <permission require="@WebPermission.AdminDashboard.Read">
                                     <a href="/admin" class="dropdown-item">
-                                        <i class="bi bi-grid fa-fw me-2"></i>Admin Dashboard
+                                        <i class="bi bi-grid fa-fw me-2"></i>@L["Navbar.AdminDashboard"]
                                     </a>
                                 </permission>
                             </role>
@@ -132,7 +140,7 @@
                             <role require="TourGuide">
                                 <permission require="@WebPermission.GuideDashboard.Read">
                                     <a href="/guide" class="dropdown-item">
-                                        <i class="bi bi-grid fa-fw me-2"></i>Guide Dashboard
+                                        <i class="bi bi-grid fa-fw me-2"></i>@L["Navbar.GuideDashboard"]
                                     </a>
                                 </permission>
                             </role>
@@ -140,7 +148,7 @@
                             <role require="Provider">
                                 <permission require="@WebPermission.ProviderDashboard.Read">
                                     <a href="/provider" class="dropdown-item">
-                                        <i class="bi bi-grid fa-fw me-2"></i>Provider Dashboard
+                                        <i class="bi bi-grid fa-fw me-2"></i>@L["Navbar.ProviderDashboard"]
                                     </a>
                                 </permission>
                             </role>
@@ -148,16 +156,16 @@
                             <role require="Creator">
                                 <permission require="@WebPermission.Creator.Read">
                                     <a href="/creator" class="dropdown-item">
-                                        <i class="bi bi-grid fa-fw me-2"></i>Creator Dashboard
+                                        <i class="bi bi-grid fa-fw me-2"></i>@L["Navbar.CreatorDashboard"]
                                     </a>
                                 </permission>
                             </role>
 
-                            <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Settings" asp-action="Index"><i class="bi bi-gear fa-fw me-2"></i>Settings</a></li>
+                            <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Settings" asp-action="Index"><i class="bi bi-gear fa-fw me-2"></i>@L["Navbar.Settings"]</a></li>
                             <li>
                                 <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="d-grid">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="dropdown-item bg-danger-soft-hover text-danger"><i class="bi bi-power fa-fw me-2"></i>Sign Out</button>
+                                    <button type="submit" class="dropdown-item bg-danger-soft-hover text-danger"><i class="bi bi-power fa-fw me-2"></i>@L["Navbar.SignOut"]</button>
                                 </form>
                             </li>
                             <li> <hr class="dropdown-divider"></li>
@@ -165,21 +173,21 @@
                             <!-- Dark mode options START -->
                             <li>
                                 <div class="nav-pills-primary-soft theme-icon-active d-flex justify-content-between align-items-center p-2 pb-0">
-                                    <span>Mode:</span>
-                                    <button type="button" class="btn btn-link nav-link text-primary-hover mb-0 p-0" data-bs-theme-value="light" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Light">
+                                    <span>@L["Navbar.Mode"]</span>
+                                    <button type="button" class="btn btn-link nav-link text-primary-hover mb-0 p-0" data-bs-theme-value="light" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@L["Navbar.ModeLight"]" aria-label="@L["Navbar.ModeLight"]">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sun fa-fw mode-switch" viewBox="0 0 16 16">
                                             <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z" />
                                             <use href="#"></use>
                                         </svg>
                                     </button>
-                                    <button type="button" class="btn btn-link nav-link text-primary-hover mb-0 p-0" data-bs-theme-value="dark" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Dark">
+                                    <button type="button" class="btn btn-link nav-link text-primary-hover mb-0 p-0" data-bs-theme-value="dark" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@L["Navbar.ModeDark"]" aria-label="@L["Navbar.ModeDark"]">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-moon-stars fa-fw mode-switch" viewBox="0 0 16 16">
                                             <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278zM4.858 1.311A7.269 7.269 0 0 0 1.025 7.71c0 4.02 3.279 7.276 7.319 7.276a7.316 7.316 0 0 0 5.205-2.162c-.337.042-.68.063-1.029.063-4.61 0-8.343-3.714-8.343-8.29 0-1.167.242-2.278.681-3.286z" />
                                             <path d="M10.794 3.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387a1.734 1.734 0 0 0-1.097 1.097l-.387 1.162a.217.217 0 0 1-.412 0l-.387-1.162A1.734 1.734 0 0 0 9.31 6.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387a1.734 1.734 0 0 0 1.097-1.097l.387-1.162zM13.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L13.863.1z" />
                                             <use href="#"></use>
                                         </svg>
                                     </button>
-                                    <button type="button" class="btn btn-link nav-link text-primary-hover mb-0 p-0 active" data-bs-theme-value="auto" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Auto">
+                                    <button type="button" class="btn btn-link nav-link text-primary-hover mb-0 p-0 active" data-bs-theme-value="auto" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@L["Navbar.ModeAuto"]" aria-label="@L["Navbar.ModeAuto"]">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-circle-half fa-fw mode-switch" viewBox="0 0 16 16">
                                             <path d="M8 15A7 7 0 1 0 8 1v14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z" />
                                             <use href="#"></use>
@@ -194,18 +202,51 @@
                 }
                 else
                 {
-
-                    <li class="nav-item ms-2">
-                        <a class="btn btn-primary mb-0" asp-area="Auth" asp-controller="Auth" asp-action="SignIn">Sign In</a>
+                    <li class="nav-item ms-2 d-none d-sm-block">
+                        <a class="nav-link" asp-area="Auth" asp-controller="Auth" asp-action="SignIn">@L["Navbar.SignIn"]</a>
                     </li>
-
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-primary mb-0" asp-area="Auth" asp-controller="Auth" asp-action="SignUp">@L["Navbar.Register"]</a>
+                    </li>
                 }
 
-				
             </ul>
             <!-- Profile and Notification END -->
 
         </div>
     </nav>
     <!-- Logo Nav END -->
+
+    <!-- Search overlay START (UI-UX-S2 autocomplete; PE1 fallback = the trigger is a real link to Tours and this form is a plain GET) -->
+    <div class="offcanvas offcanvas-top search-overlay" tabindex="-1" id="searchOverlay" aria-labelledby="searchOverlayLabel"
+         data-yj-component="search-overlay"
+         data-suggest-url="@Url.Action("Suggest", "Search", new { area = "Public" })"
+         data-tours-url="@Url.Action("Index", "Tours", new { area = "Public" })"
+         data-no-results="@L["Search.Overlay.NoResults"]"
+         data-view-all="@L["Search.Overlay.ViewAll"]">
+        <div class="offcanvas-header pb-0">
+            <h5 class="offcanvas-title" id="searchOverlayLabel">@L["Search.Overlay.Title"]</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="@L["Search.Overlay.Close"]"></button>
+        </div>
+        <div class="offcanvas-body">
+            <form method="get" asp-area="Public" asp-controller="Tours" asp-action="Index" role="search" id="searchOverlayForm">
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-transparent"><i class="bi bi-search" aria-hidden="true"></i></span>
+                    <input type="search" class="form-control" id="searchOverlayInput" name="q"
+                           placeholder="@L["Search.Overlay.Placeholder"]" autocomplete="off"
+                           role="combobox" aria-expanded="false" aria-controls="searchOverlaySuggest" aria-autocomplete="list" />
+                    <button class="btn btn-primary" type="submit">@L["Navbar.Search"]</button>
+                </div>
+            </form>
+            <div id="searchOverlaySuggest" class="search-overlay-suggestions list-group mt-2 d-none" role="listbox" aria-label="@L["Search.Overlay.Title"]"></div>
+            <div id="searchOverlayRecent" class="mt-3 d-none">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small text-muted">@L["Search.Overlay.Recent"]</span>
+                    <button type="button" class="btn btn-link btn-sm p-0" id="searchOverlayClearRecent">@L["Search.Overlay.Clear"]</button>
+                </div>
+                <div class="d-flex flex-wrap gap-2" id="searchOverlayRecentChips"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Search overlay END -->
 </header>

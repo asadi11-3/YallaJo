@@ -11596,4 +11596,157 @@
   <data name="Business.Staff.Role.Staff" xml:space="preserve">
     <value>Staff</value>
   </data>
+<data name="Navbar.Menu" xml:space="preserve">
+<value>Menu</value>
+</data>
+<data name="Navbar.Explore" xml:space="preserve">
+<value>Explore</value>
+</data>
+<data name="Navbar.Tours" xml:space="preserve">
+<value>Tours</value>
+</data>
+<data name="Navbar.Destinations" xml:space="preserve">
+<value>Destinations</value>
+</data>
+<data name="Navbar.Packages" xml:space="preserve">
+<value>Packages</value>
+</data>
+<data name="Navbar.Guides" xml:space="preserve">
+<value>Guides</value>
+</data>
+<data name="Navbar.Directory" xml:space="preserve">
+<value>Businesses</value>
+</data>
+<data name="Navbar.Stories" xml:space="preserve">
+<value>Stories</value>
+</data>
+<data name="Navbar.More" xml:space="preserve">
+<value>More</value>
+</data>
+<data name="Navbar.Help" xml:space="preserve">
+<value>Help center</value>
+</data>
+<data name="Navbar.Faq" xml:space="preserve">
+<value>FAQ</value>
+</data>
+<data name="Navbar.Contact" xml:space="preserve">
+<value>Contact us</value>
+</data>
+<data name="Navbar.Agencies" xml:space="preserve">
+<value>Agencies</value>
+</data>
+<data name="Navbar.ListExperience" xml:space="preserve">
+<value>List your experience</value>
+</data>
+<data name="Navbar.SignIn" xml:space="preserve">
+<value>Sign in</value>
+</data>
+<data name="Navbar.Register" xml:space="preserve">
+<value>Sign up</value>
+</data>
+<data name="Navbar.MyProfile" xml:space="preserve">
+<value>My profile</value>
+</data>
+<data name="Navbar.MyBookings" xml:space="preserve">
+<value>My bookings</value>
+</data>
+<data name="Navbar.Wishlist" xml:space="preserve">
+<value>Wishlist</value>
+</data>
+<data name="Navbar.Settings" xml:space="preserve">
+<value>Settings</value>
+</data>
+<data name="Navbar.SignOut" xml:space="preserve">
+<value>Sign out</value>
+</data>
+<data name="Navbar.AdminDashboard" xml:space="preserve">
+<value>Admin dashboard</value>
+</data>
+<data name="Navbar.GuideDashboard" xml:space="preserve">
+<value>Guide dashboard</value>
+</data>
+<data name="Navbar.ProviderDashboard" xml:space="preserve">
+<value>Provider dashboard</value>
+</data>
+<data name="Navbar.CreatorDashboard" xml:space="preserve">
+<value>Creator studio</value>
+</data>
+<data name="Navbar.Mode" xml:space="preserve">
+<value>Mode</value>
+</data>
+<data name="Navbar.ModeLight" xml:space="preserve">
+<value>Light</value>
+</data>
+<data name="Navbar.ModeDark" xml:space="preserve">
+<value>Dark</value>
+</data>
+<data name="Navbar.ModeAuto" xml:space="preserve">
+<value>Auto</value>
+</data>
+<data name="Navbar.Search" xml:space="preserve">
+<value>Search</value>
+</data>
+<data name="Navbar.Account" xml:space="preserve">
+<value>Account</value>
+</data>
+<data name="Footer.Tagline" xml:space="preserve">
+<value>Discover and book authentic tours and experiences across Jordan.</value>
+</data>
+<data name="Footer.Explore" xml:space="preserve">
+<value>Explore</value>
+</data>
+<data name="Footer.Company" xml:space="preserve">
+<value>Company</value>
+</data>
+<data name="Footer.Support" xml:space="preserve">
+<value>Support</value>
+</data>
+<data name="Footer.Blog" xml:space="preserve">
+<value>Blog</value>
+</data>
+<data name="Footer.Privacy" xml:space="preserve">
+<value>Privacy policy</value>
+</data>
+<data name="Footer.Terms" xml:space="preserve">
+<value>Terms of service</value>
+</data>
+<data name="Footer.Rights" xml:space="preserve">
+<value>All rights reserved.</value>
+</data>
+<data name="MobileNav.Browse" xml:space="preserve">
+<value>Browse</value>
+</data>
+<data name="MobileNav.Search" xml:space="preserve">
+<value>Search</value>
+</data>
+<data name="MobileNav.Wishlist" xml:space="preserve">
+<value>Wishlist</value>
+</data>
+<data name="MobileNav.Bookings" xml:space="preserve">
+<value>Bookings</value>
+</data>
+<data name="MobileNav.Profile" xml:space="preserve">
+<value>Profile</value>
+</data>
+<data name="Search.Overlay.Title" xml:space="preserve">
+<value>Search YallaJo</value>
+</data>
+<data name="Search.Overlay.Placeholder" xml:space="preserve">
+<value>Search tours, destinations, experiences…</value>
+</data>
+<data name="Search.Overlay.Close" xml:space="preserve">
+<value>Close</value>
+</data>
+<data name="Search.Overlay.Recent" xml:space="preserve">
+<value>Recent searches</value>
+</data>
+<data name="Search.Overlay.Clear" xml:space="preserve">
+<value>Clear</value>
+</data>
+<data name="Search.Overlay.ViewAll" xml:space="preserve">
+<value>View all results</value>
+</data>
+<data name="Search.Overlay.NoResults" xml:space="preserve">
+<value>No matches found</value>
+</data>
 </root>
