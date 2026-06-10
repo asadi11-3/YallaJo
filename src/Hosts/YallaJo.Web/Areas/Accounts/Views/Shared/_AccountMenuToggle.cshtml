@@ -1,0 +1,7 @@
+@* Phase 1 (Accounts plan): shared mobile account-menu trigger.
+   Replaces ~19 duplicated offcanvas-toggle blocks across Accounts views (UI-UX-D2, CON1). *@
+<div class="d-grid d-lg-none mb-3">
+    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
+        <i class="fas fa-sliders-h me-2" aria-hidden="true"></i>@Localizer["Accounts.Nav.AccountMenu"]
+    </button>
+</div>

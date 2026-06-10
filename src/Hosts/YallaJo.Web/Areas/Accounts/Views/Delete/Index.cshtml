@@ -12,11 +12,7 @@
             <partial name="_AccountSidebar" model="sidebar" />
 
             <div class="col-lg-8 col-xl-9">
-                <div class="d-grid d-lg-none mb-3">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
-                        <i class="fas fa-sliders-h me-2"></i>Account menu
-                    </button>
-                </div>
+                <partial name="_AccountMenuToggle" />
 
                 <div class="card border">
                     <div class="card-header border-bottom">
@@ -61,7 +57,7 @@
                                 Keep my account
                             </a>
                             <form asp-area="Accounts" asp-controller="Delete" asp-action="Delete" method="post" class="mb-0"
-                                  onsubmit="return confirm('Delete your account now? You can restore it by signing in again.');">
+                                  data-confirm="@Localizer["Accounts.Confirm.DeleteAccount"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" id="deleteAccountBtn" class="btn btn-danger mb-0" disabled>
                                     <i class="bi bi-trash me-1"></i>Delete my account

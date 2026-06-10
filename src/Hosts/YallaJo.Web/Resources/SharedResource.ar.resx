@@ -12703,4 +12703,73 @@
 <data name="Home.Features.VerifiedText" xml:space="preserve">
 <value>التقييمات تأتي من مسافرين أكملوا حجوزاتهم.</value>
 </data>
+<data name="Accounts.Nav.AccountMenu" xml:space="preserve">
+<value>قائمة الحساب</value>
+</data>
+<data name="Accounts.Status.Confirmed" xml:space="preserve">
+<value>مؤكد</value>
+</data>
+<data name="Accounts.Status.Completed" xml:space="preserve">
+<value>مكتمل</value>
+</data>
+<data name="Accounts.Status.Cancelled" xml:space="preserve">
+<value>ملغى</value>
+</data>
+<data name="Accounts.Status.Rejected" xml:space="preserve">
+<value>مرفوض</value>
+</data>
+<data name="Accounts.Status.AwaitingPayment" xml:space="preserve">
+<value>بانتظار الدفع</value>
+</data>
+<data name="Accounts.Status.PendingConfirmation" xml:space="preserve">
+<value>بانتظار التأكيد</value>
+</data>
+<data name="Accounts.Status.Pending" xml:space="preserve">
+<value>قيد الانتظار</value>
+</data>
+<data name="Accounts.Status.Approved" xml:space="preserve">
+<value>مقبول</value>
+</data>
+<data name="Accounts.Status.Open" xml:space="preserve">
+<value>مفتوح</value>
+</data>
+<data name="Accounts.Status.Resolved" xml:space="preserve">
+<value>تم الحل</value>
+</data>
+<data name="Accounts.Status.AwaitingUser" xml:space="preserve">
+<value>بانتظار ردك</value>
+</data>
+<data name="Accounts.Status.Closed" xml:space="preserve">
+<value>مغلق</value>
+</data>
+<data name="Accounts.Status.Active" xml:space="preserve">
+<value>نشط</value>
+</data>
+<data name="Accounts.Status.Failed" xml:space="preserve">
+<value>فشل</value>
+</data>
+<data name="Accounts.Disputes.Pagination" xml:space="preserve">
+<value>ترقيم صفحات النزاعات</value>
+</data>
+<data name="Accounts.Confirm.DeleteAvatar" xml:space="preserve">
+<value>إزالة صورة ملفك الشخصي؟</value>
+</data>
+<data name="Accounts.Confirm.RemoveAllWishlist" xml:space="preserve">
+<value>إزالة جميع العناصر من قائمة أمنياتك؟ لا يمكن التراجع عن هذا.</value>
+</data>
+<data name="Accounts.Confirm.DeleteNotification" xml:space="preserve">
+<value>حذف هذا الإشعار؟</value>
+</data>
+<data name="Accounts.Confirm.RemoveDevice" xml:space="preserve">
+<value>إزالة هذا الجهاز؟</value>
+</data>
+<data name="Accounts.Confirm.DeleteAccount" xml:space="preserve">
+<value>حذف حسابك؟ سيؤدي هذا إلى جدولة ملفك الشخصي للحذف.</value>
+</data>
+<data name="Accounts.Confirm.CloseTicket" xml:space="preserve">
+<value>إغلاق تذكرة الدعم هذه؟</value>
+</data>
+<data name="Accounts.Confirm.Close" xml:space="preserve">
+<value>إغلاق</value>
+</data>
 </root>

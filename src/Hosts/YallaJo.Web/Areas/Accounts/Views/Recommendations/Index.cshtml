@@ -31,11 +31,7 @@
             <partial name="_AccountSidebar" model="sidebar" />
 
             <div class="col-lg-8 col-xl-9">
-                <div class="d-grid d-lg-none mb-3">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
-                        <i class="fas fa-sliders-h me-2"></i>Account menu
-                    </button>
-                </div>
+                <partial name="_AccountMenuToggle" />
 
                 @if (TempData["Success"] is string success)
                 {
@@ -147,7 +143,7 @@
                         <h4 class="card-header-title mb-0">Personalization preferences</h4>
                     </div>
                     <div class="card-body">
-                        <form asp-area="Accounts" asp-controller="Recommendations" asp-action="UpdatePreferences" method="post">
+                        <form asp-area="Accounts" asp-controller="Recommendations" asp-action="UpdatePreferences" method="post" data-loading>
                             @Html.AntiForgeryToken()
                             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 

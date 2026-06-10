@@ -7,16 +7,6 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
 
-    string StatusBadge(string status) => status switch
-    {
-        "Confirmed" => "bg-success bg-opacity-10 text-success",
-        "Completed" => "bg-primary bg-opacity-10 text-primary",
-        "Cancelled" => "bg-danger bg-opacity-10 text-danger",
-        "Rejected" => "bg-danger bg-opacity-10 text-danger",
-        "AwaitingPayment" => "bg-warning bg-opacity-10 text-warning",
-        "PendingConfirmation" => "bg-warning bg-opacity-10 text-warning",
-        _ => "bg-secondary bg-opacity-10 text-secondary",
-    };
 }
 
 <section class="pt-3">
@@ -25,11 +15,7 @@
             <partial name="_AccountSidebar" model="sidebar" />
 
             <div class="col-lg-8 col-xl-9">
-                <div class="d-grid d-lg-none mb-3">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
-                        <i class="fas fa-sliders-h me-2"></i>Account menu
-                    </button>
-                </div>
+                <partial name="_AccountMenuToggle" />
 
                 <div class="mb-3 d-flex flex-wrap gap-2">
                     <a class="btn btn-sm btn-light mb-0" asp-area="Accounts" asp-controller="Bookings" asp-action="Index">
@@ -43,12 +29,12 @@
                 <div class="card border mb-4">
                     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
                         <h4 class="card-header-title mb-0">@Model.TourName</h4>
-                        <span class="badge @StatusBadge(Model.Status)">@Model.Status</span>
+                        <partial name="_StatusBadge" model="@Model.Status" />
                     </div>
                     <div class="card-body">
                         @if (!string.IsNullOrEmpty(Model.ImageUrl))
                         {
-                            <img src="@Model.ImageUrl" class="img-fluid rounded mb-3 w-100 object-fit-cover" style="max-height:240px;" alt="@Model.TourName" />
+                            <img src="@Model.ImageUrl" class="img-fluid rounded mb-3 w-100 object-fit-cover img-max-h240" alt="@Model.TourName" />
                         }
                         <div class="row g-3 mb-2">
                             <div class="col-sm-6"><span class="text-muted small d-block">Reference</span><strong>@Model.Reference</strong></div>

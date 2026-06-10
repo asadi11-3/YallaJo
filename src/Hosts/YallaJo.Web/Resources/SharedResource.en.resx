@@ -12703,4 +12703,73 @@
 <data name="Home.Features.VerifiedText" xml:space="preserve">
 <value>Ratings come from travelers with completed bookings.</value>
 </data>
+<data name="Accounts.Nav.AccountMenu" xml:space="preserve">
+<value>Account menu</value>
+</data>
+<data name="Accounts.Status.Confirmed" xml:space="preserve">
+<value>Confirmed</value>
+</data>
+<data name="Accounts.Status.Completed" xml:space="preserve">
+<value>Completed</value>
+</data>
+<data name="Accounts.Status.Cancelled" xml:space="preserve">
+<value>Cancelled</value>
+</data>
+<data name="Accounts.Status.Rejected" xml:space="preserve">
+<value>Rejected</value>
+</data>
+<data name="Accounts.Status.AwaitingPayment" xml:space="preserve">
+<value>Awaiting payment</value>
+</data>
+<data name="Accounts.Status.PendingConfirmation" xml:space="preserve">
+<value>Pending confirmation</value>
+</data>
+<data name="Accounts.Status.Pending" xml:space="preserve">
+<value>Pending</value>
+</data>
+<data name="Accounts.Status.Approved" xml:space="preserve">
+<value>Approved</value>
+</data>
+<data name="Accounts.Status.Open" xml:space="preserve">
+<value>Open</value>
+</data>
+<data name="Accounts.Status.Resolved" xml:space="preserve">
+<value>Resolved</value>
+</data>
+<data name="Accounts.Status.AwaitingUser" xml:space="preserve">
+<value>Awaiting your reply</value>
+</data>
+<data name="Accounts.Status.Closed" xml:space="preserve">
+<value>Closed</value>
+</data>
+<data name="Accounts.Status.Active" xml:space="preserve">
+<value>Active</value>
+</data>
+<data name="Accounts.Status.Failed" xml:space="preserve">
+<value>Failed</value>
+</data>
+<data name="Accounts.Disputes.Pagination" xml:space="preserve">
+<value>Disputes pagination</value>
+</data>
+<data name="Accounts.Confirm.DeleteAvatar" xml:space="preserve">
+<value>Remove your profile photo?</value>
+</data>
+<data name="Accounts.Confirm.RemoveAllWishlist" xml:space="preserve">
+<value>Remove all items from your wishlist? This cannot be undone.</value>
+</data>
+<data name="Accounts.Confirm.DeleteNotification" xml:space="preserve">
+<value>Delete this notification?</value>
+</data>
+<data name="Accounts.Confirm.RemoveDevice" xml:space="preserve">
+<value>Remove this device?</value>
+</data>
+<data name="Accounts.Confirm.DeleteAccount" xml:space="preserve">
+<value>Delete your account? This will schedule your profile for deletion.</value>
+</data>
+<data name="Accounts.Confirm.CloseTicket" xml:space="preserve">
+<value>Close this support ticket?</value>
+</data>
+<data name="Accounts.Confirm.Close" xml:space="preserve">
+<value>Close</value>
+</data>
 </root>

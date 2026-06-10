@@ -1,0 +1,24 @@
+@* Phase 1 (Accounts plan): shared Previous/Next pager for page-number lists (e.g. Disputes).
+   Cursor-based "Load more" lists keep their single-anchor pattern until Phase 4 AJAX-ifies them.
+   ViewData knobs: prevUrl (string?), nextUrl (string?), ariaLabel (string). Localized via
+   existing Public.Previous / Public.Next keys (UI-CONTENT-CON1, A11Y-friendly disabled states). *@
+@{
+    var prevUrl = ViewData["prevUrl"] as string;
+    var nextUrl = ViewData["nextUrl"] as string;
+    var ariaLabel = ViewData["ariaLabel"] as string ?? Localizer["Public.Previous"].Value + " / " + Localizer["Public.Next"].Value;
+    var hasPrev = !string.IsNullOrEmpty(prevUrl);
+    var hasNext = !string.IsNullOrEmpty(nextUrl);
+}
+@if (hasPrev || hasNext)
+{
+    <nav class="d-flex justify-content-center mt-4" aria-label="@ariaLabel">
+        <ul class="pagination pagination-primary-soft mb-0">
+            <li class="page-item @(hasPrev ? "" : "disabled")">
+                <a class="page-link" href="@(hasPrev ? prevUrl : "#")" tabindex="@(hasPrev ? "0" : "-1")" aria-disabled="@(hasPrev ? null : "true")">@Localizer["Public.Previous"]</a>
+            </li>
+            <li class="page-item @(hasNext ? "" : "disabled")">
+                <a class="page-link" href="@(hasNext ? nextUrl : "#")" tabindex="@(hasNext ? "0" : "-1")" aria-disabled="@(hasNext ? null : "true")">@Localizer["Public.Next"]</a>
+            </li>
+        </ul>
+    </nav>
+}

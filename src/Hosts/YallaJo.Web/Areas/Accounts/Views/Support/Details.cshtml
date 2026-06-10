@@ -24,11 +24,7 @@
             <partial name="_AccountSidebar" model="sidebar" />
 
             <div class="col-lg-8 col-xl-9">
-                <div class="d-grid d-lg-none mb-3">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
-                        <i class="fas fa-sliders-h me-2"></i>Account menu
-                    </button>
-                </div>
+                <partial name="_AccountMenuToggle" />
 
                 <a asp-area="Accounts" asp-controller="Support" asp-action="Index" class="small d-inline-block mb-3 text-decoration-none">
                     <i class="bi bi-arrow-left me-1"></i>Back to my tickets
@@ -57,7 +53,7 @@
                                 {
                                     <li class="mb-3">
                                         <div class="d-flex @(m.IsFromStaff ? "" : "justify-content-end")">
-                                            <div class="rounded p-2 @(m.IsFromStaff ? "bg-light" : "bg-primary bg-opacity-10")" style="max-width: 80%;">
+                                            <div class="rounded p-2 @(m.IsFromStaff ? "bg-light" : "bg-primary bg-opacity-10") max-w-80">
                                                 <div class="small fw-bold mb-1">@(m.IsFromStaff ? "Support team" : "You")</div>
                                                 <div class="small">@m.Body</div>
                                                 <div class="small text-muted mt-1">@TimeStamp(m.CreatedAt)</div>
@@ -95,7 +91,7 @@
                         <permission require="@WebPermission.SupportTicket.Close">
                             <div class="card-footer border-top text-end">
                                 <form asp-area="Accounts" asp-controller="Support" asp-action="Close" asp-route-id="@Model.Id" method="post"
-                                      onsubmit="return confirm('Close this ticket? You can open a new one any time.');" class="m-0">
+                                      class="m-0" data-confirm="@Localizer["Accounts.Confirm.CloseTicket"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Accounts.Confirm.Close"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
                                     <button type="submit" class="btn btn-sm btn-outline-danger mb-0">Close ticket</button>

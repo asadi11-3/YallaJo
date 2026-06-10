@@ -1,5 +1,8 @@
 @using YallaJo.Web
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Infrastructure.Identity
+@using Microsoft.Extensions.Localization
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @addTagHelper *, YallaJo.Web
+@* Phase 1 (Accounts plan): area-wide localizer so every view can use @Localizer["key"] (UI-CONTENT-CON1). *@
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer

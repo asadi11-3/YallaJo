@@ -22,11 +22,7 @@
             <partial name="_AccountSidebar" model="sidebar" />
 
             <div class="col-lg-8 col-xl-9">
-                <div class="d-grid d-lg-none mb-3">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
-                        <i class="bi bi-list me-2"></i>Account menu
-                    </button>
-                </div>
+                <partial name="_AccountMenuToggle" />
 
                 <div class="card border">
                     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
@@ -35,11 +31,12 @@
                     <div class="card-body">
                         @if (!Model.HasRequests)
                         {
-                            <div class="text-center py-5">
-                                <img src="~/assets/images/element/17.svg" alt="" class="h-100px mb-3" />
-                                <h6 class="mb-1">No join requests yet</h6>
-                                <p class="text-muted mb-0">When you ask to join someone's group tour, your requests will appear here.</p>
-                            </div>
+                            @* Phase 1: shared empty state (UI-UX-L6) *@
+                            <partial name="~/Areas/Public/Views/Shared/_EmptyState.cshtml" view-data='@(new ViewDataDictionary(ViewData)
+                            {
+                                { "title", "No join requests yet" },
+                                { "message", "When you ask to join a group tour, your requests will appear here." }
+                            })' />
                         }
                         else
                         {
@@ -62,10 +59,10 @@
                                             <tr>
                                                 <td><span class="@StatusBadge(row.Status)">@row.Status</span></td>
                                                 <td>@row.ParticipantCount</td>
-                                                <td class="text-truncate" style="max-width: 220px;">@(string.IsNullOrWhiteSpace(row.Message) ? "—" : row.Message)</td>
+                                                <td class="text-truncate max-w-220">@(string.IsNullOrWhiteSpace(row.Message) ? "—" : row.Message)</td>
                                                 <td><small>@row.CreatedAt.ToString("d MMM yyyy")</small></td>
                                                 <td><small>@row.ExpiresAt.ToString("d MMM yyyy")</small></td>
-                                                <td class="text-truncate" style="max-width: 200px;">@(string.IsNullOrWhiteSpace(row.ResponseMessage) ? "—" : row.ResponseMessage)</td>
+                                                <td class="text-truncate max-w-200">@(string.IsNullOrWhiteSpace(row.ResponseMessage) ? "—" : row.ResponseMessage)</td>
                                                 <td class="text-end">
                                                     @if (row.ResultingBookingId is { } bookingId)
                                                     {

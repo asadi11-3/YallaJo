@@ -13,11 +13,7 @@
             <partial name="_AccountSidebar" model="sidebar" />
 
             <div class="col-lg-8 col-xl-9">
-                <div class="d-grid d-lg-none mb-3">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
-                        <i class="fas fa-sliders-h me-2"></i>Account menu
-                    </button>
-                </div>
+                <partial name="_AccountMenuToggle" />
 
                 <div class="vstack gap-4">
 
@@ -28,7 +24,7 @@
                             <p class="mb-0 small">Choose how you want to be notified. Security and payment alerts are always on.</p>
                         </div>
                         <div class="card-body">
-                            <form asp-area="Accounts" asp-controller="Settings" asp-action="UpdateNotifications" method="post">
+                            <form asp-area="Accounts" asp-controller="Settings" asp-action="UpdateNotifications" method="post" data-loading>
                                 @Html.AntiForgeryToken()
                                 <div class="table-responsive">
                                     <table class="table table-sm align-middle mb-0">
@@ -232,7 +228,7 @@
                                                     <td class="text-end">
                                                         <form asp-area="Accounts" asp-controller="Settings" asp-action="RemoveDevice"
                                                               asp-route-id="@d.Id" method="post" class="d-inline"
-                                                              onsubmit="return confirm('Remove this device from push notifications?');">
+                                                              data-confirm="@Localizer["Accounts.Confirm.RemoveDevice"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                                                             @Html.AntiForgeryToken()
                                                             <button type="submit" class="btn btn-sm btn-outline-danger mb-0">Remove</button>
                                                         </form>
@@ -244,7 +240,7 @@
                                 </div>
                             }
 
-                            <form asp-area="Accounts" asp-controller="Settings" asp-action="RegisterDevice" method="post" class="row g-2 align-items-end">
+                            <form asp-area="Accounts" asp-controller="Settings" asp-action="RegisterDevice" method="post" class="row g-2 align-items-end" data-loading>
                                 @Html.AntiForgeryToken()
                                 <div class="col-sm-4">
                                     <label class="form-label" for="deviceId">Device id</label>

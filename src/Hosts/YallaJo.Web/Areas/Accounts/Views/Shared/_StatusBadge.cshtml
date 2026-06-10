@@ -1,0 +1,19 @@
+@* Phase 1 (Accounts plan): shared status badge.
+   Replaces duplicated StatusBadge() local helpers (bookings/join-requests PascalCase family
+   and support/dispute lowercase family). Label localizes via Accounts.Status.* keys with a
+   raw-status fallback for unknown values (UI-CONTENT-CON1, A11Y5 color+text). *@
+@model string
+@{
+    var status = Model ?? string.Empty;
+    var cls = status.ToLowerInvariant() switch
+    {
+        "confirmed" or "resolved" or "approved" or "active" => "bg-success bg-opacity-10 text-success",
+        "completed" or "open" => "bg-primary bg-opacity-10 text-primary",
+        "cancelled" or "rejected" or "failed" => "bg-danger bg-opacity-10 text-danger",
+        "awaitingpayment" or "pendingconfirmation" or "pending" or "awaitinguser" => "bg-warning bg-opacity-10 text-warning",
+        _ => "bg-secondary bg-opacity-10 text-secondary",
+    };
+    var localized = Localizer["Accounts.Status." + status];
+    var label = localized.ResourceNotFound ? status : localized.Value;
+}
+<span class="badge @cls">@label</span>

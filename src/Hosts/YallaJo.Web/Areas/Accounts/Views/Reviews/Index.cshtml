@@ -31,11 +31,7 @@
             <partial name="_AccountSidebar" model="sidebar" />
 
             <div class="col-lg-8 col-xl-9">
-                <div class="d-grid d-lg-none mb-3">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
-                        <i class="fas fa-sliders-h me-2"></i>Account menu
-                    </button>
-                </div>
+                <partial name="_AccountMenuToggle" />
 
                 <div class="card border">
                     <div class="card-header border-bottom">
@@ -122,7 +118,7 @@
                                                     </button>
                                                     <form asp-area="Accounts" asp-controller="Reviews" asp-action="Delete"
                                                           asp-route-id="@r.Id" method="post" class="mb-0"
-                                                          onsubmit="return confirm('Delete this review? This cannot be undone.');">
+                                                          data-confirm="@Localizer["Public.Confirm.DeleteReview"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="rowVersion" value="@r.RowVersion" />
                                                         <button type="submit" class="btn btn-sm btn-danger-soft mb-0">
@@ -132,7 +128,7 @@
                                                 </div>
 
                                                 <div class="collapse mt-3" id="edit-@r.Id.ToString("N")">
-                                                    <form asp-area="Accounts" asp-controller="Reviews" asp-action="Edit" method="post" class="border-top pt-3">
+                                                    <form asp-area="Accounts" asp-controller="Reviews" asp-action="Edit" method="post" class="border-top pt-3" data-loading>
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="Id" value="@r.Id" />
                                                         <input type="hidden" name="RowVersion" value="@r.RowVersion" />

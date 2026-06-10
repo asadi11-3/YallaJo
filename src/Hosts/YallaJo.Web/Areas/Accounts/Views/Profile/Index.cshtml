@@ -35,11 +35,7 @@
             <partial name="_AccountSidebar" model="sidebar" />
 
             <div class="col-lg-8 col-xl-9">
-                <div class="d-grid d-lg-none mb-3">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
-                        <i class="fas fa-sliders-h me-2"></i>Menu
-                    </button>
-                </div>
+                <partial name="_AccountMenuToggle" />
 
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
@@ -51,6 +47,7 @@
                             <span class="fw-bold">@pct%</span>
                         </div>
                         <div class="progress progress-sm bg-success bg-opacity-10" role="progressbar" aria-valuenow="@pct" aria-valuemin="0" aria-valuemax="100">
+                            @* Inline style justified (UI-PERF-X6): width is a runtime-computed percentage. *@
                             <div class="progress-bar bg-success" style="width:@(pct)%"></div>
                         </div>
                         <div class="bg-body rounded p-3 mt-3">
@@ -89,21 +86,24 @@
                                     <form asp-area="Accounts" asp-controller="Profile" asp-action="UpdateAvatar"
                                           method="post" enctype="multipart/form-data" class="d-flex align-items-center gap-2 mb-2">
                                         @Html.AntiForgeryToken()
-                                        <input type="file" name="File" accept="image/*" class="form-control form-control-sm" style="max-width:14rem;" />
+                                        <input type="file" name="File" accept="image/*" class="form-control form-control-sm max-w-14r" />
                                         <button type="submit" class="btn btn-sm btn-primary-soft mb-0">Change</button>
                                     </form>
                                     @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
                                     {
-                                        <form asp-area="Accounts" asp-controller="Profile" asp-action="DeleteAvatar" method="post">
+                                        <form asp-area="Accounts" asp-controller="Profile" asp-action="DeleteAvatar" method="post"
+                                              data-confirm="@Localizer["Accounts.Confirm.DeleteAvatar"]"
+                                              data-confirm-title="@Localizer["Public.Confirm.Title"]"
+                                              data-confirm-action="@Localizer["Public.Confirm.Delete"]"
+                                              data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-link text-danger p-0 mb-0"
-                                                    onclick="return confirm('Remove your avatar?');">Remove</button>
+                                            <button type="submit" class="btn btn-sm btn-link text-danger p-0 mb-0">Remove</button>
                                         </form>
                                     }
                                 </div>
                             </div>
 
-                            <form asp-area="Accounts" asp-controller="Profile" asp-action="Update" method="post">
+                            <form asp-area="Accounts" asp-controller="Profile" asp-action="Update" method="post" data-loading>
                                 @Html.AntiForgeryToken()
                                 <partial name="_UpdateProfileForm" model="Model.Update" />
                             </form>

@@ -13,11 +13,7 @@
             <partial name="_AccountSidebar" model="sidebar" />
 
             <div class="col-lg-8 col-xl-9">
-                <div class="d-grid d-lg-none mb-3">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
-                        <i class="fas fa-sliders-h me-2"></i>Account menu
-                    </button>
-                </div>
+                <partial name="_AccountMenuToggle" />
 
                 @if (!string.IsNullOrWhiteSpace(Model.LoadError))
                 {
@@ -92,7 +88,7 @@
 <div class="modal fade" id="deleteDataModal" tabindex="-1" aria-labelledby="deleteDataModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form asp-area="Accounts" asp-controller="Privacy" asp-action="DeleteData" method="post">
+            <form asp-area="Accounts" asp-controller="Privacy" asp-action="DeleteData" method="post" data-loading>
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h5 class="modal-title" id="deleteDataModalLabel">Delete recommendation data?</h5>

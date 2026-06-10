@@ -3,7 +3,7 @@
 @* §3.2 — request to join an existing confirmed group booking.
    Typed partial so asp-for / asp-validation-for bind to the JoinRequestFormVm property
    names exactly; the controller action binds `JoinRequestFormVm form` at top level. *@
-<form asp-area="Accounts" asp-controller="JoinRequests" asp-action="Create" method="post">
+<form asp-area="Accounts" asp-controller="JoinRequests" asp-action="Create" method="post" data-loading>
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
     <div class="row g-3">

@@ -230,3 +230,10 @@ html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
         transform: none;
     }
 }
+
+/* ---- Accounts Phase 1 utilities (UI-PERF-X6) ---- */
+.img-max-h240 { max-height: 240px; }
+.min-h-120 { min-height: 120px; }
+.max-w-200 { max-width: 200px; }
+.max-w-14r { max-width: 14rem; }
+.max-w-80 { max-width: 80%; }
