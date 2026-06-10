@@ -9,10 +9,42 @@
 @{
     var rangeStart = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
     var rangeEnd = Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount);
+
+    // Phase 8.4: rebuilds the current URL without the given filter param (and without page) for removal chips.
+    string RemoveParamUrl(string param)
+    {
+        var query = Context.Request.Query
+            .Where(kv => !string.Equals(kv.Key, param, StringComparison.OrdinalIgnoreCase)
+                      && !string.Equals(kv.Key, "page", StringComparison.OrdinalIgnoreCase))
+            .SelectMany(kv => kv.Value, (kv, v) => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(v ?? string.Empty)}")
+            .ToList();
+        var path = Context.Request.PathBase + Context.Request.Path;
+        return query.Count > 0 ? $"{path}?{string.Join("&", query)}" : path.ToString();
+    }
+
+    var chips = new List<(string Label, string Param)>();
+    if (!string.IsNullOrWhiteSpace(Model.Filters.City)) { chips.Add(($"{Localizer["Public.City"]}: {Model.Filters.City}", "city")); }
+    if (!string.IsNullOrWhiteSpace(Model.Filters.Country)) { chips.Add(($"{Localizer["Public.Country"]}: {Model.Filters.Country}", "country")); }
+    if (Model.Filters.EffectiveRatingMin is int rm) { chips.Add((Localizer["Public.StarsPlus", rm].Value, "ratingMin")); }
+    if (Model.Filters.HasActiveTours) { chips.Add((Localizer["Public.Has.active.tours"].Value, "hasActiveTours")); }
 }
 <div class="row mb-4">
     <div class="col-12">
         <h5 class="mb-0">@Localizer["Public.ShowingPlaces", rangeStart, rangeEnd, Model.TotalCount]</h5>
+        @if (chips.Count > 0)
+        {
+            @* Phase 8.4: active-filter chips (same pattern as _TourResults); links stay same-pathname so listing.js AJAX-swaps them. *@
+            <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                @foreach (var chip in chips)
+                {
+                    <a href="@RemoveParamUrl(chip.Param)" class="badge text-bg-light border text-decoration-none js-filter-chip"
+                       aria-label="@Localizer["Public.RemoveFilter", chip.Label]">
+                        @chip.Label <i class="bi bi-x-lg ms-1" aria-hidden="true"></i>
+                    </a>
+                }
+                <a asp-area="Public" asp-controller="Places" asp-action="Index" class="btn btn-sm btn-link p-0">@Localizer["Public.Filter.ClearAll"]</a>
+            </div>
+        }
     </div>
 </div>
 

@@ -26,13 +26,28 @@
         <!-- Filter bar START (real GET form per UI-UX-PE1; listing.js enhances it via data-yj-listing) -->
         <form method="get" asp-area="Public" asp-controller="Places" asp-action="Index" class="card bg-light p-3 mb-4" data-yj-listing>
             <div class="row g-3 align-items-end">
+                @* Phase 8.4: datalist suggestions sourced from the current page's places.
+                   TODO(backend): no city/country lookup endpoint exists; once one does, replace
+                   these datalists with a proper autocomplete fed by that endpoint. *@
                 <div class="col-sm-6 col-lg-3">
                     <label for="city" class="form-label small mb-1">@Localizer["Public.City"]</label>
-                    <input type="text" id="city" name="city" value="@Model.Filters.City" class="form-control" placeholder="@Localizer["Public.e.g.Petra"]" />
+                    <input type="text" id="city" name="city" value="@Model.Filters.City" class="form-control" placeholder="@Localizer["Public.e.g.Petra"]" list="cityOptions" autocomplete="off" />
+                    <datalist id="cityOptions">
+                        @foreach (var c in Model.Places.Select(p => p.City).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(c => c, StringComparer.OrdinalIgnoreCase))
+                        {
+                            <option value="@c"></option>
+                        }
+                    </datalist>
                 </div>
                 <div class="col-sm-6 col-lg-3">
                     <label for="country" class="form-label small mb-1">@Localizer["Public.Country"]</label>
-                    <input type="text" id="country" name="country" value="@Model.Filters.Country" class="form-control" placeholder="@Localizer["Public.e.g.Jordan"]" />
+                    <input type="text" id="country" name="country" value="@Model.Filters.Country" class="form-control" placeholder="@Localizer["Public.e.g.Jordan"]" list="countryOptions" autocomplete="off" />
+                    <datalist id="countryOptions">
+                        @foreach (var c in Model.Places.Select(p => p.Country).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(c => c, StringComparer.OrdinalIgnoreCase))
+                        {
+                            <option value="@c"></option>
+                        }
+                    </datalist>
                 </div>
                 <div class="col-sm-6 col-lg-2">
                     <label for="ratingMin" class="form-label small mb-1">@Localizer["Public.Minimum.rating"]</label>
@@ -45,7 +60,8 @@
                     </select>
                 </div>
                 <div class="col-sm-6 col-lg-2">
-                    <div class="form-check mt-4">
+                    @* Phase 8.4: mb-2 aligns the checkbox with the inputs' baseline (row is align-items-end); old mt-4 hack removed. *@
+                    <div class="form-check mb-2">
                         <input type="checkbox" id="hasActiveTours" name="hasActiveTours" value="true" class="form-check-input" checked="@Model.Filters.HasActiveTours" />
                         <label for="hasActiveTours" class="form-check-label small">@Localizer["Public.Has.active.tours"]</label>
                     </div>
