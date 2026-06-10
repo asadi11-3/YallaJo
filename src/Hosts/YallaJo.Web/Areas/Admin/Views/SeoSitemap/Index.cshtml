@@ -141,7 +141,7 @@ else
                 </tbody>
             </table>
         </div>
-        @if (Model.TotalPages > 1)
+        @if (Model.HasPrevious || Model.HasNext)
         {
             <div class="card-footer border-top">
                 <nav aria-label="@Localizer["Admin.SeoSitemap.PaginationLabel"]">
