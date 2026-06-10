@@ -207,6 +207,12 @@ PublishScripts/
 # Same collision for the provider tour-packages view models.
 !src/Hosts/YallaJo.Web/Areas/Provider/Models/Packages/
 !src/Hosts/YallaJo.Web/Areas/Provider/Models/Packages/**
+# Same collision for the public tour-packages Razor views.
+!src/Hosts/YallaJo.Web/Areas/Public/Views/Packages/
+!src/Hosts/YallaJo.Web/Areas/Public/Views/Packages/**
+# Same collision for the provider tour-packages Razor views.
+!src/Hosts/YallaJo.Web/Areas/Provider/Views/Packages/
+!src/Hosts/YallaJo.Web/Areas/Provider/Views/Packages/**
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files

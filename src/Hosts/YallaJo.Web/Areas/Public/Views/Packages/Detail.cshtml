@@ -1,0 +1,124 @@
+@model YallaJo.Web.Areas.Public.Models.Packages.PackageDetailVm
+@using YallaJo.Web.Infrastructure.Seo
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    ViewData.SetSeo(new SeoModel
+    {
+        Title = Model.Name,
+        Description = Model.Description,
+        Canonical = $"{baseUrl}/packages/{Model.Id}",
+        OgType = "website"
+    });
+
+    string Money(decimal amount, string currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+}
+
+<section class="pt-4">
+    <div class="container">
+        <nav aria-label="@Localizer["Public.breadcrumb"]">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Packages" asp-action="Index">@Localizer["Public.Packages"]</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+            </ol>
+        </nav>
+
+        <div class="d-sm-flex justify-content-sm-between align-items-start">
+            <div>
+                <h1 class="fs-2 mb-2">@Model.Name</h1>
+                <ul class="nav nav-divider align-items-center small">
+                    <li class="nav-item"><span class="h5 mb-0 text-primary">@Money(Model.PriceAmount, Model.Currency)</span></li>
+                    @if (Model.MaxParticipants is int max)
+                    {
+                        <li class="nav-item"><i class="bi bi-people me-1" aria-hidden="true"></i>@Localizer["Public.UpToParticipants", max]</li>
+                    }
+                    @if (Model.HasValidity)
+                    {
+                        <li class="nav-item">
+                            <i class="bi bi-calendar-event me-1" aria-hidden="true"></i>
+                            @if (Model.ValidFrom is not null && Model.ValidTo is not null)
+                            {
+                                @($"{Model.ValidFrom:d MMM yyyy} – {Model.ValidTo:d MMM yyyy}")
+                            }
+                            else if (Model.ValidFrom is not null)
+                            {
+                                @Localizer["Public.ValidFrom", $"{Model.ValidFrom:d MMM yyyy}"]
+                            }
+                            else
+                            {
+                                @Localizer["Public.ValidUntil", $"{Model.ValidTo:d MMM yyyy}"]
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pt-4 pb-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <div class="card border mb-4">
+                        <div class="card-header"><h2 class="h5 mb-0">@Localizer["Public.About.this.package"]</h2></div>
+                        <div class="card-body"><p class="mb-0 preserve-whitespace">@Model.Description</p></div>
+                    </div>
+                }
+
+                <h2 class="h4 mb-3">@Localizer["Public.Included.tours"]</h2>
+                @if (Model.HasIncludedTours)
+                {
+                    <div class="row g-3 g-md-4">
+                        @foreach (var tour in Model.IncludedTours)
+                        {
+                            <partial name="_TourCard" model="tour" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })" />
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-body-secondary">@Localizer["Public.No.tours.are.currently.linked.to.this.package"]</p>
+                }
+            </div>
+
+            <div class="col-lg-4">
+                @* Phase 8.3: no package-level booking endpoint exists (TODO(backend)); inquiry CTA instead.
+                   Included tours below each link to their own bookable detail page. *@
+                <div class="card border mb-4">
+                    <div class="card-body">
+                        <h2 class="h5">@Localizer["Public.Package.InterestedTitle"]</h2>
+                        <p class="small text-body-secondary">@Localizer["Public.Package.InquiryHelp"]</p>
+                        <a class="btn btn-primary w-100" asp-area="Public" asp-controller="Contact" asp-action="Index" asp-route-subject="@Localizer["Public.Package.InquirySubject", Model.Name]">@Localizer["Public.Package.Inquire"]</a>
+                    </div>
+                </div>
+
+                @if (Model.HasInclusions)
+                {
+                    <div class="card border">
+                        <div class="card-header"><h2 class="h5 mb-0">@Localizer["Public.What.s.included"]</h2></div>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var inclusion in Model.Inclusions)
+                            {
+                                <li class="list-group-item d-flex">
+                                    <i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>
+                                    <span>@inclusion</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/assets/js/packages-detail.js" asp-append-version="true"></script>
+}

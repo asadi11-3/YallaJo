@@ -1,0 +1,223 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Provider.Shared
+@model YallaJo.Web.Areas.Provider.Models.Packages.PackagesIndexVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    ViewData["Title"] = Localizer["Provider.Packages.Title"].Value;
+    ViewData["ProviderNav"] = "Listings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+
+    var culture = CultureInfo.CurrentUICulture;
+    string Count(int n) => n.ToString("N0", culture);
+    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
+}
+
+<partial name="_ProviderSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <h1 class="fs-4 mb-0"><i class="fa-solid fa-box me-2" aria-hidden="true"></i>@Localizer["Provider.Packages.Heading"]</h1>
+            @if (Model.HasPackages)
+            {
+                <span class="badge bg-primary bg-opacity-10 text-primary"><bdi dir="ltr" class="font-data">@Count(Model.TotalCount)</bdi> @Localizer["Provider.Packages.CountLabel"]</span>
+            }
+        </div>
+
+        <div class="row g-4">
+            <permission require="@WebPermission.Package.Create">
+                <div class="col-lg-5">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header border-bottom">
+                            <h2 class="card-header-title h5 mb-0">@Localizer["Provider.Packages.CreateHeading"]</h2>
+                        </div>
+                        <div class="card-body">
+                            <form asp-action="Create" method="post" class="vstack gap-3">
+                                @Html.AntiForgeryToken()
+                                <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
+
+                                <div>
+                                    <label asp-for="Create.Name" class="form-label">@Localizer["Provider.Packages.NameLabel"]</label>
+                                    <input asp-for="Create.Name" class="form-control" />
+                                    <span asp-validation-for="Create.Name" class="text-danger small" role="alert"></span>
+                                </div>
+
+                                <div>
+                                    <label asp-for="Create.Description" class="form-label">@Localizer["Provider.Packages.DescriptionLabel"]</label>
+                                    <textarea asp-for="Create.Description" rows="2" class="form-control"></textarea>
+                                    <span asp-validation-for="Create.Description" class="text-danger small" role="alert"></span>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-7">
+                                        <label asp-for="Create.Price" class="form-label">@Localizer["Provider.Packages.PriceLabel"]</label>
+                                        <input asp-for="Create.Price" type="number" step="0.001" min="0" inputmode="decimal" dir="ltr" class="form-control" />
+                                        <span asp-validation-for="Create.Price" class="text-danger small" role="alert"></span>
+                                    </div>
+                                    <div class="col-5">
+                                        <label asp-for="Create.Currency" class="form-label">@Localizer["Provider.Packages.CurrencyLabel"]</label>
+                                        <input asp-for="Create.Currency" dir="ltr" class="form-control text-uppercase" maxlength="3" />
+                                        <span asp-validation-for="Create.Currency" class="text-danger small" role="alert"></span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label asp-for="Create.MaxParticipants" class="form-label">@Localizer["Provider.Packages.MaxParticipantsLabel"]</label>
+                                    <input asp-for="Create.MaxParticipants" type="number" min="1" dir="ltr" class="form-control" />
+                                    <span asp-validation-for="Create.MaxParticipants" class="text-danger small" role="alert"></span>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label asp-for="Create.ValidFrom" class="form-label">@Localizer["Provider.Packages.ValidFromLabel"]</label>
+                                        <input asp-for="Create.ValidFrom" type="date" dir="ltr" class="form-control" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label asp-for="Create.ValidTo" class="form-label">@Localizer["Provider.Packages.ValidToLabel"]</label>
+                                        <input asp-for="Create.ValidTo" type="date" dir="ltr" class="form-control" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label asp-for="Create.IncludedTourIds" class="form-label">@Localizer["Provider.Packages.IncludedToursLabel"]</label>
+                                    <textarea asp-for="Create.IncludedTourIds" rows="2" dir="ltr" class="form-control font-data" aria-describedby="pkg-tours-help"></textarea>
+                                    <small id="pkg-tours-help" class="form-text">@Localizer["Provider.Packages.IncludedToursHelp"]</small>
+                                </div>
+
+                                <div>
+                                    <label asp-for="Create.Inclusions" class="form-label">@Localizer["Provider.Packages.InclusionsLabel"]</label>
+                                    <textarea asp-for="Create.Inclusions" rows="3" class="form-control" aria-describedby="pkg-incl-help"></textarea>
+                                    <small id="pkg-incl-help" class="form-text">@Localizer["Provider.Packages.InclusionsHelp"]</small>
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.CreateSubmit"]</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </permission>
+
+            <div class="col-lg-7">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header border-bottom">
+                        <h2 class="card-header-title h5 mb-0">@Localizer["Provider.Packages.DirectoryHeading"]</h2>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.HasPackages)
+                        {
+                            <div class="text-center py-5">
+                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                                <p class="mb-1 fw-semibold">@Localizer["Provider.Packages.EmptyTitle"]</p>
+                                <p class="mb-0 text-secondary">@Localizer["Provider.Packages.EmptyMessage"]</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">@Localizer["Provider.Packages.ColName"]</th>
+                                            <th scope="col" class="text-end">@Localizer["Provider.Packages.ColPrice"]</th>
+                                            <th scope="col" class="text-end">@Localizer["Provider.Packages.ColTours"]</th>
+                                            <th scope="col">@Localizer["Provider.Packages.ColValidity"]</th>
+                                            <th scope="col" class="text-end">@Localizer["Provider.Packages.ColActions"]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var p in Model.Packages)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <span class="fw-semibold">@p.Name</span>
+                                                    <div class="small text-secondary">@Localizer["Provider.Packages.CreatedOn"] <bdi dir="ltr" class="font-data">@Date(p.CreatedAt)</bdi></div>
+                                                </td>
+                                                <td class="text-end"><bdi dir="ltr" class="font-data">@p.PriceLabel</bdi></td>
+                                                <td class="text-end"><bdi dir="ltr" class="font-data">@Count(p.IncludedTourCount)</bdi></td>
+                                                <td>
+                                                    @if (string.IsNullOrWhiteSpace(p.ValidityLabel))
+                                                    {
+                                                        <span class="text-secondary">&mdash;</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <bdi dir="ltr" class="font-data">@p.ValidityLabel</bdi>
+                                                    }
+                                                </td>
+                                                <td class="text-end">
+                                                    <div class="btn-group btn-group-sm" role="group" aria-label="@Localizer["Provider.Packages.ColActions"]">
+                                                        <a asp-action="Manage" asp-route-id="@p.Id" class="btn btn-outline-primary"><i class="fa-solid fa-gear me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.Manage"]</a>
+                                                        <permission require="@WebPermission.Package.Delete">
+                                                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#del-pkg-@p.Id.ToString("N")">
+                                                                <i class="fa-solid fa-trash-can me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.Delete"]
+                                                            </button>
+                                                        </permission>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                    @if (Model.HasPrevious || Model.HasNext)
+                    {
+                        <div class="card-footer border-top d-flex justify-content-between align-items-center">
+                            @if (Model.HasPrevious)
+                            {
+                                <a asp-action="Index" asp-route-page="@(Model.Page - 1)" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-chevron-left me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.Previous"]</a>
+                            }
+                            else
+                            {
+                                <span></span>
+                            }
+                            <span class="small text-secondary">@Localizer["Provider.Packages.PageLabel"] <bdi dir="ltr" class="font-data">@Count(Model.Page)</bdi></span>
+                            @if (Model.HasNext)
+                            {
+                                <a asp-action="Index" asp-route-page="@(Model.Page + 1)" class="btn btn-sm btn-outline-secondary">@Localizer["Provider.Packages.Next"]<i class="fa-solid fa-chevron-right ms-1" aria-hidden="true"></i></a>
+                            }
+                            else
+                            {
+                                <span></span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<permission require="@WebPermission.Package.Delete">
+    @foreach (var p in Model.Packages)
+    {
+        <div class="modal fade" id="del-pkg-@p.Id.ToString("N")" tabindex="-1" aria-labelledby="del-pkg-title-@p.Id.ToString("N")" aria-describedby="del-pkg-body-@p.Id.ToString("N")" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-action="Delete" asp-route-id="@p.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="del-pkg-title-@p.Id.ToString("N")">@Localizer["Provider.Packages.DeleteTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.Packages.Cancel"]"></button>
+                    </div>
+                    <div class="modal-body" id="del-pkg-body-@p.Id.ToString("N")">
+                        @Localizer["Provider.Packages.DeleteBody", p.Name]
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.Packages.Cancel"]</button>
+                        <button type="submit" class="btn btn-danger">@Localizer["Provider.Packages.DeleteConfirm"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</permission>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
