@@ -26,19 +26,61 @@ public sealed class ToursController : BaseController
         _accessibilityReviews = accessibilityReviews;
     }
 
+    // Phase 4: /tours is the canonical search surface. Filter params map 1:1 to the
+    // backend GET /api/v1/tours/search contract (UI-UX-S1/S3). The output cache must
+    // vary by X-Requested-With because the same URL serves both the full page and the
+    // _TourResults partial for AJAX refinement (api-client.js always sends the header).
     [HttpGet("tours")]
-    [OutputCache(PolicyName = "PublicShort")]
-    public async Task<IActionResult> Index(int page = 1, string? sort = null, string? q = null, Guid? placeId = null, CancellationToken ct = default)
+    [OutputCache(PolicyName = "PublicShort", VaryByHeaderNames = new[] { "X-Requested-With" })]
+    public async Task<IActionResult> Index(
+        int page = 1,
+        string? sort = null,
+        string? q = null,
+        Guid? placeId = null,
+        decimal? priceMin = null,
+        decimal? priceMax = null,
+        string? difficulty = null,
+        int? durationMin = null,
+        int? durationMax = null,
+        bool? childFriendly = null,
+        bool? accessible = null,
+        bool? instantBooking = null,
+        bool? hasDiscount = null,
+        decimal? minRating = null,
+        CancellationToken ct = default)
     {
-        var result = await _tours.GetGridAsync(page, sort, q, placeId, ct);
+        var filters = new TourFilterVm
+        {
+            PriceMin = priceMin is < 0 ? null : priceMin,
+            PriceMax = priceMax is < 0 ? null : priceMax,
+            Difficulty = NormalizeDifficulty(difficulty),
+            DurationMin = durationMin is < 0 ? null : durationMin,
+            DurationMax = durationMax is < 0 ? null : durationMax,
+            ChildFriendly = childFriendly,
+            Accessible = accessible,
+            InstantBooking = instantBooking,
+            HasDiscount = hasDiscount,
+            MinRating = minRating is < 0 or > 5 ? null : minRating
+        };
+
+        var result = await _tours.GetGridAsync(page, sort, q, placeId, filters, ct);
 
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new TourGridVm { Sort = ToursFacade.NormalizeSort(sort), Query = q, PlaceId = placeId });
+            var fallback = new TourGridVm { Sort = ToursFacade.NormalizeSort(sort), Query = q, PlaceId = placeId, Filters = filters };
+            return WantsAjax() ? PartialView("_TourResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        return WantsAjax() ? PartialView("_TourResults", result.Data) : View(result.Data);
+    }
+
+    /// <summary>Whitelist difficulty tokens (search index stores lowercase names).</summary>
+    private static string? NormalizeDifficulty(string? difficulty)
+    {
+        if (string.IsNullOrWhiteSpace(difficulty)) return null;
+        var token = difficulty.Trim().ToLowerInvariant();
+        return token is "easy" or "moderate" or "hard" or "expert" ? token : null;
     }
 
     [HttpGet("tours/{slug}")]

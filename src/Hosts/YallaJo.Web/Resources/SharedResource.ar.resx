@@ -11755,4 +11755,82 @@
 <data name="Public.RatingOutOfFive" xml:space="preserve">
 <value>التقييم {0} من 5</value>
 </data>
+<data name="Public.Filter.Apply" xml:space="preserve">
+<value>تطبيق الفلاتر</value>
+</data>
+<data name="Public.Filter.ClearAll" xml:space="preserve">
+<value>مسح الكل</value>
+</data>
+<data name="Public.Filter.Price" xml:space="preserve">
+<value>نطاق السعر</value>
+</data>
+<data name="Public.Filter.PriceMin" xml:space="preserve">
+<value>أدنى سعر</value>
+</data>
+<data name="Public.Filter.PriceMax" xml:space="preserve">
+<value>أعلى سعر</value>
+</data>
+<data name="Public.Filter.Difficulty" xml:space="preserve">
+<value>مستوى الصعوبة</value>
+</data>
+<data name="Public.Difficulty.Any" xml:space="preserve">
+<value>الكل</value>
+</data>
+<data name="Public.Difficulty.Easy" xml:space="preserve">
+<value>سهل</value>
+</data>
+<data name="Public.Difficulty.Moderate" xml:space="preserve">
+<value>متوسط</value>
+</data>
+<data name="Public.Difficulty.Hard" xml:space="preserve">
+<value>صعب</value>
+</data>
+<data name="Public.Difficulty.Expert" xml:space="preserve">
+<value>خبير</value>
+</data>
+<data name="Public.Filter.Duration" xml:space="preserve">
+<value>المدة</value>
+</data>
+<data name="Public.Filter.DurationMin" xml:space="preserve">
+<value>أقل مدة</value>
+</data>
+<data name="Public.Filter.DurationMax" xml:space="preserve">
+<value>أقصى مدة</value>
+</data>
+<data name="Public.HoursShort" xml:space="preserve">
+<value>{0} س</value>
+</data>
+<data name="Public.Filter.MinRating" xml:space="preserve">
+<value>الحد الأدنى للتقييم</value>
+</data>
+<data name="Public.StarsPlus" xml:space="preserve">
+<value>{0}+ نجوم</value>
+</data>
+<data name="Public.Filter.ChildFriendly" xml:space="preserve">
+<value>مناسب للأطفال</value>
+</data>
+<data name="Public.Filter.Accessible" xml:space="preserve">
+<value>مهيأ لذوي الإعاقة</value>
+</data>
+<data name="Public.Filter.InstantBooking" xml:space="preserve">
+<value>حجز فوري</value>
+</data>
+<data name="Public.Filter.HasDiscount" xml:space="preserve">
+<value>عليه خصم</value>
+</data>
+<data name="Public.Most.relevant" xml:space="preserve">
+<value>الأكثر صلة</value>
+</data>
+<data name="Public.Results.Error" xml:space="preserve">
+<value>تعذر تحميل النتائج.</value>
+</data>
+<data name="Public.Retry" xml:space="preserve">
+<value>حاول مرة أخرى</value>
+</data>
+<data name="Public.RemoveFilter" xml:space="preserve">
+<value>إزالة الفلتر: {0}</value>
+</data>
+<data name="Public.Loading" xml:space="preserve">
+<value>جارٍ التحميل…</value>
+</data>
 </root>

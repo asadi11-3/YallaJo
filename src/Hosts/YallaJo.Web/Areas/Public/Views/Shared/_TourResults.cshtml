@@ -1,0 +1,102 @@
+@model YallaJo.Web.Areas.Public.Models.Tours.TourGridVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Tour results region — rendered inside Tours/Index and returned standalone
+    when the request is AJAX (BaseController.WantsAjax, UI-UX-S1).
+    tours-index.js swaps this markup into #tourResults and re-binds hooks.
+*@
+@{
+    var rangeStart = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
+    var rangeEnd = Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount);
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+
+    // Builds the current URL minus one query parameter (and minus page, so removal resets paging).
+    string RemoveParamUrl(string param)
+    {
+        var parts = new List<string>();
+        foreach (var kv in Context.Request.Query)
+        {
+            if (string.Equals(kv.Key, param, StringComparison.OrdinalIgnoreCase)) { continue; }
+            if (string.Equals(kv.Key, "page", StringComparison.OrdinalIgnoreCase)) { continue; }
+            foreach (var v in kv.Value)
+            {
+                parts.Add($"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(v ?? string.Empty)}");
+            }
+        }
+
+        return parts.Count == 0 ? Context.Request.Path.ToString() : $"{Context.Request.Path}?{string.Join("&", parts)}";
+    }
+
+    // (label, value, query param) for each active filter — drives the removable chips (UI-UX-S3).
+    var chips = new List<(string Label, string Param)>();
+    var f = Model.Filters;
+    if (f.PriceMin is not null) { chips.Add(($"{Localizer["Public.Filter.PriceMin"]}: {f.PriceMin:N0}", "priceMin")); }
+    if (f.PriceMax is not null) { chips.Add(($"{Localizer["Public.Filter.PriceMax"]}: {f.PriceMax:N0}", "priceMax")); }
+    if (!string.IsNullOrEmpty(f.Difficulty))
+    {
+        var diffKey = "Public.Difficulty." + char.ToUpperInvariant(f.Difficulty[0]) + f.Difficulty[1..];
+        chips.Add(($"{Localizer["Public.Filter.Difficulty"]}: {Localizer[diffKey]}", "difficulty"));
+    }
+    if (f.DurationMin is not null) { chips.Add(($"{Localizer["Public.Filter.DurationMin"]}: {string.Format(Localizer["Public.HoursShort"].Value, f.DurationMin / 60)}", "durationMin")); }
+    if (f.DurationMax is not null) { chips.Add(($"{Localizer["Public.Filter.DurationMax"]}: {string.Format(Localizer["Public.HoursShort"].Value, f.DurationMax / 60)}", "durationMax")); }
+    if (f.MinRating is not null) { chips.Add((string.Format(Localizer["Public.StarsPlus"].Value, f.MinRating.Value.ToString("0.#")), "minRating")); }
+    if (f.ChildFriendly == true) { chips.Add((Localizer["Public.Filter.ChildFriendly"].Value, "childFriendly")); }
+    if (f.Accessible == true) { chips.Add((Localizer["Public.Filter.Accessible"].Value, "accessible")); }
+    if (f.InstantBooking == true) { chips.Add((Localizer["Public.Filter.InstantBooking"].Value, "instantBooking")); }
+    if (f.HasDiscount == true) { chips.Add((Localizer["Public.Filter.HasDiscount"].Value, "hasDiscount")); }
+}
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <h5 class="mb-0 me-auto" id="tourResultsCount">
+        @Localizer["Public.ShowingResults", rangeStart, rangeEnd, Model.TotalCount]
+    </h5>
+</div>
+
+@if (chips.Count > 0)
+{
+    <div class="d-flex flex-wrap gap-2 mb-3" id="tourActiveFilters">
+        @foreach (var chip in chips)
+        {
+            <a class="badge text-bg-light border d-inline-flex align-items-center gap-1 text-decoration-none js-filter-chip"
+               href="@RemoveParamUrl(chip.Param)"
+               aria-label="@string.Format(Localizer["Public.RemoveFilter"].Value, chip.Label)">
+                @chip.Label
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </a>
+        }
+        <a class="btn btn-link btn-sm p-0 align-self-center" href="@Url.Action("Index", "Tours", new { area = "Public", q = Model.Query, placeId = Model.PlaceId, sort = Model.Sort })">
+            @Localizer["Public.Filter.ClearAll"]
+        </a>
+    </div>
+}
+
+@if (Model.HasResults)
+{
+    <div class="row g-4" id="tourGrid">
+        @foreach (var tour in Model.Tours)
+        {
+            <partial name="_TourCard" model="tour"
+                     view-data='@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-md-6 col-xl-4 js-tour-card" }, { "dataTitle", tour.Name.ToLowerInvariant() } })' />
+        }
+    </div>
+
+    <div class="row d-none mt-4" id="noFilterMatch">
+        <div class="col-12 text-center text-body-secondary py-4">
+            @Localizer["Public.No.tours.on.this.page.match.your.filter"]
+        </div>
+    </div>
+
+    <partial name="_Pagination" model='new YallaJo.Web.Areas.Public.Models.Shared.PaginationVm { PageNumber = Model.PageNumber, TotalPages = Model.TotalPages, AriaLabel = Localizer["Public.Tours.pagination"] }' />
+}
+else
+{
+    <partial name="_EmptyState"
+             view-data='@(new ViewDataDictionary(ViewData)
+             {
+                 { "title", Localizer["Public.No.tours.found"].Value },
+                 { "message", Localizer["Public.Try.a.different.sort.or.check.back.soon"].Value },
+                 { "ctaText", (chips.Count > 0 || !string.IsNullOrEmpty(Model.Query)) ? Localizer["Public.Filter.ClearAll"].Value : null },
+                 { "ctaUrl", (chips.Count > 0 || !string.IsNullOrEmpty(Model.Query)) ? Url.Action("Index", "Tours", new { area = "Public" }) : null }
+             })' />
+}

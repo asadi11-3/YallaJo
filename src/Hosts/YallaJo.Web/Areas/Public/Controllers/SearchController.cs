@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Public.Facades;
 using YallaJo.Web.Areas.Public.Models.Search;
 using YallaJo.Web.Infrastructure.Mvc;
@@ -8,7 +7,8 @@ using YallaJo.Web.Infrastructure.Mvc;
 namespace YallaJo.Web.Areas.Public.Controllers;
 
 /// <summary>
-/// §2.2 Search. SSR results grid at <c>/search</c> + JSON autocomplete at <c>/search/suggest</c>.
+/// §2.2 Search — JSON gateway for the public search experience (suggest/businesses/
+/// nearby/map) plus a permanent redirect from the retired /search page to /tours.
 /// </summary>
 [Area("Public")]
 [AllowAnonymous]
@@ -18,34 +18,32 @@ public sealed class SearchController : BaseController
 
     public SearchController(SearchFacade search) => _search = search;
 
+    /// <summary>
+    /// Phase 4.1: the standalone search page is retired — /tours is the canonical
+    /// search surface (navbar overlay + filter offcanvas). Permanent redirect keeps
+    /// old deep links and SEO equity alive. q/placeId/page are preserved; from/to/
+    /// participants ride along as URL intent (backend availability filter is still
+    /// a TODO — see SearchApiClient.SearchToursAsync notes).
+    /// </summary>
     [HttpGet("search")]
-    [OutputCache(PolicyName = "PublicShort")]
-    public async Task<IActionResult> Index(
+    public IActionResult Index(
         string? q = null,
         Guid? placeId = null,
         DateOnly? from = null,
         DateOnly? to = null,
         int? participants = null,
-        int page = 1,
-        int pageSize = SearchFacade.DefaultPageSize,
-        CancellationToken ct = default)
+        int page = 1)
     {
-        var result = await _search.SearchAsync(q, placeId, from, to, participants, page, pageSize, ct);
-        if (!result.IsSuccess || result.Data is null)
+        return RedirectToActionPermanent("Index", "Tours", new
         {
-            SetError(result.Error);
-            return View(new SearchVm
-            {
-                Query = q,
-                PlaceId = placeId,
-                From = from,
-                To = to,
-                Participants = participants,
-                PageNumber = page,
-                PageSize = pageSize
-            });
-        }
-        return View(result.Data);
+            area = "Public",
+            q,
+            placeId,
+            from,
+            to,
+            participants,
+            page = page > 1 ? page : (int?)null
+        });
     }
 
     /// <summary>

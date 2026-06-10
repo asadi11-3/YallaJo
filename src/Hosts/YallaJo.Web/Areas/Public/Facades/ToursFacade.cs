@@ -1,5 +1,7 @@
 using YallaJo.Web.Areas.Public.ApiClients;
 using YallaJo.Web.Areas.Public.Helpers;
+using YallaJo.Web.Areas.Public.Models.Search;
+using YallaJo.Web.Areas.Public.Models.Shared;
 using YallaJo.Web.Areas.Public.Models.Tours;
 using YallaJo.Web.Areas.Public.Translations;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -11,19 +13,35 @@ namespace YallaJo.Web.Areas.Public.Facades;
 public sealed class ToursFacade
 {
     private readonly ToursApiClient _api;
+    private readonly SearchApiClient _searchApi;
     private readonly PlacesApiClient _placesApi;
     private readonly SeoApiClient _seo;
     private readonly TranslationsApiClient _translations;
     private readonly IApiAssetUrlResolver _assetResolver;
 
-    // Sort tokens accepted by GET /api/v1/tours.
+    // Sort tokens accepted by the tour grid. "relevance" only makes sense on the
+    // search path (GET /api/v1/tours/search); the browse path maps it back to
+    // popularity_desc because GET /api/v1/tours has no relevance ordering.
     private static readonly HashSet<string> AllowedSorts =
         new(StringComparer.OrdinalIgnoreCase)
-        { "price_asc", "price_desc", "rating_desc", "popularity_desc", "newest" };
+        { "price_asc", "price_desc", "rating_desc", "popularity_desc", "newest", "relevance" };
 
-    public ToursFacade(ToursApiClient api, PlacesApiClient placesApi, SeoApiClient seo, TranslationsApiClient translations, IApiAssetUrlResolver assetResolver)
+    // Web sort token → backend SearchSort enum name (case-insensitive minimal-API binding).
+    private static readonly Dictionary<string, string> SearchSortMap =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["relevance"] = "Relevance",
+            ["price_asc"] = "PriceAsc",
+            ["price_desc"] = "PriceDesc",
+            ["rating_desc"] = "RatingDesc",
+            ["popularity_desc"] = "PopularityDesc",
+            ["newest"] = "Newest"
+        };
+
+    public ToursFacade(ToursApiClient api, SearchApiClient searchApi, PlacesApiClient placesApi, SeoApiClient seo, TranslationsApiClient translations, IApiAssetUrlResolver assetResolver)
     {
         _api = api;
+        _searchApi = searchApi;
         _placesApi = placesApi;
         _seo = seo;
         _translations = translations;
@@ -34,34 +52,76 @@ public sealed class ToursFacade
         => sort is not null && AllowedSorts.Contains(sort) ? sort.ToLowerInvariant() : "popularity_desc";
 
     public async Task<ApiResult<TourGridVm>> GetGridAsync(
-        int page, string? sort, string? query, Guid? placeId = null, CancellationToken ct = default)
+        int page, string? sort, string? query, Guid? placeId = null, TourFilterVm? filters = null, CancellationToken ct = default)
     {
         const int pageSize = 12;
         var pageNumber = page < 1 ? 1 : page;
-        var normalizedSort = NormalizeSort(sort);
+        filters ??= new TourFilterVm();
 
-        var toursTask = _api.GetToursAsync(pageNumber, pageSize, normalizedSort, placeId, ct);
+        // Phase 4.2: a text query or any server-side filter routes through the search
+        // endpoint (16-param GET /api/v1/tours/search); plain browsing stays on the
+        // cheaper GET /api/v1/tours. Default sort becomes relevance when searching.
+        var useSearch = !string.IsNullOrWhiteSpace(query) || filters.HasAny;
+        var normalizedSort = sort is null && !string.IsNullOrWhiteSpace(query)
+            ? "relevance"
+            : NormalizeSort(sort);
+
         var categoriesTask = _api.GetCategoriesAsync(ct);
         // CP-3c: when a place filter is active, resolve its name for the heading
         // label. Tolerant — a failed/missing place just yields the generic label.
         var placeNameTask = SafePlaceNameAsync(placeId, ct);
-        await Task.WhenAll(toursTask, categoriesTask, placeNameTask);
 
-        var toursResult = await toursTask;
+        List<TourCardVm> cards;
+        int totalCount, totalPages, respPage, respPageSize;
+        bool hasPrev, hasNext;
+
+        if (useSearch)
+        {
+            var searchTask = _searchApi.SearchToursAsync(query, pageNumber, pageSize, placeId, filters, SearchSortMap[normalizedSort], ct);
+            await Task.WhenAll(searchTask, categoriesTask, placeNameTask);
+
+            var searchResult = await searchTask;
+            if (!searchResult.IsSuccess || searchResult.Data is null)
+                return ApiResult<TourGridVm>.Fail(searchResult.StatusCode, searchResult.Error ?? "Could not load tours.");
+
+            var sp = searchResult.Data;
+            cards = sp.Items.Select(MapSearchCard).ToList();
+            totalCount = sp.TotalCount;
+            // Search payload carries no TotalPages (wire shape rule) — derive it.
+            totalPages = sp.PageSize > 0 ? (int)Math.Ceiling(sp.TotalCount / (double)sp.PageSize) : 0;
+            respPage = sp.PageNumber;
+            respPageSize = sp.PageSize;
+            hasPrev = sp.HasPreviousPage;
+            hasNext = sp.HasNextPage;
+        }
+        else
+        {
+            // Browse path has no "relevance" ordering — degrade to popularity.
+            var browseSort = normalizedSort == "relevance" ? "popularity_desc" : normalizedSort;
+            var toursTask = _api.GetToursAsync(pageNumber, pageSize, browseSort, placeId, ct);
+            await Task.WhenAll(toursTask, categoriesTask, placeNameTask);
+
+            var toursResult = await toursTask;
+            if (!toursResult.IsSuccess || toursResult.Data is null)
+                return ApiResult<TourGridVm>.Fail(toursResult.StatusCode, toursResult.Error ?? "Could not load tours.");
+
+            var page0 = toursResult.Data;
+
+            // Tour summaries expose no public image field and the attachment endpoint is
+            // not anonymous-accessible, so cards use a deterministic theme placeholder
+            // (temporary public image API gap — see PublicImagePlaceholder).
+            cards = page0.Items
+                .Select(t => TourGridMapper.ToCardVm(t, PublicImagePlaceholder.ResolveTourImage(t.Id)))
+                .ToList();
+            totalCount = page0.TotalCount;
+            totalPages = page0.TotalPages;
+            respPage = page0.PageNumber;
+            respPageSize = page0.PageSize;
+            hasPrev = page0.HasPreviousPage;
+            hasNext = page0.HasNextPage;
+        }
+
         var categoriesResult = await categoriesTask;
-
-        if (!toursResult.IsSuccess || toursResult.Data is null)
-            return ApiResult<TourGridVm>.Fail(toursResult.StatusCode, toursResult.Error ?? "Could not load tours.");
-
-        var page0 = toursResult.Data;
-
-        // Tour summaries expose no public image field and the attachment endpoint is
-        // not anonymous-accessible, so cards use a deterministic theme placeholder
-        // (temporary public image API gap — see PublicImagePlaceholder).
-        var cards = page0.Items
-            .Select(t => TourGridMapper.ToCardVm(t, PublicImagePlaceholder.ResolveTourImage(t.Id)))
-            .ToList();
-
         var categories = categoriesResult is { IsSuccess: true, Data: { } cats }
             ? cats.Select(TourGridMapper.ToFilterVm).ToList()
             : new List<CategoryFilterVm>();
@@ -70,18 +130,35 @@ public sealed class ToursFacade
         {
             Tours = cards,
             Categories = categories,
-            PageNumber = page0.PageNumber,
-            PageSize = page0.PageSize,
-            TotalCount = page0.TotalCount,
-            TotalPages = page0.TotalPages,
-            HasPreviousPage = page0.HasPreviousPage,
-            HasNextPage = page0.HasNextPage,
+            PageNumber = respPage,
+            PageSize = respPageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages,
+            HasPreviousPage = hasPrev,
+            HasNextPage = hasNext,
             Query = query,
             Sort = normalizedSort,
+            Filters = filters,
             PlaceId = placeId,
             PlaceFilterName = placeNameTask.Result,
         });
     }
+
+    /// <summary>Search items expose the same card fields as browse summaries (see SearchFacade.MapItem precedent).</summary>
+    private static TourCardVm MapSearchCard(TourSearchItemResponse item) => new()
+    {
+        Id = item.Id,
+        Name = item.Name,
+        Slug = item.Slug,
+        ImageUrl = PublicImagePlaceholder.ResolveTourImage(item.Id),
+        BasePrice = item.BasePrice,
+        SalePrice = item.SalePrice,
+        Currency = string.IsNullOrWhiteSpace(item.Currency) ? "USD" : item.Currency,
+        AverageRating = item.AverageRating,
+        ReviewCount = item.ReviewCount,
+        BookingCount = item.BookingCount,
+        IsFeatured = item.IsFeatured
+    };
 
     public async Task<ApiResult<TourDetailVm>> GetDetailAsync(string slug, CancellationToken ct = default)
     {

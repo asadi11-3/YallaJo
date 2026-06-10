@@ -203,3 +203,30 @@ html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
 .min-w-240 { min-width: 240px; }
 .img-max-h380 { max-height: 380px; }
 .max-w-220 { max-width: 220px; }
+
+
+/* ------------------------------------------------------------------
+   6. Filter offcanvas - mobile bottom sheet (Phase 4.3, UI-UX-D4/S3)
+   Desktop: standard offcanvas-end side panel.
+   Mobile (<768px): becomes a bottom sheet with sticky Apply footer.
+   ------------------------------------------------------------------ */
+@media (max-width: 767.98px) {
+    .filter-offcanvas.offcanvas.offcanvas-end {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: auto;
+        max-height: 85vh;
+        border-left: 0;
+        border-top-left-radius: 1rem;
+        border-top-right-radius: 1rem;
+        transform: translateY(100%);
+    }
+
+    .filter-offcanvas.offcanvas.offcanvas-end.show,
+    .filter-offcanvas.offcanvas.offcanvas-end.showing {
+        transform: none;
+    }
+}

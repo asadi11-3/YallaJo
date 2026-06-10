@@ -103,7 +103,8 @@
         <div class="card shadow rounded-3 p-3 p-md-4">
             @* Submits to Tours/Index — placeId is honored as a filter today;
                from/to/participants travel in the URL as future-filter intent. *@
-            <form method="get" asp-area="Public" asp-controller="Search" asp-action="Index" class="row g-3 align-items-end">
+            @* Phase 4.1: hero search targets /tours directly (Search page retired; /search 301s here). from/to/participants ride along as URL intent until backend supports availability-window filtering. *@
+                            <form method="get" asp-area="Public" asp-controller="Tours" asp-action="Index" class="row g-3 align-items-end">
                 @* Location pill *@
                 <div class="col-md-4">
                     <label for="heroLocation" class="form-label fw-semibold small mb-1">
