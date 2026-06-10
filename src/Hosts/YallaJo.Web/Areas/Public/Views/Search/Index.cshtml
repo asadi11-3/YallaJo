@@ -154,7 +154,7 @@
             <div class="row g-3 g-md-4">
                 @foreach (var item in Model.Items)
                 {
-                    <partial name="~/Areas/Public/Views/Home/_HomeTourCard.cshtml"
+                    <partial name="_TourCard"
                              model="item"
                              view-data='@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })' />
                 }

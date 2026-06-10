@@ -116,92 +116,9 @@
             <div class="row g-4" id="tourGrid">
                 @foreach (var tour in Model.Tours)
                 {
-                    <!-- Card item START -->
-                    <div class="col-md-6 col-xl-4 js-tour-card" data-title="@tour.Name.ToLowerInvariant()">
-                        <div class="card card-hover-shadow pb-0 h-100">
-                            <!-- Image + overlay -->
-                            <div class="position-relative">
-                                @if (!string.IsNullOrWhiteSpace(tour.ImageUrl))
-                                {
-                                    <img src="@tour.ImageUrl" class="card-img-top" alt="@tour.Name" style="height:220px;object-fit:cover;">
-                                }
-                                else
-                                {
-                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height:220px;">
-                                        <i class="bi bi-image text-secondary display-5"></i>
-                                    </div>
-                                }
-                                <div class="card-img-overlay d-flex flex-column p-3 z-index-1">
-                                    <div>
-                                        @if (tour.HasDiscount)
-                                        {
-                                            <span class="badge text-bg-danger">@Localizer["Public.PercentOff", tour.DiscountPercent]</span>
-                                        }
-                                        @if (tour.IsFeatured)
-                                        {
-                                            <span class="badge text-bg-dark">@Localizer["Public.Featured"]</span>
-                                        }
-                                    </div>
-                                </div>
-                                <!-- Wishlist heart (auth-gated) -->
-                                <div class="position-absolute top-0 end-0 p-3 z-index-1">
-                                    @if (User.Identity?.IsAuthenticated == true)
-                                    {
-                                        <button type="button"
-                                                class="btn btn-sm btn-white rounded-circle js-favorite"
-                                                data-entity-type="Tour" data-entity-id="@tour.Id"
-                                                title="@Localizer["Public.Save.to.wishlist"]" aria-label="@Localizer["Public.Save.to.wishlist"]">
-                                            <i class="bi bi-heart"></i>
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <button type="button"
-                                                class="btn btn-sm btn-white rounded-circle"
-                                                disabled
-                                                data-bs-toggle="tooltip" title="@Localizer["Public.Log.in.to.save"]">
-                                            <i class="bi bi-heart"></i>
-                                        </button>
-                                    }
-                                </div>
-                            </div>
-
-                            <!-- Card body -->
-                            <div class="card-body px-3">
-                                <h5 class="card-title mb-1">
-                                    <a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@tour.Slug" class="stretched-link">@tour.Name</a>
-                                </h5>
-                                <ul class="nav nav-divider mb-0 small">
-                                    <li class="nav-item">
-                                        <i class="bi bi-star-fill text-warning me-1"></i>@tour.AverageRating.ToString("0.0")
-                                        <span class="text-body">(@tour.ReviewCount)</span>
-                                    </li>
-                                    @if (tour.BookingCount > 0)
-                                    {
-                                        <li class="nav-item">@Localizer["Public.BookedCount", tour.BookingCount]</li>
-                                    }
-                                </ul>
-                            </div>
-
-                            <!-- Card footer -->
-                            <div class="card-footer pt-0">
-                                <div class="d-sm-flex justify-content-sm-between align-items-center flex-wrap">
-                                    <div class="hstack gap-2">
-                                        <h5 class="fw-normal text-success mb-0">@Currency(tour.EffectivePrice, tour.Currency)</h5>
-                                        <small>@Localizer["Public.per.person"]</small>
-                                        @if (tour.HasDiscount)
-                                        {
-                                            <span class="text-decoration-line-through small">@Currency(tour.BasePrice, tour.Currency)</span>
-                                        }
-                                    </div>
-                                    <div class="mt-2 mt-sm-0">
-                                        <a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@tour.Slug" class="btn btn-sm btn-primary mb-0">@Localizer["Public.View.Details"]</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Card item END -->
+                    <partial name="_TourCard"
+                             model="tour"
+                             view-data='@(new ViewDataDictionary(ViewData) { { "isAuthed", User.Identity?.IsAuthenticated == true }, { "colClass", "col-md-6 col-xl-4 js-tour-card" }, { "dataTitle", tour.Name.ToLowerInvariant() } })' />
                 }
             </div>
 

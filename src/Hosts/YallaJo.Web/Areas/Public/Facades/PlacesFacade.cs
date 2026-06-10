@@ -2,6 +2,7 @@ using YallaJo.Web.Areas.Public.ApiClients;
 using YallaJo.Web.Areas.Public.Helpers;
 using YallaJo.Web.Areas.Public.Models.Directory;
 using YallaJo.Web.Areas.Public.Models.Places;
+using YallaJo.Web.Areas.Public.Models.Shared;
 using YallaJo.Web.Areas.Public.Models.Tours;
 using YallaJo.Web.Areas.Public.Translations;
 using YallaJo.Web.Infrastructure.Api.Contracts;

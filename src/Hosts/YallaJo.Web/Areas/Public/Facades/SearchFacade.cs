@@ -1,7 +1,7 @@
 using YallaJo.Web.Areas.Public.ApiClients;
 using YallaJo.Web.Areas.Public.Helpers;
-using YallaJo.Web.Areas.Public.Models.Home;
 using YallaJo.Web.Areas.Public.Models.Search;
+using YallaJo.Web.Areas.Public.Models.Shared;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Areas.Public.Facades;
@@ -229,7 +229,7 @@ public sealed class SearchFacade
         }
     }
 
-    private static HomeTourCardVm MapItem(TourSearchItemResponse item) => new()
+    private static TourCardVm MapItem(TourSearchItemResponse item) => new()
     {
         Id = item.Id,
         Name = item.Name,

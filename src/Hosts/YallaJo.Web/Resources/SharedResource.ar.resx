@@ -11749,4 +11749,7 @@
 <data name="Search.Overlay.NoResults" xml:space="preserve">
 <value>لا توجد نتائج مطابقة</value>
 </data>
+<data name="Public.Remove.from.wishlist" xml:space="preserve">
+<value>إزالة من قائمة الأمنيات</value>
+</data>
 </root>

@@ -11749,4 +11749,7 @@
 <data name="Search.Overlay.NoResults" xml:space="preserve">
 <value>No matches found</value>
 </data>
+<data name="Public.Remove.from.wishlist" xml:space="preserve">
+<value>Remove from wishlist</value>
+</data>
 </root>

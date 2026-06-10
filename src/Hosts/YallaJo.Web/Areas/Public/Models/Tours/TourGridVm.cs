@@ -1,27 +1,6 @@
+using YallaJo.Web.Areas.Public.Models.Shared;
+
 namespace YallaJo.Web.Areas.Public.Models.Tours;
-
-/// <summary>A single tour card on the grid page.</summary>
-public sealed class TourCardVm
-{
-    public Guid Id { get; init; }
-    public string Name { get; init; } = string.Empty;
-    public string Slug { get; init; } = string.Empty;
-    public string? ImageUrl { get; init; }
-    public decimal BasePrice { get; init; }
-    public decimal? SalePrice { get; init; }
-    public string Currency { get; init; } = string.Empty;
-    public decimal AverageRating { get; init; }
-    public int ReviewCount { get; init; }
-    public int BookingCount { get; init; }
-    public bool IsFeatured { get; init; }
-
-    public decimal EffectivePrice => SalePrice ?? BasePrice;
-    public bool HasDiscount => SalePrice is > 0 && SalePrice < BasePrice;
-    public int DiscountPercent =>
-        HasDiscount && BasePrice > 0
-            ? (int)Math.Round((1 - (SalePrice!.Value / BasePrice)) * 100)
-            : 0;
-}
 
 /// <summary>A category chip used for the client-side category filter.</summary>
 public sealed class CategoryFilterVm

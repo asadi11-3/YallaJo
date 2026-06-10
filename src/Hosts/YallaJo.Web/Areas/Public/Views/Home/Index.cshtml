@@ -264,7 +264,7 @@
             <div class="row g-4">
                 @foreach (var tour in Model.FeaturedTours)
                 {
-                    <partial name="_HomeTourCard" model="tour" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })" />
+                    <partial name="_TourCard" model="tour" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-sm-6 col-xl-3" } })" />
                 }
             </div>
         </div>
@@ -290,7 +290,7 @@
             <div class="row g-4 justify-content-center">
                 @foreach (var place in Model.PopularPlaces)
                 {
-                    <partial name="_HomePlaceCard" model="place" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })" />
+                    <partial name="_PlaceCircleCard" model="place" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })" />
                 }
             </div>
         </div>
@@ -316,7 +316,7 @@
             <div class="row g-4">
                 @foreach (var tour in Model.PopularTours)
                 {
-                    <partial name="_HomeTourCard" model="tour" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })" />
+                    <partial name="_TourCard" model="tour" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-sm-6 col-xl-3" } })" />
                 }
             </div>
         </div>
@@ -342,7 +342,7 @@
             <div class="row g-4">
                 @foreach (var business in Model.PopularBusinesses)
                 {
-                    <partial name="_HomeBusinessCard" model="business" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })" />
+                    <partial name="_BusinessCard" model="business" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-sm-6 col-xl-3" } })" />
                 }
             </div>
         </div>

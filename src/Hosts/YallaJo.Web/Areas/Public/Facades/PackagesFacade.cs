@@ -1,7 +1,7 @@
 using YallaJo.Web.Areas.Public.ApiClients;
 using YallaJo.Web.Areas.Public.Helpers;
-using YallaJo.Web.Areas.Public.Models.Home;
 using YallaJo.Web.Areas.Public.Models.Packages;
+using YallaJo.Web.Areas.Public.Models.Shared;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Areas.Public.Facades;
@@ -52,7 +52,7 @@ public sealed class PackagesFacade(PackagesApiClient api)
             return ApiResult<PackageDetailVm>.Fail(result.StatusCode, result.Error ?? "Package not found.");
         }
 
-        var includedTours = d.IncludedTours.Select(t => new HomeTourCardVm
+        var includedTours = d.IncludedTours.Select(t => new TourCardVm
         {
             Id = t.Id,
             Name = t.Name,

@@ -1,3 +1,5 @@
+using YallaJo.Web.Areas.Public.Models.Shared;
+
 namespace YallaJo.Web.Areas.Public.Models.Tours;
 
 /// <summary>Pure projection helpers for the tour grid (no I/O).</summary>

@@ -1,11 +1,11 @@
-using YallaJo.Web.Areas.Public.Models.Home;
+using YallaJo.Web.Areas.Public.Models.Shared;
 
 namespace YallaJo.Web.Areas.Public.Models.Search;
 
 /// <summary>
 /// Top-level view model for the §2.2 Search results page (route <c>/search</c>).
 /// Holds the echoed filters + a paginated list of result cards. Result cards reuse
-/// <see cref="HomeTourCardVm"/> since the card is shape-generic; future Place/Business
+/// <see cref="TourCardVm"/> since the card is shape-generic; future Place/Business
 /// tabs can add their own collections without breaking this contract.
 /// </summary>
 public sealed class SearchVm
@@ -22,7 +22,7 @@ public sealed class SearchVm
     public DateOnly? To { get; init; }
     public int? Participants { get; init; }
 
-    public IReadOnlyList<HomeTourCardVm> Items { get; init; } = [];
+    public IReadOnlyList<TourCardVm> Items { get; init; } = [];
     public int PageNumber { get; init; } = 1;
     public int PageSize { get; init; } = 20;
     public int TotalCount { get; init; }
