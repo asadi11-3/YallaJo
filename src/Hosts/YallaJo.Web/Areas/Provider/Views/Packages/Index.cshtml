@@ -3,9 +3,6 @@
     ViewData["Title"] = Localizer["Provider.Packages.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
 
-    var culture = CultureInfo.CurrentUICulture;
-    string Count(int n) => n.ToString("N0", culture);
-    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
 }
 
 @await Component.InvokeAsync("ProviderSidebar")
@@ -103,11 +100,7 @@
                     <div class="card-body">
                         @if (!Model.HasPackages)
                         {
-                            <div class="text-center py-5">
-                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                <p class="mb-1 fw-semibold">@Localizer["Provider.Packages.EmptyTitle"]</p>
-                                <p class="mb-0 text-secondary">@Localizer["Provider.Packages.EmptyMessage"]</p>
-                            </div>
+                            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.Packages.EmptyTitle"].Value }, { "message", Localizer["Provider.Packages.EmptyMessage"].Value } })" />
                         }
                         else
                         {
@@ -146,9 +139,16 @@
                                                     <div class="btn-group btn-group-sm" role="group" aria-label="@Localizer["Provider.Packages.ColActions"]">
                                                         <a asp-action="Manage" asp-route-id="@p.Id" class="btn btn-outline-primary"><i class="fa-solid fa-gear me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.Manage"]</a>
                                                         <permission require="@WebPermission.Package.Delete">
-                                                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#del-pkg-@p.Id.ToString("N")">
-                                                                <i class="fa-solid fa-trash-can me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.Delete"]
-                                                            </button>
+                                                            <form asp-action="Delete" asp-route-id="@p.Id" method="post" class="d-inline"
+                                                                  data-confirm="@Localizer["Provider.Packages.DeleteBody", p.Name]"
+                                                                  data-confirm-title="@Localizer["Provider.Packages.DeleteTitle"]"
+                                                                  data-confirm-action="@Localizer["Provider.Packages.DeleteConfirm"]"
+                                                                  data-confirm-cancel="@Localizer["Provider.Packages.Cancel"]">
+                                                                @Html.AntiForgeryToken()
+                                                                <button type="submit" class="btn btn-outline-danger">
+                                                                    <i class="fa-solid fa-trash-can me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.Delete"]
+                                                                </button>
+                                                            </form>
                                                         </permission>
                                                     </div>
                                                 </td>
@@ -186,30 +186,6 @@
         </div>
     </div>
 </section>
-
-<permission require="@WebPermission.Package.Delete">
-    @foreach (var p in Model.Packages)
-    {
-        <div class="modal fade" id="del-pkg-@p.Id.ToString("N")" tabindex="-1" aria-labelledby="del-pkg-title-@p.Id.ToString("N")" aria-describedby="del-pkg-body-@p.Id.ToString("N")" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <form asp-action="Delete" asp-route-id="@p.Id" method="post" class="modal-content">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="del-pkg-title-@p.Id.ToString("N")">@Localizer["Provider.Packages.DeleteTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.Packages.Cancel"]"></button>
-                    </div>
-                    <div class="modal-body" id="del-pkg-body-@p.Id.ToString("N")">
-                        @Localizer["Provider.Packages.DeleteBody", p.Name]
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.Packages.Cancel"]</button>
-                        <button type="submit" class="btn btn-danger">@Localizer["Provider.Packages.DeleteConfirm"]</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    }
-</permission>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

@@ -4,10 +4,6 @@
     ViewData["Title"] = Localizer["Provider.ProviderBookings.Title"].Value;
     ViewData["ProviderNav"] = "Bookings";
 
-    var culture = CultureInfo.CurrentUICulture;
-    string Money(decimal a, string? c = null) => a.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(c) ? "JOD" : c);
-    string Count(int n) => n.ToString("N0", culture);
-
     (string Color, string Icon) StatusBadge(string s) => (s ?? "").ToLowerInvariant() switch
     {
         "confirmed" => ("success", "circle-check"),
@@ -58,10 +54,7 @@
             <div class="card-body">
                 @if (!Model.HasItems)
                 {
-                    <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                        <p class="mb-0 text-secondary">@Localizer["Provider.ProviderBookings.EmptyMessage"]</p>
-                    </div>
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.ProviderBookings.EmptyMessage"].Value } })" />
                 }
                 else
                 {

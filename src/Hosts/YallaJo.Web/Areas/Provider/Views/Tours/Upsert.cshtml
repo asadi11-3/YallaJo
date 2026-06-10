@@ -1,0 +1,131 @@
+@using YallaJo.Web.Areas.Provider.Models.Tours
+@model ProviderTourFormVm
+@{
+    ViewData["Title"] = Localizer[Model.IsEdit ? "Provider.Tours.EditTitle" : "Provider.Tours.CreateTitle"].Value;
+    ViewData["ProviderNav"] = "Listings";
+}
+
+@await Component.InvokeAsync("ProviderSidebar")
+
+<section class="pt-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-9 vstack gap-4">
+                @if (Model.IsEdit)
+                {
+                    <div class="d-sm-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="fs-4 mb-0"><i class="fa-solid fa-map me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.EditHeading"]</h1>
+                            @if (!string.IsNullOrWhiteSpace(Model.StatusLabel))
+                            {
+                                <span class="small text-body-secondary">@Localizer["Provider.Tours.StatusPrefix"] <strong>@Model.StatusLabel</strong></span>
+                            }
+                        </div>
+                        <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-outline-secondary mt-2 mt-sm-0">
+                            <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.BackToList"]
+                        </a>
+                    </div>
+
+                    @if (Model.TourId.HasValue)
+                    {
+                        var stepTourId = Model.TourId.Value;
+                        <partial name="_TourWizardSteps" model="@(new TourWizardStepsVm { TourId = stepTourId, CurrentStep = 1 })" />
+                    }
+                }
+                else
+                {
+                    <div>
+                        <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-link px-0">
+                            <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.BackToList"]
+                        </a>
+                        <h1 class="fs-4 mb-1"><i class="fa-solid fa-map me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.CreateHeading"]</h1>
+                        <p class="small text-body-secondary mb-0">@Localizer["Provider.Tours.CreateIntro"]</p>
+                    </div>
+                }
+
+                <div class="card border shadow-sm">
+                    @if (Model.IsEdit)
+                    {
+                        <div class="card-header border-bottom d-flex flex-wrap gap-2 align-items-center">
+                            <span class="me-auto fw-semibold">@Localizer["Provider.Tours.Manage"]</span>
+                            <a asp-area="Provider" asp-controller="TourImages" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-images me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.NavImages"]</a>
+                            <a asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-tag me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.NavPricing"]</a>
+                            <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-calendar-days me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.NavSchedules"]</a>
+                            <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-calendar-week me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.NavAvailability"]</a>
+                            <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-route me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.NavWaypoints"]</a>
+                            <a asp-area="Provider" asp-controller="TourGuides" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-id-badge me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.NavGuides"]</a>
+                            <a asp-area="Provider" asp-controller="TourApplications" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-file-lines me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.NavApplications"]</a>
+                        </div>
+                    }
+                    <div class="card-body">
+                        @if (Model.IsEdit)
+                        {
+                            <form asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId" method="post">
+                                @Html.AntiForgeryToken()
+                                <partial name="_Form" model="Model" />
+                                <div class="mt-4 d-flex flex-wrap gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.SaveChanges"]
+                                    </button>
+                                    <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-outline-secondary">@Localizer["Provider.Tours.Cancel"]</a>
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-area="Provider" asp-controller="Tours" asp-action="Create" method="post">
+                                @Html.AntiForgeryToken()
+                                <partial name="_Form" model="Model" />
+                                <div class="mt-4 d-flex flex-wrap gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.CreateSubmit"]
+                                    </button>
+                                    <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-outline-secondary">@Localizer["Provider.Tours.Cancel"]</a>
+                                </div>
+                            </form>
+                        }
+                    </div>
+                </div>
+
+                @if (Model.IsEdit && (Model.CanSubmit || Model.CanArchive))
+                {
+                    <div class="card border shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                @if (Model.CanSubmit)
+                                {
+                                    <permission require="@WebPermission.Tour.Submit">
+                                        <form asp-area="Provider" asp-controller="Tours" asp-action="Submit" asp-route-id="@Model.TourId" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-primary"><i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.Submit"]</button>
+                                        </form>
+                                    </permission>
+                                }
+                                @if (Model.CanArchive)
+                                {
+                                    <permission require="@WebPermission.Tour.Archive">
+                                        <form asp-area="Provider" asp-controller="Tours" asp-action="Archive" asp-route-id="@Model.TourId" method="post" class="d-inline"
+                                              data-confirm="@Localizer["Provider.Tours.ArchiveBody", Model.Name]"
+                                              data-confirm-title="@Localizer["Provider.Tours.ArchiveTitle"]"
+                                              data-confirm-action="@Localizer["Provider.Tours.ArchiveConfirm"]"
+                                              data-confirm-cancel="@Localizer["Provider.Tours.Cancel"]">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger">
+                                                <i class="fa-solid fa-box-archive me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.Archive"]
+                                            </button>
+                                        </form>
+                                    </permission>
+                                }
+                            </div>
+                            <p class="text-body-secondary small mt-2 mb-0">@Localizer["Provider.Tours.SubmitRequirements"]</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

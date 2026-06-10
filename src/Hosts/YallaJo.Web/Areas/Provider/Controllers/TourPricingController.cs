@@ -48,7 +48,7 @@ public sealed class TourPricingController : ProviderTourResourceController
         var result = await _facade.GetCreateAsync(id, ct);
         return result.Outcome switch
         {
-            TourPricingOutcome.Ok => View(result.Form),
+            TourPricingOutcome.Ok => View("Upsert", result.Form),
             TourPricingOutcome.ForceSignOut => RedirectToLogin(),
             TourPricingOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error),
@@ -65,7 +65,7 @@ public sealed class TourPricingController : ProviderTourResourceController
 
         vm.TourId = id;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.CreateAsync(id, vm, ct);
         switch (result.Outcome)
@@ -83,7 +83,7 @@ public sealed class TourPricingController : ProviderTourResourceController
                 return RedirectToAction(nameof(Index), new { id });
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                return View("Upsert", vm);
         }
     }
 
@@ -97,7 +97,7 @@ public sealed class TourPricingController : ProviderTourResourceController
         var result = await _facade.GetEditAsync(id, tierId, ct);
         return result.Outcome switch
         {
-            TourPricingOutcome.Ok => View(result.Form),
+            TourPricingOutcome.Ok => View("Upsert", result.Form),
             TourPricingOutcome.ForceSignOut => RedirectToLogin(),
             TourPricingOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error, id),
@@ -115,7 +115,7 @@ public sealed class TourPricingController : ProviderTourResourceController
         vm.TourId = id;
         vm.TierId = tierId;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.UpdateAsync(id, tierId, vm, ct);
         switch (result.Outcome)
@@ -134,10 +134,10 @@ public sealed class TourPricingController : ProviderTourResourceController
             case TourPricingOutcome.Conflict:
                 // e.g. deactivating the last active Adult tier — keep the user on the form.
                 SetError(result.Error);
-                return View(vm);
+                return View("Upsert", vm);
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                return View("Upsert", vm);
         }
     }
 

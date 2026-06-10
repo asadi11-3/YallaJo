@@ -4,12 +4,6 @@
     ViewData["Title"] = Localizer["Provider.Bookings.Title"].Value;
     ViewData["ProviderNav"] = "Bookings";
 
-    var culture = CultureInfo.CurrentUICulture;
-    string Count(int n) => n.ToString("N0", culture);
-    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
-    string Money(decimal amount, string? currency) =>
-        amount.ToString("N3", culture) + (string.IsNullOrWhiteSpace(currency) ? "" : " " + currency);
-
     (string Color, string Icon) JoinBadge(string status) => status?.ToLowerInvariant() switch
     {
         "pending" => ("warning", "clock"),
@@ -53,11 +47,7 @@
             <div class="card-body">
                 @if (!Model.HasJoinRequests)
                 {
-                    <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                        <p class="mb-1 fw-semibold">@Localizer["Provider.Bookings.NoJoinRequestsTitle"]</p>
-                        <p class="text-body-secondary mb-0">@Localizer["Provider.Bookings.NoJoinRequestsMsg"]</p>
-                    </div>
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.Bookings.NoJoinRequestsTitle"].Value }, { "message", Localizer["Provider.Bookings.NoJoinRequestsMsg"].Value } })" />
                 }
                 else
                 {
@@ -98,7 +88,11 @@
                                             @if (jr.IsPending)
                                             {
                                                 <div class="d-inline-flex gap-2">
-                                                    <form asp-action="ApproveJoin" asp-route-id="@jr.Id" method="post" class="d-inline">
+                                                    <form asp-action="ApproveJoin" asp-route-id="@jr.Id" method="post" class="d-inline"
+                                                          data-confirm="@Localizer["Provider.Bookings.ApproveBody"]"
+                                                          data-confirm-title="@Localizer["Provider.Bookings.ApproveTitle"]"
+                                                          data-confirm-action="@Localizer["Provider.Bookings.Approve"]"
+                                                          data-confirm-cancel="@Localizer["Provider.Common.Cancel"]">
                                                         @Html.AntiForgeryToken()
                                                         <button type="submit" class="btn btn-sm btn-success-soft">
                                                             <i class="fa-solid fa-check me-1" aria-hidden="true"></i>@Localizer["Provider.Bookings.Approve"]
@@ -220,7 +214,11 @@
                         <div class="d-flex flex-wrap gap-2">
                             @if (b.IsConfirmable)
                             {
-                                <form asp-action="ConfirmBooking" asp-route-id="@b.Id" method="post" class="d-inline">
+                                <form asp-action="ConfirmBooking" asp-route-id="@b.Id" method="post" class="d-inline"
+                                      data-confirm="@Localizer["Provider.Bookings.ConfirmBody"]"
+                                      data-confirm-title="@Localizer["Provider.Bookings.ConfirmTitle"]"
+                                      data-confirm-action="@Localizer["Provider.Bookings.ConfirmBooking"]"
+                                      data-confirm-cancel="@Localizer["Provider.Common.Cancel"]">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-success"><i class="fa-solid fa-check me-1" aria-hidden="true"></i>@Localizer["Provider.Bookings.ConfirmBooking"]</button>
                                 </form>

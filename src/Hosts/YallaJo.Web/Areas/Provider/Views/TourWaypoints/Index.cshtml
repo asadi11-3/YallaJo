@@ -30,14 +30,8 @@
         @if (!Model.HasWaypoints)
         {
             <div class="card border">
-                <div class="card-body text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                    <h2 class="h5 mb-1">@Localizer["Provider.TourWaypoints.EmptyTitle"]</h2>
-                    <p class="text-body-secondary mb-3">@Localizer["Provider.TourWaypoints.EmptyMsg"]</p>
-                    <permission require="@WebPermission.TourWaypoint.Create">
-                        <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Create" asp-route-id="@Model.TourId"
-                           class="btn btn-sm btn-primary"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourWaypoints.AddFirst"]</a>
-                    </permission>
+                <div class="card-body">
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.TourWaypoints.EmptyTitle"].Value }, { "message", Localizer["Provider.TourWaypoints.EmptyMsg"].Value }, { "ctaText", Localizer["Provider.TourWaypoints.AddFirst"].Value }, { "ctaUrl", Url.Action("Create", "TourWaypoints", new { area = "Provider", id = Model.TourId }) }, { "ctaClass", "btn btn-sm btn-primary" }, { "ctaPermission", WebPermission.TourWaypoint.Create } })" />
                 </div>
             </div>
         }
@@ -108,8 +102,14 @@
                                                    class="btn btn-sm btn-light" aria-label="@Localizer["Provider.TourWaypoints.Edit", w.Name]"><i class="fa-solid fa-pen" aria-hidden="true"></i></a>
                                             </permission>
                                             <permission require="@WebPermission.TourWaypoint.Delete">
-                                                <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#delete-waypoint-@w.Id"
-                                                        aria-label="@Localizer["Provider.TourWaypoints.Delete", w.Name]"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                                                <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-waypointId="@w.Id" method="post" class="d-inline"
+                                                      data-confirm="@Localizer["Provider.TourWaypoints.DeleteBody", w.Name]"
+                                                      data-confirm-title="@Localizer["Provider.TourWaypoints.DeleteTitle"]"
+                                                      data-confirm-action="@Localizer["Provider.TourWaypoints.DeleteConfirm"]"
+                                                      data-confirm-cancel="@Localizer["Provider.TourWaypoints.Cancel"]">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="@Localizer["Provider.TourWaypoints.Delete", w.Name]"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                                                </form>
                                             </permission>
                                         </div>
                                     </td>
@@ -123,26 +123,3 @@
     </div>
 </section>
 
-<permission require="@WebPermission.TourWaypoint.Delete">
-    @foreach (var w in Model.Waypoints)
-    {
-        <div class="modal fade" id="delete-waypoint-@w.Id" tabindex="-1" aria-labelledby="delete-waypoint-title-@w.Id" aria-describedby="delete-waypoint-body-@w.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-waypointId="@w.Id" method="post" class="modal-content">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="delete-waypoint-title-@w.Id">@Localizer["Provider.TourWaypoints.DeleteTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourWaypoints.Close"]"></button>
-                    </div>
-                    <div class="modal-body" id="delete-waypoint-body-@w.Id">
-                        <p class="mb-0">@Localizer["Provider.TourWaypoints.DeleteBody", w.Name]</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary-soft" data-bs-dismiss="modal">@Localizer["Provider.TourWaypoints.Cancel"]</button>
-                        <button type="submit" class="btn btn-danger">@Localizer["Provider.TourWaypoints.DeleteConfirm"]</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    }
-</permission>

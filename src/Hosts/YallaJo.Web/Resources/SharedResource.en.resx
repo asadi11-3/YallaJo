@@ -12703,4 +12703,37 @@
 <data name="Home.Features.VerifiedText" xml:space="preserve">
 <value>Ratings come from travelers with completed bookings.</value>
 </data>
+<data name="Provider.Packages.SubmitTitle" xml:space="preserve">
+<value>Submit for review?</value>
+</data>
+<data name="Provider.Packages.SubmitBody" xml:space="preserve">
+<value>Submit "{0}" for review? You won't be able to edit it while it is being reviewed.</value>
+</data>
+<data name="Provider.Packages.SubmitConfirm" xml:space="preserve">
+<value>Submit</value>
+</data>
+<data name="Provider.Bookings.ApproveTitle" xml:space="preserve">
+<value>Approve join request?</value>
+</data>
+<data name="Provider.Bookings.ApproveBody" xml:space="preserve">
+<value>Approve this join request? The traveler will be added to the booking.</value>
+</data>
+<data name="Provider.Bookings.ConfirmTitle" xml:space="preserve">
+<value>Confirm booking?</value>
+</data>
+<data name="Provider.Bookings.ConfirmBody" xml:space="preserve">
+<value>Confirm this booking? The traveler will be notified that their booking is confirmed.</value>
+</data>
+<data name="Provider.ProviderBookings.ConfirmTitle" xml:space="preserve">
+<value>Confirm booking?</value>
+</data>
+<data name="Provider.ProviderBookings.ConfirmBody" xml:space="preserve">
+<value>Confirm this booking? The traveler will be notified that their booking is confirmed.</value>
+</data>
+<data name="Provider.TourApplications.ApproveTitle" xml:space="preserve">
+<value>Approve application?</value>
+</data>
+<data name="Provider.TourApplications.ApproveBody" xml:space="preserve">
+<value>Approve this guide application? The applicant will be granted access to this listing.</value>
+</data>
 </root>

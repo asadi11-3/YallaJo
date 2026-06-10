@@ -3,8 +3,6 @@
 @{
     ViewData["Title"] = Localizer["Provider.TourImages.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
-    var culture = CultureInfo.CurrentUICulture;
-    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
 }
 
 @await Component.InvokeAsync("ProviderSidebar")
@@ -54,10 +52,7 @@
             <div class="card-body">
                 @if (!Model.HasImages)
                 {
-                    <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                        <p class="mb-0 text-secondary">@Localizer["Provider.TourImages.EmptyMsg"]</p>
-                    </div>
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.TourImages.EmptyMsg"].Value } })" />
                 }
                 else
                 {
@@ -87,10 +82,17 @@
                                             <i class="fa-solid fa-up-right-from-square me-1" aria-hidden="true"></i>@Localizer["Provider.TourImages.Open"]
                                         </a>
                                         <permission require="@WebPermission.Attachment.Delete">
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                    data-bs-toggle="modal" data-bs-target="#delete-image-@img.Id">
-                                                <i class="fa-solid fa-trash me-1" aria-hidden="true"></i>@Localizer["Provider.TourImages.Delete"]
-                                            </button>
+                                            <form asp-area="Provider" asp-controller="TourImages" asp-action="Delete"
+                                                  asp-route-id="@Model.TourId" asp-route-attachmentId="@img.Id" method="post" class="d-inline"
+                                                  data-confirm="@Localizer["Provider.TourImages.DeleteBody", imgName]"
+                                                  data-confirm-title="@Localizer["Provider.TourImages.DeleteTitle"]"
+                                                  data-confirm-action="@Localizer["Provider.TourImages.DeleteConfirm"]"
+                                                  data-confirm-cancel="@Localizer["Provider.TourImages.Cancel"]">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fa-solid fa-trash me-1" aria-hidden="true"></i>@Localizer["Provider.TourImages.Delete"]
+                                                </button>
+                                            </form>
                                         </permission>
                                     </div>
                                 </div>
@@ -103,33 +105,3 @@
     </div>
 </section>
 
-<permission require="@WebPermission.Attachment.Delete">
-    @foreach (var img in Model.Images)
-    {
-        var imgName = string.IsNullOrEmpty(img.FileName) ? Localizer["Provider.TourImages.UnnamedImage"].Value : img.FileName;
-        <div class="modal fade" id="delete-image-@img.Id" tabindex="-1"
-             aria-labelledby="delete-image-title-@img.Id" aria-describedby="delete-image-body-@img.Id"
-             aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <form asp-area="Provider" asp-controller="TourImages" asp-action="Delete"
-                      asp-route-id="@Model.TourId" asp-route-attachmentId="@img.Id"
-                      method="post" class="modal-content">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="delete-image-title-@img.Id">@Localizer["Provider.TourImages.DeleteTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourImages.Close"]"></button>
-                    </div>
-                    <div class="modal-body" id="delete-image-body-@img.Id">
-                        <p class="mb-0">@Localizer["Provider.TourImages.DeleteBody", imgName]</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary-soft" data-bs-dismiss="modal">@Localizer["Provider.TourImages.Cancel"]</button>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fa-solid fa-trash me-1" aria-hidden="true"></i>@Localizer["Provider.TourImages.DeleteConfirm"]
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    }
-</permission>

@@ -4,9 +4,6 @@
     ViewData["Title"] = Localizer["Provider.Tours.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
 
-    var culture = CultureInfo.CurrentUICulture;
-    string Money(decimal a, string? c) => a.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(c) ? "JOD" : c);
-    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
     string StatusText(string status, string fallback)
     {
         var s = Localizer["Provider.Status." + status];
@@ -22,7 +19,6 @@
         "draft" => "pen-ruler",
         _ => "circle-info",
     };
-    string PageUrl(int p) => Url.Action("Index", "Tours", new { area = "Provider", status = Model.Status, page = p })!;
 }
 
 @await Component.InvokeAsync("ProviderSidebar")
@@ -64,15 +60,8 @@
         @if (!Model.HasItems)
         {
             <div class="card border">
-                <div class="card-body text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                    <h2 class="h6 mb-1">@Localizer["Provider.Tours.EmptyTitle"]</h2>
-                    <p class="text-body-secondary mb-3">@Localizer["Provider.Tours.EmptyMsg"]</p>
-                    <permission require="@WebPermission.Tour.Create">
-                        <a asp-area="Provider" asp-controller="Tours" asp-action="Create" class="btn btn-primary">
-                            <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.CreateFirst"]
-                        </a>
-                    </permission>
+                <div class="card-body">
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.Tours.EmptyTitle"].Value }, { "message", Localizer["Provider.Tours.EmptyMsg"].Value }, { "ctaText", Localizer["Provider.Tours.CreateFirst"].Value }, { "ctaUrl", Url.Action("Create", "Tours", new { area = "Provider" }) }, { "ctaPermission", WebPermission.Tour.Create } })" />
                 </div>
             </div>
         }
@@ -139,11 +128,29 @@
                                             @if (row.CanArchive)
                                             {
                                                 <permission require="@WebPermission.Tour.Archive">
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#archive-tour-@row.Id">@Localizer["Provider.Tours.Archive"]</button>
+                                                    @* Shared confirm modal via form-ux.js data-confirm (F8/MOD3/MOD5);
+                                                       without JS the form posts directly (PE1). *@
+                                                    <form asp-area="Provider" asp-controller="Tours" asp-action="Archive"
+                                                          asp-route-id="@row.Id" method="post" class="d-inline"
+                                                          data-confirm="@Localizer["Provider.Tours.ArchiveBody", row.Name]"
+                                                          data-confirm-title="@Localizer["Provider.Tours.ArchiveTitle"]"
+                                                          data-confirm-action="@Localizer["Provider.Tours.ArchiveConfirm"]"
+                                                          data-confirm-cancel="@Localizer["Provider.Tours.Cancel"]">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Provider.Tours.Archive"]</button>
+                                                    </form>
                                                 </permission>
                                             }
                                             <permission require="@WebPermission.Tour.DeleteOwn">
-                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-tour-@row.Id">@Localizer["Provider.Tours.Delete"]</button>
+                                                <form asp-area="Provider" asp-controller="Tours" asp-action="Delete"
+                                                      asp-route-id="@row.Id" method="post" class="d-inline"
+                                                      data-confirm="@Localizer["Provider.Tours.DeleteBody", row.Name]"
+                                                      data-confirm-title="@Localizer["Provider.Tours.DeleteTitle"]"
+                                                      data-confirm-action="@Localizer["Provider.Tours.DeleteConfirm"]"
+                                                      data-confirm-cancel="@Localizer["Provider.Tours.Cancel"]">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Provider.Tours.Delete"]</button>
+                                                </form>
                                             </permission>
                                         </div>
                                     </td>
@@ -156,64 +163,11 @@
 
             @if (Model.TotalPages > 1)
             {
-                <nav aria-label="@Localizer["Provider.Tours.Pagination"]">
-                    <ul class="pagination pagination-sm justify-content-center mb-0">
-                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                            <a class="page-link" href="@PageUrl(Model.Page - 1)">@Localizer["Provider.Tours.Previous"]</a>
-                        </li>
-                        <li class="page-item active" aria-current="page"><span class="page-link">@Localizer["Provider.Tours.PageOf", Model.Page, Model.TotalPages]</span></li>
-                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                            <a class="page-link" href="@PageUrl(Model.Page + 1)">@Localizer["Provider.Tours.Next"]</a>
-                        </li>
-                    </ul>
-                </nav>
+                <partial name="~/Areas/Public/Views/Shared/_Pagination.cshtml"
+                         model="@(new YallaJo.Web.Areas.Public.Models.Shared.PaginationVm { PageNumber = Model.Page, TotalPages = Model.TotalPages, AriaLabel = Localizer["Provider.Tours.Pagination"].Value })" />
             }
         }
     </div>
 </section>
 
-@if (Model.HasItems)
-{
-    foreach (var row in Model.Items)
-    {
-        if (row.CanArchive)
-        {
-            <permission require="@WebPermission.Tour.Archive">
-                <div class="modal fade" id="archive-tour-@row.Id" tabindex="-1" aria-labelledby="archive-tour-title-@row.Id" aria-describedby="archive-tour-body-@row.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <form asp-area="Provider" asp-controller="Tours" asp-action="Archive" asp-route-id="@row.Id" method="post" class="modal-content">
-                            @Html.AntiForgeryToken()
-                            <div class="modal-header">
-                                <h2 class="modal-title h5" id="archive-tour-title-@row.Id">@Localizer["Provider.Tours.ArchiveTitle"]</h2>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.Tours.Close"]"></button>
-                            </div>
-                            <div class="modal-body" id="archive-tour-body-@row.Id">@Localizer["Provider.Tours.ArchiveBody", row.Name]</div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.Tours.Cancel"]</button>
-                                <button type="submit" class="btn btn-danger">@Localizer["Provider.Tours.ArchiveConfirm"]</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </permission>
-        }
-        <permission require="@WebPermission.Tour.DeleteOwn">
-            <div class="modal fade" id="delete-tour-@row.Id" tabindex="-1" aria-labelledby="delete-tour-title-@row.Id" aria-describedby="delete-tour-body-@row.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form asp-area="Provider" asp-controller="Tours" asp-action="Delete" asp-route-id="@row.Id" method="post" class="modal-content">
-                        @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="delete-tour-title-@row.Id">@Localizer["Provider.Tours.DeleteTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.Tours.Close"]"></button>
-                        </div>
-                        <div class="modal-body" id="delete-tour-body-@row.Id">@Localizer["Provider.Tours.DeleteBody", row.Name]</div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.Tours.Cancel"]</button>
-                            <button type="submit" class="btn btn-danger">@Localizer["Provider.Tours.DeleteConfirm"]</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </permission>
-    }
-}
+

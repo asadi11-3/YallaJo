@@ -48,7 +48,7 @@ public sealed class TourWaypointsController : ProviderTourResourceController
         var result = await _facade.GetCreateAsync(id, ct);
         return result.Outcome switch
         {
-            TourWaypointOutcome.Ok => View(result.Form),
+            TourWaypointOutcome.Ok => View("Upsert", result.Form),
             TourWaypointOutcome.ForceSignOut => RedirectToLogin(),
             TourWaypointOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error),
@@ -65,7 +65,7 @@ public sealed class TourWaypointsController : ProviderTourResourceController
 
         vm.TourId = id;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.CreateAsync(id, vm, ct);
         switch (result.Outcome)
@@ -83,7 +83,7 @@ public sealed class TourWaypointsController : ProviderTourResourceController
                 return RedirectToAction(nameof(Index), new { id });
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                return View("Upsert", vm);
         }
     }
 
@@ -97,7 +97,7 @@ public sealed class TourWaypointsController : ProviderTourResourceController
         var result = await _facade.GetEditAsync(id, waypointId, ct);
         return result.Outcome switch
         {
-            TourWaypointOutcome.Ok => View(result.Form),
+            TourWaypointOutcome.Ok => View("Upsert", result.Form),
             TourWaypointOutcome.ForceSignOut => RedirectToLogin(),
             TourWaypointOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error, id),
@@ -115,7 +115,7 @@ public sealed class TourWaypointsController : ProviderTourResourceController
         vm.TourId = id;
         vm.WaypointId = waypointId;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.UpdateAsync(id, waypointId, vm, ct);
         switch (result.Outcome)
@@ -133,7 +133,7 @@ public sealed class TourWaypointsController : ProviderTourResourceController
                 return RedirectToAction(nameof(Index), new { id });
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                return View("Upsert", vm);
         }
     }
 

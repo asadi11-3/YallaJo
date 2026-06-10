@@ -18,7 +18,7 @@
         </div>
 
         <permission require="@WebPermission.TourGuide.Update">
-            <div class="card border">
+            <div class="card border" id="assign-guide">
                 <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.TourGuides.AssignHeading"]</h2></div>
                 <div class="card-body">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
@@ -51,10 +51,7 @@
             <div class="card-body">
                 @if (!Model.HasGuides)
                 {
-                    <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                        <p class="mb-0 text-body-secondary">@Localizer["Provider.TourGuides.Empty"]</p>
-                    </div>
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.TourGuides.Empty"].Value }, { "ctaText", Localizer["Provider.TourGuides.Assign"].Value }, { "ctaUrl", "#assign-guide" }, { "ctaClass", "btn btn-sm btn-primary-soft" }, { "ctaPermission", WebPermission.TourGuide.Update } })" />
                 }
                 else
                 {
@@ -74,10 +71,17 @@
                                     </div>
                                 </div>
                                 <permission require="@WebPermission.TourGuide.Update">
-                                    <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#remove-guide-@g.TourGuideId"
-                                            aria-label="@Localizer["Provider.TourGuides.RemoveAria", g.DisplayName]">
-                                        <i class="fa-solid fa-user-minus me-1" aria-hidden="true"></i>@Localizer["Provider.TourGuides.Remove"]
-                                    </button>
+                                    <form asp-area="Provider" asp-controller="TourGuides" asp-action="Remove" asp-route-id="@Model.TourId"
+                                          asp-route-guideUserId="@g.TourGuideId" method="post" class="d-inline"
+                                          data-confirm="@Localizer["Provider.TourGuides.RemoveBody", g.DisplayName]"
+                                          data-confirm-title="@Localizer["Provider.TourGuides.RemoveTitle"]"
+                                          data-confirm-action="@Localizer["Provider.TourGuides.RemoveConfirm"]"
+                                          data-confirm-cancel="@Localizer["Provider.TourGuides.Cancel"]">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="@Localizer["Provider.TourGuides.RemoveAria", g.DisplayName]">
+                                            <i class="fa-solid fa-user-minus me-1" aria-hidden="true"></i>@Localizer["Provider.TourGuides.Remove"]
+                                        </button>
+                                    </form>
                                 </permission>
                             </li>
                         }
@@ -88,34 +92,6 @@
     </div>
 </section>
 
-@if (Model.HasGuides)
-{
-    <permission require="@WebPermission.TourGuide.Update">
-        @foreach (var g in Model.Guides)
-        {
-            <div class="modal fade" id="remove-guide-@g.TourGuideId" tabindex="-1" aria-labelledby="remove-guide-title-@g.TourGuideId"
-                 aria-describedby="remove-guide-body-@g.TourGuideId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form asp-area="Provider" asp-controller="TourGuides" asp-action="Remove" asp-route-id="@Model.TourId"
-                          asp-route-guideUserId="@g.TourGuideId" method="post" class="modal-content">
-                        @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="remove-guide-title-@g.TourGuideId">@Localizer["Provider.TourGuides.RemoveTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourGuides.Close"]"></button>
-                        </div>
-                        <div class="modal-body" id="remove-guide-body-@g.TourGuideId">
-                            <p class="mb-0">@Localizer["Provider.TourGuides.RemoveBody", g.DisplayName]</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary-soft" data-bs-dismiss="modal">@Localizer["Provider.TourGuides.Cancel"]</button>
-                            <button type="submit" class="btn btn-danger"><i class="fa-solid fa-user-minus me-1" aria-hidden="true"></i>@Localizer["Provider.TourGuides.RemoveConfirm"]</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        }
-    </permission>
-}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

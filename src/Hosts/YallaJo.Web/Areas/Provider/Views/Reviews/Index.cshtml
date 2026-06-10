@@ -5,9 +5,7 @@
     ViewData["ProviderNav"] = "Reviews";
 
     var culture = CultureInfo.CurrentUICulture;
-    string Count(int n) => n.ToString("N0", culture);
     string Rating(decimal r) => r.ToString("0.0", culture);
-    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
 
     string Stars(decimal rating)
     {
@@ -26,11 +24,8 @@
 
         @if (!Model.HasTours)
         {
-            <div class="card card-body border text-center py-5">
-                <img src="~/assets/images/element/17.svg" width="80" height="80" class="h-80px mx-auto mb-3" aria-hidden="true" alt="" />
-                <h2 class="h5 mb-1">@Localizer["Provider.Reviews.NoListingsTitle"]</h2>
-                <p class="text-body-secondary mb-3">@Localizer["Provider.Reviews.NoListingsMsg"]</p>
-                <div><a class="btn btn-primary" asp-area="Provider" asp-controller="Tours" asp-action="Create"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.Reviews.AddListing"]</a></div>
+            <div class="card card-body border">
+                <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.Reviews.NoListingsTitle"].Value }, { "message", Localizer["Provider.Reviews.NoListingsMsg"].Value }, { "ctaText", Localizer["Provider.Reviews.AddListing"].Value }, { "ctaUrl", Url.Action("Create", "Tours", new { area = "Provider" }) } })" />
             </div>
         }
         else
@@ -73,10 +68,8 @@
 
             @if (!Model.HasReviews)
             {
-                <div class="card card-body border text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" class="h-80px mx-auto mb-3" aria-hidden="true" alt="" />
-                    <h2 class="h6 mb-1">@Localizer["Provider.Reviews.NoReviewsTitle"]</h2>
-                    <p class="text-body-secondary mb-0">@Localizer["Provider.Reviews.NoReviewsMsg"]</p>
+                <div class="card card-body border">
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.Reviews.NoReviewsTitle"].Value }, { "message", Localizer["Provider.Reviews.NoReviewsMsg"].Value } })" />
                 </div>
             }
             else
@@ -118,7 +111,16 @@
                                         <div class="small mb-2"><bdi>@r.ReplyContent</bdi></div>
                                         <div class="d-flex gap-3">
                                             <a class="small text-primary" data-bs-toggle="collapse" href="#edit-reply-@r.Id" role="button"><i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Edit"]</a>
-                                            <button type="button" class="btn btn-link btn-sm p-0 text-danger small" data-bs-toggle="modal" data-bs-target="#delete-reply-@r.Id"><i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Delete"]</button>
+                                            <form method="post" class="d-inline"
+                                                  asp-area="Provider" asp-controller="Reviews" asp-action="DeleteReply"
+                                                  asp-route-id="@r.Id" asp-route-replyId="@r.ReplyId" asp-route-tourId="@Model.SelectedTourId"
+                                                  data-confirm="@Localizer["Provider.Reviews.DeleteReplyBody"]"
+                                                  data-confirm-title="@Localizer["Provider.Reviews.DeleteReplyTitle"]"
+                                                  data-confirm-action="@Localizer["Provider.Reviews.DeleteReplyConfirm"]"
+                                                  data-confirm-cancel="@Localizer["Provider.Reviews.Cancel"]">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-link btn-sm p-0 text-danger small"><i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Delete"]</button>
+                                            </form>
                                         </div>
                                         <div class="collapse mt-2" id="edit-reply-@r.Id">
                                             <form method="post" asp-area="Provider" asp-controller="Reviews" asp-action="EditReply"
@@ -182,30 +184,3 @@
     </div>
 </section>
 
-@if (Model.HasReviews)
-{
-    foreach (var r in Model.Reviews)
-    {
-        if (r.HasReply)
-        {
-            <div class="modal fade" id="delete-reply-@r.Id" tabindex="-1" aria-labelledby="delete-reply-title-@r.Id" aria-describedby="delete-reply-body-@r.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form method="post" class="modal-content"
-                          asp-area="Provider" asp-controller="Reviews" asp-action="DeleteReply"
-                          asp-route-id="@r.Id" asp-route-replyId="@r.ReplyId" asp-route-tourId="@Model.SelectedTourId">
-                        @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="delete-reply-title-@r.Id">@Localizer["Provider.Reviews.DeleteReplyTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.Reviews.Close"]"></button>
-                        </div>
-                        <div class="modal-body" id="delete-reply-body-@r.Id">@Localizer["Provider.Reviews.DeleteReplyBody"]</div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Provider.Reviews.Cancel"]</button>
-                            <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash me-1" aria-hidden="true"></i>@Localizer["Provider.Reviews.DeleteReplyConfirm"]</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        }
-    }
-}

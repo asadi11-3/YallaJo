@@ -48,7 +48,7 @@ public sealed class TourSchedulesController : ProviderTourResourceController
         var result = await _facade.GetCreateAsync(id, ct);
         return result.Outcome switch
         {
-            TourScheduleOutcome.Ok => View(result.Form),
+            TourScheduleOutcome.Ok => View("Upsert", result.Form),
             TourScheduleOutcome.ForceSignOut => RedirectToLogin(),
             TourScheduleOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error),
@@ -65,7 +65,7 @@ public sealed class TourSchedulesController : ProviderTourResourceController
 
         vm.TourId = id;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.CreateAsync(id, vm, ct);
         switch (result.Outcome)
@@ -83,10 +83,10 @@ public sealed class TourSchedulesController : ProviderTourResourceController
                 return RedirectToAction(nameof(Index), new { id });
             case TourScheduleOutcome.NothingCreated:
                 ModelState.AddModelError(string.Empty, result.Error ?? "No schedule was added.");
-                return View(vm);
+                return View("Upsert", vm);
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                return View("Upsert", vm);
         }
     }
 
@@ -100,7 +100,7 @@ public sealed class TourSchedulesController : ProviderTourResourceController
         var result = await _facade.GetEditAsync(id, scheduleId, ct);
         return result.Outcome switch
         {
-            TourScheduleOutcome.Ok => View(result.Form),
+            TourScheduleOutcome.Ok => View("Upsert", result.Form),
             TourScheduleOutcome.ForceSignOut => RedirectToLogin(),
             TourScheduleOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error, id),
@@ -118,7 +118,7 @@ public sealed class TourSchedulesController : ProviderTourResourceController
         vm.TourId = id;
         vm.ScheduleId = scheduleId;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.UpdateAsync(id, scheduleId, vm, ct);
         switch (result.Outcome)
@@ -136,10 +136,10 @@ public sealed class TourSchedulesController : ProviderTourResourceController
                 return RedirectToAction(nameof(Index), new { id });
             case TourScheduleOutcome.Conflict:
                 SetError(result.Error);
-                return View(vm);
+                return View("Upsert", vm);
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                return View("Upsert", vm);
         }
     }
 

@@ -4,8 +4,6 @@
     ViewData["Title"] = Localizer["Provider.Documents.Title"].Value;
     ViewData["ProviderNav"] = "Documents";
 
-    var culture = CultureInfo.CurrentUICulture;
-    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
     string DocLabel(DocumentType t) => Localizer["Provider.Documents.Type." + t.ToString()];
 
     (string Color, string Icon) StatusBadge(DocumentStatus s) => s switch
@@ -69,11 +67,7 @@
                     <div class="card-body">
                         @if (!Model.HasDocuments)
                         {
-                            <div class="text-center py-5">
-                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                <p class="mb-1 fw-semibold">@Localizer["Provider.Documents.EmptyTitle"]</p>
-                                <p class="mb-0 text-secondary">@Localizer["Provider.Documents.EmptyMessage"]</p>
-                            </div>
+                            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.Documents.EmptyTitle"].Value }, { "message", Localizer["Provider.Documents.EmptyMessage"].Value } })" />
                         }
                         else
                         {

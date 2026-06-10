@@ -4,11 +4,6 @@
     ViewData["Title"] = Localizer["Provider.Finance.Title"].Value;
     ViewData["ProviderNav"] = "Finance";
 
-    var culture = CultureInfo.CurrentUICulture;
-    string Money(decimal a, string? c) => a.ToString("N3", culture) + (string.IsNullOrWhiteSpace(c) ? "" : " " + c);
-    string Count(int n) => n.ToString("N0", culture);
-    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
-    string DateOnlyF(DateOnly d) => d.ToString("d MMM yyyy", culture);
 
     (string Color, string Icon) PayoutBadge(string? s) => (s ?? "").ToLowerInvariant() switch
     {
@@ -36,37 +31,13 @@
         @* KPI summary (always visible, from the earnings read) *@
         <div class="row g-3">
             <div class="col-sm-4">
-                <div class="card card-body border">
-                    <div class="d-flex align-items-center">
-                        <div class="icon-xl bg-success bg-opacity-10 rounded-3 text-success"><i class="fa-solid fa-money-bill-wave fs-5" aria-hidden="true"></i></div>
-                        <div class="ms-3">
-                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Money(Model.Earnings.GrossTotal, Model.Earnings.Currency)</bdi></p>
-                            <span class="small text-body-secondary">@Localizer["Provider.Finance.GrossTotal"]</span>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-money-bill-wave" }, { "color", "success" }, { "value", Money(Model.Earnings.GrossTotal, Model.Earnings.Currency) }, { "label", Localizer["Provider.Finance.GrossTotal"].Value } })" />
             </div>
             <div class="col-sm-4">
-                <div class="card card-body border">
-                    <div class="d-flex align-items-center">
-                        <div class="icon-xl bg-info bg-opacity-10 rounded-3 text-info"><i class="fa-solid fa-wallet fs-5" aria-hidden="true"></i></div>
-                        <div class="ms-3">
-                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Money(Model.Earnings.NetEstimateTotal, Model.Earnings.Currency)</bdi></p>
-                            <span class="small text-body-secondary">@Localizer["Provider.Finance.NetEstimate"]</span>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-wallet" }, { "color", "info" }, { "value", Money(Model.Earnings.NetEstimateTotal, Model.Earnings.Currency) }, { "label", Localizer["Provider.Finance.NetEstimate"].Value } })" />
             </div>
             <div class="col-sm-4">
-                <div class="card card-body border">
-                    <div class="d-flex align-items-center">
-                        <div class="icon-xl bg-warning bg-opacity-10 rounded-3 text-warning"><i class="fa-solid fa-receipt fs-5" aria-hidden="true"></i></div>
-                        <div class="ms-3">
-                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Count(Model.Earnings.PaymentCount)</bdi></p>
-                            <span class="small text-body-secondary">@Localizer["Provider.Finance.PaidBookings"]</span>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-receipt" }, { "color", "warning" }, { "value", Count(Model.Earnings.PaymentCount) }, { "label", Localizer["Provider.Finance.PaidBookings"].Value } })" />
             </div>
         </div>
 
@@ -98,10 +69,7 @@
                     <div class="tab-pane fade show active" id="pane-payouts" role="tabpanel" aria-labelledby="tab-payouts">
                         @if (!Model.Earnings.HasPayouts)
                         {
-                            <div class="text-center py-5">
-                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                <p class="text-body-secondary mb-0">@Localizer["Provider.Finance.NoPayouts"]</p>
-                            </div>
+                            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.Finance.NoPayouts"].Value } })" />
                         }
                         else
                         {
@@ -124,7 +92,7 @@
                                         {
                                             var pb = PayoutBadge(p.Status);
                                             <tr>
-                                                <td><bdi dir="ltr" class="font-data">@DateOnlyF(p.BatchPeriodStart) – @DateOnlyF(p.BatchPeriodEnd)</bdi></td>
+                                                <td><bdi dir="ltr" class="font-data">@Date(p.BatchPeriodStart) – @Date(p.BatchPeriodEnd)</bdi></td>
                                                 <td class="text-end"><bdi dir="ltr" class="font-data">@Money(p.GrossAmount, p.Currency)</bdi></td>
                                                 <td class="text-end text-danger"><bdi dir="ltr" class="font-data">@Money(p.CommissionAmount, p.Currency)</bdi></td>
                                                 <td class="text-end text-success"><bdi dir="ltr" class="font-data">@Money(p.NetAmount, p.Currency)</bdi></td>
@@ -181,10 +149,7 @@
                     <div class="tab-pane fade" id="pane-invoices" role="tabpanel" aria-labelledby="tab-invoices">
                         @if (!Model.Invoices.HasInvoices)
                         {
-                            <div class="text-center py-5">
-                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                <p class="text-body-secondary mb-0">@Localizer["Provider.Finance.NoInvoices"]</p>
-                            </div>
+                            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.Finance.NoInvoices"].Value } })" />
                         }
                         else
                         {
@@ -268,10 +233,7 @@
 
                         @if (!Model.Methods.HasMethods)
                         {
-                            <div class="text-center py-5">
-                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                <p class="text-body-secondary mb-0">@Localizer["Provider.Finance.NoMethods"]</p>
-                            </div>
+                            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.Finance.NoMethods"].Value } })" />
                         }
                         else
                         {
@@ -314,8 +276,15 @@
                                                                 aria-label="@Localizer["Provider.Finance.EditMethod", m.DisplayName]"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
                                                     </permission>
                                                     <permission require="@WebPermission.ProviderPaymentMethod.Delete">
-                                                        <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#fin-del-@m.Id"
-                                                                aria-label="@Localizer["Provider.Finance.DeleteMethod", m.DisplayName]"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                                                        <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Delete" asp-route-id="@m.Id" method="post" class="d-inline"
+                                                              data-confirm="@Localizer["Provider.Finance.DeleteModalBody", m.DisplayName]"
+                                                              data-confirm-title="@Localizer["Provider.Finance.DeleteModalTitle"]"
+                                                              data-confirm-action="@Localizer["Provider.Finance.DeleteConfirm"]"
+                                                              data-confirm-cancel="@Localizer["Provider.Common.Cancel"]">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-danger-soft"
+                                                                    aria-label="@Localizer["Provider.Finance.DeleteMethod", m.DisplayName]"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                                                        </form>
                                                     </permission>
                                                 </td>
                                             </tr>
@@ -362,30 +331,6 @@
                                 </table>
                             </div>
 
-                            @* Delete-method confirmation modals *@
-                            <permission require="@WebPermission.ProviderPaymentMethod.Delete">
-                                @foreach (var m in Model.Methods.Methods)
-                                {
-                                    <div class="modal fade" id="fin-del-@m.Id" tabindex="-1" aria-labelledby="fin-del-title-@m.Id" aria-describedby="fin-del-body-@m.Id" data-bs-backdrop="static" data-bs-keyboard="false">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Delete" asp-route-id="@m.Id" method="post" class="modal-content">
-                                                @Html.AntiForgeryToken()
-                                                <div class="modal-header">
-                                                    <h2 class="modal-title h5" id="fin-del-title-@m.Id">@Localizer["Provider.Finance.DeleteModalTitle"]</h2>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.Common.Close"]"></button>
-                                                </div>
-                                                <div class="modal-body" id="fin-del-body-@m.Id">
-                                                    @Localizer["Provider.Finance.DeleteModalBody", m.DisplayName]
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.Common.Cancel"]</button>
-                                                    <button type="submit" class="btn btn-danger">@Localizer["Provider.Finance.DeleteConfirm"]</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                }
-                            </permission>
                         }
                     </div>
                 </div>

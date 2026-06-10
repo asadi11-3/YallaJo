@@ -80,7 +80,7 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
         var result = await _facade.GetCreateAsync(id, ct);
         return result.Outcome switch
         {
-            TourAvailabilityOutcome.Ok => View(result.Form),
+            TourAvailabilityOutcome.Ok => View("Upsert", result.Form),
             TourAvailabilityOutcome.ForceSignOut => RedirectToLogin(),
             TourAvailabilityOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error),
@@ -98,7 +98,7 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
         vm.TourId = id;
         vm.IsEdit = false;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.CreateAsync(id, vm, ct);
         switch (result.Outcome)
@@ -116,10 +116,10 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
                 return RedirectToAction(nameof(Index), new { id });
             case TourAvailabilityOutcome.Conflict:
                 ModelState.AddModelError(string.Empty, result.Error ?? "This slot conflicts with an existing one.");
-                return View(vm);
+                return View("Upsert", vm);
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                return View("Upsert", vm);
         }
     }
 
@@ -133,7 +133,7 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
         var result = await _facade.GetEditAsync(id, slotId, ct);
         return result.Outcome switch
         {
-            TourAvailabilityOutcome.Ok => View(result.Form),
+            TourAvailabilityOutcome.Ok => View("Upsert", result.Form),
             TourAvailabilityOutcome.ForceSignOut => RedirectToLogin(),
             TourAvailabilityOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error, id),
@@ -160,7 +160,7 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
             ModelState.AddModelError(nameof(vm.MaxCapacity), "Capacity must be at least 1.");
 
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.UpdateAsync(id, slotId, vm, ct);
         switch (result.Outcome)
@@ -178,10 +178,10 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
                 return RedirectToAction(nameof(Index), new { id });
             case TourAvailabilityOutcome.Conflict:
                 SetError(result.Error);
-                return View(vm);
+                return View("Upsert", vm);
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                return View("Upsert", vm);
         }
     }
 

@@ -5,8 +5,6 @@
     ViewData["Title"] = Localizer["Provider.TourPricing.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
 
-    var culture = CultureInfo.CurrentUICulture;
-    string Money(decimal a, string? c = null) => a.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(c) ? "JOD" : c);
 }
 
 @await Component.InvokeAsync("ProviderSidebar")
@@ -54,16 +52,7 @@
             <div class="card-body">
                 @if (!Model.HasTiers)
                 {
-                    <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                        <h3 class="h5">@Localizer["Provider.TourPricing.EmptyTitle"]</h3>
-                        <p class="text-body-secondary mb-3">@Localizer["Provider.TourPricing.EmptyMsg"]</p>
-                        <permission require="@WebPermission.TourPricingTier.Create">
-                            <a asp-area="Provider" asp-controller="TourPricing" asp-action="Create" asp-route-id="@Model.TourId" class="btn btn-sm btn-primary-soft">
-                                <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourPricing.AddFirst"]
-                            </a>
-                        </permission>
-                    </div>
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.TourPricing.EmptyTitle"].Value }, { "headingTag", "h3" }, { "message", Localizer["Provider.TourPricing.EmptyMsg"].Value }, { "ctaText", Localizer["Provider.TourPricing.AddFirst"].Value }, { "ctaUrl", Url.Action("Create", "TourPricing", new { area = "Provider", id = Model.TourId }) }, { "ctaClass", "btn btn-sm btn-primary-soft" }, { "ctaPermission", WebPermission.TourPricingTier.Create } })" />
                 }
                 else
                 {
@@ -112,9 +101,16 @@
                                                     </a>
                                                 </permission>
                                                 <permission require="@WebPermission.TourPricingTier.Delete">
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-tier-@tier.Id" aria-label="@Localizer["Provider.TourPricing.Delete", tier.Name]">
-                                                        <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
-                                                    </button>
+                                                    <form asp-area="Provider" asp-controller="TourPricing" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-tierId="@tier.Id" method="post" class="d-inline"
+                                                          data-confirm="@Localizer["Provider.TourPricing.DeleteBody", tier.Name]"
+                                                          data-confirm-title="@Localizer["Provider.TourPricing.DeleteTitle"]"
+                                                          data-confirm-action="@Localizer["Provider.TourPricing.DeleteConfirm"]"
+                                                          data-confirm-cancel="@Localizer["Provider.TourPricing.Cancel"]">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="@Localizer["Provider.TourPricing.Delete", tier.Name]">
+                                                            <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
+                                                        </button>
+                                                    </form>
                                                 </permission>
                                             </div>
                                         </td>
@@ -129,24 +125,3 @@
     </div>
 </section>
 
-<permission require="@WebPermission.TourPricingTier.Delete">
-    @foreach (var tier in Model.Tiers)
-    {
-        <div class="modal fade" id="delete-tier-@tier.Id" tabindex="-1" aria-labelledby="delete-tier-title-@tier.Id" aria-describedby="delete-tier-body-@tier.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <form asp-area="Provider" asp-controller="TourPricing" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-tierId="@tier.Id" method="post" class="modal-content">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="delete-tier-title-@tier.Id">@Localizer["Provider.TourPricing.DeleteTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourPricing.Close"]"></button>
-                    </div>
-                    <div class="modal-body" id="delete-tier-body-@tier.Id">@Localizer["Provider.TourPricing.DeleteBody", tier.Name]</div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.TourPricing.Cancel"]</button>
-                        <button type="submit" class="btn btn-danger">@Localizer["Provider.TourPricing.DeleteConfirm"]</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    }
-</permission>

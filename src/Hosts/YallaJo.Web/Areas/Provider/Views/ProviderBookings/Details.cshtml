@@ -5,8 +5,8 @@
     ViewData["ProviderNav"] = "Bookings";
 
     var culture = CultureInfo.CurrentUICulture;
+    @* Local Money override (shadows ProviderFormat): falls back to the booking's own currency. *@
     string Money(decimal a, string? c = null) => a.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(c) ? Model.Currency : c);
-    string Count(int n) => n.ToString("N0", culture);
     string DateTimeF(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
 
     (string Color, string Icon) StatusBadge(string s) => (s ?? "").ToLowerInvariant() switch
@@ -135,7 +135,11 @@
                         @if (Model.CanConfirm)
                         {
                             <permission require="@WebPermission.TourBooking.Confirm">
-                                <form asp-action="Confirm" asp-route-id="@Model.Id" method="post">
+                                <form asp-action="Confirm" asp-route-id="@Model.Id" method="post"
+                                      data-confirm="@Localizer["Provider.ProviderBookings.ConfirmBody"]"
+                                      data-confirm-title="@Localizer["Provider.ProviderBookings.ConfirmTitle"]"
+                                      data-confirm-action="@Localizer["Provider.ProviderBookings.Confirm"]"
+                                      data-confirm-cancel="@Localizer["Provider.Common.Cancel"]">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-success w-100"><i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>@Localizer["Provider.ProviderBookings.Confirm"]</button>
                                 </form>

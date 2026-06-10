@@ -12703,4 +12703,37 @@
 <data name="Home.Features.VerifiedText" xml:space="preserve">
 <value>التقييمات تأتي من مسافرين أكملوا حجوزاتهم.</value>
 </data>
+<data name="Provider.Packages.SubmitTitle" xml:space="preserve">
+<value>إرسال للمراجعة؟</value>
+</data>
+<data name="Provider.Packages.SubmitBody" xml:space="preserve">
+<value>هل تريد إرسال "{0}" للمراجعة؟ لن تتمكن من تعديلها أثناء المراجعة.</value>
+</data>
+<data name="Provider.Packages.SubmitConfirm" xml:space="preserve">
+<value>إرسال</value>
+</data>
+<data name="Provider.Bookings.ApproveTitle" xml:space="preserve">
+<value>الموافقة على طلب الانضمام؟</value>
+</data>
+<data name="Provider.Bookings.ApproveBody" xml:space="preserve">
+<value>هل توافق على طلب الانضمام هذا؟ سيُضاف المسافر إلى الحجز.</value>
+</data>
+<data name="Provider.Bookings.ConfirmTitle" xml:space="preserve">
+<value>تأكيد الحجز؟</value>
+</data>
+<data name="Provider.Bookings.ConfirmBody" xml:space="preserve">
+<value>هل تريد تأكيد هذا الحجز؟ سيتم إشعار المسافر بتأكيد حجزه.</value>
+</data>
+<data name="Provider.ProviderBookings.ConfirmTitle" xml:space="preserve">
+<value>تأكيد الحجز؟</value>
+</data>
+<data name="Provider.ProviderBookings.ConfirmBody" xml:space="preserve">
+<value>هل تريد تأكيد هذا الحجز؟ سيتم إشعار المسافر بتأكيد حجزه.</value>
+</data>
+<data name="Provider.TourApplications.ApproveTitle" xml:space="preserve">
+<value>الموافقة على الطلب؟</value>
+</data>
+<data name="Provider.TourApplications.ApproveBody" xml:space="preserve">
+<value>هل توافق على طلب المرشد هذا؟ سيُمنح مقدم الطلب صلاحية الوصول إلى هذا العرض.</value>
+</data>
 </root>

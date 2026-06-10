@@ -54,7 +54,7 @@ public sealed class ToursController : ProviderTourResourceController
         if (await PopulatePlaceOptionsAsync(vm, ct) is { } signOut)
             return signOut;
 
-        return View(vm);
+        return View("Upsert", vm);
     }
 
     // ── POST /provider/tours/create ───────────────────────────────────────────────
@@ -68,7 +68,7 @@ public sealed class ToursController : ProviderTourResourceController
         if (!ModelState.IsValid)
         {
             if (await PopulatePlaceOptionsAsync(vm, ct) is { } signOut) return signOut;
-            return View(vm);
+            return View("Upsert", vm);
         }
 
         var result = await _facade.CreateAsync(vm, ct);
@@ -85,7 +85,7 @@ public sealed class ToursController : ProviderTourResourceController
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
                 if (await PopulatePlaceOptionsAsync(vm, ct) is { } so) return so;
-                return View(vm);
+                return View("Upsert", vm);
         }
     }
 
@@ -101,7 +101,7 @@ public sealed class ToursController : ProviderTourResourceController
         {
             case ProviderTourOutcome.Ok:
                 if (await PopulatePlaceOptionsAsync(result.Form!, ct) is { } signOut) return signOut;
-                return View(result.Form);
+                return View("Upsert", result.Form);
             case ProviderTourOutcome.ForceSignOut:
                 return RedirectToLogin();
             case ProviderTourOutcome.Forbidden:
@@ -123,7 +123,7 @@ public sealed class ToursController : ProviderTourResourceController
         if (!ModelState.IsValid)
         {
             if (await PopulatePlaceOptionsAsync(vm, ct) is { } signOut) return signOut;
-            return View(vm);
+            return View("Upsert", vm);
         }
 
         var result = await _facade.UpdateAsync(id, vm, ct);
@@ -146,7 +146,7 @@ public sealed class ToursController : ProviderTourResourceController
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
                 if (await PopulatePlaceOptionsAsync(vm, ct) is { } so) return so;
-                return View(vm);
+                return View("Upsert", vm);
         }
     }
 

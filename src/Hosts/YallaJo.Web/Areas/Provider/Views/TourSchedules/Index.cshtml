@@ -44,16 +44,7 @@
             <div class="card-body">
                 @if (!Model.HasSchedules)
                 {
-                    <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                        <h3 class="h5">@Localizer["Provider.TourSchedules.EmptyTitle"]</h3>
-                        <p class="mb-3 text-body-secondary">@Localizer["Provider.TourSchedules.EmptyMsg"]</p>
-                        <permission require="@WebPermission.TourSchedule.Create">
-                            <a class="btn btn-sm btn-primary-soft" asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId">
-                                <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourSchedules.AddFirst"]
-                            </a>
-                        </permission>
-                    </div>
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.TourSchedules.EmptyTitle"].Value }, { "headingTag", "h3" }, { "message", Localizer["Provider.TourSchedules.EmptyMsg"].Value }, { "ctaText", Localizer["Provider.TourSchedules.AddFirst"].Value }, { "ctaUrl", Url.Action("Create", "TourSchedules", new { area = "Provider", id = Model.TourId }) }, { "ctaClass", "btn btn-sm btn-primary-soft" }, { "ctaPermission", WebPermission.TourSchedule.Create } })" />
                 }
                 else
                 {
@@ -92,9 +83,16 @@
                                                     </a>
                                                 </permission>
                                                 <permission require="@WebPermission.TourSchedule.Delete">
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-schedule-@s.Id" aria-label="@Localizer["Provider.TourSchedules.Delete", s.DayLabel]">
-                                                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
-                                                    </button>
+                                                    <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id" method="post" class="d-inline"
+                                                          data-confirm="@Localizer["Provider.TourSchedules.DeleteBody", s.DayLabel]"
+                                                          data-confirm-title="@Localizer["Provider.TourSchedules.DeleteTitle"]"
+                                                          data-confirm-action="@Localizer["Provider.TourSchedules.DeleteConfirm"]"
+                                                          data-confirm-cancel="@Localizer["Provider.TourSchedules.Cancel"]">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="@Localizer["Provider.TourSchedules.Delete", s.DayLabel]">
+                                                            <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                                        </button>
+                                                    </form>
                                                 </permission>
                                             </div>
                                         </td>
@@ -109,26 +107,3 @@
     </div>
 </section>
 
-<permission require="@WebPermission.TourSchedule.Delete">
-    @foreach (var s in Model.Schedules)
-    {
-        var titleId = "delete-schedule-title-" + s.Id;
-        var bodyId = "delete-schedule-body-" + s.Id;
-        <div class="modal fade" id="delete-schedule-@s.Id" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bodyId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" asp-area="Provider" asp-controller="TourSchedules" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id" method="post">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="@titleId">@Localizer["Provider.TourSchedules.DeleteTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourSchedules.Close"]"></button>
-                    </div>
-                    <div class="modal-body" id="@bodyId">@Localizer["Provider.TourSchedules.DeleteBody", s.DayLabel]</div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.TourSchedules.Cancel"]</button>
-                        <button type="submit" class="btn btn-danger">@Localizer["Provider.TourSchedules.DeleteConfirm"]</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    }
-</permission>

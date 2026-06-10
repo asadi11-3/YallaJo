@@ -1,0 +1,69 @@
+@using YallaJo.Web.Areas.Provider.Models.TourAvailability
+@model AvailabilitySlotFormVm
+@{
+    ViewData["Title"] = Localizer[Model.IsEdit ? "Provider.TourAvailability.EditTitle" : "Provider.TourAvailability.CreateTitle"].Value;
+    ViewData["ProviderNav"] = "Listings";
+}
+
+@await Component.InvokeAsync("ProviderSidebar")
+
+<section class="pt-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-xl-8">
+                <h1 class="fs-4 mb-1"><i class="fa-solid fa-calendar-week me-2" aria-hidden="true"></i>@Localizer[Model.IsEdit ? "Provider.TourAvailability.EditHeading" : "Provider.TourAvailability.CreateHeading"]</h1>
+                @if (Model.IsEdit)
+                {
+                    if (!string.IsNullOrWhiteSpace(Model.TourName))
+                    {
+                        <p class="small text-body-secondary"><bdi dir="ltr">@Model.TourName</bdi></p>
+                    }
+                }
+                else
+                {
+                    <p class="small text-body-secondary">
+                        @if (!string.IsNullOrWhiteSpace(Model.TourName))
+                        {
+                            <bdi dir="ltr">@Model.TourName</bdi><text> · </text>
+                        }
+                        @Localizer["Provider.TourAvailability.CreateIntro"]
+                    </p>
+                }
+
+                <div class="card border">
+                    <div class="card-body">
+                        @if (Model.IsEdit)
+                        {
+                            <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Edit"
+                                  asp-route-id="@Model.TourId" asp-route-slotId="@Model.SlotId" method="post">
+                                @Html.AntiForgeryToken()
+                                <partial name="_Form" model="Model" />
+                                <div class="mt-4 d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">@Localizer["Provider.TourAvailability.EditSubmit"]</button>
+                                    <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Index" asp-route-id="@Model.TourId"
+                                       class="btn btn-link">@Localizer["Provider.TourAvailability.Cancel"]</a>
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Create" asp-route-id="@Model.TourId" method="post">
+                                @Html.AntiForgeryToken()
+                                <partial name="_Form" model="Model" />
+                                <div class="mt-4 d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">@Localizer["Provider.TourAvailability.CreateSubmit"]</button>
+                                    <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Index" asp-route-id="@Model.TourId"
+                                       class="btn btn-link">@Localizer["Provider.TourAvailability.Cancel"]</a>
+                                </div>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
