@@ -382,3 +382,5 @@ FodyWeavers.xsd
 # Serena agent tool artifacts
 .serena/
 
+
+.sisyphus/
