@@ -36,10 +36,10 @@
                 <p class="mb-4">@Localizer["Home.Hero.Lead"]</p>
 
                 <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-primary mb-0">@Localizer["Home.Hero.Cta"]</a>
-                @* GLightbox modal â€” uses theme convention. JS will lazy-init on `.glightbox`. *@
+                @* GLightbox modal — uses theme convention. JS will lazy-init on `.glightbox`. *@
                 @* TODO(content): re-add a 'Watch our story' CTA once a real brand video exists (Phase 11 removed unverifiable placeholder). *@
 
-                @* Client rating card â€” Phase 11 replaces these unverified trust claims with honest copy or real stats. *@
+                @* Client rating card — Phase 11 replaces these unverified trust claims with honest copy or real stats. *@
                 <div class="card shadow rounded-3 p-3 w-sm-75 w-xl-50 position-md-absolute mt-4 mt-md-5 ms-md-n5 mb-md-n5 bottom-md-0 start-md-100 z-index-1">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-patch-check-fill fs-3 text-success me-3" aria-hidden="true"></i>
@@ -82,7 +82,7 @@
 <section class="pt-4 pt-md-5">
     <div class="container">
         <div class="card shadow rounded-3 p-3 p-md-4">
-            @* Submits to Tours/Index â€” placeId is honored as a filter today;
+            @* Submits to Tours/Index — placeId is honored as a filter today;
                from/to/participants travel in the URL as future-filter intent. *@
             @* Phase 4.1: hero search targets /tours directly (Search page retired; /search 301s here). from/to/participants ride along as URL intent until backend supports availability-window filtering. *@
             <form method="get" asp-area="Public" asp-controller="Tours" asp-action="Index" class="row g-3 align-items-end">
@@ -103,7 +103,7 @@
                     </select>
                 </div>
 
-                @* Date pill â€” Flatpickr range *@
+                @* Date pill — Flatpickr range *@
                 <div class="col-md-4">
                     <label for="heroDate" class="form-label fw-semibold small mb-1">
                         <i class="bi bi-calendar me-1"></i>@Localizer["Home.Search.When"]
@@ -134,7 +134,7 @@
                                     <small class="text-body-secondary">@Localizer["Home.Search.AdultsAge"]</small>
                                 </div>
                                 <div class="btn-group" role="group" aria-label="@Localizer["Home.Search.AdultsCounter"]">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="adults" data-action="dec" aria-label="@Localizer["Home.Search.DecreaseAdults"]">âˆ’</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="adults" data-action="dec" aria-label="@Localizer["Home.Search.DecreaseAdults"]">−</button>
                                     <span class="btn btn-sm btn-light disabled" data-counter-value="adults">1</span>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="adults" data-action="inc" aria-label="@Localizer["Home.Search.IncreaseAdults"]">+</button>
                                 </div>
@@ -145,7 +145,7 @@
                                     <small class="text-body-secondary">@Localizer["Home.Search.ChildrenAge"]</small>
                                 </div>
                                 <div class="btn-group" role="group" aria-label="@Localizer["Home.Search.ChildrenCounter"]">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="children" data-action="dec" aria-label="@Localizer["Home.Search.DecreaseChildren"]">âˆ’</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="children" data-action="dec" aria-label="@Localizer["Home.Search.DecreaseChildren"]">−</button>
                                     <span class="btn btn-sm btn-light disabled" data-counter-value="children">0</span>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="children" data-action="inc" aria-label="@Localizer["Home.Search.IncreaseChildren"]">+</button>
                                 </div>
@@ -170,7 +170,7 @@
 <section class="pt-5 pt-md-7">
     <div class="container">
         <div class="row align-items-center g-4 g-md-5">
-            @* Left: image with rating overlay â€” Phase 11 replaces unverified stats with honest copy or real stats. *@
+            @* Left: image with rating overlay — Phase 11 replaces unverified stats with honest copy or real stats. *@
             <div class="col-lg-6 position-relative">
                 @* TODO(content): replace theme stock photo with real Jordan imagery. *@
                 <img src="~/assets/images/category/hotel/4by3/11.jpg" class="rounded-3" alt="About YallaJo" loading="lazy">
