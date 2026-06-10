@@ -5,6 +5,7 @@ using YallaJo.Web.Infrastructure.Authentication.SignIn;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.DependencyInjection;
 using YallaJo.Web.Infrastructure.Identity;
+using YallaJo.Web.Infrastructure.Routing;
 using YallaJo.Web.Infrastructure.Security.Recaptcha;
 using YallaJo.Web.Services;
 
@@ -114,6 +115,16 @@ builder.Services.AddSingleton<IApiAssetUrlResolver, ApiAssetUrlResolver>();
 // Every permission and role check in the project goes through this interface.
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
+// ── Encoded entity IDs (UI-UX-Design.md Rule 5 / F10) ─────────────────────────
+// Reversible, opaque encoding of GUIDs so raw entity IDs never appear in URLs,
+// links or form values. Defense-in-depth only — authorization (cookie + RBAC) is
+// the real control. The inbound model binder (registered on MVC below) accepts BOTH
+// encoded tokens AND plain GUIDs, so existing links/bookmarks keep working during
+// the Admin-only rollout. Outbound encoding is opt-in via Url.EncodeId(...) in views.
+builder.Services.Configure<IdEncoderOptions>(
+    builder.Configuration.GetSection(IdEncoderOptions.SectionName));
+builder.Services.AddSingleton<IIdEncoder, AesIdEncoder>();
+
 // ── Feature services (ApiClients + Facades) ──────────────────────────────────
 // Convention-based registration: every concrete class whose name ends in
 // "ApiClient" or "Facade" is registered as scoped self. This replaces the ~40
@@ -188,6 +199,11 @@ var mvcBuilder  = builder.Services.AddControllersWithViews(options =>
     // ForbiddenResultFilter: the ONE code path that renders AccessDenied.cshtml.
     // Branches on content negotiation: HTML page → view, AJAX/JSON → ProblemDetails.
     options.Filters.Add<ForbiddenResultFilter>();
+
+    // EncodedIdModelBinderProvider: transparently decodes encoded entity IDs (and raw
+    // GUIDs, for backward compatibility) for every Guid / Guid? action parameter. Inserted
+    // at the FRONT so it precedes the default simple-type binder. See Infrastructure/Routing.
+    options.ModelBinderProviders.Insert(0, new EncodedIdModelBinderProvider());
 })
     .AddRazorOptions(o =>
     {
