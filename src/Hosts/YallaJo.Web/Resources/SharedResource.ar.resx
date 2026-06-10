@@ -3643,8 +3643,20 @@
   <data name="Admin.Blogs.Unpublish" xml:space="preserve">
     <value>إلغاء النشر</value>
   </data>
+  <data name="Admin.Blogs.UnpublishConfirm" xml:space="preserve">
+    <value>إلغاء نشر المقال ‏«{0}»؟ لن يعود ظاهرًا للعامة حتى تتم إعادة نشره.</value>
+  </data>
+  <data name="Admin.Blogs.UnpublishTitle" xml:space="preserve">
+    <value>إلغاء نشر المقال</value>
+  </data>
   <data name="Admin.Blogs.Archive" xml:space="preserve">
     <value>أرشفة</value>
+  </data>
+  <data name="Admin.Blogs.ArchiveConfirm" xml:space="preserve">
+    <value>أرشفة المقال ‏«{0}»؟ ستتم إزالته من القائمة النشطة.</value>
+  </data>
+  <data name="Admin.Blogs.ArchiveTitle" xml:space="preserve">
+    <value>أرشفة المقال</value>
   </data>
   <data name="Admin.Blogs.Feature" xml:space="preserve">
     <value>تمييز</value>

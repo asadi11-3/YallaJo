@@ -3643,8 +3643,20 @@
   <data name="Admin.Blogs.Unpublish" xml:space="preserve">
     <value>Unpublish</value>
   </data>
+  <data name="Admin.Blogs.UnpublishConfirm" xml:space="preserve">
+    <value>Unpublish the post “{0}”? It will no longer be visible to the public until re-published.</value>
+  </data>
+  <data name="Admin.Blogs.UnpublishTitle" xml:space="preserve">
+    <value>Unpublish post</value>
+  </data>
   <data name="Admin.Blogs.Archive" xml:space="preserve">
     <value>Archive</value>
+  </data>
+  <data name="Admin.Blogs.ArchiveConfirm" xml:space="preserve">
+    <value>Archive the post “{0}”? It will be removed from the active list.</value>
+  </data>
+  <data name="Admin.Blogs.ArchiveTitle" xml:space="preserve">
+    <value>Archive post</value>
   </data>
   <data name="Admin.Blogs.Feature" xml:space="preserve">
     <value>Feature</value>
