@@ -17,17 +17,19 @@ public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews, IStri
     private const string TargetType = "Blog";
 
     [HttpGet("blog")]
-    [OutputCache(PolicyName = "PublicShort")]
+    [OutputCache(PolicyName = "PublicShort", VaryByHeaderNames = new[] { "X-Requested-With" })]
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
         var result = await blog.GetGridAsync(page, ct);
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new BlogsGridVm());
+            var fallback = new BlogsGridVm();
+            return WantsAjax() ? PartialView("_BlogResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        // Phase 7: AJAX requests (listing.js) receive just the results fragment.
+        return WantsAjax() ? PartialView("_BlogResults", result.Data) : View(result.Data);
     }
 
     [HttpGet("blog/{slug}")]

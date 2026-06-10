@@ -17,17 +17,19 @@ public sealed class GuidesController(
     private const string TargetType = "TourGuide";
 
     [HttpGet("guides")]
-    [OutputCache(PolicyName = "PublicShort")]
+    [OutputCache(PolicyName = "PublicShort", VaryByHeaderNames = new[] { "X-Requested-With" })]
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
         var result = await guides.GetGridAsync(page, ct);
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new GuidesGridVm());
+            var fallback = new GuidesGridVm();
+            return WantsAjax() ? PartialView("_GuidesResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        // Phase 7: AJAX requests (listing.js) receive just the results fragment.
+        return WantsAjax() ? PartialView("_GuidesResults", result.Data) : View(result.Data);
     }
 
     [HttpGet("guides/{slug}")]

@@ -4,9 +4,6 @@
 @{
     ViewData["Title"] = Localizer["Public.Explore.the.Directory"];
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var isAuthed = User.Identity?.IsAuthenticated == true;
-    var firstResult = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
-    var lastResult = Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount);
 }
 
 @functions {
@@ -34,7 +31,8 @@
             <div class="col-xl-9 mx-auto text-center">
                 <h6 class="text-white fw-normal mb-3">@Localizer["Public.Discover.amp.connect.with.great.places"]</h6>
                 <h1 class="display-5 text-white mb-4">@Localizer["Public.Explore.the.Directory"]</h1>
-                <form class="row g-2 justify-content-center" asp-area="Public" asp-controller="Directory" asp-action="Index" method="get">
+                @* Real GET form per UI-UX-PE1; listing.js enhances it via data-yj-listing *@
+                <form class="row g-2 justify-content-center" asp-area="Public" asp-controller="Directory" asp-action="Index" method="get" data-yj-listing>
                     <div class="col-lg-5">
                         <input class="form-control form-control-lg" type="text" name="q" value="@Model.Query" placeholder="@Localizer["Public.What.are.you.looking.for"]" />
                     </div>
@@ -87,46 +85,14 @@
 <!-- Listing -->
 <section class="pt-4">
     <div class="container">
-        <div class="d-sm-flex justify-content-between align-items-center mb-4">
-            <h5 class="mb-2 mb-sm-0">
-                @if (Model.HasResults)
-                {
-                    <text>@Localizer["Public.ShowingPlaces", firstResult, lastResult, Model.TotalCount]</text>
-                }
-                else
-                {
-                    <text>@Localizer["Public.No.places.found"]</text>
-                }
-            </h5>
+        @* Phase 7: results fragment is shared with the AJAX partial response (WantsAjax) and swapped in place by listing.js. *@
+        <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+             data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]" data-loading-text="@Localizer["Public.Loading"]">
+            <partial name="_DirectoryResults" model="Model" />
         </div>
-
-        @if (!Model.HasResults)
-        {
-            <div class="text-center py-5">
-                <img src="@Url.Content("~/assets/images/element/17.svg")" class="h-100px mb-3" alt="@Localizer["Public.No.results"]" />
-                <h5 class="mb-1">@Localizer["Public.Nothing.matched.your.search"]</h5>
-                <p class="mb-0">@Localizer["Public.Try.a.different.category.city.or.search.term"]</p>
-            </div>
-        }
-        else
-        {
-            <div class="row g-4">
-                @foreach (var biz in Model.Businesses)
-                {
-                    @* Shared card partial (Phase 3.3 consistency: card-hover-shadow + col-md-6 col-xl-4 grid) *@
-                    <partial name="_BusinessCard"
-                             model="biz"
-                             view-data='@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-md-6 col-xl-4" } })' />
-                }
-            </div>
-
-            @* Pagination (shared partial preserves query string, swaps page) *@
-            <partial name="_Pagination"
-                     model='new YallaJo.Web.Areas.Public.Models.Shared.PaginationVm { PageNumber = Model.PageNumber, TotalPages = Model.TotalPages, AriaLabel = Localizer["Public.Directory.pages"] }' />
-        }
     </div>
 </section>
 
 @section Scripts {
-    <script src="~/assets/js/directory-index.js" asp-append-version="true"></script>
+    <script src="~/assets/js/listing.js" asp-append-version="true"></script>
 }

@@ -26,7 +26,7 @@ public sealed class PlacesController : BaseController
 
     // ── GET /places ───────────────────────────────────────────────────────────
     [HttpGet("places")]
-    [OutputCache(PolicyName = "PublicShort")]
+    [OutputCache(PolicyName = "PublicShort", VaryByHeaderNames = new[] { "X-Requested-With" })]
     public async Task<IActionResult> Index(
         string? city = null,
         string? country = null,
@@ -50,10 +50,12 @@ public sealed class PlacesController : BaseController
             // Tolerant: render a friendly empty grid (with the echoed filters
             // preserved) plus the error message, rather than a 500.
             SetError(result.Error);
-            return View(new PlacesGridVm { Filters = filters });
+            var fallback = new PlacesGridVm { Filters = filters };
+            return WantsAjax() ? PartialView("_PlacesResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        // Phase 7: AJAX requests (listing.js) receive just the results fragment.
+        return WantsAjax() ? PartialView("_PlacesResults", result.Data) : View(result.Data);
     }
 
     // ── GET /places/{slug} ──────────────────────────────────────────────────────

@@ -11,17 +11,19 @@ namespace YallaJo.Web.Areas.Public.Controllers;
 public sealed class AgenciesController(AgenciesFacade agencies) : BaseController
 {
     [HttpGet("agency")]
-    [OutputCache(PolicyName = "PublicMedium")]
+    [OutputCache(PolicyName = "PublicMedium", VaryByHeaderNames = new[] { "X-Requested-With" })]
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
         var result = await agencies.GetGridAsync(page, ct);
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new AgenciesGridVm());
+            var fallback = new AgenciesGridVm();
+            return WantsAjax() ? PartialView("_AgenciesResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        // Phase 7: AJAX requests (listing.js) receive just the results fragment.
+        return WantsAjax() ? PartialView("_AgenciesResults", result.Data) : View(result.Data);
     }
 
     [HttpGet("agency/{agencyUserId:guid}")]

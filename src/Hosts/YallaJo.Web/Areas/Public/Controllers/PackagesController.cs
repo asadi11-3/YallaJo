@@ -13,17 +13,19 @@ namespace YallaJo.Web.Areas.Public.Controllers;
 public sealed class PackagesController(PackagesFacade packages) : BaseController
 {
     [HttpGet("packages")]
-    [OutputCache(PolicyName = "PublicShort")]
+    [OutputCache(PolicyName = "PublicShort", VaryByHeaderNames = new[] { "X-Requested-With" })]
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
         var result = await packages.GetGridAsync(page, ct);
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new PackagesGridVm());
+            var fallback = new PackagesGridVm();
+            return WantsAjax() ? PartialView("_PackagesResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        // Phase 7: AJAX requests (listing.js) receive just the results fragment.
+        return WantsAjax() ? PartialView("_PackagesResults", result.Data) : View(result.Data);
     }
 
     [HttpGet("packages/{id:guid}")]

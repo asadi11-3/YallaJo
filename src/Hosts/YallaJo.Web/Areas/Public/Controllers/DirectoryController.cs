@@ -25,7 +25,7 @@ public sealed class DirectoryController : BaseController
     }
 
     [HttpGet("businesses")]
-    [OutputCache(PolicyName = "PublicShort")]
+    [OutputCache(PolicyName = "PublicShort", VaryByHeaderNames = new[] { "X-Requested-With" })]
     public async Task<IActionResult> Index(
         string? q = null, string? businessType = null, string? city = null, int page = 1, CancellationToken ct = default)
     {
@@ -33,16 +33,18 @@ public sealed class DirectoryController : BaseController
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new DirectoryVm
+            var fallback = new DirectoryVm
             {
                 BusinessTypes = DirectoryFacade.BusinessTypeOptions,
                 Query = q,
                 SelectedBusinessType = DirectoryFacade.NormalizeBusinessType(businessType),
                 City = city,
-            });
+            };
+            return WantsAjax() ? PartialView("_DirectoryResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        // Phase 7: AJAX requests (listing.js) receive just the results fragment.
+        return WantsAjax() ? PartialView("_DirectoryResults", result.Data) : View(result.Data);
     }
 
     [HttpGet("businesses/{id:guid}")]

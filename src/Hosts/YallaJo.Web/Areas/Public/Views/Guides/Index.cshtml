@@ -29,77 +29,14 @@
 
 <section class="pb-5">
     <div class="container">
-        @if (Model.HasResults)
-        {
-            <div class="row g-3 g-md-4">
-                @foreach (var guide in Model.Guides)
-                {
-                    <div class="col-sm-6 col-xl-3">
-                        <div class="card border h-100 text-center card-hover-shadow position-relative">
-                            <div class="card-body">
-                                @if (guide.HasAvatar)
-                                {
-                                    <img src="@guide.AvatarUrl" class="rounded-circle mb-3 object-cover" width="96" height="96" alt="@guide.DisplayName" loading="lazy" />
-                                }
-                                else
-                                {
-                                    <i class="bi bi-person-circle display-4 text-body-tertiary d-block mb-3" aria-hidden="true"></i>
-                                }
-                                <h2 class="h6 mb-1">
-                                    @if (guide.HasSlug)
-                                    {
-                                        <a class="stretched-link text-reset" asp-area="Public" asp-controller="Guides" asp-action="Detail" asp-route-slug="@guide.Slug">@guide.DisplayName</a>
-                                    }
-                                    else
-                                    {
-                                        @guide.DisplayName
-                                    }
-                                </h2>
-                                <div class="small text-body-secondary mb-2">
-                                    <i class="bi bi-star-fill text-warning" aria-hidden="true"></i>
-                                    @guide.AverageRating.ToString("0.0")
-                                    <span class="text-body-tertiary">(@guide.ReviewCount)</span>
-                                </div>
-                                <div class="d-flex justify-content-center flex-wrap gap-1 mb-2">
-                                    <span class="badge text-bg-light">@Localizer["Public.Tours.Count", guide.TourCount]</span>
-                                    @if (guide.LanguageCount > 0)
-                                    {
-                                        <span class="badge text-bg-light">@Localizer["Public.Languages.Count", guide.LanguageCount]</span>
-                                    }
-                                </div>
-                                @if (!string.IsNullOrWhiteSpace(guide.Bio))
-                                {
-                                    <p class="small text-body-secondary mb-0 text-truncate-2">@guide.Bio</p>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-
-            @if (Model.HasPreviousPage || Model.HasNextPage)
-            {
-                <nav class="mt-4" aria-label="@Localizer["Public.Guides.pages"]">
-                    <ul class="pagination justify-content-center mb-0">
-                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                            <a class="page-link" asp-area="Public" asp-controller="Guides" asp-action="Index" asp-route-page="@(Model.PageNumber - 1)">@Localizer["Public.Previous"]</a>
-                        </li>
-                        <li class="page-item active" aria-current="page"><span class="page-link">@Model.PageNumber</span></li>
-                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                            <a class="page-link" asp-area="Public" asp-controller="Guides" asp-action="Index" asp-route-page="@(Model.PageNumber + 1)">@Localizer["Public.Next"]</a>
-                        </li>
-                    </ul>
-                </nav>
-            }
-        }
-        else
-        {
-            <div class="text-center py-5">
-                <i class="bi bi-person-badge display-4 text-body-tertiary d-block mb-3" aria-hidden="true"></i>
-                <h2 class="h5">@Localizer["Public.No.guides.yet"]</h2>
-                <p class="text-body-secondary">@Localizer["Public.Check.back.soon.to.meet.our.verified.local.guides"]</p>
-                <a class="btn btn-primary" asp-area="Public" asp-controller="Tours" asp-action="Index">@Localizer["Public.Browse.all.tours"]</a>
-            </div>
-        }
+        @* Phase 7: results fragment swapped via AJAX by listing.js (UI-UX-S1); plain markup without JS (PE1). *@
+        <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+             data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]" data-loading-text="@Localizer["Public.Loading"]">
+            <partial name="_GuidesResults" model="Model" />
+        </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true"></script>
+}
