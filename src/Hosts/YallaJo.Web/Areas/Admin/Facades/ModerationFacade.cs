@@ -18,7 +18,7 @@ public sealed class ModerationFacade
 
     public async Task<ApiResult<ModerationVm>> GetIndexAsync(Guid? afterCursor, int pageSize, CancellationToken ct)
     {
-        if (pageSize < 1 || pageSize > 100)
+        if (pageSize < 1 || pageSize > 50)
         {
             pageSize = DefaultPageSize;
         }

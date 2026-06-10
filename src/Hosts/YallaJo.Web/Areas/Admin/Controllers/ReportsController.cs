@@ -20,7 +20,9 @@ public sealed class ReportsController : BaseController
     public async Task<IActionResult> Index([FromQuery] ReportsFilterRequest request, CancellationToken ct)
     {
         ViewData["AdminNav"] = "Reports";
-        var result = await _facade.GetIndexAsync(request.AfterCursor, request.PageSize, ct);
+        // UI-UX-D1/R4: cap the page size at 50 at the controller boundary.
+        var pageSize = Math.Clamp(request.PageSize, 1, 50);
+        var result = await _facade.GetIndexAsync(request.AfterCursor, pageSize, ct);
         if (GuardSignOut(result) is { } signOut)
         {
             return signOut;

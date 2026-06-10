@@ -18,7 +18,7 @@ public sealed class ReportsFacade
 
     public async Task<ApiResult<ReportsVm>> GetIndexAsync(Guid? afterCursor, int pageSize, CancellationToken ct)
     {
-        if (pageSize < 1 || pageSize > 100)
+        if (pageSize < 1 || pageSize > 50)
         {
             pageSize = DefaultPageSize;
         }

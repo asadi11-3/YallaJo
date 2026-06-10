@@ -12,10 +12,8 @@ public sealed class SeoSitemapFacade
 
     public async Task<ApiResult<SeoSitemapVm>> GetIndexAsync(SitemapFilterRequest filter, CancellationToken ct = default)
     {
-        if (filter.PageSize < 1 || filter.PageSize > 200)
-        {
-            filter.PageSize = 50;
-        }
+        // UI-UX-D1/R4: cap the page size at 50 (was 200).
+        filter.PageSize = Math.Clamp(filter.PageSize, 1, 50);
 
         if (filter.Page < 1)
         {

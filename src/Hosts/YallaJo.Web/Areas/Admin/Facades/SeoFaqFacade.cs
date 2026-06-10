@@ -16,10 +16,8 @@ public sealed class SeoFaqFacade
 
     public async Task<ApiResult<SeoFaqVm>> GetIndexAsync(FaqFilterRequest filter, CancellationToken ct = default)
     {
-        if (filter.PageSize is < 1 or > 200)
-        {
-            filter.PageSize = 50;
-        }
+        // UI-UX-D1/R4: cap the page size at 50 (was 200).
+        filter.PageSize = Math.Clamp(filter.PageSize, 1, 50);
 
         if (filter.Page < 1)
         {
