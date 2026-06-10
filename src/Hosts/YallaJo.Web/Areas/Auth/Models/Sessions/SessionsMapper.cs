@@ -14,5 +14,6 @@ public static class SessionsMapper
         CreatedAt  = r.CreatedAt,
         ExpiresAt  = r.ExpiresAt,
         IsCurrent  = r.IsCurrent,
+        IsTrusted  = r.IsTrusted,
     };
 }

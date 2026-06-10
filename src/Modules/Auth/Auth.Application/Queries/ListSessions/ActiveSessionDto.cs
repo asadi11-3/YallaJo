@@ -8,4 +8,5 @@ public sealed record ActiveSessionDto(
     string? IpAddress,
     DateTime CreatedAt,
     DateTime ExpiresAt,
-    bool IsCurrent);
+    bool IsCurrent,
+    bool IsTrusted);

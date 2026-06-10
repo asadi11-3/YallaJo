@@ -7048,6 +7048,9 @@
   <data name="Auth.Sessions.Current" xml:space="preserve">
     <value>الحالية</value>
   </data>
+  <data name="Auth.Sessions.Trusted" xml:space="preserve">
+    <value>موثوق</value>
+  </data>
   <data name="Auth.Sessions.Trust" xml:space="preserve">
     <value>اعتماد الجهاز</value>
   </data>

@@ -7048,6 +7048,9 @@
   <data name="Auth.Sessions.Current" xml:space="preserve">
     <value>Current</value>
   </data>
+  <data name="Auth.Sessions.Trusted" xml:space="preserve">
+    <value>Trusted</value>
+  </data>
   <data name="Auth.Sessions.Trust" xml:space="preserve">
     <value>Trust device</value>
   </data>

@@ -67,6 +67,13 @@
                                                         @Localizer["Auth.Sessions.Current"]
                                                     </span>
                                                 }
+                                                @if (s.IsTrusted)
+                                                {
+                                                    <span class="badge bg-primary bg-opacity-10 text-primary ms-2">
+                                                        <i class="fa-solid fa-shield-halved fa-fw" aria-hidden="true"></i>
+                                                        @Localizer["Auth.Sessions.Trusted"]
+                                                    </span>
+                                                }
                                             </td>
                                             <td>
                                                 @if (string.IsNullOrWhiteSpace(s.IpAddress))
@@ -82,14 +89,19 @@
                                             <td><bdi dir="ltr" class="font-data">@When(s.ExpiresAt)</bdi></td>
                                             <td class="text-end">
                                                 <div class="d-inline-flex gap-2">
-                                                    <form asp-area="Auth" asp-controller="Devices" asp-action="Trust"
-                                                          asp-route-deviceId="@s.DeviceId" method="post" class="d-inline">
-                                                        @Html.AntiForgeryToken()
-                                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                                            <i class="fa-solid fa-shield-halved fa-fw me-1" aria-hidden="true"></i>
-                                                            @Localizer["Auth.Sessions.Trust"]
-                                                        </button>
-                                                    </form>
+                                                    @* Trust is one-way today (no untrust endpoint), so the button only
+                                                       renders for devices that are not yet trusted. *@
+                                                    @if (!s.IsTrusted)
+                                                    {
+                                                        <form asp-area="Auth" asp-controller="Devices" asp-action="Trust"
+                                                              asp-route-deviceId="@s.DeviceId" method="post" class="d-inline">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                                                <i class="fa-solid fa-shield-halved fa-fw me-1" aria-hidden="true"></i>
+                                                                @Localizer["Auth.Sessions.Trust"]
+                                                            </button>
+                                                        </form>
+                                                    }
                                                     @if (!s.IsCurrent)
                                                     {
                                                         <form asp-area="Auth" asp-controller="Sessions" asp-action="Revoke"

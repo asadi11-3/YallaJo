@@ -7,4 +7,5 @@ public sealed record ActiveSessionListItemDto(
     string? UserAgent,
     string? IpAddress,
     DateTime CreatedAt,
-    DateTime ExpiresAt);
+    DateTime ExpiresAt,
+    bool IsTrusted);

@@ -70,7 +70,8 @@ internal static class SessionEndpoints
                     IpAddress: i.IpAddress,
                     CreatedAt: i.CreatedAt,
                     ExpiresAt: i.ExpiresAt,
-                    IsCurrent: currentSessionId.HasValue && i.SessionId == currentSessionId.Value))
+                    IsCurrent: currentSessionId.HasValue && i.SessionId == currentSessionId.Value,
+                    IsTrusted: i.IsTrusted))
                 .ToList());
 
             return decorated.ToApiResult();

@@ -59,7 +59,8 @@ public sealed class ListActiveSessionsQueryHandler(
                     UserAgent: device?.UserAgent,
                     IpAddress: s.IpAddress,
                     CreatedAt: s.CreatedAt,
-                    ExpiresAt: s.ExpiresAt);
+                    ExpiresAt: s.ExpiresAt,
+                    IsTrusted: device?.IsTrusted ?? false);
             })
             .ToList();
 

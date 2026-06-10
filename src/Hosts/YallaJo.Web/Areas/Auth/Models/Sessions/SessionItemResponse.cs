@@ -10,4 +10,5 @@ public sealed class SessionItemResponse
     public DateTime  CreatedAt  { get; init; }
     public DateTime  ExpiresAt  { get; init; }
     public bool      IsCurrent  { get; init; }
+    public bool      IsTrusted  { get; init; }
 }

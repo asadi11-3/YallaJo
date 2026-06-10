@@ -10,5 +10,8 @@ namespace YallaJo.Web.Areas.Auth.Models.Sessions
         public DateTime CreatedAt { get; init; }
         public DateTime ExpiresAt { get; init; }
         public bool IsCurrent { get; init; }
+
+        /// <summary>Trust state of the session's device (one device → many sessions).</summary>
+        public bool IsTrusted { get; init; }
     }
 }
