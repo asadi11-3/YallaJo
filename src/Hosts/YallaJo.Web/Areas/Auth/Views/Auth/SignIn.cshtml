@@ -7,8 +7,6 @@
 @{
     ViewData["Title"] = Localizer["Auth.SignIn.Title"].Value;
     Layout = "~/Areas/Auth/Views/Shared/_AuthLayout.cshtml";
-    var loginError = TempData["LoginError"] as string;
-
 }
 
 <section class="vh-xxl-100">
@@ -41,11 +39,9 @@
                                     <a asp-area="Auth" asp-controller="Auth" asp-action="SignUp">@Localizer["Auth.SignIn.CreateAccount"]</a>
                                 </p>
 
-                                @if (!string.IsNullOrEmpty(loginError))
-                                {
-                                    <div class="alert alert-warning mt-4 mb-0">@loginError</div>
-                                }
-
+                                @* External sign-in failures now arrive via the standard _Alerts flash
+                                   (BaseController.SetError → TempData["Error"], rendered by _AuthLayout),
+                                   replacing the bespoke TempData["LoginError"] side channel. *@
                                 <div asp-validation-summary="All" class="text-danger mt-4"></div>
 
                                 <!-- Form START -->

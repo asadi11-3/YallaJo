@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Auth.Models.ExternalProviders;
 using YallaJo.Web.Infrastructure.Authentication.Claims;
 using YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
+using YallaJo.Web.Infrastructure.Mvc;
 using YallaJo.Web.Infrastructure.Security.Recaptcha;
 using YallaJo.Web.Areas.Auth.Facades;
 
@@ -13,7 +14,7 @@ namespace YallaJo.Web.Areas.Auth.Controllers;
 [Area("Auth")]
 [AllowAnonymous]
 [Route("auth/external")]
-public sealed class ExternalAuthController : Controller
+public sealed class ExternalAuthController : BaseController
 {
     private readonly ExternalProvidersFacade _facade;
     private readonly IExternalProviderAvailability _availability;
@@ -93,7 +94,7 @@ public sealed class ExternalAuthController : Controller
         if (!authResult.Succeeded || authResult.Principal is null)
         {
             _logger.LogInformation("External auth callback for {Provider} failed (no principal).", provider);
-            return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+            return RedirectToLogin();
         }
 
         var items = authResult.Properties?.Items ?? new Dictionary<string, string?>();
@@ -122,7 +123,7 @@ public sealed class ExternalAuthController : Controller
         if (string.IsNullOrWhiteSpace(providerUserId))
         {
             _logger.LogWarning("External auth callback for {Provider} missing NameIdentifier claim.", provider);
-            return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+            return RedirectToLogin();
         }
 
         var safeMode = string.Equals(storedMode, "link", StringComparison.OrdinalIgnoreCase) ? "link" : "login";
@@ -131,8 +132,8 @@ public sealed class ExternalAuthController : Controller
         {
             if (User.Identity?.IsAuthenticated != true)
             {
-                TempData["Error"] = "Please sign in first, then link your account.";
-                return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+                SetError("Please sign in first, then link your account.");
+                return RedirectToLogin();
             }
 
             var currentUser = User.FindFirstValue(AppClaimTypes.UserId);
@@ -175,7 +176,7 @@ public sealed class ExternalAuthController : Controller
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(ticket))
-            return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+            return RedirectToLogin();
 
         var safeReturn = NormalizeReturnUrl(returnUrl);
         var safeMode = string.Equals(mode, "link", StringComparison.OrdinalIgnoreCase) ? "link" : "login";
@@ -184,19 +185,31 @@ public sealed class ExternalAuthController : Controller
         {
             if (User.Identity?.IsAuthenticated != true)
             {
-                TempData["Error"] = "Please sign in first, then link your account.";
-                return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+                SetError("Please sign in first, then link your account.");
+                return RedirectToLogin();
             }
 
             var linkResult = await _facade.LinkAsync(ticket, recaptchaToken ?? string.Empty, ct);
 
             if (linkResult.IsSuccess)
-                TempData["Success"] = $"{provider} account linked successfully.";
+            {
+                SetSuccess($"{provider} account linked successfully.");
+            }
             else
-                TempData["Error"] = linkResult.Error ?? "Could not link provider.";
+            {
+                // There is no form to re-render in the ticket flow, so field-level
+                // validation errors (if any) are collapsed into the flash message
+                // instead of being dropped (linkResult.Error is null for the
+                // Invalid case, which previously lost the reason entirely).
+                var firstValidation = linkResult.ValidationErrors?
+                    .SelectMany(kv => kv.Value)
+                    .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
+                SetError(linkResult.Error ?? firstValidation ?? "Could not link provider.");
+            }
 
-            if (linkResult.RequireSignOut)
-                return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+            // Flash is written before the guard on purpose: the original behavior
+            // bounced to sign-in with the message intact when the session expired.
+            if (GuardSignOut(linkResult) is { } signOut) return signOut;
 
             return RedirectToAction("Index", "ExternalProviders", new { area = "Auth" });
         }
@@ -206,14 +219,11 @@ public sealed class ExternalAuthController : Controller
         if (outcome.IsSuccess)
             return RedirectLocal(safeReturn);
 
-        if (outcome.IsNotLinked)
-        {
-            TempData["LoginError"] = outcome.Error;
-            return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
-        }
-
-        TempData["LoginError"] = outcome.Error ?? "External sign-in failed.";
-        return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+        // Standard _Alerts flash (was a bespoke TempData["LoginError"] side channel).
+        // outcome.Error is always facade-authored friendly copy — never a raw
+        // provider/API error — so it is safe to surface verbatim.
+        SetError(outcome.Error ?? "External sign-in failed.");
+        return RedirectToLogin();
     }
 
     private bool IsProviderAvailable(string? provider)
