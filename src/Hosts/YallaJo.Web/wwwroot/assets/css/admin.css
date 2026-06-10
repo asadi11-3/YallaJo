@@ -38,3 +38,9 @@
     background-color: var(--bs-dark, #14191e);
     color: #fff;
 }
+
+/* Preserve author line breaks in long-form text (e.g. tour descriptions) without
+   an inline style attribute (X6). Direction-agnostic. */
+.text-pre-wrap {
+    white-space: pre-wrap;
+}
