@@ -27,6 +27,11 @@ public sealed class HelpController : BaseController
         return View(result.Data);
     }
 
+    /// <summary>
+    /// Phase 6 (view reduction): the standalone article page was merged into the
+    /// Help index accordion. The route is kept for old links/bookmarks and 301s
+    /// to the matching accordion anchor (#faq-{id}). 404 semantics preserved.
+    /// </summary>
     [HttpGet("help/{id:guid}")]
     public async Task<IActionResult> Detail(Guid id, CancellationToken ct = default)
     {
@@ -40,6 +45,6 @@ public sealed class HelpController : BaseController
             return RedirectToAction(nameof(Index));
         }
 
-        return View(result.Data);
+        return RedirectPermanent(Url.Action(nameof(Index)) + "#faq-" + id.ToString("N"));
     }
 }
