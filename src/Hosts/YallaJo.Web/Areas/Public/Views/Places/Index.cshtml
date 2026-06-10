@@ -152,49 +152,9 @@
                 }
             </div>
 
-            <!-- Pagination -->
-            @if (Model.TotalPages > 1)
-            {
-                <div class="row">
-                    <div class="col-12">
-                        <nav class="mt-4 d-flex justify-content-center" aria-label="@Localizer["Public.Places.pagination"]">
-                            <ul class="pagination pagination-primary-soft d-inline-block d-md-flex rounded mb-0">
-                                <li class="page-item mb-0 @(Model.HasPreviousPage ? "" : "disabled")">
-                                    <a class="page-link"
-                                       asp-area="Public" asp-controller="Places" asp-action="Index"
-                                       asp-route-page="@(Model.PageNumber - 1)"
-                                       asp-route-city="@Model.Filters.City"
-                                       asp-route-country="@Model.Filters.Country"
-                                       asp-route-ratingMin="@(Model.Filters.RatingMin is > 0 ? Model.Filters.RatingMin : null)"
-                                       asp-route-hasActiveTours="@(Model.Filters.HasActiveTours ? "true" : null)"
-                                       tabindex="-1"><i class="fa-solid fa-angle-left"></i></a>
-                                </li>
-                                @for (var p = 1; p <= Model.TotalPages; p++)
-                                {
-                                    <li class="page-item mb-0 @(p == Model.PageNumber ? "active" : "")">
-                                        <a class="page-link"
-                                           asp-area="Public" asp-controller="Places" asp-action="Index"
-                                           asp-route-page="@p"
-                                           asp-route-city="@Model.Filters.City"
-                                           asp-route-country="@Model.Filters.Country"
-                                           asp-route-ratingMin="@(Model.Filters.RatingMin is > 0 ? Model.Filters.RatingMin : null)"
-                                           asp-route-hasActiveTours="@(Model.Filters.HasActiveTours ? "true" : null)">@p</a>
-                                    </li>
-                                }
-                                <li class="page-item mb-0 @(Model.HasNextPage ? "" : "disabled")">
-                                    <a class="page-link"
-                                       asp-area="Public" asp-controller="Places" asp-action="Index"
-                                       asp-route-page="@(Model.PageNumber + 1)"
-                                       asp-route-city="@Model.Filters.City"
-                                       asp-route-country="@Model.Filters.Country"
-                                       asp-route-ratingMin="@(Model.Filters.RatingMin is > 0 ? Model.Filters.RatingMin : null)"
-                                       asp-route-hasActiveTours="@(Model.Filters.HasActiveTours ? "true" : null)"><i class="fa-solid fa-angle-right"></i></a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-            }
+            <!-- Pagination (shared partial preserves query string, swaps page) -->
+            <partial name="_Pagination"
+                     model='new YallaJo.Web.Areas.Public.Models.Shared.PaginationVm { PageNumber = Model.PageNumber, TotalPages = Model.TotalPages, AriaLabel = Localizer["Public.Places.pagination"] }' />
         }
     </div>
 </section>

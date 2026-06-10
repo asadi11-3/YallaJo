@@ -11752,4 +11752,7 @@
 <data name="Public.Remove.from.wishlist" xml:space="preserve">
 <value>Remove from wishlist</value>
 </data>
+<data name="Public.RatingOutOfFive" xml:space="preserve">
+<value>Rated {0} out of 5</value>
+</data>
 </root>

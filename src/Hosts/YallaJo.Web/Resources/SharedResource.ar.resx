@@ -11752,4 +11752,7 @@
 <data name="Public.Remove.from.wishlist" xml:space="preserve">
 <value>إزالة من قائمة الأمنيات</value>
 </data>
+<data name="Public.RatingOutOfFive" xml:space="preserve">
+<value>التقييم {0} من 5</value>
+</data>
 </root>

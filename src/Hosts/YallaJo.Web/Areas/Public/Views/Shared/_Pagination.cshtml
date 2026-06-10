@@ -1,0 +1,51 @@
+@model YallaJo.Web.Areas.Public.Models.Shared.PaginationVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    // Builds hrefs that preserve every current query parameter and only swap "page".
+    string PageUrl(int page)
+    {
+        var query = new List<string>();
+        foreach (var kv in Context.Request.Query)
+        {
+            if (string.Equals(kv.Key, "page", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            foreach (var value in kv.Value)
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    query.Add($"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(value)}");
+                }
+            }
+        }
+
+        query.Add($"page={page}");
+        return $"{Context.Request.Path}?{string.Join("&", query)}";
+    }
+}
+@if (Model.TotalPages > 1)
+{
+    <nav class="d-flex justify-content-center mt-4" aria-label="@Model.AriaLabel">
+        <ul class="pagination pagination-primary-soft d-inline-block d-md-flex rounded mb-0">
+            <li class="page-item mb-0 @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" href="@(Model.HasPreviousPage ? PageUrl(Model.PageNumber - 1) : "#")" tabindex="@(Model.HasPreviousPage ? null : "-1")" aria-label="@Localizer["Public.Previous"]">
+                    <i class="fa-solid fa-angle-left" aria-hidden="true"></i>
+                </a>
+            </li>
+            @for (var i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item mb-0 @(i == Model.PageNumber ? "active" : "")" @(i == Model.PageNumber ? "aria-current=page" : "")>
+                    <a class="page-link" href="@PageUrl(i)">@i</a>
+                </li>
+            }
+            <li class="page-item mb-0 @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link" href="@(Model.HasNextPage ? PageUrl(Model.PageNumber + 1) : "#")" tabindex="@(Model.HasNextPage ? null : "-1")" aria-label="@Localizer["Public.Next"]">
+                    <i class="fa-solid fa-angle-right" aria-hidden="true"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+}

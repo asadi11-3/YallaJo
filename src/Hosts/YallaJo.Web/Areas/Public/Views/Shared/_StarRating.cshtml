@@ -1,0 +1,27 @@
+@*
+    Shared star rating snippet (replaces ad-hoc bi-star-fill rows).
+    ViewData knobs:
+      - value (decimal/double, required) average rating
+      - count (int, optional) review count; renders "(N)" when present
+*@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    var raw = ViewData["value"];
+    var value = raw switch
+    {
+        decimal d => d,
+        double db => (decimal)db,
+        int i => i,
+        _ => 0m
+    };
+    int? count = ViewData["count"] as int?;
+    var label = string.Format(Localizer["Public.RatingOutOfFive"].Value, value.ToString("0.0"));
+}
+<span class="small" role="img" aria-label="@label">
+    <i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i><span aria-hidden="true">@value.ToString("0.0")</span>
+    @if (count.HasValue)
+    {
+        <span class="text-body-secondary" aria-hidden="true">(@count.Value)</span>
+    }
+</span>

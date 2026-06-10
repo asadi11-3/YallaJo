@@ -112,92 +112,16 @@
             <div class="row g-4">
                 @foreach (var biz in Model.Businesses)
                 {
-                    <div class="col-sm-6 col-lg-4 col-xl-3">
-                        <div class="card shadow h-100">
-                            <div class="position-relative">
-                                @if (!string.IsNullOrEmpty(biz.ImageUrl))
-                                {
-                                    <img src="@biz.ImageUrl" class="card-img-top" style="height:200px;object-fit:cover;" alt="@biz.Name" />
-                                }
-                                else
-                                {
-                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height:200px;">
-                                        <i class="bi @TypeIcon(biz.BusinessType) display-5 text-secondary"></i>
-                                    </div>
-                                }
-                                <div class="card-img-overlay p-3 z-index-1">
-                                    @if (!string.IsNullOrEmpty(biz.BusinessType))
-                                    {
-                                        <div class="badge text-bg-dark"><i class="bi @TypeIcon(biz.BusinessType) me-1"></i>@biz.BusinessType</div>
-                                    }
-                                    @if (biz.IsVerified)
-                                    {
-                                        <div class="badge text-bg-success">@Localizer["Public.Verified"]</div>
-                                    }
-                                </div>
-                                <div class="position-absolute top-0 end-0 p-3 z-index-2">
-                                    @if (isAuthed)
-                                    {
-                                        <button type="button" class="btn btn-sm btn-light rounded-circle js-favorite" data-entity-type="Business" data-entity-id="@biz.Id" title="@Localizer["Public.Save"]">
-                                            <i class="bi bi-heart"></i>
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <button type="button" class="btn btn-sm btn-light rounded-circle" disabled data-bs-toggle="tooltip" title="@Localizer["Public.Log.in.to.save"]">
-                                            <i class="bi bi-heart"></i>
-                                        </button>
-                                    }
-                                </div>
-                            </div>
-
-                            <div class="card-body">
-                                @if (biz.IsFeatured)
-                                {
-                                    <div class="badge bg-danger bg-opacity-10 text-danger mb-2">@Localizer["Public.Featured"]</div>
-                                }
-                                <h5 class="card-title mb-2">
-                                    <a asp-area="Public" asp-controller="Directory" asp-action="Detail" asp-route-id="@biz.Id">@biz.Name</a>
-                                </h5>
-                                <ul class="list-group list-group-borderless mb-0">
-                                    @if (!string.IsNullOrEmpty(biz.Location))
-                                    {
-                                        <li class="list-group-item small pb-0">
-                                            <i class="bi bi-pin-map-fill fa-fw me-1"></i>@biz.Location
-                                        </li>
-                                    }
-                                    <li class="list-group-item small pb-0">
-                                        <i class="bi bi-star-fill fa-fw text-warning me-1"></i>@biz.AverageRating.ToString("0.0") <span class="text-body-secondary">(@Localizer["Public.Reviews.Count", biz.ReviewCount])</span>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div class="card-footer border-top">
-                                <a asp-area="Public" asp-controller="Directory" asp-action="Detail" asp-route-id="@biz.Id" class="btn btn-link p-0 mb-0">
-                                    View detail<i class="bi bi-arrow-right ms-1"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    @* Shared card partial (Phase 3.3 consistency: card-hover-shadow + col-md-6 col-xl-4 grid) *@
+                    <partial name="_BusinessCard"
+                             model="biz"
+                             view-data='@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-md-6 col-xl-4" } })' />
                 }
             </div>
 
-            @if (Model.TotalPages > 1)
-            {
-                <nav class="mt-5" aria-label="@Localizer["Public.Directory.pages"]">
-                    <ul class="pagination pagination-primary-soft justify-content-center mb-0">
-                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                            <a class="page-link" asp-area="Public" asp-controller="Directory" asp-action="Index"
-                               asp-route-q="@Model.Query" asp-route-businessType="@Model.SelectedBusinessType" asp-route-city="@Model.City" asp-route-page="@(Model.PageNumber - 1)">@Localizer["Public.Prev"]</a>
-                        </li>
-                        <li class="page-item disabled"><span class="page-link">@Localizer["Public.PageOf", Model.PageNumber, Model.TotalPages]</span></li>
-                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                            <a class="page-link" asp-area="Public" asp-controller="Directory" asp-action="Index"
-                               asp-route-q="@Model.Query" asp-route-businessType="@Model.SelectedBusinessType" asp-route-city="@Model.City" asp-route-page="@(Model.PageNumber + 1)">@Localizer["Public.Next"]</a>
-                        </li>
-                    </ul>
-                </nav>
-            }
+            @* Pagination (shared partial preserves query string, swaps page) *@
+            <partial name="_Pagination"
+                     model='new YallaJo.Web.Areas.Public.Models.Shared.PaginationVm { PageNumber = Model.PageNumber, TotalPages = Model.TotalPages, AriaLabel = Localizer["Public.Directory.pages"] }' />
         }
     </div>
 </section>
