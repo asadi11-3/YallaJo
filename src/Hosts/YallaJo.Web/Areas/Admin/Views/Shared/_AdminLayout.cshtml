@@ -14,7 +14,7 @@
     NOTE: assets/css/style.css already bundles Bootstrap v5.3.0, so no separate Bootstrap CSS link is loaded.
 *@
 @{
-    var displayName = User.Identity?.Name ?? "Account";
+    var displayName = User.Identity?.Name ?? Localizer["Admin.Layout.Account"].Value;
     var adminCulture = System.Globalization.CultureInfo.CurrentUICulture;
     var adminLang = adminCulture.TwoLetterISOLanguageName;
     var adminDir = adminCulture.TextInfo.IsRightToLeft ? "rtl" : "ltr";
@@ -157,8 +157,8 @@
             @* Logo START *@
             <div class="d-flex align-items-center">
                 <a class="navbar-brand" asp-area="Admin" asp-controller="Home" asp-action="Index">
-                    <img class="light-mode-item navbar-brand-item" src="~/assets/images/logo.svg" alt="logo" />
-                    <img class="dark-mode-item navbar-brand-item" src="~/assets/images/logo-light.svg" alt="logo" />
+                    <img class="light-mode-item navbar-brand-item" src="~/assets/images/logo.svg" alt="YallaJo" width="130" height="40" />
+                    <img class="dark-mode-item navbar-brand-item" src="~/assets/images/logo-light.svg" alt="YallaJo" width="130" height="40" />
                 </a>
             </div>
             @* Logo END *@
@@ -202,23 +202,23 @@
                         @* Logo START (mobile only) *@
                         <div class="d-flex align-items-center d-xl-none">
                             <a class="navbar-brand" asp-area="Admin" asp-controller="Home" asp-action="Index">
-                                <img class="navbar-brand-item h-40px" src="~/assets/images/logo-icon.svg" alt="logo" />
+                                <img class="navbar-brand-item h-40px" src="~/assets/images/logo-icon.svg" alt="YallaJo" width="40" height="40" />
                             </a>
                         </div>
                         @* Logo END *@
 
                         @* Sidebar toggler *@
                         <div class="navbar-expand-xl sidebar-offcanvas-menu">
-                            <button class="navbar-toggler me-auto p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar" aria-label="Toggle navigation">
-                                <i class="bi bi-list text-primary fa-fw"></i>
+                            <button class="navbar-toggler me-auto p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar" aria-label="@Localizer["Admin.Layout.ToggleNavigation"]">
+                                <i class="bi bi-list text-primary fa-fw" aria-hidden="true"></i>
                             </button>
                         </div>
 
                         @* Search START *@
                         <div class="navbar-collapse collapse">
                             <form class="position-relative ms-3 d-none d-md-block">
-                                <input class="form-control bg-light pe-5" type="search" placeholder="Search" aria-label="Search" />
-                                <button class="btn bg-transparent px-2 py-0 position-absolute top-50 end-0 translate-middle-y" type="submit"><i class="bi bi-search fs-5"></i></button>
+                                <input class="form-control bg-light pe-5" type="search" placeholder="@Localizer["Admin.Layout.Search"]" aria-label="@Localizer["Admin.Layout.Search"]" />
+                                <button class="btn bg-transparent px-2 py-0 position-absolute top-50 end-0 translate-middle-y" type="submit" aria-label="@Localizer["Admin.Layout.Search"]"><i class="bi bi-search fs-5" aria-hidden="true"></i></button>
                             </form>
                         </div>
                         @* Search END *@
@@ -237,26 +237,26 @@
 
                             @* Dark mode dropdown START *@
                             <li class="nav-item ms-3 dropdown">
-                                <button class="btn btn-light btn-round mb-0" type="button" id="bd-theme" data-bs-toggle="dropdown" aria-expanded="false" data-bs-display="static">
-                                    <svg width="16" height="16" class="theme-icon-active"><use href="#"></use></svg>
+                                <button class="btn btn-light btn-round mb-0" type="button" id="bd-theme" data-bs-toggle="dropdown" aria-expanded="false" data-bs-display="static" aria-label="@Localizer["Admin.Layout.ToggleTheme"]">
+                                    <svg width="16" height="16" class="theme-icon-active" aria-hidden="true"><use href="#"></use></svg>
                                 </button>
                                 <ul class="dropdown-menu min-w-auto dropdown-menu-end shadow" aria-labelledby="bd-theme">
                                     <li class="mb-1">
                                         <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light">
-                                            <svg width="16" height="16" class="me-2 opacity-50"><use href="#"></use><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path></svg>
-                                            Light
+                                            <svg width="16" height="16" class="me-2 opacity-50" aria-hidden="true"><use href="#"></use><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path></svg>
+                                            @Localizer["Admin.Layout.ThemeLight"]
                                         </button>
                                     </li>
                                     <li class="mb-1">
                                         <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark">
-                                            <svg width="16" height="16" class="me-2 opacity-50"><use href="#"></use><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"></path></svg>
-                                            Dark
+                                            <svg width="16" height="16" class="me-2 opacity-50" aria-hidden="true"><use href="#"></use><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"></path></svg>
+                                            @Localizer["Admin.Layout.ThemeDark"]
                                         </button>
                                     </li>
                                     <li>
                                         <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="auto">
-                                            <svg width="16" height="16" class="me-2 opacity-50"><use href="#"></use><path d="M8 15A7 7 0 1 0 8 1v14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"></path></svg>
-                                            Auto
+                                            <svg width="16" height="16" class="me-2 opacity-50" aria-hidden="true"><use href="#"></use><path d="M8 15A7 7 0 1 0 8 1v14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"></path></svg>
+                                            @Localizer["Admin.Layout.ThemeAuto"]
                                         </button>
                                     </li>
                                 </ul>
@@ -272,15 +272,15 @@
 
                                 @* Profile dropdown START *@
                                 <li class="nav-item ms-3 dropdown">
-                                    <a class="avatar avatar-sm p-0" href="#" id="profileDropdown" role="button" data-bs-auto-close="outside" data-bs-display="static" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <img class="avatar-img rounded-2" src="~/assets/images/avatar/01.jpg" alt="avatar" />
+                                    <a class="avatar avatar-sm p-0" href="#" id="profileDropdown" role="button" data-bs-auto-close="outside" data-bs-display="static" data-bs-toggle="dropdown" aria-expanded="false" aria-label="@displayName">
+                                        <img class="avatar-img rounded-2" src="~/assets/images/avatar/01.jpg" alt="@displayName" width="40" height="40" />
                                     </a>
 
                                     <ul class="dropdown-menu dropdown-animation dropdown-menu-end shadow pt-3" aria-labelledby="profileDropdown">
                                         <li class="px-3 mb-3">
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar me-3">
-                                                    <img class="avatar-img rounded-circle shadow" src="~/assets/images/avatar/01.jpg" alt="avatar" />
+                                                    <img class="avatar-img rounded-circle shadow" src="~/assets/images/avatar/01.jpg" alt="@displayName" width="48" height="48" />
                                                 </div>
                                                 <div>
                                                     <a class="h6 mt-2 mt-sm-0" href="#">@displayName</a>
@@ -289,13 +289,13 @@
                                         </li>
 
                                         <li><hr class="dropdown-divider" /></li>
-                                        <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Profile" asp-action="Index"><i class="bi bi-person fa-fw me-2"></i>My Profile</a></li>
-                                        <li><a class="dropdown-item" asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index"><i class="bi bi-shield-lock fa-fw me-2"></i>Change Password</a></li>
-                                        <li><a class="dropdown-item" asp-area="Auth" asp-controller="Sessions" asp-action="Index"><i class="bi bi-laptop fa-fw me-2"></i>Sessions</a></li>
+                                        <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Profile" asp-action="Index"><i class="bi bi-person fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Layout.MyProfile"]</a></li>
+                                        <li><a class="dropdown-item" asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index"><i class="bi bi-shield-lock fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Layout.ChangePassword"]</a></li>
+                                        <li><a class="dropdown-item" asp-area="Auth" asp-controller="Sessions" asp-action="Index"><i class="bi bi-laptop fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Layout.Sessions"]</a></li>
                                         <li>
                                             <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="d-grid">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="dropdown-item bg-danger-soft-hover text-danger"><i class="bi bi-power fa-fw me-2"></i>Sign Out</button>
+                                                <button type="submit" class="dropdown-item bg-danger-soft-hover text-danger"><i class="bi bi-power fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.SignOut"]</button>
                                             </form>
                                         </li>
                                     </ul>
@@ -305,7 +305,7 @@
                             else
                             {
                                 <li class="nav-item ms-3">
-                                    <a class="btn btn-primary mb-0" asp-area="Auth" asp-controller="Auth" asp-action="SignIn">Sign In</a>
+                                    <a class="btn btn-primary mb-0" asp-area="Auth" asp-controller="Auth" asp-action="SignIn">@Localizer["Admin.Layout.SignIn"]</a>
                                 </li>
                             }
                         </ul>
