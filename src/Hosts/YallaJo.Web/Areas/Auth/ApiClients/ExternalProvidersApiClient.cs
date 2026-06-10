@@ -8,6 +8,10 @@ public sealed class ExternalProvidersApiClient
     private readonly IApiClient _api;
     public ExternalProvidersApiClient(IApiClient api) => _api = api;
 
+    public Task<ApiResult<IReadOnlyList<LinkedProviderResponse>>> GetLinkedAsync(
+        CancellationToken ct = default)
+        => _api.GetAsync<IReadOnlyList<LinkedProviderResponse>>("/api/v1/auth/external-providers", ct);
+
     public Task<ApiResult<Guid>> LinkAsync(
         LinkExternalProviderRequest request,
         CancellationToken ct = default)

@@ -18,6 +18,7 @@ public sealed class AuthPermissionCatalog : IPermissionCatalog
         new(AuthFeatures.Device, AppAction.Update, PermissionGroup.SystemAccess, "Update own devices"),
         new(AuthFeatures.Device, AppAction.Delete, PermissionGroup.SystemAccess, "Revoke own devices"),
 
+        new(AuthFeatures.ExternalProvider, AppAction.Read,   PermissionGroup.SystemAccess, "View own linked external providers"),
         new(AuthFeatures.ExternalProvider, AppAction.Create, PermissionGroup.SystemAccess, "Link external providers"),
         new(AuthFeatures.ExternalProvider, AppAction.Delete, PermissionGroup.SystemAccess, "Unlink external providers"),
     ];

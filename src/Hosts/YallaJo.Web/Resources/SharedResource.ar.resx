@@ -7102,6 +7102,36 @@
   <data name="Auth.External.NoneAvailable" xml:space="preserve">
     <value>لا يوجد مزوّدو دخول خارجيون مهيّأون على هذا الخادم. يرجى التواصل مع المسؤول.</value>
   </data>
+  <data name="Auth.External.LinkedHeading" xml:space="preserve">
+    <value>الحسابات المرتبطة</value>
+  </data>
+  <data name="Auth.External.AvailableHeading" xml:space="preserve">
+    <value>ربط حساب آخر</value>
+  </data>
+  <data name="Auth.External.NoneLinked" xml:space="preserve">
+    <value>لا توجد حسابات خارجية مرتبطة بعد. يمكنك ربط حساب أدناه.</value>
+  </data>
+  <data name="Auth.External.LinkedAt" xml:space="preserve">
+    <value>تاريخ الربط</value>
+  </data>
+  <data name="Auth.External.Unlink" xml:space="preserve">
+    <value>إلغاء الربط</value>
+  </data>
+  <data name="Auth.External.UnlinkConfirm" xml:space="preserve">
+    <value>إلغاء ربط حساب {0}؟ لن تتمكن من تسجيل الدخول به بعد ذلك.</value>
+  </data>
+  <data name="Auth.External.UnlinkTitle" xml:space="preserve">
+    <value>إلغاء ربط الحساب</value>
+  </data>
+  <data name="Auth.External.ListUnavailable" xml:space="preserve">
+    <value>تعذّر تحميل حساباتك المرتبطة حاليًا. لا يزال الربط متاحًا؛ حاول مجددًا لاحقًا لإدارة الروابط الحالية.</value>
+  </data>
+  <data name="Auth.External.AlreadyLinked" xml:space="preserve">
+    <value>مرتبط</value>
+  </data>
+  <data name="Auth.Flash.ProviderUnlinked" xml:space="preserve">
+    <value>تم إلغاء ربط مزوّد الخدمة.</value>
+  </data>
   <data name="Auth.Complete.Title" xml:space="preserve">
     <value>جارٍ إتمام تسجيل الدخول</value>
   </data>

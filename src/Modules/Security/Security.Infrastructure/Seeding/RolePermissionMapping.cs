@@ -115,6 +115,17 @@ public sealed class RolePermissionMapping
             // F33 2026-05-30: User couldn't list own device tokens via /devices/tokens → 403
             "Permission.DeviceToken.Read",
 
+            // B5 2026-06-10: external-provider self-service (account security page).
+            // GET /auth/external-providers (Read, new), POST /auth/external-providers
+            // (Create) and DELETE /auth/external-providers/{id} (Delete) are all
+            // owner-enforced server-side (handlers 403 on non-owner; link consumes a
+            // BFF-signed single-use ticket), so granting consumer-wide does not widen
+            // blast radius. These are SystemAccess-group permissions, never swept —
+            // without this grant regular users 403 on the whole linked-providers flow.
+            "Permission.ExternalProvider.Read",
+            "Permission.ExternalProvider.Create",
+            "Permission.ExternalProvider.Delete",
+
             // F44 2026-05-30: User couldn't apply to become provider via /provider/apply → 403
             // Real perms: /apply requires AccountsFeatures.ProviderApplication+AppAction.Submit
             // and /register requires AccountsFeatures.ProviderApplication+AppAction.Register

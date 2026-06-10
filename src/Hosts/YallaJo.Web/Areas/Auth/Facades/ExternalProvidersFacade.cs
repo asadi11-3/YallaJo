@@ -21,6 +21,49 @@ public sealed class ExternalProvidersFacade
         _ticketBuilder = ticketBuilder;
     }
 
+    /// <summary>
+    /// Fetches the user's active linked providers (B5) mapped to display VMs with the
+    /// provider e-mail already masked. 401 signs the local cookie out; any other failure
+    /// returns Fail so the page can degrade to link-buttons-only instead of crashing.
+    /// </summary>
+    public async Task<ApiResult<IReadOnlyList<LinkedProviderVm>>> GetLinkedAsync(
+        CancellationToken ct = default)
+    {
+        var result = await _api.GetLinkedAsync(ct);
+
+        if (result.IsSuccess)
+        {
+            IReadOnlyList<LinkedProviderVm> vms = (result.Data ?? [])
+                .Select(r => new LinkedProviderVm
+                {
+                    ProviderId  = r.ProviderId,
+                    Provider    = r.Provider,
+                    MaskedEmail = MaskEmail(r.ProviderEmail),
+                    LinkedAt    = r.LinkedAt,
+                })
+                .ToList();
+            return ApiResult<IReadOnlyList<LinkedProviderVm>>.Ok(vms);
+        }
+
+        if (result.IsUnauthorized)
+        {
+            await _signIn.SignOutAsync();
+            return ApiResult<IReadOnlyList<LinkedProviderVm>>.ForceSignOut();
+        }
+
+        return ApiResult<IReadOnlyList<LinkedProviderVm>>.Fail(
+            result.StatusCode, result.Error ?? "Could not load linked providers.");
+    }
+
+    /// <summary>"j***@example.com" — limits PII on screen; empty when no e-mail.</summary>
+    private static string MaskEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return string.Empty;
+        var at = email.IndexOf('@');
+        if (at <= 0) return "***";
+        return $"{email[0]}***{email[at..]}";
+    }
+
     public string BuildTicket(
         string provider,
         string providerUserId,

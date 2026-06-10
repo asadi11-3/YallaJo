@@ -1,12 +1,14 @@
 using Auth.Application.Commands.ExternalLogin;
 using Auth.Application.Commands.LinkExternalProvider;
 using Auth.Application.Commands.UnlinkExternalProvider;
+using Auth.Application.Queries.ListLinkedProviders;
 using Auth.Contracts.Authorization;
 using Auth.Presentation.Endpoints.ExternalProvider.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
@@ -17,6 +19,31 @@ internal static class ExternalProviderEndpoints
 {
     internal static void MapExternalProviderEndpoints(RouteGroupBuilder group)
     {
+        // ── List: the current user's ACTIVE linked providers ─────────────────
+        // B5 (2026-06-10): supersedes the earlier "no GET-list endpoint" decision —
+        // the account-security page needs link state to drive the unlink UI. The
+        // projection is deliberately minimal: ProviderId (the link's own id, needed
+        // for unlink), provider name, provider-reported e-mail and link date.
+        // ProviderUserId / tokens / raw provider payloads are never exposed.
+        group.MapGet("/external-providers", async (
+            ICurrentUser currentUser,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+                return Results.Unauthorized();
+
+            var result = await sender.Send(
+                new ListLinkedProvidersQuery(currentUser.UserId.Value), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ListLinkedExternalProviders")
+        .Produces<IReadOnlyList<LinkedProviderDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .WithSummary("List the current user's linked external OAuth providers")
+        .WithMetadata(new MustHavePermissionAttribute(AuthFeatures.ExternalProvider, AppAction.Read))
+        .RequireAuthorization();
+
         // ── Link: authenticated user binds a verified external identity ──────
         group.MapPost("/external-providers", async (
             LinkExternalProviderRequest request,

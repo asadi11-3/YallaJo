@@ -7102,6 +7102,36 @@
   <data name="Auth.External.NoneAvailable" xml:space="preserve">
     <value>No external providers are configured on this server. Please contact your administrator.</value>
   </data>
+  <data name="Auth.External.LinkedHeading" xml:space="preserve">
+    <value>Linked accounts</value>
+  </data>
+  <data name="Auth.External.AvailableHeading" xml:space="preserve">
+    <value>Link another account</value>
+  </data>
+  <data name="Auth.External.NoneLinked" xml:space="preserve">
+    <value>No external accounts are linked yet. You can link one below.</value>
+  </data>
+  <data name="Auth.External.LinkedAt" xml:space="preserve">
+    <value>Linked on</value>
+  </data>
+  <data name="Auth.External.Unlink" xml:space="preserve">
+    <value>Unlink</value>
+  </data>
+  <data name="Auth.External.UnlinkConfirm" xml:space="preserve">
+    <value>Unlink your {0} account? You will no longer be able to sign in with it.</value>
+  </data>
+  <data name="Auth.External.UnlinkTitle" xml:space="preserve">
+    <value>Unlink account</value>
+  </data>
+  <data name="Auth.External.ListUnavailable" xml:space="preserve">
+    <value>Your linked accounts could not be loaded right now. Linking still works; try again later to manage existing links.</value>
+  </data>
+  <data name="Auth.External.AlreadyLinked" xml:space="preserve">
+    <value>Linked</value>
+  </data>
+  <data name="Auth.Flash.ProviderUnlinked" xml:space="preserve">
+    <value>Provider unlinked.</value>
+  </data>
   <data name="Auth.Complete.Title" xml:space="preserve">
     <value>Completing sign-in</value>
   </data>
