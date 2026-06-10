@@ -135,7 +135,7 @@
     {
         <div class="modal fade" id="delete-waypoint-@w.Id" tabindex="-1" aria-labelledby="delete-waypoint-title-@w.Id" aria-describedby="delete-waypoint-body-@w.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-waypointId="@w.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-waypointId="@w.Id" method="post" class="modal-content">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h2 class="modal-title h5" id="delete-waypoint-title-@w.Id">@Localizer["Provider.TourWaypoints.DeleteTitle"]</h2>

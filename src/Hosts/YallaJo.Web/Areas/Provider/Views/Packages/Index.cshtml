@@ -199,7 +199,7 @@
     {
         <div class="modal fade" id="del-pkg-@p.Id.ToString("N")" tabindex="-1" aria-labelledby="del-pkg-title-@p.Id.ToString("N")" aria-describedby="del-pkg-body-@p.Id.ToString("N")" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-action="Delete" asp-route-id="@p.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                <form asp-action="Delete" asp-route-id="@p.Id" method="post" class="modal-content">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h2 class="modal-title h5" id="del-pkg-title-@p.Id.ToString("N")">@Localizer["Provider.Packages.DeleteTitle"]</h2>

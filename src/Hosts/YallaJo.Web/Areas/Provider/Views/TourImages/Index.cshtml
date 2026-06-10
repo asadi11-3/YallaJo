@@ -120,7 +120,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <form asp-area="Provider" asp-controller="TourImages" asp-action="Delete"
                       asp-route-id="@Model.TourId" asp-route-attachmentId="@img.Id"
-                      method="post" class="modal-content" role="dialog" aria-modal="true">
+                      method="post" class="modal-content">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h2 class="modal-title h5" id="delete-image-title-@img.Id">@Localizer["Provider.TourImages.DeleteTitle"]</h2>

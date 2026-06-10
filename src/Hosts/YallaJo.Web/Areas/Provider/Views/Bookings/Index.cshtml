@@ -242,7 +242,7 @@
                         {
                             <div class="modal fade" id="rejectBookingModal" tabindex="-1" aria-labelledby="rejectBookingTitle" aria-describedby="rejectBookingBody" data-bs-backdrop="static" data-bs-keyboard="false">
                                 <div class="modal-dialog modal-dialog-centered">
-                                    <form asp-action="RejectBooking" asp-route-id="@b.Id" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="rejectBookingTitle">
+                                    <form asp-action="RejectBooking" asp-route-id="@b.Id" method="post" class="modal-content">
                                         @Html.AntiForgeryToken()
                                         <div class="modal-header">
                                             <h2 class="modal-title h5" id="rejectBookingTitle">@Localizer["Provider.Bookings.RejectModalTitle"]</h2>
@@ -273,7 +273,7 @@
 {
     <div class="modal fade" id="declineJoin-@jr.Id.ToString("N")" tabindex="-1" aria-labelledby="declineJoinTitle-@jr.Id.ToString("N")" aria-describedby="declineJoinBody-@jr.Id.ToString("N")" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
-            <form asp-action="RejectJoin" asp-route-id="@jr.Id" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="declineJoinTitle-@jr.Id.ToString("N")">
+            <form asp-action="RejectJoin" asp-route-id="@jr.Id" method="post" class="modal-content">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h2 class="modal-title h5" id="declineJoinTitle-@jr.Id.ToString("N")">@Localizer["Provider.Bookings.DeclineModalTitle"]</h2>

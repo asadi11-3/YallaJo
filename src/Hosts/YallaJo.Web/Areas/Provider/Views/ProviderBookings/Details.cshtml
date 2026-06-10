@@ -182,7 +182,7 @@
     <permission require="@WebPermission.TourBooking.Complete">
         <div class="modal fade" id="completeModal" tabindex="-1" aria-labelledby="complete-title" aria-describedby="complete-body" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-action="Complete" asp-route-id="@Model.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                <form asp-action="Complete" asp-route-id="@Model.Id" method="post" class="modal-content">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h2 class="modal-title h5" id="complete-title">@Localizer["Provider.ProviderBookings.CompleteTitle"]</h2>
@@ -204,7 +204,7 @@
     <permission require="@WebPermission.TourBooking.Reject">
         <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="reject-title" aria-describedby="reject-help" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-action="Reject" asp-route-id="@Model.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                <form asp-action="Reject" asp-route-id="@Model.Id" method="post" class="modal-content">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h2 class="modal-title h5" id="reject-title">@Localizer["Provider.ProviderBookings.RejectTitle"]</h2>
@@ -230,7 +230,7 @@
     <permission require="@WebPermission.TourBooking.Cancel">
         <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancel-title" aria-describedby="cancel-help" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="modal-content">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h2 class="modal-title h5" id="cancel-title">@Localizer["Provider.ProviderBookings.CancelTitle"]</h2>

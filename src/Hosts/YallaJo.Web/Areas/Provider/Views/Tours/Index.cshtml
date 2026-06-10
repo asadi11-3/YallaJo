@@ -188,7 +188,7 @@
             <permission require="@WebPermission.Tour.Archive">
                 <div class="modal fade" id="archive-tour-@row.Id" tabindex="-1" aria-labelledby="archive-tour-title-@row.Id" aria-describedby="archive-tour-body-@row.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                     <div class="modal-dialog modal-dialog-centered">
-                        <form asp-area="Provider" asp-controller="Tours" asp-action="Archive" asp-route-id="@row.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                        <form asp-area="Provider" asp-controller="Tours" asp-action="Archive" asp-route-id="@row.Id" method="post" class="modal-content">
                             @Html.AntiForgeryToken()
                             <div class="modal-header">
                                 <h2 class="modal-title h5" id="archive-tour-title-@row.Id">@Localizer["Provider.Tours.ArchiveTitle"]</h2>
@@ -207,7 +207,7 @@
         <permission require="@WebPermission.Tour.DeleteOwn">
             <div class="modal fade" id="delete-tour-@row.Id" tabindex="-1" aria-labelledby="delete-tour-title-@row.Id" aria-describedby="delete-tour-body-@row.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form asp-area="Provider" asp-controller="Tours" asp-action="Delete" asp-route-id="@row.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                    <form asp-area="Provider" asp-controller="Tours" asp-action="Delete" asp-route-id="@row.Id" method="post" class="modal-content">
                         @Html.AntiForgeryToken()
                         <div class="modal-header">
                             <h2 class="modal-title h5" id="delete-tour-title-@row.Id">@Localizer["Provider.Tours.DeleteTitle"]</h2>

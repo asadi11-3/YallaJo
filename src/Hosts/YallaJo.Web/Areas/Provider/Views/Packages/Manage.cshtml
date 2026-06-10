@@ -123,7 +123,7 @@
 <permission require="@WebPermission.Package.Delete">
     <div class="modal fade" id="del-pkg-modal" tabindex="-1" aria-labelledby="del-pkg-modal-title" aria-describedby="del-pkg-modal-body" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
-            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="modal-content">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h2 class="modal-title h5" id="del-pkg-modal-title">@Localizer["Provider.Packages.DeleteTitle"]</h2>

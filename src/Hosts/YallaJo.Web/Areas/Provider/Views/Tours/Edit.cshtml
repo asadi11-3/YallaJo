@@ -98,7 +98,7 @@
     <permission require="@WebPermission.Tour.Archive">
         <div class="modal fade" id="archive-listing-modal" tabindex="-1" aria-labelledby="archive-listing-title" aria-describedby="archive-listing-body" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-area="Provider" asp-controller="Tours" asp-action="Archive" asp-route-id="@Model.TourId" method="post" class="modal-content" role="dialog" aria-modal="true">
+                <form asp-area="Provider" asp-controller="Tours" asp-action="Archive" asp-route-id="@Model.TourId" method="post" class="modal-content">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h2 class="modal-title h5" id="archive-listing-title">@Localizer["Provider.Tours.ArchiveTitle"]</h2>

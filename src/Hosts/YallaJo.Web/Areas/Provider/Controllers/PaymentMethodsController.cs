@@ -2,12 +2,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Provider.Facades;
 using YallaJo.Web.Areas.Provider.Models.PaymentMethods;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
 
+/// <summary>
+/// Provider payout payment methods. The standalone page was retired into the Finance
+/// hub (Methods tab); <see cref="Index"/> remains only as a permanent redirect so old
+/// links keep working. All write actions PRG back to the Finance hub.
+/// </summary>
 [Area("Provider")]
 [Authorize]
 [RequirePermission(WebPermission.ProviderPaymentMethod.Read)]
@@ -17,33 +21,17 @@ public sealed class PaymentMethodsController : BaseController
 
     public PaymentMethodsController(ProviderPaymentMethodsFacade paymentMethods) => _paymentMethods = paymentMethods;
 
+    /// <summary>Retired page — 301 into the Finance hub's Methods tab.</summary>
     [HttpGet("provider/payment-methods")]
-    public async Task<IActionResult> Index(CancellationToken ct = default)
-    {
-        SetSidebar();
-
-        var result = await _paymentMethods.GetAsync(ct);
-        if (GuardSignOut(result) is { } signOut)
-            return signOut;
-
-        if (!result.IsSuccess || result.Data is null)
-        {
-            SetError(result.Error);
-            return View(new PaymentMethodsVm());
-        }
-
-        return View(result.Data);
-    }
+    public IActionResult Index() => RedirectPermanent("/provider/finance#methods");
 
     [HttpPost("provider/payment-methods/create")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.ProviderPaymentMethod.Create)]
     public async Task<IActionResult> Create(CreatePaymentMethodFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
-
         if (!ModelState.IsValid)
-            return await ReloadAsync(form, ct);
+            return BackToFinanceWithModelErrors();
 
         var result = await _paymentMethods.CreateAsync(form, ct);
         if (GuardSignOut(result) is { } signOut)
@@ -51,13 +39,12 @@ public sealed class PaymentMethodsController : BaseController
 
         if (!result.IsSuccess)
         {
-            if (!ApplyValidationErrors(result))
-                SetError(result.Error);
-            return await ReloadAsync(form, ct);
+            SetError(result.Error ?? "Could not add the payment method.");
+            return RedirectToFinanceMethods();
         }
 
         SetSuccess("Payment method added.");
-        return RedirectToAction("Index", "Finance");
+        return RedirectToFinanceMethods();
     }
 
     [HttpPost("provider/payment-methods/{id:guid}/edit")]
@@ -65,10 +52,8 @@ public sealed class PaymentMethodsController : BaseController
     [RequirePermission(WebPermission.ProviderPaymentMethod.Update)]
     public async Task<IActionResult> Edit(Guid id, CreatePaymentMethodFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
-
         if (!ModelState.IsValid)
-            return await ReloadAsync(form, ct);
+            return BackToFinanceWithModelErrors();
 
         var result = await _paymentMethods.UpdateAsync(id, form, ct);
         if (GuardSignOut(result) is { } signOut)
@@ -76,13 +61,12 @@ public sealed class PaymentMethodsController : BaseController
 
         if (!result.IsSuccess)
         {
-            if (!ApplyValidationErrors(result))
-                SetError(result.Error);
-            return await ReloadAsync(form, ct);
+            SetError(result.Error ?? "Could not update the payment method.");
+            return RedirectToFinanceMethods();
         }
 
         SetSuccess("Payment method updated.");
-        return RedirectToAction("Index", "Finance");
+        return RedirectToFinanceMethods();
     }
 
     [HttpPost("provider/payment-methods/{id:guid}/delete")]
@@ -95,20 +79,23 @@ public sealed class PaymentMethodsController : BaseController
             return signOut;
 
         SetFlash(result, "Payment method deleted.", "Could not delete the payment method.");
-        return RedirectToAction("Index", "Finance");
+        return RedirectToFinanceMethods();
     }
 
-    private async Task<IActionResult> ReloadAsync(CreatePaymentMethodFormVm form, CancellationToken ct)
+    /// <summary>
+    /// PRG fallback for invalid form posts: flash the first model error and bounce back
+    /// to the Finance hub's Methods tab (the standalone view no longer exists).
+    /// </summary>
+    private IActionResult BackToFinanceWithModelErrors()
     {
-        var result = await _paymentMethods.GetAsync(ct);
-        var vm = result is { IsSuccess: true, Data: { } data } ? data : new PaymentMethodsVm();
-        vm.Form = form;
-        return View(nameof(Index), vm);
+        var firstError = ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage)
+            .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
+
+        SetError(firstError ?? "Please correct the highlighted fields and try again.");
+        return RedirectToFinanceMethods();
     }
 
-    private void SetSidebar()
-    {
-        ViewData["ProviderNav"] = "PaymentMethods";
-        ViewBag.Sidebar = new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
-    }
+    private IActionResult RedirectToFinanceMethods() => Redirect("/provider/finance#methods");
 }

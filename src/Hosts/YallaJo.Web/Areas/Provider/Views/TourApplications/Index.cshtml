@@ -129,7 +129,7 @@
          data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form asp-area="Provider" asp-controller="TourApplications" asp-action="Close" asp-route-id="@Model.TourId" method="post"
-                  class="modal-content" role="dialog" aria-modal="true">
+                  class="modal-content">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h2 class="modal-title h5" id="close-apps-title">@Localizer["Provider.TourApplications.CloseTitle"]</h2>
@@ -158,7 +158,7 @@
                 <div class="modal-dialog modal-dialog-centered">
                     <form asp-area="Provider" asp-controller="TourApplications" asp-action="Reject"
                           asp-route-id="@Model.TourId" asp-route-applicationId="@a.ApplicationId" method="post"
-                          class="modal-content" role="dialog" aria-modal="true">
+                          class="modal-content">
                         @Html.AntiForgeryToken()
                         <div class="modal-header">
                             <h2 class="modal-title h5" id="reject-title-@a.ApplicationId">@Localizer["Provider.TourApplications.RejectTitle"]</h2>

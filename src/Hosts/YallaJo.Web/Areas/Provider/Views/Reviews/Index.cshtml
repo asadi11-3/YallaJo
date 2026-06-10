@@ -196,7 +196,7 @@
         {
             <div class="modal fade" id="delete-reply-@r.Id" tabindex="-1" aria-labelledby="delete-reply-title-@r.Id" aria-describedby="delete-reply-body-@r.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form method="post" class="modal-content" role="dialog" aria-modal="true"
+                    <form method="post" class="modal-content"
                           asp-area="Provider" asp-controller="Reviews" asp-action="DeleteReply"
                           asp-route-id="@r.Id" asp-route-replyId="@r.ReplyId" asp-route-tourId="@Model.SelectedTourId">
                         @Html.AntiForgeryToken()

@@ -141,7 +141,7 @@
     {
         <div class="modal fade" id="delete-tier-@tier.Id" tabindex="-1" aria-labelledby="delete-tier-title-@tier.Id" aria-describedby="delete-tier-body-@tier.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-area="Provider" asp-controller="TourPricing" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-tierId="@tier.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
+                <form asp-area="Provider" asp-controller="TourPricing" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-tierId="@tier.Id" method="post" class="modal-content">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h2 class="modal-title h5" id="delete-tier-title-@tier.Id">@Localizer["Provider.TourPricing.DeleteTitle"]</h2>

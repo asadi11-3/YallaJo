@@ -122,7 +122,7 @@
         var bodyId = "delete-schedule-body-" + s.Id;
         <div class="modal fade" id="delete-schedule-@s.Id" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bodyId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" role="dialog" aria-modal="true" asp-area="Provider" asp-controller="TourSchedules" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id" method="post">
+                <form class="modal-content" asp-area="Provider" asp-controller="TourSchedules" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id" method="post">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h2 class="modal-title h5" id="@titleId">@Localizer["Provider.TourSchedules.DeleteTitle"]</h2>

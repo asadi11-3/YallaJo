@@ -85,12 +85,14 @@
                             <i class="fa-solid fa-building-columns me-1" aria-hidden="true"></i>@Localizer["Provider.Finance.TabPayouts"]
                         </button>
                     </li>
-                    <li class="nav-item" role="presentation">
+                    @* "invoices" / "methods" ids are permanent-redirect anchor targets for the
+                       retired /provider/invoices and /provider/payment-methods pages. *@
+                    <li class="nav-item" role="presentation" id="invoices">
                         <button class="nav-link" id="tab-invoices" data-bs-toggle="tab" data-bs-target="#pane-invoices" type="button" role="tab" aria-controls="pane-invoices" aria-selected="false">
                             <i class="fa-solid fa-receipt me-1" aria-hidden="true"></i>@Localizer["Provider.Finance.TabInvoices"]
                         </button>
                     </li>
-                    <li class="nav-item" role="presentation">
+                    <li class="nav-item" role="presentation" id="methods">
                         <button class="nav-link" id="tab-methods" data-bs-toggle="tab" data-bs-target="#pane-methods" type="button" role="tab" aria-controls="pane-methods" aria-selected="false">
                             <i class="fa-solid fa-credit-card me-1" aria-hidden="true"></i>@Localizer["Provider.Finance.TabMethods"]
                         </button>
@@ -373,7 +375,7 @@
                                 {
                                     <div class="modal fade" id="fin-del-@m.Id" tabindex="-1" aria-labelledby="fin-del-title-@m.Id" aria-describedby="fin-del-body-@m.Id" data-bs-backdrop="static" data-bs-keyboard="false">
                                         <div class="modal-dialog modal-dialog-centered">
-                                            <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Delete" asp-route-id="@m.Id" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="fin-del-title-@m.Id">
+                                            <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Delete" asp-route-id="@m.Id" method="post" class="modal-content">
                                                 @Html.AntiForgeryToken()
                                                 <div class="modal-header">
                                                     <h2 class="modal-title h5" id="fin-del-title-@m.Id">@Localizer["Provider.Finance.DeleteModalTitle"]</h2>
