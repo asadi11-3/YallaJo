@@ -11,14 +11,16 @@ public sealed class AcceptInviteVm
     [Required]
     public string Token { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Password is required.")]
-    [StringLength(128, MinimumLength = 8, ErrorMessage = "Password must be between 8 and 128 characters.")]
+    // ErrorMessage values are SharedResource resx KEYS (en + ar) — see Program.cs
+    // DataAnnotationLocalizerProvider (CON1). The label is localized in the view via
+    // @Localizer["Auth.Field.ConfirmPassword"], so no English [Display] name here.
+    [Required(ErrorMessage = "Auth.Validation.PasswordRequired")]
+    [StringLength(128, MinimumLength = 8, ErrorMessage = "Auth.Validation.PasswordLength")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Please confirm your password.")]
-    [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+    [Required(ErrorMessage = "Auth.Validation.ConfirmPasswordRequired")]
+    [Compare(nameof(Password), ErrorMessage = "Auth.Validation.PasswordsMismatch")]
     [DataType(DataType.Password)]
-    [Display(Name = "Confirm password")]
     public string ConfirmPassword { get; set; } = string.Empty;
 }

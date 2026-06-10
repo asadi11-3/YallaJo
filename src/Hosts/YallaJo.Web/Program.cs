@@ -215,7 +215,14 @@ var mvcBuilder  = builder.Services.AddControllersWithViews(options =>
 
     })
     .AddViewLocalization()
-    .AddDataAnnotationsLocalization();
+    // DataAnnotations messages resolve against the single SharedResource (CON1): VM
+    // attributes carry resx KEYS (e.g. ErrorMessage = "Auth.Validation.EmailRequired")
+    // and this provider looks them up in Resources/SharedResource.{culture}.resx.
+    // Unknown keys fall back to the literal string, so legacy English messages keep
+    // rendering unchanged until they are migrated to keys.
+    .AddDataAnnotationsLocalization(options =>
+        options.DataAnnotationLocalizerProvider = (_, factory) =>
+            factory.Create(typeof(YallaJo.Web.Resources.SharedResource)));
 
 #if DEBUG
 // Razor runtime compilation watches the filesystem and recompiles views on

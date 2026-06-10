@@ -47,13 +47,13 @@
                                     <div class="row">
                                         <!-- First name -->
                                         <div class="mb-3 col-sm-6">
-                                            <label asp-for="FirstName" class="form-label"></label>
+                                            <label asp-for="FirstName" class="form-label">@Localizer["Auth.Field.FirstName"]</label>
                                             <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
                                             <span asp-validation-for="FirstName" class="text-danger small"></span>
                                         </div>
                                         <!-- Last name -->
                                         <div class="mb-3 col-sm-6">
-                                            <label asp-for="LastName" class="form-label"></label>
+                                            <label asp-for="LastName" class="form-label">@Localizer["Auth.Field.LastName"]</label>
                                             <input asp-for="LastName" class="form-control" autocomplete="family-name" />
                                             <span asp-validation-for="LastName" class="text-danger small"></span>
                                         </div>
@@ -61,14 +61,14 @@
 
                                     <!-- Email -->
                                     <div class="mb-3">
-                                        <label asp-for="Email" class="form-label"></label>
+                                        <label asp-for="Email" class="form-label">@Localizer["Auth.Field.Email"]</label>
                                         <input asp-for="Email" class="form-control" type="email" dir="ltr" autocomplete="email" />
                                         <span asp-validation-for="Email" class="text-danger small"></span>
                                     </div>
 
                                     <!-- Password -->
                                     <div class="mb-3 position-relative">
-                                        <label asp-for="Password" class="form-label"></label>
+                                        <label asp-for="Password" class="form-label">@Localizer["Auth.Field.Password"]</label>
                                         <input asp-for="Password" class="form-control fakepassword" id="psw-input" type="password" autocomplete="new-password" />
                                         <span class="position-absolute top-50 end-0 translate-middle-y p-0 mt-3">
                                             <i class="fakepasswordicon fas fa-eye-slash cursor-pointer p-2"></i>

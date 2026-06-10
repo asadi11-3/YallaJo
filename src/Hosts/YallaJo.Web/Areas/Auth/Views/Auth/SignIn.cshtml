@@ -20,7 +20,7 @@
                         <!-- Vector image -->
                         <div class="col-lg-6 d-flex align-items-center order-2 order-lg-1">
                             <div class="p-3 p-lg-5">
-                                <img src="~/assets/images/element/signin.svg" alt="Sign in illustration">
+                                <img src="~/assets/images/element/signin.svg" alt="" aria-hidden="true">
                             </div>
                             <!-- Divider -->
                             <div class="vr opacity-1 d-none d-lg-block"></div>
@@ -63,7 +63,7 @@
                                     <!-- Password -->
                                     <div class="mb-3 position-relative">
                                         <label asp-for="Password" class="form-label">@Localizer["Auth.Field.Password"]</label>
-                                        <input asp-for="Password" class="form-control fakepassword" id="psw-input" autocomplete="current-password" />
+                                        <input asp-for="Password" type="password" class="form-control fakepassword" id="psw-input" autocomplete="current-password" />
                                         <span class="position-absolute top-50 end-0 translate-middle-y p-0 mt-3 me-2">
                                             <i class="fakepasswordicon fas fa-eye-slash cursor-pointer p-2"></i>
                                         </span>

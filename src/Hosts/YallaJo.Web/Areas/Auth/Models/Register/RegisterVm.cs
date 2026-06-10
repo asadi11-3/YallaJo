@@ -2,25 +2,26 @@ using System.ComponentModel.DataAnnotations;
 
 namespace YallaJo.Web.Areas.Auth.Models.Register;
 
+// DataAnnotation ErrorMessage values are SharedResource resx KEYS (en + ar), resolved by
+// the DataAnnotationLocalizerProvider configured in Program.cs (CON1). Field labels are
+// localized in the SignUp view via @Localizer (no English [Display] names here).
 public sealed class RegisterVm
 {
-    [Required(ErrorMessage = "First name is required.")]
-    [StringLength(100, ErrorMessage = "First name must be 100 characters or fewer.")]
-    [Display(Name = "First name")]
+    [Required(ErrorMessage = "Auth.Validation.FirstNameRequired")]
+    [StringLength(100, ErrorMessage = "Auth.Validation.FirstNameLength")]
     public string FirstName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Last name is required.")]
-    [StringLength(100, ErrorMessage = "Last name must be 100 characters or fewer.")]
-    [Display(Name = "Last name")]
+    [Required(ErrorMessage = "Auth.Validation.LastNameRequired")]
+    [StringLength(100, ErrorMessage = "Auth.Validation.LastNameLength")]
     public string LastName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Email is required.")]
-    [EmailAddress(ErrorMessage = "Enter a valid email address.")]
-    [StringLength(320, ErrorMessage = "Email must be 320 characters or fewer.")]
+    [Required(ErrorMessage = "Auth.Validation.EmailRequired")]
+    [EmailAddress(ErrorMessage = "Auth.Validation.EmailInvalid")]
+    [StringLength(320, ErrorMessage = "Auth.Validation.EmailLength")]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Password is required.")]
-    [StringLength(128, MinimumLength = 8, ErrorMessage = "Password must be between 8 and 128 characters.")]
+    [Required(ErrorMessage = "Auth.Validation.PasswordRequired")]
+    [StringLength(128, MinimumLength = 8, ErrorMessage = "Auth.Validation.PasswordLength")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
 

@@ -7099,6 +7099,54 @@
   <data name="Auth.Field.ConfirmPassword" xml:space="preserve">
     <value>Confirm password</value>
   </data>
+  <data name="Auth.Field.FirstName" xml:space="preserve">
+    <value>First name</value>
+  </data>
+  <data name="Auth.Field.LastName" xml:space="preserve">
+    <value>Last name</value>
+  </data>
+  <data name="Auth.Validation.FirstNameRequired" xml:space="preserve">
+    <value>First name is required.</value>
+  </data>
+  <data name="Auth.Validation.FirstNameLength" xml:space="preserve">
+    <value>First name must be 100 characters or fewer.</value>
+  </data>
+  <data name="Auth.Validation.LastNameRequired" xml:space="preserve">
+    <value>Last name is required.</value>
+  </data>
+  <data name="Auth.Validation.LastNameLength" xml:space="preserve">
+    <value>Last name must be 100 characters or fewer.</value>
+  </data>
+  <data name="Auth.Validation.EmailRequired" xml:space="preserve">
+    <value>Email is required.</value>
+  </data>
+  <data name="Auth.Validation.EmailInvalid" xml:space="preserve">
+    <value>Enter a valid email address.</value>
+  </data>
+  <data name="Auth.Validation.EmailLength" xml:space="preserve">
+    <value>Email must be 320 characters or fewer.</value>
+  </data>
+  <data name="Auth.Validation.PasswordRequired" xml:space="preserve">
+    <value>Password is required.</value>
+  </data>
+  <data name="Auth.Validation.PasswordLength" xml:space="preserve">
+    <value>Password must be between 8 and 128 characters.</value>
+  </data>
+  <data name="Auth.Validation.PasswordMinLength" xml:space="preserve">
+    <value>Password must be at least 8 characters.</value>
+  </data>
+  <data name="Auth.Validation.NewPasswordRequired" xml:space="preserve">
+    <value>New password is required.</value>
+  </data>
+  <data name="Auth.Validation.ConfirmPasswordRequired" xml:space="preserve">
+    <value>Please confirm your password.</value>
+  </data>
+  <data name="Auth.Validation.PasswordsMismatch" xml:space="preserve">
+    <value>Passwords do not match.</value>
+  </data>
+  <data name="Auth.Validation.OtpRequired" xml:space="preserve">
+    <value>OTP code is required.</value>
+  </data>
   <data name="Auth.Social.Google" xml:space="preserve">
     <value>Sign in with Google</value>
   </data>
