@@ -12286,4 +12286,16 @@
 <data name="Home.Empty.Text" xml:space="preserve">
 <value>Ù†Ø®ØªØ§Ø± Ù„Ùƒ Ø§Ù„Ø¬ÙˆÙ„Ø§Øª ÙˆØ§Ù„ØªØ¬Ø§Ø±Ø¨ Ø¨Ø¹Ù†Ø§ÙŠØ©. Ø¹ÙØ¯ Ù‚Ø±ÙŠØ¨Ø§Ù‹.</value>
 </data>
+<data name="Home.Trust.Title" xml:space="preserve">
+<value>تقييمات حقيقية من مسافرين حقيقيين</value>
+</data>
+<data name="Home.Trust.Text" xml:space="preserve">
+<value>كل تقييم على يلا جو يأتي من حجز مُوثَّق.</value>
+</data>
+<data name="Home.Features.VerifiedTitle" xml:space="preserve">
+<value>تقييمات موثَّقة</value>
+</data>
+<data name="Home.Features.VerifiedText" xml:space="preserve">
+<value>التقييمات تأتي من مسافرين أكملوا حجوزاتهم.</value>
+</data>
 </root>

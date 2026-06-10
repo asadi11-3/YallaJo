@@ -96,7 +96,7 @@
             <div class="row g-2">
                 <div class="col-lg-8">
                     <a href="@Model.ImageUrls[0]" class="glightbox" data-gallery="business-gallery">
-                        <img src="@Model.ImageUrls[0]" class="rounded-3 w-100 hero-img-h380 object-cover" alt="@Model.Name">
+                        <img src="@Model.ImageUrls[0]" class="rounded-3 w-100 hero-img-h380 object-cover" alt="@Model.Name" fetchpriority="high">
                     </a>
                 </div>
                 <div class="col-lg-4">
@@ -105,7 +105,7 @@
                         {
                             <div class="col-6">
                                 <a href="@img" class="glightbox" data-gallery="business-gallery">
-                                    <img src="@img" class="rounded-3 w-100 thumb-h185 object-cover" alt="@Model.Name">
+                                    <img src="@img" class="rounded-3 w-100 thumb-h185 object-cover" alt="@Model.Name" loading="lazy">
                                 </a>
                             </div>
                         }

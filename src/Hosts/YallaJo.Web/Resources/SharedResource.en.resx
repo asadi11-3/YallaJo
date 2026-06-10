@@ -12286,4 +12286,16 @@
 <data name="Home.Empty.Text" xml:space="preserve">
 <value>We're hand-picking tours and experiences for you. Check back soon.</value>
 </data>
+<data name="Home.Trust.Title" xml:space="preserve">
+<value>Real reviews from real travelers</value>
+</data>
+<data name="Home.Trust.Text" xml:space="preserve">
+<value>Every review on YallaJo comes from a verified booking.</value>
+</data>
+<data name="Home.Features.VerifiedTitle" xml:space="preserve">
+<value>Verified reviews</value>
+</data>
+<data name="Home.Features.VerifiedText" xml:space="preserve">
+<value>Ratings come from travelers with completed bookings.</value>
+</data>
 </root>

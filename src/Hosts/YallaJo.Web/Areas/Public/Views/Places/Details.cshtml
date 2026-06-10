@@ -85,7 +85,7 @@
             <!-- Main column -->
             <div class="col-lg-8">
                 <div class="card shadow mb-4">
-                    <img src="@Model.HeroImageUrl" class="card-img-top hero-img-h360 object-cover" alt="@Model.Name">
+                    <img src="@Model.HeroImageUrl" class="card-img-top hero-img-h360 object-cover" alt="@Model.Name" fetchpriority="high">
                 </div>
 
                 @if (Model.GalleryImageUrls.Count > 0)
@@ -94,7 +94,7 @@
                         @foreach (var img in Model.GalleryImageUrls)
                         {
                             <div class="col-4 col-md-3">
-                                <img src="@img" class="img-fluid rounded w-100 thumb-h90 object-cover" alt="@Model.Name">
+                                <img src="@img" class="img-fluid rounded w-100 thumb-h90 object-cover" alt="@Model.Name" loading="lazy">
                             </div>
                         }
                     </div>
@@ -314,7 +314,7 @@
                     <div class="col-md-6 col-xl-3">
                         <div class="card card-hover-shadow pb-0 h-100">
                             <div class="position-relative">
-                                <img src="@tour.ImageUrl" class="card-img-top card-img-h180 object-cover" alt="@tour.Name">
+                                <img src="@tour.ImageUrl" class="card-img-top card-img-h180 object-cover" alt="@tour.Name" loading="lazy">
                                 @if (tour.IsFeatured)
                                 {
                                     <div class="card-img-overlay d-flex flex-column p-3 z-index-1">
@@ -356,7 +356,7 @@
                 {
                     <div class="col-md-6 col-xl-4">
                         <div class="card card-hover-shadow h-100">
-                            <img src="@business.ImageUrl" class="card-img-top card-img-h170 object-cover" alt="@business.Name">
+                            <img src="@business.ImageUrl" class="card-img-top card-img-h170 object-cover" alt="@business.Name" loading="lazy">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <h5 class="h6 mb-0"><a asp-area="Public" asp-controller="Directory" asp-action="Detail" asp-route-id="@business.Id" class="stretched-link">@business.Name</a></h5>
