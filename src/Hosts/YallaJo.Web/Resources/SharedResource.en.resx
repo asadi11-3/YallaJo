@@ -11833,4 +11833,40 @@
 <data name="Public.Loading" xml:space="preserve">
 <value>Loading…</value>
 </data>
+<data name="Public.Review.Created" xml:space="preserve">
+<value>Thanks for your review!</value>
+</data>
+<data name="Public.Review.Updated" xml:space="preserve">
+<value>Your review was updated.</value>
+</data>
+<data name="Public.Review.Deleted" xml:space="preserve">
+<value>Your review was deleted.</value>
+</data>
+<data name="Public.Review.Helpful" xml:space="preserve">
+<value>Marked as helpful.</value>
+</data>
+<data name="Public.Review.HelpfulRemoved" xml:space="preserve">
+<value>Helpful vote removed.</value>
+</data>
+<data name="Public.Review.Reported" xml:space="preserve">
+<value>Thanks for reporting. Our team will review it.</value>
+</data>
+<data name="Public.Review.FormError" xml:space="preserve">
+<value>Please complete the review form.</value>
+</data>
+<data name="Public.AccessibilityReview.Created" xml:space="preserve">
+<value>Thanks for your accessibility review!</value>
+</data>
+<data name="Public.AccessibilityReview.Updated" xml:space="preserve">
+<value>Your accessibility review was updated.</value>
+</data>
+<data name="Public.AccessibilityReview.Deleted" xml:space="preserve">
+<value>Your accessibility review was deleted.</value>
+</data>
+<data name="Public.AccessibilityReview.FormError" xml:space="preserve">
+<value>Please complete the accessibility review form, including at least one feature.</value>
+</data>
+<data name="Public.Report.FormError" xml:space="preserve">
+<value>Please choose a reason and add a short description.</value>
+</data>
 </root>

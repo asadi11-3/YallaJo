@@ -424,10 +424,11 @@
             <div class="container">
                 <div class="row g-4">
                     <div class="col-lg-7">
-                        <form method="post" asp-area="Public" asp-controller="Places" asp-action="CreateReview" asp-route-slug="@Model.Slug" class="card border p-3 h-100" data-loading>
+                        <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="CreateReview" asp-route-targetType="place" asp-route-targetId="@Model.PlaceId" class="card border p-3 h-100" data-loading>
                             @Html.AntiForgeryToken()
                             <h3 class="h6 mb-3">@Localizer["Public.Write.a.review"]</h3>
                             <input type="hidden" name="Review.TargetId" value="@Model.PlaceId" />
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.PathBase + Context.Request.Path + Context.Request.QueryString)" />
                             <div class="mb-2">
                                 <label class="form-label small" for="placeReviewRating">@Localizer["Public.Rating"]</label>
                                 <select id="placeReviewRating" name="Review.Rating" class="form-select form-select-sm">
@@ -454,10 +455,11 @@
                         </form>
                     </div>
                     <div class="col-lg-5">
-                        <form method="post" asp-area="Public" asp-controller="Places" asp-action="Report" asp-route-slug="@Model.Slug" class="card border p-3 h-100" data-loading>
+                        <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="ReportEntity" asp-route-targetType="place" asp-route-targetId="@Model.PlaceId" class="card border p-3 h-100" data-loading>
                             @Html.AntiForgeryToken()
                             <h3 class="h6 mb-3">@Localizer["Public.Report.this.place"]</h3>
                             <input type="hidden" name="Report.EntityId" value="@Model.PlaceId" />
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.PathBase + Context.Request.Path + Context.Request.QueryString)" />
                             <div class="mb-2">
                                 <label class="form-label small" for="placeReportReason">@Localizer["Public.Reason"]</label>
                                 <select id="placeReportReason" name="Report.Reason" class="form-select form-select-sm">

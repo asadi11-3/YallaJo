@@ -11833,4 +11833,40 @@
 <data name="Public.Loading" xml:space="preserve">
 <value>جارٍ التحميل…</value>
 </data>
+<data name="Public.Review.Created" xml:space="preserve">
+<value>شكراً لتقييمك!</value>
+</data>
+<data name="Public.Review.Updated" xml:space="preserve">
+<value>تم تحديث تقييمك.</value>
+</data>
+<data name="Public.Review.Deleted" xml:space="preserve">
+<value>تم حذف تقييمك.</value>
+</data>
+<data name="Public.Review.Helpful" xml:space="preserve">
+<value>تم وضع علامة مفيد.</value>
+</data>
+<data name="Public.Review.HelpfulRemoved" xml:space="preserve">
+<value>تمت إزالة تصويت "مفيد".</value>
+</data>
+<data name="Public.Review.Reported" xml:space="preserve">
+<value>شكراً للإبلاغ. سيراجع فريقنا البلاغ.</value>
+</data>
+<data name="Public.Review.FormError" xml:space="preserve">
+<value>يرجى إكمال نموذج التقييم.</value>
+</data>
+<data name="Public.AccessibilityReview.Created" xml:space="preserve">
+<value>شكراً لتقييم إمكانية الوصول!</value>
+</data>
+<data name="Public.AccessibilityReview.Updated" xml:space="preserve">
+<value>تم تحديث تقييم إمكانية الوصول.</value>
+</data>
+<data name="Public.AccessibilityReview.Deleted" xml:space="preserve">
+<value>تم حذف تقييم إمكانية الوصول.</value>
+</data>
+<data name="Public.AccessibilityReview.FormError" xml:space="preserve">
+<value>يرجى إكمال نموذج تقييم إمكانية الوصول مع اختيار ميزة واحدة على الأقل.</value>
+</data>
+<data name="Public.Report.FormError" xml:space="preserve">
+<value>يرجى اختيار سبب وإضافة وصف قصير.</value>
+</data>
 </root>
