@@ -6898,6 +6898,15 @@
   <data name="Auth.SignUp.OrWith" xml:space="preserve">
     <value>أو سجّل عبر</value>
   </data>
+  <data name="Auth.Resend.EmailRequired" xml:space="preserve">
+    <value>البريد الإلكتروني مطلوب.</value>
+  </data>
+  <data name="Auth.Resend.VerificationFailed" xml:space="preserve">
+    <value>فشل التحقق. يرجى المحاولة مرة أخرى.</value>
+  </data>
+  <data name="Auth.Resend.Uniform" xml:space="preserve">
+    <value>إذا كان هذا البريد الإلكتروني مسجلاً، فقد تم إرسال رمز جديد.</value>
+  </data>
   <data name="Auth.Forgot.Title" xml:space="preserve">
     <value>نسيت كلمة المرور</value>
   </data>

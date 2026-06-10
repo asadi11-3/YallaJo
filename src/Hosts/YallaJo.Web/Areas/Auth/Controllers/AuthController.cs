@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Auth.Facades;
 using YallaJo.Web.Areas.Auth.Models.ForgotPassword;
 using YallaJo.Web.Areas.Auth.Models.Login;
@@ -32,6 +33,7 @@ public sealed class AuthController : BaseController
     private readonly VerifyEmailFacade _verify;
     private readonly LogoutFacade _logout;
     private readonly LogoutAllFacade _logoutAll;
+    private readonly IStringLocalizer<YallaJo.Web.Resources.SharedResource> _localizer;
 
     public AuthController(
         LoginFacade login,
@@ -40,7 +42,8 @@ public sealed class AuthController : BaseController
         ResetPasswordFacade reset,
         VerifyEmailFacade verify,
         LogoutFacade logout,
-        LogoutAllFacade logoutAll)
+        LogoutAllFacade logoutAll,
+        IStringLocalizer<YallaJo.Web.Resources.SharedResource> localizer)
     {
         _login = login;
         _register = register;
@@ -49,6 +52,7 @@ public sealed class AuthController : BaseController
         _verify = verify;
         _logout = logout;
         _logoutAll = logoutAll;
+        _localizer = localizer;
     }
 
     // ── Sign in ───────────────────────────────────────────────────────────────
@@ -218,23 +222,27 @@ public sealed class AuthController : BaseController
         return View(vm);
     }
 
+    // Anti-enumeration (guide §security): the response is UNIFORM regardless of whether
+    // the email maps to an account or what the upstream API said — no raw status codes,
+    // no provider error text. A 404 vs 429 vs 400 distinction (or relayed API messages)
+    // would let an attacker confirm account existence or probe rate-limit boundaries.
+    // The only non-200 responses are input-shape guards that reveal nothing about
+    // accounts. Same pattern as ForgotPassword's "If that email is registered…".
     [HttpPost("resend-otp")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResendOtp([FromBody] ResendOtpPayload payload, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(payload.Email))
-            return BadRequest(new { error = "Email is required." });
+            return BadRequest(new { error = _localizer["Auth.Resend.EmailRequired"].Value });
 
         if (string.IsNullOrWhiteSpace(payload.RecaptchaToken))
-            return BadRequest(new { error = "Verification failed. Please try again." });
+            return BadRequest(new { error = _localizer["Auth.Resend.VerificationFailed"].Value });
 
-        var outcome = await _verify.ResendOtpAsync(payload.Email, "EmailVerification", payload.RecaptchaToken, ct);
+        // Outcome deliberately ignored beyond awaiting completion: success, unknown
+        // email, and upstream errors all collapse into the same neutral message.
+        await _verify.ResendOtpAsync(payload.Email, "EmailVerification", payload.RecaptchaToken, ct);
 
-        if (outcome.IsSuccess)
-            return Ok(new { message = "A new code has been sent." });
-
-        var status = outcome.StatusCode is >= 400 and < 600 ? outcome.StatusCode : 500;
-        return StatusCode(status, new { error = outcome.Error ?? "Could not resend code." });
+        return Ok(new { message = _localizer["Auth.Resend.Uniform"].Value });
     }
 
     // ── Sign out ────────────────────────────────────────────────────────────────

@@ -70,12 +70,14 @@
                                         <span asp-validation-for="Password" class="text-danger d-block"></span>
                                     </div>
 
-                                    <!-- Remember me / forgot password -->
-                                    <div class="mb-3 d-sm-flex justify-content-between">
-                                        <div>
-                                            <input type="checkbox" class="form-check-input" id="rememberCheck">
-                                            <label class="form-check-label" for="rememberCheck">@Localizer["Auth.SignIn.RememberMe"]</label>
-                                        </div>
+                                    @* Remember-me checkbox removed: it was never posted (no asp-for/name) and
+                                       session persistence is a fixed policy in WebSignInService (IsPersistent=true,
+                                       8 h sliding cookie) — every sign-in persists. Showing a non-functional
+                                       control would mislead users. If per-login persistence becomes a product
+                                       requirement, add RememberMe to LoginVm and thread it through
+                                       LoginFacade → WebSignInService.SignInAsync instead of reviving this markup. *@
+                                    <!-- Forgot password -->
+                                    <div class="mb-3 text-end">
                                         <a asp-area="Auth" asp-controller="Auth" asp-action="ForgotPassword">@Localizer["Auth.SignIn.ForgotPassword"]</a>
                                     </div>
 
