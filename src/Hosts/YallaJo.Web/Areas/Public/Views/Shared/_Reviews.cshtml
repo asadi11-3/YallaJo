@@ -88,7 +88,7 @@
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#report-review-@review.Id" aria-expanded="false">@Localizer["Public.Report"]</button>
                                 </div>
                                 <div class="collapse mt-3" id="report-review-@review.Id">
-                                    <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="ReportReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" asp-route-reviewId="@review.Id" class="border rounded p-3" data-loading>
+                                    <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="ReportReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" asp-route-reviewId="@review.Id" class="border rounded p-3" data-loading data-success-message="@Localizer["Public.Review.Reported"]">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="returnUrl" value="@returnUrl" />
                                         <div class="row g-2">
@@ -117,7 +117,7 @@
                                 <div class="mt-3">
                                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#edit-review-@review.Id" aria-expanded="false">@Localizer["Public.Edit.your.review"]</button>
                                     <div class="collapse mt-3" id="edit-review-@review.Id">
-                                        <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="EditReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" asp-route-reviewId="@review.Id" class="border rounded p-3" data-loading>
+                                        <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="EditReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" asp-route-reviewId="@review.Id" class="border rounded p-3" data-loading data-success-message="@Localizer["Public.Review.Updated"]">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="returnUrl" value="@returnUrl" />
                                             <input type="hidden" name="Review.RowVersion" value="@review.RowVersion" />
@@ -149,7 +149,7 @@
                             }
                             @if (ownReview)
                             {
-                                <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="DeleteReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" asp-route-reviewId="@review.Id" class="mt-2">
+                                <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="DeleteReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" asp-route-reviewId="@review.Id" class="mt-2" data-confirm="@Localizer["Public.Confirm.DeleteReview"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="returnUrl" value="@returnUrl" />
                                     <input type="hidden" name="rowVersion" value="@review.RowVersion" />

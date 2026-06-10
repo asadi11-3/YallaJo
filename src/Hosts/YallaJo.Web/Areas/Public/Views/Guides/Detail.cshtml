@@ -181,7 +181,7 @@
                 {
                     <div class="row g-4">
                         <div class="col-lg-7">
-                            <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="CreateReview" asp-route-targetType="guide" asp-route-targetId="@Model.Id" class="card border p-3 h-100" data-loading>
+                            <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="CreateReview" asp-route-targetType="guide" asp-route-targetId="@Model.Id" class="card border p-3 h-100" data-loading data-success-message="@Localizer["Public.Review.Created"]">
                                 @Html.AntiForgeryToken()
                                 <h3 class="h6 mb-3">@Localizer["Public.Write.a.review"]</h3>
                                 <input type="hidden" name="Review.TargetId" value="@Model.Id" />
@@ -212,7 +212,7 @@
                             </form>
                         </div>
                         <div class="col-lg-5">
-                            <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="ReportEntity" asp-route-targetType="guide" asp-route-targetId="@Model.Id" class="card border p-3 h-100" data-loading>
+                            <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="ReportEntity" asp-route-targetType="guide" asp-route-targetId="@Model.Id" class="card border p-3 h-100" data-loading data-success-message="@Localizer["Public.Review.Reported"]">
                                 @Html.AntiForgeryToken()
                                 <h3 class="h6 mb-3">@Localizer["Public.Report.this.guide"]</h3>
                                 <input type="hidden" name="Report.EntityId" value="@Model.Id" />
@@ -244,4 +244,5 @@
 
 @section Scripts {
     <script src="~/assets/js/guides-detail.js" asp-append-version="true"></script>
+    <script src="~/assets/js/reviews.js" asp-append-version="true"></script>
 }

@@ -11869,4 +11869,19 @@
 <data name="Public.Report.FormError" xml:space="preserve">
 <value>Please choose a reason and add a short description.</value>
 </data>
+<data name="Public.Confirm.Title" xml:space="preserve">
+<value>Are you sure?</value>
+</data>
+<data name="Public.Confirm.Delete" xml:space="preserve">
+<value>Delete</value>
+</data>
+<data name="Public.Confirm.Cancel" xml:space="preserve">
+<value>Cancel</value>
+</data>
+<data name="Public.Confirm.DeleteReview" xml:space="preserve">
+<value>Delete your review? This cannot be undone.</value>
+</data>
+<data name="Public.Confirm.DeleteAccessibilityReview" xml:space="preserve">
+<value>Delete your accessibility review? This cannot be undone.</value>
+</data>
 </root>

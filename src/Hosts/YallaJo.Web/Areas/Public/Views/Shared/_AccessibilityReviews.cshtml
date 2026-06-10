@@ -1,6 +1,8 @@
 @model YallaJo.Web.Areas.Public.Models.AccessibilityReviews.AccessibilityReviewListVm
 @using YallaJo.Web.Areas.Public.Models.AccessibilityReviews
 @using YallaJo.Web.Infrastructure.Authentication.Claims
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     var isAuthed = User.Identity?.IsAuthenticated == true;
     var currentUserId = Guid.TryParse(User.FindFirst(AppClaimTypes.UserId)?.Value, out var uid) ? uid : Guid.Empty;
@@ -82,7 +84,7 @@
                                 <div class="mt-3">
                                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#edit-ar-@review.Id" aria-expanded="false">Edit your review</button>
                                     <div class="collapse mt-3" id="edit-ar-@review.Id">
-                                        <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="EditAccessibilityReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" asp-route-reviewId="@review.Id" class="border rounded p-3" data-loading>
+                                        <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="EditAccessibilityReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" asp-route-reviewId="@review.Id" class="border rounded p-3" data-loading data-success-message="@Localizer["Public.AccessibilityReview.Updated"]">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="returnUrl" value="@returnUrl" />
                                             <div class="mb-2">
@@ -125,7 +127,7 @@
                             @if (ownReview)
                             {
                                 <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="DeleteAccessibilityReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" asp-route-reviewId="@review.Id" class="mt-2"
-                                      onsubmit="return confirm('Delete your accessibility review? This cannot be undone.');">
+                                      data-confirm="@Localizer["Public.Confirm.DeleteAccessibilityReview"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="returnUrl" value="@returnUrl" />
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete your review</button>
@@ -146,7 +148,7 @@
             <div class="card border mt-3">
                 <div class="card-body">
                     <h3 class="h6">Write an accessibility review</h3>
-                    <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="CreateAccessibilityReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" data-loading>
+                    <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="CreateAccessibilityReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" data-loading data-success-message="@Localizer["Public.AccessibilityReview.Created"]">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="returnUrl" value="@returnUrl" />
                         <div class="row g-2">

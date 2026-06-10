@@ -11869,4 +11869,19 @@
 <data name="Public.Report.FormError" xml:space="preserve">
 <value>يرجى اختيار سبب وإضافة وصف قصير.</value>
 </data>
+<data name="Public.Confirm.Title" xml:space="preserve">
+<value>هل أنت متأكد؟</value>
+</data>
+<data name="Public.Confirm.Delete" xml:space="preserve">
+<value>حذف</value>
+</data>
+<data name="Public.Confirm.Cancel" xml:space="preserve">
+<value>إلغاء</value>
+</data>
+<data name="Public.Confirm.DeleteReview" xml:space="preserve">
+<value>هل تريد حذف تقييمك؟ لا يمكن التراجع عن هذا الإجراء.</value>
+</data>
+<data name="Public.Confirm.DeleteAccessibilityReview" xml:space="preserve">
+<value>هل تريد حذف تقييم إمكانية الوصول الخاص بك؟ لا يمكن التراجع عن هذا الإجراء.</value>
+</data>
 </root>
