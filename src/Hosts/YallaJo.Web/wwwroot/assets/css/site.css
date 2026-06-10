@@ -195,3 +195,11 @@ html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
 
 /* Circle tiles (Home destinations rail) */
 .img-circle-140 { width: 140px; height: 140px; }
+
+/* Phase 3.2 additions */
+.card-img-h170 { height: 170px; }
+.card-img-h180 { height: 180px; }
+.hero-img-h320 { height: 320px; }
+.min-w-240 { min-width: 240px; }
+.img-max-h380 { max-height: 380px; }
+.max-w-220 { max-width: 220px; }

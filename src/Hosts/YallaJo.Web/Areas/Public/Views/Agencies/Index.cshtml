@@ -38,7 +38,7 @@
                         <div class="card border h-100 card-hover-shadow position-relative">
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-3">
-                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:56px;height:56px;">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 avatar-56">
                                         <i class="bi bi-building fs-4 text-primary" aria-hidden="true"></i>
                                     </div>
                                     <h2 class="h6 mb-0 ms-3">
@@ -47,7 +47,7 @@
                                 </div>
                                 @if (!string.IsNullOrWhiteSpace(agency.Description))
                                 {
-                                    <p class="text-secondary small mb-0" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">@agency.Description</p>
+                                    <p class="text-secondary small mb-0 text-truncate-3">@agency.Description</p>
                                 }
                             </div>
                         </div>

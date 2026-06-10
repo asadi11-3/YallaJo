@@ -30,11 +30,11 @@
         <div class="d-sm-flex align-items-center">
             @if (Model.HasAvatar)
             {
-                <img src="@Model.AvatarUrl" alt="@Model.DisplayName" class="rounded-circle flex-shrink-0" width="96" height="96" style="object-fit:cover;">
+                <img src="@Model.AvatarUrl" alt="@Model.DisplayName" class="rounded-circle flex-shrink-0 object-cover" width="96" height="96">
             }
             else
             {
-                <span class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle flex-shrink-0" style="width:96px;height:96px;"><i class="bi bi-person-circle display-5 text-secondary" aria-hidden="true"></i></span>
+                <span class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle flex-shrink-0 avatar-96"><i class="bi bi-person-circle display-5 text-secondary" aria-hidden="true"></i></span>
             }
             <div class="ms-sm-3 mt-3 mt-sm-0 flex-grow-1">
                 <h1 class="h3 mb-1">@Model.DisplayName</h1>
@@ -78,7 +78,7 @@
                 {
                     <div class="card border">
                         <div class="card-header"><h2 class="h6 mb-0">@Localizer["Public.About"]</h2></div>
-                        <div class="card-body"><p class="mb-0" style="white-space:pre-line;">@Model.Bio</p></div>
+                        <div class="card-body"><p class="mb-0 preserve-whitespace">@Model.Bio</p></div>
                     </div>
                 }
             </div>

@@ -71,7 +71,7 @@
 
                             @if (!string.IsNullOrWhiteSpace(review.Content))
                             {
-                                <p class="mb-1" style="white-space:pre-line;">@review.Content</p>
+                                <p class="mb-1 preserve-whitespace">@review.Content</p>
                             }
                             @if (review.VisitDate is { } vd)
                             {
@@ -177,7 +177,7 @@
                                 </div>
                             }
                         </div>
-                        <div class="mt-2" style="max-width: 220px;">
+                        <div class="mt-2 max-w-220">
                             <label class="form-label small" for="arVisit">Visit date</label>
                             <input id="arVisit" type="date" name="AccessibilityReview.VisitDate" class="form-control form-control-sm" />
                         </div>

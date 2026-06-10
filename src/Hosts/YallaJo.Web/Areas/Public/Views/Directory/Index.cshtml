@@ -26,6 +26,7 @@
 @Html.AntiForgeryToken()
 
 <!-- Banner -->
+@* Inline style justified (UI-PERF-X6): background-image URL is resolved at runtime via Url.Content *@
 <section class="position-relative py-6 py-lg-7" style="background-image:url('@Url.Content("~/assets/images/bg/20.jpg")'); background-position:center; background-size:cover;">
     <div class="bg-overlay bg-dark opacity-7"></div>
     <div class="container position-relative">

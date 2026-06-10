@@ -32,7 +32,7 @@
             <div class="d-flex align-items-center">
                 @if (Model.HasAvatar)
                 {
-                    <img src="@Model.AvatarUrl" class="rounded-circle me-3" width="96" height="96" style="object-fit:cover;" alt="@Model.DisplayName" />
+                    <img src="@Model.AvatarUrl" class="rounded-circle me-3 object-cover" width="96" height="96" alt="@Model.DisplayName" />
                 }
                 else
                 {
@@ -94,7 +94,7 @@
                     <div class="card border mb-4">
                         <div class="card-header bg-transparent"><h2 class="h5 mb-0">@Localizer["Public.About"]</h2></div>
                         <div class="card-body">
-                            <p class="mb-0" style="white-space:pre-line;">@Model.Bio</p>
+                            <p class="mb-0 preserve-whitespace">@Model.Bio</p>
                         </div>
                     </div>
                 }

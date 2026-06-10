@@ -39,7 +39,7 @@
                             <div class="card-body">
                                 @if (guide.HasAvatar)
                                 {
-                                    <img src="@guide.AvatarUrl" class="rounded-circle mb-3" width="96" height="96" style="object-fit:cover;" alt="@guide.DisplayName" loading="lazy" />
+                                    <img src="@guide.AvatarUrl" class="rounded-circle mb-3 object-cover" width="96" height="96" alt="@guide.DisplayName" loading="lazy" />
                                 }
                                 else
                                 {
@@ -69,7 +69,7 @@
                                 </div>
                                 @if (!string.IsNullOrWhiteSpace(guide.Bio))
                                 {
-                                    <p class="small text-body-secondary mb-0" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">@guide.Bio</p>
+                                    <p class="small text-body-secondary mb-0 text-truncate-2">@guide.Bio</p>
                                 }
                             </div>
                         </div>

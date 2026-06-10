@@ -123,8 +123,7 @@
             {
                 <div class="col-lg-8">
                     <a href="@Model.ImageUrls[0]" class="glightbox" data-gallery="tour-gallery">
-                        <img src="@Model.ImageUrls[0]" class="rounded-3 w-100" alt="@Model.Name"
-                             style="height:420px;object-fit:cover;">
+                        <img src="@Model.ImageUrls[0]" class="rounded-3 w-100 hero-img-h420 object-cover" alt="@Model.Name">
                     </a>
                 </div>
                 <div class="col-lg-4">
@@ -133,8 +132,7 @@
                         {
                             <div class="col-6">
                                 <a href="@img" class="glightbox" data-gallery="tour-gallery">
-                                    <img src="@img" class="rounded-3 w-100" alt="@Model.Name"
-                                         style="height:204px;object-fit:cover;">
+                                    <img src="@img" class="rounded-3 w-100 thumb-h204 object-cover" alt="@Model.Name">
                                 </a>
                             </div>
                         }
@@ -144,7 +142,7 @@
             else
             {
                 <div class="col-12">
-                    <div class="rounded-3 bg-light d-flex align-items-center justify-content-center" style="height:420px;">
+                    <div class="rounded-3 bg-light d-flex align-items-center justify-content-center hero-img-h420">
                         <i class="bi bi-image text-secondary display-3"></i>
                     </div>
                 </div>
@@ -203,7 +201,7 @@
                                 }
                                 @if (!string.IsNullOrWhiteSpace(Model.Description))
                                 {
-                                    <p style="white-space:pre-line">@Model.Description</p>
+                                    <p class="preserve-whitespace">@Model.Description</p>
                                 }
                                 else if (string.IsNullOrWhiteSpace(Model.ShortDescription))
                                 {
@@ -461,12 +459,11 @@
                                                 <div class="d-flex align-items-center">
                                                     @if (!string.IsNullOrWhiteSpace(g.AvatarUrl))
                                                     {
-                                                        <img src="@g.AvatarUrl" class="avatar avatar-md rounded-circle me-2" alt="@g.DisplayName"
-                                                             style="width:48px;height:48px;object-fit:cover;">
+                                                        <img src="@g.AvatarUrl" class="avatar avatar-md rounded-circle me-2 avatar-48 object-cover" alt="@g.DisplayName">
                                                     }
                                                     else
                                                     {
-                                                        <span class="avatar avatar-md me-2 d-inline-flex align-items-center justify-content-center bg-light rounded-circle" style="width:48px;height:48px;">
+                                                        <span class="avatar avatar-md me-2 d-inline-flex align-items-center justify-content-center bg-light rounded-circle avatar-48">
                                                             <i class="bi bi-person text-secondary"></i>
                                                         </span>
                                                     }

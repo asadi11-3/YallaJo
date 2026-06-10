@@ -47,7 +47,7 @@
                                 <div id="@collapseId" class="accordion-collapse collapse"
                                      aria-labelledby="@headingId" data-bs-parent="#helpAccordion">
                                     <div class="accordion-body">
-                                        <p class="mb-3" style="white-space: pre-line;">@faq.Answer</p>
+                                        <p class="mb-3 preserve-whitespace">@faq.Answer</p>
                                         <a class="btn btn-sm btn-primary-soft mb-0"
                                            asp-area="Public" asp-controller="Help" asp-action="Detail" asp-route-id="@faq.Id">
                                             Read full article
