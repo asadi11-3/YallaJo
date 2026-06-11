@@ -36,9 +36,11 @@ public sealed class ReviewsFacade
 
         try
         {
+            // [Backend] B6 / API7: one grouped ratings call for ALL tour options
+            // (replaces the per-tour GetRatingAsync) in parallel with the review page.
             var reviewsTask = _api.GetReviewsAsync(current.Id, 1, PageSize, ct);
-            var ratingTask = _api.GetRatingAsync(current.Id, ct);
-            await Task.WhenAll(reviewsTask, ratingTask);
+            var ratingsBatchTask = _api.GetRatingsBatchAsync(tours.Select(t => t.Id), ct);
+            await Task.WhenAll(reviewsTask, ratingsBatchTask);
 
             if (reviewsTask.Result is { IsSuccess: true, Data: not null } rr)
             {
@@ -63,10 +65,25 @@ public sealed class ReviewsFacade
                     .ToList();
             }
 
-            if (ratingTask.Result is { IsSuccess: true, Data: not null } rat)
+            if (ratingsBatchTask.Result is { IsSuccess: true, Data: not null } batch)
             {
-                averageRating = rat.Data.AverageRating;
-                reviewCount = rat.Data.ReviewCount;
+                // Enrich every selector option with its rating and resolve the
+                // currently-selected tour's aggregate from the same response.
+                var byId = batch.Data.ToDictionary(i => i.EntityId);
+                foreach (var option in tours)
+                {
+                    if (byId.TryGetValue(option.Id, out var item))
+                    {
+                        option.AverageRating = item.Average;
+                        option.ReviewCount = item.Count;
+                    }
+                }
+
+                if (byId.TryGetValue(current.Id, out var selected))
+                {
+                    averageRating = selected.Average;
+                    reviewCount = selected.Count;
+                }
             }
         }
         catch

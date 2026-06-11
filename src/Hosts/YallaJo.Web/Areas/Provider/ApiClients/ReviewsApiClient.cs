@@ -19,6 +19,15 @@ public sealed class ReviewsApiClient
     public Task<ApiResult<RatingSummaryResponse>> GetRatingAsync(Guid tourId, CancellationToken ct = default) =>
         _api.GetAsync<RatingSummaryResponse>($"/api/v1/social/reviews/ratings?entityType=Tour&entityId={tourId}", ct);
 
+    /// <summary>[Backend] B6 — single grouped query for ≤50 tour ratings (API7).</summary>
+    public Task<ApiResult<List<RatingSummaryBatchItemResponse>>> GetRatingsBatchAsync(
+        IEnumerable<Guid> tourIds, CancellationToken ct = default)
+    {
+        var csv = string.Join(",", tourIds.Take(50));
+        return _api.GetAsync<List<RatingSummaryBatchItemResponse>>(
+            $"/api/v1/social/reviews/ratings/batch?entityType=Tour&entityIds={csv}", ct);
+    }
+
     public Task<ApiResult> ReplyAsync(Guid reviewId, AddReplyRequest request, CancellationToken ct = default) =>
         _api.PostAsync($"/api/v1/social/reviews/{reviewId}/reply", request, ct);
 

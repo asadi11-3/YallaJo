@@ -1,6 +1,7 @@
 using ContentTours.Application.Commands.TourGuides.Assign;
 using ContentTours.Application.Commands.TourGuides.Unassign;
 using ContentTours.Application.Queries.TourGuides;
+using ContentTours.Application.Queries.TourGuides.LookupAssignableGuides;
 using ContentTours.Contracts.Authorization;
 using ContentTours.Presentation.Endpoints.TourGuide.Models;
 using MediatR;
@@ -34,6 +35,25 @@ internal static class TourGuideEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();
+
+        // GET /{id:guid}/guides/lookup — [Backend] B7 typeahead for the assign-guide picker (F10)
+        guides.MapGet("/lookup", async (
+            Guid id,
+            ISender sender,
+            CancellationToken ct,
+            string? term = null,
+            int pageSize = 10) =>
+        {
+            var result = await sender.Send(new LookupAssignableGuidesQuery(id, term, pageSize), ct);
+            return result.ToApiResult();
+        })
+        .WithName("LookupAssignableGuides")
+        .WithSummary("Typeahead lookup of active guides eligible for assignment to this tour (max 10 rows)")
+        .Produces<IReadOnlyList<GuideLookupDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuide, AppAction.Update))
+        .RequireAuthorization();
 
         // POST /{id:guid}/guides — assign a guide (owner or admin)
         guides.MapPost("/", async (

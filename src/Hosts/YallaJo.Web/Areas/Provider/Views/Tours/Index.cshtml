@@ -33,10 +33,12 @@
                     <div class="col-sm-5 col-lg-4">
                         <label for="status" class="form-label small mb-1">@Localizer["Provider.Tours.FilterStatus"]</label>
                         <select id="status" name="status" class="form-select form-select-sm">
-                            <option value="">@Localizer["Provider.Tours.AllStatuses"]</option>
+                            @* [Backend] B1: per-status counts appended when available; degrades to plain labels (ERR3). *@
+                            <option value="">@Localizer["Provider.Tours.AllStatuses"]@(Model.StatusCounts is not null ? $" ({Model.StatusCounts.Total})" : "")</option>
                             @foreach (var opt in Model.StatusOptions)
                             {
-                                <option value="@opt.Value" selected="@(string.Equals(opt.Value, Model.Status, StringComparison.OrdinalIgnoreCase))">@StatusText(opt.Value, opt.Label)</option>
+                                var count = Model.StatusCounts?.For(opt.Value);
+                                <option value="@opt.Value" selected="@(string.Equals(opt.Value, Model.Status, StringComparison.OrdinalIgnoreCase))">@StatusText(opt.Value, opt.Label)@(count is not null ? $" ({count})" : "")</option>
                             }
                         </select>
                     </div>

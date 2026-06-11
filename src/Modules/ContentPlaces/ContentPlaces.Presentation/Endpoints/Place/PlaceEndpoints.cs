@@ -8,6 +8,7 @@ using ContentPlaces.Application.Queries.Place.GetPlaceById;
 using ContentPlaces.Application.Queries.Place.GetPlaceBySlug;
 using ContentPlaces.Application.Queries.Place.GetPlaceImages;
 using ContentPlaces.Application.Queries.Place.ListPlaces;
+using ContentPlaces.Application.Queries.Place.LookupPlaces;
 using ContentPlaces.Presentation.Endpoints.Place.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -49,6 +50,21 @@ internal static class PlaceEndpoints
         .WithName("ListPlaces")
         .Produces<PaginatedResult<PlaceSummaryDto>>(StatusCodes.Status200OK)
         .WithSummary("List places with pagination and optional filters (max 50 per page)")
+        .AllowAnonymous();
+
+        // [Backend] B2: lightweight typeahead lookup (literal segment wins over the {slug} route).
+        places.MapGet("/lookup", async (
+            ISender sender,
+            CancellationToken ct,
+            string? term = null,
+            int pageSize = 10) =>
+        {
+            var result = await sender.Send(new LookupPlacesQuery(term, pageSize), ct);
+            return result.ToApiResult();
+        })
+        .WithName("LookupPlaces")
+        .Produces<IReadOnlyList<PlaceLookupDto>>(StatusCodes.Status200OK)
+        .WithSummary("Typeahead place lookup by name (max 20 rows)")
         .AllowAnonymous();
 
         places.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>

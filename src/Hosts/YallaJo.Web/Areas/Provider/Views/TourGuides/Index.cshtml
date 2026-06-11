@@ -27,7 +27,14 @@
                         @Html.AntiForgeryToken()
                         <div class="col-md-7">
                             <label asp-for="Assign.TourGuideUserId" class="form-label">@Localizer["Provider.TourGuides.GuideIdLabel"] <span class="text-danger">*</span></label>
+                            @* [Backend] B7 + F10: provider-guide-picker.js replaces this input with a
+                               searchable name combobox backed by data-yj-lookup-url; the raw input is
+                               the no-JS fallback (PE1). *@
                             <input asp-for="Assign.TourGuideUserId" class="form-control font-data" dir="ltr" autocomplete="off"
+                                   data-yj-guide-picker
+                                   data-yj-lookup-url="@Url.Action("Lookup", "TourGuides", new { area = "Provider", id = Model.TourId })"
+                                   data-yj-search-placeholder="@Localizer["Provider.TourGuides.SearchPlaceholder"]"
+                                   data-yj-no-results="@Localizer["Provider.TourGuides.NoMatches"]"
                                    aria-describedby="assign-guide-help" placeholder="00000000-0000-0000-0000-000000000000" />
                             <small id="assign-guide-help" class="form-text">@Localizer["Provider.TourGuides.GuideIdHelp"]</small>
                             <span asp-validation-for="Assign.TourGuideUserId" class="text-danger small" role="alert"></span>
@@ -95,4 +102,6 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    @* [Backend] B7/F10: guide name picker (JS5/J7/JS6). *@
+    <script src="~/assets/js/provider-guide-picker.js" asp-append-version="true"></script>
 }

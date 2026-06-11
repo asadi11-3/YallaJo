@@ -16,12 +16,14 @@ using Social.Application.Queries.Dtos;
 using Social.Application.Queries.GetFlaggedReviews;
 using Social.Application.Queries.GetMyReviews;
 using Social.Application.Queries.GetPublicReviews;
+using Social.Application.Queries.GetRatingSummariesBatch;
 using Social.Application.Queries.GetRatingSummary;
 using Social.Contracts.Authorization;
 using Social.Domain.Enums;
 using Social.Presentation.Endpoints.Review.Models;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
 
@@ -259,6 +261,36 @@ internal static class ReviewEndpoints
         .WithName("GetRatingSummary")
         .WithSummary("Public: get rating summary for an entity")
         .Produces<RatingSummaryDto>(StatusCodes.Status200OK)
+        .AllowAnonymous();
+
+        // GET /api/v1/social/reviews/ratings/batch — [Backend] B6 batch rating summaries (API7)
+        group.MapGet("/ratings/batch", async (
+            ReviewTargetType entityType,
+            string entityIds,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var parsed = new List<Guid>();
+            foreach (var raw in entityIds.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (!Guid.TryParse(raw, out var id))
+                {
+                    return Result.Failure<IReadOnlyList<RatingSummaryBatchItemDto>>(
+                            new Error("Review.InvalidEntityIds", "entityIds must be a comma-separated list of GUIDs."),
+                            Outcome.Invalid)
+                        .ToApiResult();
+                }
+
+                parsed.Add(id);
+            }
+
+            var result = await sender.Send(new GetRatingSummariesBatchQuery(entityType, parsed), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetRatingSummariesBatch")
+        .WithSummary("Public: batch rating summaries for up to 50 entities")
+        .Produces<IReadOnlyList<RatingSummaryBatchItemDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
         .AllowAnonymous();
 
         // POST /api/v1/social/reviews/{id}/helpful — Helpful vote

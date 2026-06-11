@@ -1,4 +1,7 @@
 using YallaJo.Web.Areas.Provider.Models.Dashboard;
+// Aliased to avoid clashing with the Dashboard-namespace mirror types of the same names.
+using ProviderBookingStatsResponse = YallaJo.Web.Areas.Provider.Models.Bookings.ProviderBookingStatsResponse;
+using ProviderEarningsSummaryResponse = YallaJo.Web.Areas.Provider.Models.Earnings.ProviderEarningsSummaryResponse;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
 
@@ -15,6 +18,14 @@ public sealed class DashboardApiClient
 
     public Task<ApiResult<GuideEarningsSummaryResponse>> GetEarningsSummaryAsync(CancellationToken ct = default)
         => _api.GetAsync<GuideEarningsSummaryResponse>("/api/v1/finance/guide/summary", ct);
+
+    // [Backend] B4 — richer earnings summary (this-month / pending payout / commission).
+    public Task<ApiResult<ProviderEarningsSummaryResponse>> GetProviderEarningsSummaryAsync(CancellationToken ct = default)
+        => _api.GetAsync<ProviderEarningsSummaryResponse>("/api/v1/finance/provider/summary", ct);
+
+    // [Backend] B5 — per-status booking counts for the KPI row / donut chart.
+    public Task<ApiResult<ProviderBookingStatsResponse>> GetBookingStatsAsync(CancellationToken ct = default)
+        => _api.GetAsync<ProviderBookingStatsResponse>("/api/v1/booking/provider/bookings/stats", ct);
 
     public Task<ApiResult<List<JoinRequestResponse>>> GetJoinRequestsAsync(CancellationToken ct = default)
         => _api.GetAsync<List<JoinRequestResponse>>("/api/v1/booking/join-requests?myRequestsOnly=false", ct);

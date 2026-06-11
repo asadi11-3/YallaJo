@@ -1,0 +1,66 @@
+@model YallaJo.Web.Areas.Provider.Models.TourAvailability.AvailabilityCalendarVm
+@{
+    // [Backend] B3 — server-rendered month grid (CAL1). Returned standalone by
+    // TourAvailabilityController.Calendar and swapped in by provider-availability.js.
+    // Fully localizable: month/day names come from the current culture.
+    var culture = System.Globalization.CultureInfo.CurrentUICulture;
+    var first = new DateOnly(Model.Year, Model.Month, 1);
+    var daysInMonth = DateTime.DaysInMonth(Model.Year, Model.Month);
+    var firstDayOfWeek = culture.DateTimeFormat.FirstDayOfWeek;
+    var leading = ((int)first.DayOfWeek - (int)firstDayOfWeek + 7) % 7;
+    var monthLabel = first.ToDateTime(TimeOnly.MinValue).ToString("MMMM yyyy", culture);
+    var prev = first.AddMonths(-1);
+    var next = first.AddMonths(1);
+    string DayHeader(int offset)
+    {
+        var dow = (DayOfWeek)(((int)firstDayOfWeek + offset) % 7);
+        return culture.DateTimeFormat.AbbreviatedDayNames[(int)dow];
+    }
+}
+<div data-yj-calendar data-yj-tour-id="@Model.TourId" data-yj-year="@Model.Year" data-yj-month="@Model.Month">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-yj-cal-nav
+                data-yj-cal-year="@prev.Year" data-yj-cal-month="@prev.Month"
+                aria-label="@Localizer["Provider.TourAvailability.PrevMonth"]">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        </button>
+        <h3 class="h6 mb-0"><bdi>@monthLabel</bdi></h3>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-yj-cal-nav
+                data-yj-cal-year="@next.Year" data-yj-cal-month="@next.Month"
+                aria-label="@Localizer["Provider.TourAvailability.NextMonth"]">
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div class="row row-cols-7 g-0 text-center small fw-semibold text-body-secondary border-bottom pb-1 mb-1">
+        @for (var i = 0; i < 7; i++)
+        {
+            <div class="col">@DayHeader(i)</div>
+        }
+    </div>
+    <div class="row row-cols-7 g-1" role="grid" aria-label="@monthLabel">
+        @for (var i = 0; i < leading; i++)
+        {
+            <div class="col" role="presentation"></div>
+        }
+        @for (var day = 1; day <= daysInMonth; day++)
+        {
+            var date = new DateOnly(Model.Year, Model.Month, day);
+            var info = Model.For(date);
+            var cls = info is null
+                ? "bg-body-tertiary text-body-secondary"
+                : info.HasOpenSlots ? "bg-success bg-opacity-10 border border-success-subtle" : "bg-warning bg-opacity-10 border border-warning-subtle";
+            <div class="col" role="gridcell">
+                @* X6: dynamic min-height keeps grid rows even regardless of content. *@
+                <div class="rounded-2 p-1 text-center @cls" style="min-height:3rem;"
+                     @(info is not null ? Html.Raw($"tabindex=\"0\" data-yj-cal-day=\"{date:yyyy-MM-dd}\"") : Html.Raw(""))
+                     aria-label="@date.ToString("d MMMM", culture)@(info is not null ? $" — {info.SlotCount} {Localizer["Provider.TourAvailability.SlotsLabel"].Value}, {info.TotalCapacity - info.BookedSeats} {Localizer["Provider.TourAvailability.SeatsFree"].Value}" : "")">
+                    <span class="d-block small fw-semibold"><bdi dir="ltr">@day</bdi></span>
+                    @if (info is not null)
+                    {
+                        <span class="d-block small"><bdi dir="ltr">@info.SlotCount</bdi> <span class="visually-hidden">@Localizer["Provider.TourAvailability.SlotsLabel"]</span><i class="fa-regular fa-clock ms-1 small" aria-hidden="true"></i></span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

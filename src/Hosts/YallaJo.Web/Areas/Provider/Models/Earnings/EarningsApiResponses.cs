@@ -8,6 +8,17 @@ public sealed class GuideEarningsSummaryResponse
     public string Currency { get; init; } = string.Empty;
 }
 
+// [Backend] B4 — mirror of Finance ProviderEarningsSummaryDto (GET /api/v1/finance/provider/summary).
+public sealed class ProviderEarningsSummaryResponse
+{
+    public decimal GrossTotal { get; init; }
+    public decimal NetEarnings { get; init; }
+    public decimal ThisMonth { get; init; }
+    public decimal PendingPayout { get; init; }
+    public decimal TotalCommission { get; init; }
+    public string Currency { get; init; } = string.Empty;
+}
+
 public sealed class GuideEarningResponse
 {
     public Guid PaymentId { get; init; }

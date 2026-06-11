@@ -118,6 +118,16 @@ public interface ITourBookingRepository : IRepository<TourBooking, Guid>
         string? paymentStatus,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// [Backend] B5: per-status booking counts for a provider, optionally scoped to a
+    /// slot-date range. Single grouped query (no N-per-status round trips).
+    /// </summary>
+    Task<IReadOnlyDictionary<BookingStatus, int>> GetProviderBookingStatusCountsAsync(
+        Guid providerId,
+        DateOnly? fromDate,
+        DateOnly? toDate,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Lists provider-confirmation bookings older than the configured auto-accept cutoff.</summary>
     Task<IReadOnlyList<TourBooking>> GetPendingConfirmationOlderThanAsync(
         DateTime cutoffUtc,

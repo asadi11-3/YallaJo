@@ -29,6 +29,10 @@ public sealed class ProviderBookingsApiClient
         return _api.GetAsync<ProviderBookingsPageResponse>(url, ct);
     }
 
+    // [Backend] B5 — GET /api/v1/booking/provider/bookings/stats — per-status counts (API7)
+    public Task<ApiResult<ProviderBookingStatsResponse>> GetStatsAsync(CancellationToken ct = default)
+        => _api.GetAsync<ProviderBookingStatsResponse>($"{Base}/provider/bookings/stats", ct);
+
     // GET /api/v1/booking/{id} — owner/provider/admin can view
     public Task<ApiResult<ProviderBookingDetailResponse>> GetByIdAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<ProviderBookingDetailResponse>($"{Base}/{id}", ct);

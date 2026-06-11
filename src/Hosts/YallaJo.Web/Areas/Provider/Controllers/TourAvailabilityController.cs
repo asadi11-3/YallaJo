@@ -22,6 +22,27 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
     }
 
     // ── GET /provider/tours/{id}/availability ─────────────────────────────────────
+    /// <summary>
+    /// [Backend] B3 Web proxy — server-rendered month grid for the availability
+    /// calendar (CAL1, lazy per month via api.loadPartial; JS5). The slot table on
+    /// the Index page remains the no-JS path (PE1).
+    /// </summary>
+    [HttpGet("provider/tours/{id:guid}/availability/calendar")]
+    public async Task<IActionResult> Calendar(Guid id, int year, int month, CancellationToken ct)
+    {
+        if (!_currentUser.HasPermission(WebPermission.AvailabilitySlot.Read)) return Forbid();
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        if (year < 2000 || year > 2100) year = today.Year;
+        if (month is < 1 or > 12) month = today.Month;
+
+        var vm = await _facade.GetCalendarAsync(id, year, month, ct);
+        if (vm is null)
+            return BadRequest(new { error = "Could not load the calendar." });
+
+        return PartialView("_AvailabilityCalendar", vm);
+    }
+
     [HttpGet("provider/tours/{id:guid}/availability")]
     public async Task<IActionResult> Index(Guid id, CancellationToken ct)
     {

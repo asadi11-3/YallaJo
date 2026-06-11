@@ -9,6 +9,18 @@ public sealed class ListMyToursResponse
     public int TotalPages { get; init; }
 }
 
+/// <summary>[Backend] B1 mirror of GET /api/v1/tours/provider/my-tours/status-counts.</summary>
+public sealed class TourStatusCountsResponse
+{
+    public int Draft { get; init; }
+    public int Pending { get; init; }
+    public int Approved { get; init; }
+    public int Rejected { get; init; }
+    public int Suspended { get; init; }
+    public int Archived { get; init; }
+    public int Total { get; init; }
+}
+
 public sealed class TourSummaryResponse
 {
     public Guid Id { get; init; }

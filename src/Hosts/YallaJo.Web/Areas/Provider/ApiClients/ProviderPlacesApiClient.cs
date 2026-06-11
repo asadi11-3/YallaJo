@@ -27,4 +27,21 @@ public sealed class ProviderPlacesApiClient
         var url = QueryHelpers.AddQueryString(Base, query);
         return _api.GetAsync<PaginatedPlaceLookupResponse>(url, ct);
     }
+
+    /// <summary>[Backend] B2 — lightweight typeahead lookup (GET /api/v1/places/lookup).</summary>
+    public Task<ApiResult<List<PlaceLookupSuggestionResponse>>> LookupAsync(
+        string? term, int pageSize = 10, CancellationToken ct = default)
+    {
+        var query = new Dictionary<string, string?>
+        {
+            ["pageSize"] = pageSize.ToString(),
+        };
+        if (!string.IsNullOrWhiteSpace(term)) query["term"] = term;
+
+        var url = QueryHelpers.AddQueryString($"{Base}/lookup", query);
+        return _api.GetAsync<List<PlaceLookupSuggestionResponse>>(url, ct);
+    }
 }
+
+/// <summary>[Backend] B2 mirror of PlaceLookupDto (typeahead suggestion).</summary>
+public sealed record PlaceLookupSuggestionResponse(Guid Id, string Name, string? City);

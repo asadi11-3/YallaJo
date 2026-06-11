@@ -30,6 +30,16 @@
             <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>@Localizer["Provider.TourAvailability.Intro"]
         </div>
 
+        @* [Backend] B3 / CAL1: month grid lazily loaded per month by provider-availability.js
+           via api.loadPartial. Hidden without JS — the slot table below is the no-JS path (PE1). *@
+        <div class="card border d-none" data-yj-component="availability-calendar"
+             data-yj-calendar-url="@Url.Action("Calendar", "TourAvailability", new { area = "Provider", id = Model.TourId })"
+             data-error-text="@Localizer["Provider.Common.ResultsError"]"
+             data-retry-text="@Localizer["Provider.Common.Retry"]">
+            <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.TourAvailability.CalendarHeading"]</h2></div>
+            <div class="card-body" data-yj-calendar-host aria-live="polite" aria-busy="false"></div>
+        </div>
+
         <permission require="@WebPermission.AvailabilitySlot.Create">
             <div class="collapse" id="bulk-slots">
                 <div class="card border">
@@ -168,4 +178,8 @@
         }
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/provider-availability.js" asp-append-version="true"></script>
+}
 

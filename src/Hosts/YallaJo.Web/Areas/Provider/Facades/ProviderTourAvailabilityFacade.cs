@@ -61,6 +61,34 @@ public sealed class ProviderTourAvailabilityFacade
         return new(TourAvailabilityOutcome.Ok, vm);
     }
 
+    /// <summary>
+    /// [Backend] B3 — month aggregation for the availability calendar (CAL1).
+    /// Returns null on any failure: the calendar section degrades and the table remains (ERR3/PE1).
+    /// </summary>
+    public async Task<AvailabilityCalendarVm?> GetCalendarAsync(
+        Guid tourId, int year, int month, CancellationToken ct = default)
+    {
+        var result = await _availabilityApi.GetCalendarAsync(tourId, year, month, ct);
+        if (!result.IsSuccess || result.Data is null) return null;
+
+        return new AvailabilityCalendarVm
+        {
+            TourId = tourId,
+            Year = year,
+            Month = month,
+            Days = result.Data
+                .Select(d => new AvailabilityCalendarDayVm
+                {
+                    Date = d.Date,
+                    SlotCount = d.SlotCount,
+                    TotalCapacity = d.TotalCapacity,
+                    BookedSeats = d.BookedSeats,
+                    HasOpenSlots = d.HasOpenSlots,
+                })
+                .ToList(),
+        };
+    }
+
     public async Task<TourAvailabilityFormResult> GetCreateAsync(Guid tourId, CancellationToken ct = default)
     {
         var tour = await LoadTourAsync(tourId, ct);

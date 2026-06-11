@@ -54,4 +54,16 @@ public sealed class ProviderPlacesFacade
 
         return PlaceOptionsResult.Success(options);
     }
+
+    /// <summary>
+    /// [Backend] B2 — typeahead lookup for the async place combobox (F10).
+    /// Returns an empty list on any failure: the combobox simply shows no suggestions
+    /// and the SSR select remains the no-JS fallback (PE1).
+    /// </summary>
+    public async Task<IReadOnlyList<PlaceLookupSuggestionResponse>> LookupAsync(
+        string? term, CancellationToken ct = default)
+    {
+        var result = await _api.LookupAsync(term, pageSize: 10, ct);
+        return result.IsSuccess && result.Data is not null ? result.Data : [];
+    }
 }

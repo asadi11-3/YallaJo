@@ -38,6 +38,20 @@ internal static class EarningsEndpoints
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.Payout, AppAction.Read))
         .RequireAuthorization();
 
+        // [Backend] B4 — provider earnings summary for the Provider dashboard / finance page.
+        // Additive: /guide/summary remains untouched for existing consumers.
+        group.MapGet("/provider/summary", async (ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetProviderEarningsSummaryQuery(currentUser.UserId!.Value), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetProviderEarningsSummary")
+        .WithSummary("Get the current provider's earnings summary (gross, net, this month, pending payout, commission).")
+        .WithTags("Finance | Earnings")
+        .Produces<ProviderEarningsSummaryDto>(StatusCodes.Status200OK)
+        .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.Payout, AppAction.Read))
+        .RequireAuthorization();
+
         group.MapGet("/admin/dashboard", async (ISender sender, CancellationToken ct, [FromQuery] DateTime? fromUtc = null, [FromQuery] DateTime? toUtc = null) =>
         {
             var result = await sender.Send(new GetAdminFinanceDashboardQuery(fromUtc, toUtc), ct);

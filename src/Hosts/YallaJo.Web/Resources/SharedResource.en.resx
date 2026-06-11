@@ -12775,4 +12775,46 @@
 <data name="Provider.Reviews.ReportToast" xml:space="preserve">
 <value>Thanks. Our moderation team will review this report.</value>
 </data>
+<data name="Provider.Dashboard.ThisMonth" xml:space="preserve">
+<value>This month</value>
+</data>
+<data name="Provider.Dashboard.PendingPayout" xml:space="preserve">
+<value>Pending payout</value>
+</data>
+<data name="Provider.Dashboard.GrossTotal" xml:space="preserve">
+<value>Gross total</value>
+</data>
+<data name="Provider.Dashboard.TotalCommission" xml:space="preserve">
+<value>Total commission</value>
+</data>
+<data name="Provider.Dashboard.BookingsByStatus" xml:space="preserve">
+<value>Bookings by status</value>
+</data>
+<data name="Provider.Dashboard.TotalBookings" xml:space="preserve">
+<value>Total bookings</value>
+</data>
+<data name="Provider.TourForm.PlaceSearchPlaceholder" xml:space="preserve">
+<value>Type to search places…</value>
+</data>
+<data name="Provider.TourGuides.SearchPlaceholder" xml:space="preserve">
+<value>Type a guide name to search…</value>
+</data>
+<data name="Provider.TourGuides.NoMatches" xml:space="preserve">
+<value>No matching guides found.</value>
+</data>
+<data name="Provider.TourAvailability.PrevMonth" xml:space="preserve">
+<value>Previous month</value>
+</data>
+<data name="Provider.TourAvailability.NextMonth" xml:space="preserve">
+<value>Next month</value>
+</data>
+<data name="Provider.TourAvailability.SlotsLabel" xml:space="preserve">
+<value>slots</value>
+</data>
+<data name="Provider.TourAvailability.SeatsFree" xml:space="preserve">
+<value>seats free</value>
+</data>
+<data name="Provider.TourAvailability.CalendarHeading" xml:space="preserve">
+<value>Monthly overview</value>
+</data>
 </root>

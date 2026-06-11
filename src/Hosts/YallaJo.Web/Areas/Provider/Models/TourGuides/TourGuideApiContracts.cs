@@ -11,3 +11,6 @@ public sealed class TourGuideResponse
 
 // POST /api/v1/tours/{id}/guides
 public sealed record AssignTourGuideApiRequest(Guid TourGuideUserId, bool IsPrimary);
+
+/// <summary>[Backend] B7 mirror of GuideLookupDto (assignable-guide typeahead).</summary>
+public sealed record GuideLookupItemResponse(Guid UserId, string DisplayName, string? AvatarUrl);

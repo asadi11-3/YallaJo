@@ -1,5 +1,6 @@
 using ContentTours.Application.Commands.Tour.ToggleTourFeatured;
 using ContentTours.Application.Queries.Tour.Common;
+using ContentTours.Application.Queries.Tour.GetMyTourStatusCounts;
 using ContentTours.Application.Queries.Tour.ListFeaturedTours;
 using ContentTours.Application.Queries.Tour.ListMyTours;
 using ContentTours.Application.Queries.Tour.SearchTours;
@@ -127,6 +128,23 @@ internal static class TourSearchEndpoints
         .WithName("ListMyTours")
         .WithSummary("Provider dashboard — list own tours (all statuses)")
         .Produces<ListMyToursResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.ReadOwn));
+
+        // [Backend] B1: per-status counts for the provider "my tours" listing tabs.
+        group.MapGet("/provider/my-tours/status-counts", async (
+            ISender sender,
+            ICurrentUser currentUser,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new GetMyTourStatusCountsQuery(currentUser.UserId!.Value), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetMyTourStatusCounts")
+        .WithSummary("Provider dashboard — per-status counts of own tours")
+        .Produces<TourStatusCountsDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.ReadOwn));

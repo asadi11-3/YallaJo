@@ -55,3 +55,11 @@ public sealed record CreateBulkAvailabilitySlotsApiRequest(
     TimeOnly EndTime,
     int MaxCapacity,
     bool? SkipExisting);
+
+/// <summary>[Backend] B3 mirror of AvailabilityCalendarDayDto (one row per day with slots).</summary>
+public sealed record AvailabilityCalendarDayResponse(
+    DateOnly Date,
+    int SlotCount,
+    int TotalCapacity,
+    int BookedSeats,
+    bool HasOpenSlots);

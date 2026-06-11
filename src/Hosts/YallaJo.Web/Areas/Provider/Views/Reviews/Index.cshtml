@@ -25,15 +25,19 @@
                         <div class="col-sm-8 col-lg-6">
                             <label class="form-label small mb-1" for="review-tour">@Localizer["Provider.Reviews.ChooseListing"]</label>
                             <select id="review-tour" name="tourId" class="form-select">
+                                @* [Backend] B6: options carry batch-fetched rating + count; degrades to plain names (ERR3). *@
                                 @foreach (var t in Model.Tours)
                                 {
+                                    var suffix = t.ReviewCount is not null
+                                        ? $" — {t.AverageRating:0.0} ★ ({t.ReviewCount})"
+                                        : string.Empty;
                                     if (t.Id == Model.SelectedTourId)
                                     {
-                                        <option value="@t.Id" selected>@t.Name</option>
+                                        <option value="@t.Id" selected>@t.Name@suffix</option>
                                     }
                                     else
                                     {
-                                        <option value="@t.Id">@t.Name</option>
+                                        <option value="@t.Id">@t.Name@suffix</option>
                                     }
                                 }
                             </select>

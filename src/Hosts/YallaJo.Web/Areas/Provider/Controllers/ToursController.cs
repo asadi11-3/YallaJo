@@ -210,6 +210,19 @@ public sealed class ToursController : ProviderTourResourceController
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// [Backend] B2 Web proxy — JSON suggestions for the async place combobox (F10/JS5).
+    /// The browser never calls the API host directly; no-JS users keep the SSR select (PE1).
+    /// </summary>
+    [HttpGet("provider/tours/places-lookup")]
+    public async Task<IActionResult> PlacesLookup(string? term, CancellationToken ct)
+    {
+        if (!_currentUser.HasPermission(WebPermission.Tour.ReadOwn)) return Forbid();
+
+        var items = await _placesFacade.LookupAsync(term, ct);
+        return Json(items.Select(p => new { id = p.Id, name = p.Name, city = p.City }));
+    }
+
     private async Task<IActionResult?> PopulatePlaceOptionsAsync(ProviderTourFormVm vm, CancellationToken ct)
     {
         var result = await _placesFacade.GetPlaceOptionsAsync(ct);

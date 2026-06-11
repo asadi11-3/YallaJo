@@ -28,6 +28,10 @@ public sealed class ProviderToursApiClient
         return _api.GetAsync<ListMyToursResponse>(url, ct);
     }
 
+    /// <summary>[Backend] B1 — per-status listing counts for the filter tabs.</summary>
+    public Task<ApiResult<TourStatusCountsResponse>> GetStatusCountsAsync(CancellationToken ct = default)
+        => _api.GetAsync<TourStatusCountsResponse>($"{Base}/provider/my-tours/status-counts", ct);
+
     public Task<ApiResult<TourDetailResponse>> GetByIdAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<TourDetailResponse>($"{Base}/{id}", ct);
 

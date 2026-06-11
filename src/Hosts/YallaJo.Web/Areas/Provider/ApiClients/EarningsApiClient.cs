@@ -13,6 +13,10 @@ public sealed class EarningsApiClient
     public Task<ApiResult<GuideEarningsSummaryResponse>> GetSummaryAsync(CancellationToken ct = default)
         => _api.GetAsync<GuideEarningsSummaryResponse>("/api/v1/finance/guide/summary", ct);
 
+    // [Backend] B4 — richer provider summary (this-month / pending payout / commission).
+    public Task<ApiResult<ProviderEarningsSummaryResponse>> GetProviderSummaryAsync(CancellationToken ct = default)
+        => _api.GetAsync<ProviderEarningsSummaryResponse>("/api/v1/finance/provider/summary", ct);
+
     public Task<ApiResult<List<GuideEarningResponse>>> GetEarningsAsync(CancellationToken ct = default)
         => _api.GetAsync<List<GuideEarningResponse>>("/api/v1/finance/guide", ct);
 

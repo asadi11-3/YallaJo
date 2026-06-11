@@ -3,6 +3,7 @@ using Booking.Application.Commands.CreateAvailabilitySlot;
 using Booking.Application.Commands.CreateBulkAvailabilitySlots;
 using Booking.Application.Commands.DeleteAvailabilitySlot;
 using Booking.Application.Commands.UpdateAvailabilitySlot;
+using Booking.Application.Queries.GetAvailabilityCalendar;
 using Booking.Application.Queries.GetAvailabilityForTour;
 using Booking.Application.Queries.GetAvailabilityForTourOnDate;
 using Booking.Application.Queries.GetManageAvailabilityForTour;
@@ -28,6 +29,33 @@ internal static class AvailabilitySlotEndpoints
         MapGetByTourEndpoint(group);
         MapGetByTourOnDateEndpoint(group);
         MapGetManageByTourEndpoint(group);
+        MapGetCalendarEndpoint(group);
+    }
+
+    // [Backend] B3: per-day month aggregates for the provider availability calendar (CAL1).
+    private static void MapGetCalendarEndpoint(RouteGroupBuilder group)
+    {
+        group.MapGet("/availability/{tourId:guid}/calendar", async (
+                Guid tourId,
+                int year,
+                int month,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(
+                    new GetAvailabilityCalendarQuery(tourId, year, month),
+                    cancellationToken);
+                return result.ToApiResult();
+            })
+            .WithName("GetAvailabilityCalendar")
+            .WithSummary("Owner: per-day slot aggregates for one month (calendar view).")
+            .Produces<IReadOnlyList<AvailabilityCalendarDayDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.AvailabilitySlot, AppAction.Read))
+            .RequireAuthorization();
     }
 
     private static void MapGetManageByTourEndpoint(RouteGroupBuilder group)

@@ -85,7 +85,13 @@
 
     <div class="col-md-12">
         <label asp-for="PlaceId" class="form-label">@Localizer["Provider.TourForm.Place"]</label>
-        <select asp-for="PlaceId" class="form-select" aria-describedby="tour-place-help">
+        @* [Backend] B2 + F10: provider-tour-form.js upgrades this to an async Choices.js combobox
+           backed by data-yj-lookup-url; the SSR select itself is the no-JS path (PE1). *@
+        <select asp-for="PlaceId" class="form-select" aria-describedby="tour-place-help"
+                data-yj-place-combobox
+                data-yj-lookup-url="@Url.Action("PlacesLookup", "Tours", new { area = "Provider" })"
+                data-yj-search-placeholder="@Localizer["Provider.TourForm.PlaceSearchPlaceholder"]"
+                data-yj-no-results="@Localizer["Provider.TourForm.NoPlaces"]">
             <option value="">@Localizer["Provider.TourForm.PlaceSelect"]</option>
             @foreach (var place in Model.PlaceOptions)
             {

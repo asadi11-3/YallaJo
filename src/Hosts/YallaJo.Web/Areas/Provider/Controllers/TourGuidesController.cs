@@ -41,6 +41,19 @@ public sealed class TourGuidesController : ProviderTourResourceController
     // ── POST /provider/tours/{id}/guides/assign ───────────────────────────────────
     [HttpPost("provider/tours/{id:guid}/guides/assign")]
     [ValidateAntiForgeryToken]
+    /// <summary>
+    /// [Backend] B7 Web proxy — JSON suggestions for the guide combobox (F10/JS5).
+    /// No-JS users keep the manual GUID input (PE1).
+    /// </summary>
+    [HttpGet("provider/tours/{id:guid}/guides/lookup")]
+    public async Task<IActionResult> Lookup(Guid id, string? term, CancellationToken ct)
+    {
+        if (!_currentUser.HasPermission(WebPermission.TourGuide.Update)) return Forbid();
+
+        var items = await _facade.LookupAsync(id, term, ct);
+        return Json(items.Select(g => new { userId = g.UserId, displayName = g.DisplayName, avatarUrl = g.AvatarUrl }));
+    }
+
     public async Task<IActionResult> Assign(Guid id, AssignTourGuideFormVm vm, CancellationToken ct)
     {
         if (!_currentUser.HasPermission(WebPermission.TourGuide.Update))

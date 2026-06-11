@@ -29,6 +29,17 @@ public sealed class ProviderBookingItemResponse
     public DateTime CreatedAt { get; init; }
 }
 
+/// <summary>[Backend] B5 — mirrors ProviderBookingStatsDto from GET /api/v1/booking/provider/bookings/stats.</summary>
+public sealed class ProviderBookingStatsResponse
+{
+    public int Total { get; init; }
+    public int Pending { get; init; }
+    public int Confirmed { get; init; }
+    public int Completed { get; init; }
+    public int Cancelled { get; init; }
+    public int Rejected { get; init; }
+}
+
 /// <summary>Mirrors TourBookingDetailDto from GET /api/v1/booking/{id} (provider can view own-tour booking).</summary>
 public sealed class ProviderBookingDetailResponse
 {

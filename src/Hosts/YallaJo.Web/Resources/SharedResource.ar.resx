@@ -12775,4 +12775,46 @@
 <data name="Provider.Reviews.ReportToast" xml:space="preserve">
 <value>شكرًا لك. سيقوم فريق الإشراف بمراجعة هذا البلاغ.</value>
 </data>
+<data name="Provider.Dashboard.ThisMonth" xml:space="preserve">
+<value>هذا الشهر</value>
+</data>
+<data name="Provider.Dashboard.PendingPayout" xml:space="preserve">
+<value>دفعات قيد الانتظار</value>
+</data>
+<data name="Provider.Dashboard.GrossTotal" xml:space="preserve">
+<value>الإجمالي الكلي</value>
+</data>
+<data name="Provider.Dashboard.TotalCommission" xml:space="preserve">
+<value>إجمالي العمولة</value>
+</data>
+<data name="Provider.Dashboard.BookingsByStatus" xml:space="preserve">
+<value>الحجوزات حسب الحالة</value>
+</data>
+<data name="Provider.Dashboard.TotalBookings" xml:space="preserve">
+<value>إجمالي الحجوزات</value>
+</data>
+<data name="Provider.TourForm.PlaceSearchPlaceholder" xml:space="preserve">
+<value>اكتب للبحث عن الأماكن…</value>
+</data>
+<data name="Provider.TourGuides.SearchPlaceholder" xml:space="preserve">
+<value>اكتب اسم المرشد للبحث…</value>
+</data>
+<data name="Provider.TourGuides.NoMatches" xml:space="preserve">
+<value>لا يوجد مرشدون مطابقون.</value>
+</data>
+<data name="Provider.TourAvailability.PrevMonth" xml:space="preserve">
+<value>الشهر السابق</value>
+</data>
+<data name="Provider.TourAvailability.NextMonth" xml:space="preserve">
+<value>الشهر التالي</value>
+</data>
+<data name="Provider.TourAvailability.SlotsLabel" xml:space="preserve">
+<value>فترات</value>
+</data>
+<data name="Provider.TourAvailability.SeatsFree" xml:space="preserve">
+<value>مقاعد متاحة</value>
+</data>
+<data name="Provider.TourAvailability.CalendarHeading" xml:space="preserve">
+<value>نظرة شهرية</value>
+</data>
 </root>
