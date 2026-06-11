@@ -1,0 +1,68 @@
+@model YallaJo.Web.Areas.Public.Models.AccessibilityReviews.MyAccessibilityReviewsVm
+@* Phase 3 (Accounts plan): accessibility reviews extracted from AccessibilityReviews/Index into the
+   Reviews hub tab (R2/PE1). Delete POST keeps its route and AccessibilityReview.Delete gate. *@
+@{
+    string Stars(decimal rating)
+    {
+        var full = (int)Math.Round(rating, MidpointRounding.AwayFromZero);
+        return string.Concat(Enumerable.Range(1, 5).Select(i =>
+            i <= full ? "<i class=\"bi bi-star-fill text-warning\"></i>" : "<i class=\"bi bi-star text-warning\"></i>"));
+    }
+}
+
+<p class="small text-body-secondary mb-3"><i class="bi bi-universal-access me-2"></i>Edit a review from the place, tour, business or guide page within 48 hours of posting.</p>
+
+@if (!Model.HasItems)
+{
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-universal-access fs-1 d-block mb-2"></i>
+        <p class="mb-0">You haven't written any accessibility reviews yet.</p>
+    </div>
+}
+else
+{
+    <div class="vstack gap-3">
+        @foreach (var r in Model.Items)
+        {
+            <div class="card border">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-1">
+                        <div>
+                            @Html.Raw(Stars(r.Rating))
+                            @if (!string.IsNullOrWhiteSpace(r.Title))
+                            {
+                                <span class="fw-semibold ms-2">@r.Title</span>
+                            }
+                            <span class="badge text-bg-light border ms-2">@r.EntityLabel</span>
+                        </div>
+                        <span class="text-secondary small"><i class="bi bi-calendar3 me-1"></i>@r.CreatedAt.ToString("d MMM yyyy")</span>
+                    </div>
+
+                    @if (r.FeatureTypes.Count > 0)
+                    {
+                        <div class="mb-2">
+                            @foreach (var f in r.FeatureTypes)
+                            {
+                                <span class="badge text-bg-light border me-1">@f</span>
+                            }
+                        </div>
+                    }
+
+                    <p class="mb-2 preserve-whitespace">@r.Content</p>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (r.EntityUrl is { } url)
+                        {
+                            <a class="btn btn-sm btn-outline-secondary" href="@url">View @r.EntityLabel.ToLowerInvariant()</a>
+                        }
+                        <form method="post" asp-area="Accounts" asp-controller="AccessibilityReviews" asp-action="Delete" asp-route-id="@r.Id"
+                              data-confirm="@Localizer["Public.Confirm.DeleteAccessibilityReview"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

@@ -1,20 +1,18 @@
 /**
- * Accounts settings hub (Phase 2, Accounts plan).
- * - Tab <-> URL hash sync for the settings hub (UI-UX-R2; PE1: the server honours ?tab= so the
- *   page is fully usable without this script).
+ * Accounts tab hubs (Phases 2-3, Accounts plan).
+ * - Tab <-> URL hash sync for the settings/billing/reviews hubs (UI-UX-R2; PE1: the server
+ *   honours ?tab= so every hub is fully usable without this script).
  * - Delete-account checkbox gate (moved here from the retired Delete/Index inline script).
  */
 (function () {
     "use strict";
 
-    var root = document.querySelector('[data-yj-component="settings-tabs"]');
-    var buttons;
-
-    // Tab <-> hash sync (JS2/JS4: idempotent, self-initialising).
-    if (root && !root.dataset.yjInit && window.bootstrap && window.bootstrap.Tab) {
+    // Tab <-> hash sync (JS2/JS4: idempotent, self-initialising). One hub root per page.
+    function initTabs(root) {
+        if (!root || root.dataset.yjInit || !window.bootstrap || !window.bootstrap.Tab) return;
         root.dataset.yjInit = "1";
 
-        buttons = Array.prototype.slice.call(
+        var buttons = Array.prototype.slice.call(
             root.querySelectorAll('[data-bs-target^="#pane-"]'));
 
         function buttonForHash(hash) {
@@ -46,6 +44,10 @@
         window.addEventListener("hashchange", openFromHash);
         openFromHash();
     }
+
+    Array.prototype.slice.call(document.querySelectorAll(
+        '[data-yj-component="settings-tabs"], [data-yj-component="account-tabs"]'))
+        .forEach(initTabs);
 
     // Delete-account gate: the destructive submit stays disabled until the user ticks the box.
     var check = document.getElementById("deleteaccountCheck");

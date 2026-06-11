@@ -12790,4 +12790,22 @@
 <data name="Accounts.Settings.Tab.Account" xml:space="preserve">
 <value>الحساب</value>
 </data>
+<data name="Accounts.Billing.Tab.Payments" xml:space="preserve">
+<value>المدفوعات</value>
+</data>
+<data name="Accounts.Billing.Tab.Invoices" xml:space="preserve">
+<value>الفواتير</value>
+</data>
+<data name="Accounts.Billing.Tab.Disputes" xml:space="preserve">
+<value>النزاعات</value>
+</data>
+<data name="Accounts.Reviews.Tab.Mine" xml:space="preserve">
+<value>مراجعاتي</value>
+</data>
+<data name="Accounts.Reviews.Tab.Accessibility" xml:space="preserve">
+<value>إمكانية الوصول</value>
+</data>
+<data name="Accounts.Bookings.Tab.JoinRequests" xml:space="preserve">
+<value>طلبات الانضمام</value>
+</data>
 </root>

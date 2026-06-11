@@ -1,31 +1,20 @@
-@model YallaJo.Web.Areas.Accounts.Models.Payments.PaymentsVm
+@model YallaJo.Web.Areas.Accounts.Models.Payments.BillingVm
 @using YallaJo.Web.Areas.Accounts.Shared
+@using YallaJo.Web.Infrastructure.Authorization
 @{
-    ViewData["Title"] = "My Payments";
+    ViewData["Title"] = "Billing";
     ViewData["AccountNav"] = "Payments";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
+    var activeTab = (Model.ActiveTab ?? "payments").ToLowerInvariant();
 
-    string Money(decimal amount, string? currency)
-        => string.IsNullOrWhiteSpace(currency) ? amount.ToString("N2") : $"{amount:N2} {currency}";
-
-    string StatusBadge(string status) => status?.ToLowerInvariant() switch
-    {
-        "completed" or "succeeded" or "paid" or "captured" => "success",
-        "pending" or "processing" or "initiated" or "requiresaction" => "warning",
-        "failed" or "cancelled" or "canceled" or "expired" => "danger",
-        "refunded" or "partiallyrefunded" => "info",
-        _ => "secondary",
-    };
-
-    string PrettyType(string type) => type?.ToLowerInvariant() switch
-    {
-        "booking" => "Booking",
-        "refund" => "Refund",
-        _ => type ?? "—",
-    };
+    string TabClass(string name) => activeTab == name ? "nav-link active" : "nav-link";
+    string PaneClass(string name) => activeTab == name ? "tab-pane fade show active" : "tab-pane fade";
+    string Selected(string name) => activeTab == name ? "true" : "false";
 }
 
+@* Phase 3 (Accounts plan): Billing hub — Payments, Invoices and Disputes consolidated into one tabbed page (R2/PE1).
+   The retired /accounts/invoices and /accounts/disputes pages 301 here with ?tab=. *@
 <section class="pt-3">
     <div class="container">
         <div class="row g-4 g-xl-5">
@@ -34,66 +23,49 @@
             <div class="col-lg-8 col-xl-9">
                 <partial name="_AccountMenuToggle" />
 
-                <div class="card border">
-                    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                        <h4 class="card-header-title mb-0">My Payments</h4>
-                        @if (Model.HasPayments)
-                        {
-                            <span class="badge bg-primary bg-opacity-10 text-primary">@Model.Payments.Count</span>
-                        }
+                <ul class="nav nav-tabs nav-bottom-line mb-4 flex-nowrap overflow-auto" id="billingTabs" data-yj-component="account-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="@TabClass("payments")" id="tab-payments" data-bs-toggle="tab" data-bs-target="#pane-payments" type="button" role="tab" aria-controls="pane-payments" aria-selected="@Selected("payments")">
+                            <i class="bi bi-credit-card fa-fw me-1" aria-hidden="true"></i>@Localizer["Accounts.Billing.Tab.Payments"]
+                        </button>
+                    </li>
+                    <permission require="@WebPermission.Invoice.Read">
+                        <li class="nav-item" role="presentation">
+                            <button class="@TabClass("invoices")" id="tab-invoices" data-bs-toggle="tab" data-bs-target="#pane-invoices" type="button" role="tab" aria-controls="pane-invoices" aria-selected="@Selected("invoices")">
+                                <i class="bi bi-receipt fa-fw me-1" aria-hidden="true"></i>@Localizer["Accounts.Billing.Tab.Invoices"]
+                            </button>
+                        </li>
+                    </permission>
+                    <permission require="@WebPermission.Refund.Read">
+                        <li class="nav-item" role="presentation">
+                            <button class="@TabClass("disputes")" id="tab-disputes" data-bs-toggle="tab" data-bs-target="#pane-disputes" type="button" role="tab" aria-controls="pane-disputes" aria-selected="@Selected("disputes")">
+                                <i class="bi bi-exclamation-octagon fa-fw me-1" aria-hidden="true"></i>@Localizer["Accounts.Billing.Tab.Disputes"]
+                            </button>
+                        </li>
+                    </permission>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="@PaneClass("payments")" id="pane-payments" role="tabpanel" aria-labelledby="tab-payments" tabindex="0">
+                        <partial name="_PaymentsTab" model="Model.Payments" />
                     </div>
-                    <div class="card-body">
-                        @if (!Model.HasPayments)
-                        {
-                            <div class="text-center py-5">
-                                <i class="bi bi-credit-card-2-front display-5 text-body-tertiary"></i>
-                                <h6 class="mt-3 mb-1">No payments yet</h6>
-                                <p class="text-secondary mb-0">Your payment history will appear here once you complete a booking.</p>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Type</th>
-                                            <th>Method</th>
-                                            <th>Status</th>
-                                            <th class="text-end">Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var p in Model.Payments)
-                                        {
-                                            <tr>
-                                                <td>
-                                                    <span class="fw-semibold">@p.CreatedAt.ToString("dd MMM yyyy")</span>
-                                                    @if (p.PaidAt is { } paid)
-                                                    {
-                                                        <small class="d-block text-secondary">Paid @paid.ToString("dd MMM yyyy")</small>
-                                                    }
-                                                </td>
-                                                <td>@PrettyType(p.PaymentType)</td>
-                                                <td>@p.PaymentMethod</td>
-                                                <td>
-                                                    <span class="badge bg-@(StatusBadge(p.Status)) bg-opacity-10 text-@StatusBadge(p.Status)">@p.Status</span>
-                                                    @if (p.IsRefunded)
-                                                    {
-                                                        <span class="badge bg-info bg-opacity-10 text-info ms-1">Refunded @Money(p.RefundedTotal, p.Currency)</span>
-                                                    }
-                                                </td>
-                                                <td class="text-end fw-semibold">@Money(p.Amount, p.Currency)</td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                    </div>
+                    <permission require="@WebPermission.Invoice.Read">
+                        <div class="@PaneClass("invoices")" id="pane-invoices" role="tabpanel" aria-labelledby="tab-invoices" tabindex="0">
+                            <partial name="_InvoicesTab" model="Model.Invoices" />
+                        </div>
+                    </permission>
+                    <permission require="@WebPermission.Refund.Read">
+                        <div class="@PaneClass("disputes")" id="pane-disputes" role="tabpanel" aria-labelledby="tab-disputes" tabindex="0">
+                            <partial name="_DisputesTab" model="Model.Disputes" />
+                        </div>
+                    </permission>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/accounts-settings.js" asp-append-version="true"></script>
+}

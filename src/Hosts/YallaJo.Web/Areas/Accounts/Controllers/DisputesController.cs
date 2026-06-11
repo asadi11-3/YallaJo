@@ -2,54 +2,35 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.Disputes;
-using YallaJo.Web.Areas.Accounts.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
 /// <summary>
-/// §3.8 Disputes — the customer's standalone disputes list + open-dispute form, served
-/// at <c>/accounts/disputes</c>. Reads <c>GET /disputes/my</c> and opens via
-/// <c>POST /disputes</c> (Finance module). Owner scoping is enforced by the API.
-/// <para>
-/// Cache: authenticated ⇒ NoStore by the global base policy. Perm: <c>[Authorize]</c>
-/// plus <c>Permission.Refund.{Read,Create}</c> which mirror the backend
-/// <c>FinanceFeatures.Refund</c> Read/Create requirements on these two endpoints.
-/// Every write carries anti-forgery and follows PRG.
-/// </para>
+/// §3.8 Disputes. Phase 3 (Accounts master plan): the standalone disputes page moved into
+/// the Billing hub (/accounts/payments?tab=disputes). Index now permanently redirects
+/// there; Open keeps its route, anti-forgery and <c>Refund.Create</c> gate, and PRGs back
+/// to the hub tab. Owner scoping is enforced by the API (Finance module).
 /// </summary>
 [Area("Accounts")]
 [Authorize]
 public sealed class DisputesController : BaseController
 {
     private readonly DisputesFacade _disputes;
-    private readonly ProfileFacade _profile;
 
-    public DisputesController(DisputesFacade disputes, ProfileFacade profile)
+    public DisputesController(DisputesFacade disputes)
     {
         _disputes = disputes;
-        _profile = profile;
     }
 
     [HttpGet("accounts/disputes")]
-    [RequirePermission(WebPermission.Refund.Read)]
-    public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
-    {
-        ViewData["AccountNav"] = "Disputes";
-        await PopulateSidebarAsync(ct);
-
-        var result = await _disputes.GetAsync(page, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-
-        if (!result.IsSuccess || result.Data is null)
-        {
-            SetError(result.Error);
-            return View(new DisputesVm { PageNumber = page < 1 ? 1 : page });
-        }
-
-        return View(result.Data);
-    }
+    public IActionResult Index(int page = 1)
+        => RedirectPermanent(Url.Action(
+            "Index", "Payments",
+            page > 1
+                ? new { area = "Accounts", tab = "disputes", page }
+                : (object)new { area = "Accounts", tab = "disputes" })!);
 
     [HttpPost("accounts/disputes")]
     [ValidateAntiForgeryToken]
@@ -59,7 +40,7 @@ public sealed class DisputesController : BaseController
         if (!ModelState.IsValid)
         {
             SetError("Please correct the highlighted fields and try again.");
-            return RedirectToAction(nameof(Index));
+            return BackToTab();
         }
 
         var result = await _disputes.OpenAsync(form, ct);
@@ -70,26 +51,9 @@ public sealed class DisputesController : BaseController
         else
             SetError(result.Error ?? "Could not open the dispute.");
 
-        return RedirectToAction(nameof(Index));
+        return BackToTab();
     }
 
-    private async Task PopulateSidebarAsync(CancellationToken ct)
-    {
-        var profile = await _profile.GetAsync(ct);
-        if (profile is { IsSuccess: true, Data: { } p })
-        {
-            ViewBag.Sidebar = new AccountSidebarVm
-            {
-                AvatarUrl = p.AvatarUrl,
-                DisplayName = string.IsNullOrWhiteSpace(p.DisplayName)
-                    ? $"{p.FirstName} {p.LastName}".Trim()
-                    : p.DisplayName,
-                Email = p.Email,
-            };
-        }
-        else
-        {
-            ViewBag.Sidebar = new AccountSidebarVm();
-        }
-    }
+    private IActionResult BackToTab()
+        => RedirectToAction("Index", "Payments", new { area = "Accounts", tab = "disputes" });
 }

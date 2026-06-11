@@ -6,7 +6,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
     var tabs = Model.Tabs;
-
+    var isJoinRequestsTab = string.Equals(Model.ActiveTab, "join-requests", StringComparison.OrdinalIgnoreCase);
 }
 
 <section class="pt-3">
@@ -23,19 +23,30 @@
                     </div>
 
                     <div class="card-body">
-                        <ul class="nav nav-tabs nav-bottom-line mb-4">
+                        <ul class="nav nav-tabs nav-bottom-line mb-4 flex-nowrap overflow-auto">
                             @foreach (var tab in tabs)
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link @(Model.ActiveTab == tab ? "active" : "")"
+                                    <a class="nav-link @(!isJoinRequestsTab && Model.ActiveTab == tab ? "active" : "")"
                                        asp-area="Accounts" asp-controller="Bookings" asp-action="Index" asp-route-tab="@tab">
                                         @tab
                                     </a>
                                 </li>
                             }
+                            @* Phase 3 (Accounts plan): join requests folded into My Trips as an extra tab (PE1: real link). *@
+                            <li class="nav-item">
+                                <a class="nav-link @(isJoinRequestsTab ? "active" : "")"
+                                   asp-area="Accounts" asp-controller="Bookings" asp-action="Index" asp-route-tab="join-requests">
+                                    @Localizer["Accounts.Bookings.Tab.JoinRequests"]
+                                </a>
+                            </li>
                         </ul>
 
-                        @if (Model.Bookings.Count == 0)
+                        @if (isJoinRequestsTab)
+                        {
+                            <partial name="_JoinRequestsTab" model="Model.JoinRequests ?? new YallaJo.Web.Areas.Accounts.Models.JoinRequests.MyJoinRequestsVm()" />
+                        }
+                        else if (Model.Bookings.Count == 0)
                         {
                             @* Phase 1: shared empty state (UI-UX-L6) *@
                             <partial name="~/Areas/Public/Views/Shared/_EmptyState.cshtml" view-data='@(new ViewDataDictionary(ViewData)
@@ -94,3 +105,8 @@
         </div>
     </div>
 </section>
+
+@section Scripts {
+    @* Phase 3: join-request form client validation (PE1: native POST works without JS). *@
+    <partial name="_ValidationScriptsPartial" />
+}

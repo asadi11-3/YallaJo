@@ -15,12 +15,14 @@ public sealed class BookingsController : BaseController
     private readonly BookingsFacade _bookings;
     private readonly ProfileFacade _profile;
     private readonly PaymentsFacade _payments;
+    private readonly JoinRequestsFacade _joinRequests;
 
-    public BookingsController(BookingsFacade bookings, ProfileFacade profile, PaymentsFacade payments)
+    public BookingsController(BookingsFacade bookings, ProfileFacade profile, PaymentsFacade payments, JoinRequestsFacade joinRequests)
     {
         _bookings = bookings;
         _profile = profile;
         _payments = payments;
+        _joinRequests = joinRequests;
     }
 
     [HttpGet("accounts/bookings")]
@@ -29,16 +31,38 @@ public sealed class BookingsController : BaseController
         ViewData["AccountNav"] = "Bookings";
         await PopulateSidebarAsync(ct);
 
-        var result = await _bookings.GetBookingsAsync(tab, ct);
+        // Phase 3 (Accounts plan): "join-requests" is rendered as an extra tab on My Trips.
+        var isJoinRequestsTab = string.Equals(tab, "join-requests", StringComparison.OrdinalIgnoreCase);
+
+        var result = await _bookings.GetBookingsAsync(isJoinRequestsTab ? null : tab, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        BookingsVm vm;
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new BookingsVm { ActiveTab = tab ?? "Upcoming" });
+            vm = new BookingsVm { ActiveTab = tab ?? "Upcoming" };
+        }
+        else
+        {
+            vm = result.Data;
         }
 
-        return View(result.Data);
+        if (isJoinRequestsTab)
+        {
+            // Re-key the VM to the join-requests tab while keeping the booking tabs for the tab strip.
+            vm = new BookingsVm
+            {
+                ActiveTab = "join-requests",
+                Bookings = vm.Bookings,
+                Tabs = vm.Tabs,
+                JoinRequests = (await _joinRequests.GetMineAsync(ct)) is { IsSuccess: true, Data: { } jr }
+                    ? jr
+                    : new Models.JoinRequests.MyJoinRequestsVm(),
+            };
+        }
+
+        return View(vm);
     }
 
     [HttpGet("accounts/bookings/{id:guid}")]

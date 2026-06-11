@@ -21,7 +21,8 @@
                     <a class="btn btn-sm btn-light mb-0" asp-area="Accounts" asp-controller="Bookings" asp-action="Index">
                         <i class="bi bi-arrow-left me-1"></i>Back to bookings
                     </a>
-                    <a class="btn btn-sm btn-light mb-0" asp-area="Accounts" asp-controller="Invoices" asp-action="Index">
+                    @* Phase 3 (Accounts plan): invoices live on the Billing hub now. *@
+                    <a class="btn btn-sm btn-light mb-0" asp-area="Accounts" asp-controller="Payments" asp-action="Index" asp-route-tab="invoices">
                         <i class="bi bi-receipt me-1"></i>Invoices
                     </a>
                 </div>

@@ -12790,4 +12790,22 @@
 <data name="Accounts.Settings.Tab.Account" xml:space="preserve">
 <value>Account</value>
 </data>
+<data name="Accounts.Billing.Tab.Payments" xml:space="preserve">
+<value>Payments</value>
+</data>
+<data name="Accounts.Billing.Tab.Invoices" xml:space="preserve">
+<value>Invoices</value>
+</data>
+<data name="Accounts.Billing.Tab.Disputes" xml:space="preserve">
+<value>Disputes</value>
+</data>
+<data name="Accounts.Reviews.Tab.Mine" xml:space="preserve">
+<value>My reviews</value>
+</data>
+<data name="Accounts.Reviews.Tab.Accessibility" xml:space="preserve">
+<value>Accessibility</value>
+</data>
+<data name="Accounts.Bookings.Tab.JoinRequests" xml:space="preserve">
+<value>Join requests</value>
+</data>
 </root>

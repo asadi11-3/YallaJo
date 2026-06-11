@@ -1,3 +1,5 @@
+using YallaJo.Web.Areas.Accounts.Models.JoinRequests;
+
 namespace YallaJo.Web.Areas.Accounts.Models.Bookings;
 
 public sealed class BookingsVm
@@ -5,6 +7,12 @@ public sealed class BookingsVm
     public string ActiveTab { get; init; } = "Upcoming";
     public IReadOnlyList<BookingCardVm> Bookings { get; init; } = [];
     public IReadOnlyList<string> Tabs { get; init; } = [];
+
+    /// <summary>
+    /// Phase 3 (Accounts plan): join requests rendered as an extra tab on My Trips.
+    /// Populated only when ActiveTab == "join-requests".
+    /// </summary>
+    public MyJoinRequestsVm? JoinRequests { get; set; }
 }
 
 public sealed class BookingCardVm
