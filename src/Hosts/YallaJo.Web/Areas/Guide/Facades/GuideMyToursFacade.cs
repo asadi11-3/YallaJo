@@ -26,18 +26,15 @@ public sealed class GuideMyToursFacade
 
     public async Task<ApiResult<MyToursVm>> GetMyToursAsync(int page, int pageSize, CancellationToken ct = default)
     {
-        var profile = await _api.GetMyProfileAsync(ct);
-        if (profile.RequireSignOut)
+        // Resolve the guide id through the request-scoped accessor so a page render
+        // shares the single memoized GET /guides/me call (kills the duplicate round-trip).
+        var guideId = await _guideId.GetGuideIdAsync(ct);
+        if (guideId is null)
         {
-            return ApiResult<MyToursVm>.ForceSignOut();
+            return ApiResult<MyToursVm>.CreateFailure("Unable to resolve your guide profile.");
         }
 
-        if (!profile.IsSuccess || profile.Data is null)
-        {
-            return ApiResult<MyToursVm>.Fail(profile.StatusCode, profile.Error);
-        }
-
-        var toursResult = await _api.GetMyToursAsync(profile.Data.Id, page, pageSize, ct);
+        var toursResult = await _api.GetMyToursAsync(guideId.Value, page, pageSize, ct);
         if (toursResult.RequireSignOut)
         {
             return ApiResult<MyToursVm>.ForceSignOut();
