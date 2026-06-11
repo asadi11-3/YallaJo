@@ -39,7 +39,7 @@ else if (Model.Recommendations is { Count: > 0 })
 else
 {
     <div class="text-center py-4">
-        <p class="text-muted mb-2">No recommendations yet.</p>
-        <a asp-area="Accounts" asp-controller="Recommendations" asp-action="Index" class="btn btn-sm btn-primary">Discover</a>
+        <p class="text-muted mb-2">@Localizer["Accounts.Overview.NoRecommendations"]</p>
+        <a asp-area="Accounts" asp-controller="Recommendations" asp-action="Index" class="btn btn-sm btn-primary">@Localizer["Accounts.Overview.Discover"]</a>
     </div>
 }

@@ -12937,4 +12937,55 @@
 <data name="Accounts.Nav.AvatarAlt" xml:space="preserve">
 <value>Profile photo</value>
 </data>
+<data name="Accounts.Overview.Title" xml:space="preserve">
+<value>My account</value>
+</data>
+<data name="Accounts.Overview.WelcomeBack" xml:space="preserve">
+<value>Welcome back, {0}</value>
+</data>
+<data name="Accounts.Overview.HeroSubtitle" xml:space="preserve">
+<value>Here's a quick look at your trips, favorites and picks for you.</value>
+</data>
+<data name="Accounts.Overview.UnreadAria" xml:space="preserve">
+<value>{0} unread notifications</value>
+</data>
+<data name="Accounts.Overview.UpcomingTrips" xml:space="preserve">
+<value>Upcoming trips</value>
+</data>
+<data name="Accounts.Overview.Favorites" xml:space="preserve">
+<value>Favorites</value>
+</data>
+<data name="Accounts.Overview.PicksForYou" xml:space="preserve">
+<value>Picks for you</value>
+</data>
+<data name="Accounts.Overview.ViewBookings" xml:space="preserve">
+<value>View bookings</value>
+</data>
+<data name="Accounts.Overview.YourFavorites" xml:space="preserve">
+<value>Your favorites</value>
+</data>
+<data name="Accounts.Overview.ViewAll" xml:space="preserve">
+<value>View all</value>
+</data>
+<data name="Accounts.Overview.Discover" xml:space="preserve">
+<value>Discover</value>
+</data>
+<data name="Accounts.Overview.Manage" xml:space="preserve">
+<value>Manage</value>
+</data>
+<data name="Accounts.Overview.NoUpcomingTrips" xml:space="preserve">
+<value>No upcoming trips yet.</value>
+</data>
+<data name="Accounts.Overview.ExploreTours" xml:space="preserve">
+<value>Explore tours</value>
+</data>
+<data name="Accounts.Overview.NoFavorites" xml:space="preserve">
+<value>No favorites saved yet.</value>
+</data>
+<data name="Accounts.Overview.NoRecommendations" xml:space="preserve">
+<value>No recommendations yet.</value>
+</data>
+<data name="Accounts.Booking.GuestCount" xml:space="preserve">
+<value>{0} guest(s)</value>
+</data>
 </root>

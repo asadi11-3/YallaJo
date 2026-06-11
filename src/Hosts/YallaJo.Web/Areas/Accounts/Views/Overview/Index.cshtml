@@ -1,11 +1,10 @@
 @model YallaJo.Web.Areas.Accounts.Models.Overview.OverviewVm
 @using YallaJo.Web.Areas.Accounts.Shared
 @{
-    ViewData["Title"] = "My Account";
+    ViewData["Title"] = Localizer["Accounts.Overview.Title"].Value;
     ViewData["AccountNav"] = "Overview";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
-
 }
 
 <section class="pt-3">
@@ -20,17 +19,17 @@
                 <div class="card border bg-light mb-4">
                     <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
                         <div>
-                            <h1 class="h4 mb-1">Welcome back, @Model.DisplayName</h1>
-                            <p class="text-muted mb-0">Here's a quick look at your trips, favorites and picks for you.</p>
+                            <h1 class="h4 mb-1">@Localizer["Accounts.Overview.WelcomeBack", Model.DisplayName]</h1>
+                            <p class="text-muted mb-0">@Localizer["Accounts.Overview.HeroSubtitle"]</p>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <a asp-area="Accounts" asp-controller="Notifications" asp-action="Index"
                                class="btn btn-sm btn-light border position-relative">
-                                <i class="bi bi-bell me-1"></i>Notifications
+                                <i class="bi bi-bell me-1" aria-hidden="true"></i>@Localizer["Accounts.Settings.Tab.Notifications"]
                                 @if (Model.UnreadCount > 0)
                                 {
                                     <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
-                                          aria-live="polite" aria-label="@Model.UnreadCount unread notifications">@Model.UnreadCount</span>
+                                          aria-live="polite" aria-label="@Localizer["Accounts.Overview.UnreadAria", Model.UnreadCount]">@Model.UnreadCount</span>
                                 }
                             </a>
                             @if (Model.UnreadCount > 0)
@@ -38,7 +37,7 @@
                                 <form asp-area="" asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="m-0">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-sm btn-primary-soft mb-0">
-                                        <i class="bi bi-check2-all me-1"></i>Mark all read
+                                        <i class="bi bi-check2-all me-1" aria-hidden="true"></i>@Localizer["Accounts.Notifications.MarkAllRead"]
                                     </button>
                                 </form>
                             }
@@ -52,9 +51,9 @@
                         <a asp-area="Accounts" asp-controller="Bookings" asp-action="Index"
                            class="card border h-100 text-reset text-decoration-none">
                             <div class="card-body text-center">
-                                <i class="bi bi-ticket-perforated display-6 text-primary"></i>
+                                <i class="bi bi-ticket-perforated display-6 text-primary" aria-hidden="true"></i>
                                 <h2 class="h3 mt-2 mb-0">@Model.UpcomingBookingsCount</h2>
-                                <p class="text-muted small mb-0">Upcoming trips</p>
+                                <p class="text-muted small mb-0">@Localizer["Accounts.Overview.UpcomingTrips"]</p>
                             </div>
                         </a>
                     </div>
@@ -62,9 +61,9 @@
                         <a asp-area="Accounts" asp-controller="Wishlist" asp-action="Index"
                            class="card border h-100 text-reset text-decoration-none">
                             <div class="card-body text-center">
-                                <i class="bi bi-heart display-6 text-danger"></i>
+                                <i class="bi bi-heart display-6 text-danger" aria-hidden="true"></i>
                                 <h2 class="h3 mt-2 mb-0">@Model.FavoritesCount</h2>
-                                <p class="text-muted small mb-0">Favorites</p>
+                                <p class="text-muted small mb-0">@Localizer["Accounts.Overview.Favorites"]</p>
                             </div>
                         </a>
                     </div>
@@ -72,9 +71,9 @@
                         <a asp-area="Accounts" asp-controller="Recommendations" asp-action="Index"
                            class="card border h-100 text-reset text-decoration-none">
                             <div class="card-body text-center">
-                                <i class="bi bi-stars display-6 text-warning"></i>
+                                <i class="bi bi-stars display-6 text-warning" aria-hidden="true"></i>
                                 <h2 class="h3 mt-2 mb-0">@Model.RecommendationsCount</h2>
-                                <p class="text-muted small mb-0">Picks for you</p>
+                                <p class="text-muted small mb-0">@Localizer["Accounts.Overview.PicksForYou"]</p>
                             </div>
                         </a>
                     </div>
@@ -83,8 +82,8 @@
                 @* ── Upcoming trips preview ──────────────────────────────────── *@
                 <div class="card border mb-4">
                     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                        <h2 class="card-header-title h5 mb-0">Upcoming trips</h2>
-                        <a asp-area="Accounts" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">View bookings</a>
+                        <h2 class="card-header-title h5 mb-0">@Localizer["Accounts.Overview.UpcomingTrips"]</h2>
+                        <a asp-area="Accounts" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">@Localizer["Accounts.Overview.ViewBookings"]</a>
                     </div>
                     <div class="card-body" id="overviewBookings" data-yj-component="overview-section" data-reload-url="@Url.Action("Index", "Overview", new { area = "Accounts", section = "bookings" })" aria-live="polite">
                         <partial name="_OverviewBookings" model="Model" />
@@ -96,8 +95,8 @@
                     <div class="col-lg-6">
                         <div class="card border h-100">
                             <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                                <h2 class="card-header-title h5 mb-0">Your favorites</h2>
-                                <a asp-area="Accounts" asp-controller="Wishlist" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">View all</a>
+                                <h2 class="card-header-title h5 mb-0">@Localizer["Accounts.Overview.YourFavorites"]</h2>
+                                <a asp-area="Accounts" asp-controller="Wishlist" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">@Localizer["Accounts.Overview.ViewAll"]</a>
                             </div>
                             <div class="card-body" id="overviewFavorites" data-yj-component="overview-section" data-reload-url="@Url.Action("Index", "Overview", new { area = "Accounts", section = "favorites" })" aria-live="polite">
                                 <partial name="_OverviewFavorites" model="Model" />
@@ -109,8 +108,8 @@
                     <div class="col-lg-6">
                         <div class="card border h-100">
                             <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                                <h2 class="card-header-title h5 mb-0">Picks for you</h2>
-                                <a asp-area="Accounts" asp-controller="Recommendations" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">Discover</a>
+                                <h2 class="card-header-title h5 mb-0">@Localizer["Accounts.Overview.PicksForYou"]</h2>
+                                <a asp-area="Accounts" asp-controller="Recommendations" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">@Localizer["Accounts.Overview.Discover"]</a>
                             </div>
                             <div class="card-body" id="overviewPicks" data-yj-component="overview-section" data-reload-url="@Url.Action("Index", "Overview", new { area = "Accounts", section = "picks" })" aria-live="polite">
                                 <partial name="_OverviewPicks" model="Model" />

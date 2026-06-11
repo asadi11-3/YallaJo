@@ -12937,4 +12937,55 @@
 <data name="Accounts.Nav.AvatarAlt" xml:space="preserve">
 <value>صورة الملف الشخصي</value>
 </data>
+<data name="Accounts.Overview.Title" xml:space="preserve">
+<value>حسابي</value>
+</data>
+<data name="Accounts.Overview.WelcomeBack" xml:space="preserve">
+<value>مرحبًا بعودتك، {0}</value>
+</data>
+<data name="Accounts.Overview.HeroSubtitle" xml:space="preserve">
+<value>نظرة سريعة على رحلاتك ومفضلاتك والمختارات لك.</value>
+</data>
+<data name="Accounts.Overview.UnreadAria" xml:space="preserve">
+<value>{0} إشعارات غير مقروءة</value>
+</data>
+<data name="Accounts.Overview.UpcomingTrips" xml:space="preserve">
+<value>رحلات قادمة</value>
+</data>
+<data name="Accounts.Overview.Favorites" xml:space="preserve">
+<value>المفضلة</value>
+</data>
+<data name="Accounts.Overview.PicksForYou" xml:space="preserve">
+<value>مختارات لك</value>
+</data>
+<data name="Accounts.Overview.ViewBookings" xml:space="preserve">
+<value>عرض الحجوزات</value>
+</data>
+<data name="Accounts.Overview.YourFavorites" xml:space="preserve">
+<value>مفضلاتك</value>
+</data>
+<data name="Accounts.Overview.ViewAll" xml:space="preserve">
+<value>عرض الكل</value>
+</data>
+<data name="Accounts.Overview.Discover" xml:space="preserve">
+<value>استكشف</value>
+</data>
+<data name="Accounts.Overview.Manage" xml:space="preserve">
+<value>إدارة</value>
+</data>
+<data name="Accounts.Overview.NoUpcomingTrips" xml:space="preserve">
+<value>لا توجد رحلات قادمة بعد.</value>
+</data>
+<data name="Accounts.Overview.ExploreTours" xml:space="preserve">
+<value>استكشف الجولات</value>
+</data>
+<data name="Accounts.Overview.NoFavorites" xml:space="preserve">
+<value>لا توجد مفضلات محفوظة بعد.</value>
+</data>
+<data name="Accounts.Overview.NoRecommendations" xml:space="preserve">
+<value>لا توجد توصيات بعد.</value>
+</data>
+<data name="Accounts.Booking.GuestCount" xml:space="preserve">
+<value>{0} ضيف</value>
+</data>
 </root>
