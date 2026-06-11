@@ -19,10 +19,7 @@
             <div class="card-body">
                 @if (!Model.HasAvailableGuides)
                 {
-                    <div class="text-center py-4">
-                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-2" />
-                        <p class="mb-0 text-body-secondary">@Localizer["Guide.AgencyInvite.NoGuides"]</p>
-                    </div>
+                    <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.AgencyInvite.NoGuides"].Value)' />
                 }
                 else
                 {

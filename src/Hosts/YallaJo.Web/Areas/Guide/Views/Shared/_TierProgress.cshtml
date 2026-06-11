@@ -1,0 +1,106 @@
+@using YallaJo.Web.Areas.Guide.Infrastructure
+@using YallaJo.Web.Areas.Guide.Models.Dashboard
+@model TierProgressVm
+@{
+    // Single source of truth for tier progress (Dashboard + Tier). Phase 2 design-system partial.
+    var tier = Model;
+    var toursMet = tier.CompletedTours >= tier.CompletedToursRequired;
+    var ratingMet = tier.AverageRating >= tier.AverageRatingRequired;
+    var monthsMet = tier.ActiveMonths >= tier.ActiveMonthsRequired;
+}
+<div class="card card-body border">
+    <div class="d-flex align-items-center mb-2">
+        <i class="fa-solid fa-award fs-4 text-warning me-2" aria-hidden="true"></i>
+        <h2 class="h6 mb-0">@Localizer["Guide.Dashboard.TierProgress"]</h2>
+        <span class="badge bg-primary-soft ms-2">@tier.CurrentTier</span>
+    </div>
+    <p class="text-body-secondary small mb-3">
+        @Localizer["Guide.Dashboard.CommissionRate"]
+        <span class="fw-semibold font-data"><bdi dir="ltr">@GuideFormat.Pct(tier.CurrentCommissionRate)</bdi></span>
+        @if (tier.HasNextTier)
+        {
+            <span class="ms-2">@Localizer["Guide.Dashboard.NextTier"] <span class="fw-semibold">@tier.NextTier</span></span>
+        }
+    </p>
+    @if (!tier.HasNextTier)
+    {
+        <p class="text-success small mb-3">
+            <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i>
+            @Localizer["Guide.Dashboard.HighestTier"]
+        </p>
+    }
+    <div class="row g-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="d-flex justify-content-between small mb-1">
+                <span class="text-body-secondary">
+                    @if (toursMet)
+                    {
+                        <i class="fa-solid fa-circle-check text-success fa-fw" aria-hidden="true"></i>
+                    }
+                    @Localizer["Guide.Dashboard.CompletedTours"]
+                </span>
+                <span class="fw-semibold font-data"><bdi dir="ltr">@GuideFormat.Count(tier.CompletedTours) / @GuideFormat.Count(tier.CompletedToursRequired)</bdi></span>
+            </div>
+            <div class="progress yj-progress-thin" role="progressbar"
+                 aria-label="@Localizer["Guide.Dashboard.CompletedTours"]"
+                 aria-valuenow="@tier.ToursPercent" aria-valuemin="0" aria-valuemax="100">
+                @* X6: bar width is data-driven *@
+                <div class="progress-bar bg-primary" style="width: @(tier.ToursPercent)%"></div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="d-flex justify-content-between small mb-1">
+                <span class="text-body-secondary">
+                    @if (ratingMet)
+                    {
+                        <i class="fa-solid fa-circle-check text-success fa-fw" aria-hidden="true"></i>
+                    }
+                    @Localizer["Guide.Dashboard.AverageRating"]
+                </span>
+                <span class="fw-semibold font-data"><bdi dir="ltr">@GuideFormat.Rating(tier.AverageRating) / @GuideFormat.Rating(tier.AverageRatingRequired)</bdi></span>
+            </div>
+            <div class="progress yj-progress-thin" role="progressbar"
+                 aria-label="@Localizer["Guide.Dashboard.AverageRating"]"
+                 aria-valuenow="@tier.RatingPercent" aria-valuemin="0" aria-valuemax="100">
+                @* X6: bar width is data-driven *@
+                <div class="progress-bar bg-warning" style="width: @(tier.RatingPercent)%"></div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="d-flex justify-content-between small mb-1">
+                <span class="text-body-secondary">
+                    @if (monthsMet)
+                    {
+                        <i class="fa-solid fa-circle-check text-success fa-fw" aria-hidden="true"></i>
+                    }
+                    @Localizer["Guide.Dashboard.ActiveMonths"]
+                </span>
+                <span class="fw-semibold font-data"><bdi dir="ltr">@GuideFormat.Count(tier.ActiveMonths) / @GuideFormat.Count(tier.ActiveMonthsRequired)</bdi></span>
+            </div>
+            <div class="progress yj-progress-thin" role="progressbar"
+                 aria-label="@Localizer["Guide.Dashboard.ActiveMonths"]"
+                 aria-valuenow="@tier.ActiveMonthsPercent" aria-valuemin="0" aria-valuemax="100">
+                @* X6: bar width is data-driven *@
+                <div class="progress-bar bg-info" style="width: @(tier.ActiveMonthsPercent)%"></div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="d-flex justify-content-between small mb-1">
+                <span class="text-body-secondary">
+                    @if (!tier.ReportRateOk)
+                    {
+                        <i class="fa-solid fa-triangle-exclamation text-danger fa-fw" aria-hidden="true"></i>
+                    }
+                    @Localizer["Guide.Dashboard.ReportRate"]
+                </span>
+                <span class="fw-semibold font-data @(tier.ReportRateOk ? "text-success" : "text-danger")"><bdi dir="ltr">@GuideFormat.Pct(tier.ReportRate) / @GuideFormat.Pct(tier.MaxReportRateAllowed)</bdi></span>
+            </div>
+            <div class="progress yj-progress-thin" role="progressbar"
+                 aria-label="@Localizer["Guide.Dashboard.ReportRate"]"
+                 aria-valuenow="@tier.ReportRatePercent" aria-valuemin="0" aria-valuemax="100">
+                @* X6: bar width is data-driven *@
+                <div class="progress-bar @(tier.ReportRateOk ? "bg-success" : "bg-danger")" style="width: @(tier.ReportRatePercent)%"></div>
+            </div>
+        </div>
+    </div>
+</div>

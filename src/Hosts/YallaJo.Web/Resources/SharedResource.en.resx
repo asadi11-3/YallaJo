@@ -13225,4 +13225,37 @@
 <data name="Provider.Flash.CouldNotLoadCalendar" xml:space="preserve">
 <value>Could not load the calendar.</value>
 </data>
+<data name="Guide.Status.Approved" xml:space="preserve">
+<value>Approved</value>
+</data>
+<data name="Guide.Status.Accepted" xml:space="preserve">
+<value>Accepted</value>
+</data>
+<data name="Guide.Status.Rejected" xml:space="preserve">
+<value>Rejected</value>
+</data>
+<data name="Guide.Status.Declined" xml:space="preserve">
+<value>Declined</value>
+</data>
+<data name="Guide.Status.Submitted" xml:space="preserve">
+<value>Submitted</value>
+</data>
+<data name="Guide.Status.Draft" xml:space="preserve">
+<value>Draft</value>
+</data>
+<data name="Guide.Status.Expired" xml:space="preserve">
+<value>Expired</value>
+</data>
+<data name="Guide.Status.Active" xml:space="preserve">
+<value>Active</value>
+</data>
+<data name="Guide.Status.Suspended" xml:space="preserve">
+<value>Suspended</value>
+</data>
+<data name="Guide.Status.Removed" xml:space="preserve">
+<value>Removed</value>
+</data>
+<data name="Guide.Status.Published" xml:space="preserve">
+<value>Published</value>
+</data>
 </root>

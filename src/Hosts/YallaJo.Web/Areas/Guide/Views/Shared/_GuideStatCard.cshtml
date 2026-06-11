@@ -1,0 +1,16 @@
+@model YallaJo.Web.Areas.Guide.Models.Shared.StatCardVm
+@*
+    Shared stat card (Guide design system, Phase 2).
+    Label/Value arrive pre-localized/pre-formatted; numeric value is bdi-wrapped (RTL3).
+*@
+<div class="card card-body border h-100">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="h6 mb-1 text-body-secondary">@Model.Label</h2>
+            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Model.Value</bdi></p>
+        </div>
+        <div class="icon-xl bg-@(Model.Color)-soft text-@Model.Color rounded-circle">
+            <i class="fa-solid fa-@Model.Icon" aria-hidden="true"></i>
+        </div>
+    </div>
+</div>

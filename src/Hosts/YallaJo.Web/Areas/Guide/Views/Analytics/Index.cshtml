@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = Localizer["Guide.Analytics.Title"].Value;
     var culture = CultureInfo.CurrentUICulture;
-    string Count(int n) => n.ToString("N0", culture);
+    // Kept local: CancellationRate arrives as a 0-100 value formatted N1, unlike GuideFormat.Pct (0-1 fraction, "0.#").
     string Pct(decimal value) => value.ToString("N1", culture) + "%";
     int Bar(int value, int max) => max <= 0 ? 0 : (int)Math.Round(value * 100.0 / max);
 }
@@ -20,56 +20,16 @@
 
         <div class="row g-4">
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Analytics.TotalBookings"]</h2>
-                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Count(Model.TotalBookings)</bdi></p>
-                        </div>
-                        <div class="icon-xl bg-primary-soft text-primary rounded-circle">
-                            <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_GuideStatCard" model='new StatCardVm(Localizer["Guide.Analytics.TotalBookings"].Value, GuideFormat.Count(Model.TotalBookings), "calendar-check", "primary")' />
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Analytics.Upcoming"]</h2>
-                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Count(Model.UpcomingBookings)</bdi></p>
-                        </div>
-                        <div class="icon-xl bg-info-soft text-info rounded-circle">
-                            <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_GuideStatCard" model='new StatCardVm(Localizer["Guide.Analytics.Upcoming"].Value, GuideFormat.Count(Model.UpcomingBookings), "hourglass-half", "info")' />
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Analytics.Completed"]</h2>
-                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Count(Model.CompletedBookings)</bdi></p>
-                        </div>
-                        <div class="icon-xl bg-success-soft text-success rounded-circle">
-                            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_GuideStatCard" model='new StatCardVm(Localizer["Guide.Analytics.Completed"].Value, GuideFormat.Count(Model.CompletedBookings), "circle-check", "success")' />
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Analytics.CancellationRate"]</h2>
-                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Pct(Model.CancellationRate)</bdi></p>
-                        </div>
-                        <div class="icon-xl bg-warning-soft text-warning rounded-circle">
-                            <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_GuideStatCard" model='new StatCardVm(Localizer["Guide.Analytics.CancellationRate"].Value, Pct(Model.CancellationRate), "circle-xmark", "warning")' />
             </div>
         </div>
 
@@ -88,11 +48,12 @@
                                     <div>
                                         <div class="d-flex justify-content-between mb-1">
                                             <span class="small text-body-secondary"><bdi dir="ltr">@trend.Period</bdi></span>
-                                            <span class="small fw-semibold font-data"><bdi dir="ltr">@Count(trend.BookingCount)</bdi></span>
+                                            <span class="small fw-semibold font-data"><bdi dir="ltr">@GuideFormat.Count(trend.BookingCount)</bdi></span>
                                         </div>
-                                        <div class="progress" style="height: 8px;" role="progressbar"
+                                        <div class="progress yj-progress-thin" role="progressbar"
                                              aria-label="@trend.Period"
                                              aria-valuenow="@trend.BookingCount" aria-valuemin="0" aria-valuemax="@Model.MaxTrendCount">
+                                            @* X6: data-driven width *@
                                             <div class="progress-bar bg-primary" style="width: @(Bar(trend.BookingCount, Model.MaxTrendCount))%"></div>
                                         </div>
                                     </div>
@@ -101,10 +62,7 @@
                         }
                         else
                         {
-                            <div class="text-center py-4">
-                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                <p class="text-body-secondary mb-0">@Localizer["Guide.Analytics.NoTrends"]</p>
-                            </div>
+                            <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Analytics.NoTrends"].Value)' />
                         }
                     </div>
                 </div>
@@ -124,11 +82,12 @@
                                     <div>
                                         <div class="d-flex justify-content-between mb-1">
                                             <span class="small text-body-secondary">@day.DayOfWeek</span>
-                                            <span class="small fw-semibold font-data"><bdi dir="ltr">@Count(day.BookingCount)</bdi></span>
+                                            <span class="small fw-semibold font-data"><bdi dir="ltr">@GuideFormat.Count(day.BookingCount)</bdi></span>
                                         </div>
-                                        <div class="progress" style="height: 8px;" role="progressbar"
+                                        <div class="progress yj-progress-thin" role="progressbar"
                                              aria-label="@day.DayOfWeek"
                                              aria-valuenow="@day.BookingCount" aria-valuemin="0" aria-valuemax="@Model.MaxPeakDayCount">
+                                            @* X6: data-driven width *@
                                             <div class="progress-bar bg-info" style="width: @(Bar(day.BookingCount, Model.MaxPeakDayCount))%"></div>
                                         </div>
                                     </div>
@@ -137,10 +96,7 @@
                         }
                         else
                         {
-                            <div class="text-center py-4">
-                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                <p class="text-body-secondary mb-0">@Localizer["Guide.Analytics.NoPeakDays"]</p>
-                            </div>
+                            <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Analytics.NoPeakDays"].Value)' />
                         }
                     </div>
                 </div>
@@ -167,7 +123,7 @@
                                 {
                                     <tr>
                                         <td>@tour.TourName</td>
-                                        <td class="text-end fw-semibold font-data"><bdi dir="ltr">@Count(tour.BookingCount)</bdi></td>
+                                        <td class="text-end fw-semibold font-data"><bdi dir="ltr">@GuideFormat.Count(tour.BookingCount)</bdi></td>
                                     </tr>
                                 }
                             </tbody>
@@ -176,10 +132,7 @@
                 }
                 else
                 {
-                    <div class="text-center py-4">
-                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                        <p class="text-body-secondary mb-0">@Localizer["Guide.Analytics.NoPopularTours"]</p>
-                    </div>
+                    <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Analytics.NoPopularTours"].Value)' />
                 }
             </div>
         </div>

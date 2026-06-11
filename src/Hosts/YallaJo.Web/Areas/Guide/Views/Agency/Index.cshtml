@@ -3,17 +3,8 @@
 @{
     ViewData["Title"] = Localizer["Guide.Agency.Title"].Value;
     var culture = CultureInfo.CurrentUICulture;
+    // Kept local: commission arrives as a 0-100 percentage ("0.##" + %), unlike GuideFormat.Pct (0-1 fraction).
     string Pct(decimal v) => v.ToString("0.##", culture) + "%";
-    string DateTimeF(DateTime d) => d.ToString("yyyy-MM-dd HH:mm", culture);
-    string DateF(DateTime d) => d.ToString("yyyy-MM-dd", culture);
-
-    (string Color, string Icon) StatusStyle(AgencyInvitationStatus s) => s switch
-    {
-        AgencyInvitationStatus.Accepted => ("success", "circle-check"),
-        AgencyInvitationStatus.Declined => ("danger", "circle-xmark"),
-        AgencyInvitationStatus.Expired => ("secondary", "hourglass-end"),
-        _ => ("warning", "clock")
-    };
 }
 
 @await Component.InvokeAsync("GuideSidebar")
@@ -76,10 +67,7 @@
                     <h2 class="card-header-title h5 mb-3">@Localizer["Guide.Agency.InvitationsHeading"]</h2>
                     @if (!Model.HasInvitations)
                     {
-                        <div class="text-center py-5">
-                            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                            <p class="mb-0 text-body-secondary">@Localizer["Guide.Agency.NoInvitations"]</p>
-                        </div>
+                        <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Agency.NoInvitations"].Value)' />
                     }
                     else
                     {
@@ -99,7 +87,6 @@
                                     @{ var invIndex = 1; }
                                     @foreach (var inv in Model.Invitations)
                                     {
-                                        var style = StatusStyle(inv.Status);
                                         <tr>
                                             <td class="fw-semibold">@Localizer["Guide.Agency.InvitationLabel", invIndex]</td>
                                             <td><bdi dir="ltr" class="font-data">@Pct(inv.ProposedCommissionPercentage)</bdi></td>
@@ -114,15 +101,13 @@
                                                 }
                                             </td>
                                             <td>
-                                                <span class="badge bg-@style.Color bg-opacity-10 text-@style.Color">
-                                                    <i class="fa-solid fa-@style.Icon fa-fw" aria-hidden="true"></i> @inv.Status
-                                                </span>
+                                                <partial name="_GuideStatusBadge" model="new StatusBadgeVm(inv.Status.ToString())" />
                                                 @if (inv.IsExpired)
                                                 {
                                                     <span class="badge bg-secondary bg-opacity-10 text-secondary">@Localizer["Guide.Agency.Expired"]</span>
                                                 }
                                             </td>
-                                            <td><bdi dir="ltr" class="font-data">@DateTimeF(inv.ExpiresAt)</bdi></td>
+                                            <td><bdi dir="ltr" class="font-data">@GuideFormat.DateTimeShort(inv.ExpiresAt)</bdi></td>
                                             <td class="text-end">
                                                 @if (inv.IsPending && !inv.IsExpired)
                                                 {
@@ -143,7 +128,7 @@
                                                 }
                                                 else if (inv.RespondedAt.HasValue)
                                                 {
-                                                    <bdi dir="ltr" class="font-data text-body-secondary">@DateF(inv.RespondedAt.Value)</bdi>
+                                                    <bdi dir="ltr" class="font-data text-body-secondary">@GuideFormat.Date(inv.RespondedAt.Value)</bdi>
                                                 }
                                                 else
                                                 {

@@ -255,3 +255,19 @@ html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
 .yj-min-w-14r {
     min-width: 14rem;
 }
+
+/* Guide Phase 2 — utilities replacing legacy inline styles (X6).
+   Direction-neutral sizes; no physical left/right involved (RTL1). */
+.yj-progress-thin {
+    height: .375rem;
+}
+
+.yj-cell-truncate {
+    max-width: 16rem;
+}
+
+.yj-avatar-96 {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+}

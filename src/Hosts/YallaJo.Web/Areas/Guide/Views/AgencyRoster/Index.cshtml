@@ -3,8 +3,8 @@
 @{
     ViewData["Title"] = Localizer["Guide.AgencyRoster.Title"].Value;
     var culture = CultureInfo.CurrentUICulture;
+    // Kept local: commission arrives as a 0-100 percentage ("0.##" + %), unlike GuideFormat.Pct (0-1 fraction).
     string Pct(decimal v) => v.ToString("0.##", culture) + "%";
-    string DateF(DateTime d) => d.ToString("yyyy-MM-dd", culture);
 }
 
 @await Component.InvokeAsync("GuideSidebar")
@@ -38,10 +38,7 @@
             <div class="card-body">
                 @if (!Model.HasGuides)
                 {
-                    <div class="text-center py-4">
-                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-2" />
-                        <p class="mb-0 text-body-secondary">@Localizer["Guide.AgencyRoster.NoGuides"]</p>
-                    </div>
+                    <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.AgencyRoster.NoGuides"].Value)' />
                 }
                 else
                 {
@@ -63,7 +60,7 @@
                                     <tr>
                                         <td class="fw-semibold">@g.GuideHandle</td>
                                         <td class="text-end"><bdi dir="ltr" class="font-data">@Pct(g.CommissionPercentage)</bdi></td>
-                                        <td><bdi dir="ltr" class="font-data small">@DateF(g.JoinedAt)</bdi></td>
+                                        <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(g.JoinedAt)</bdi></td>
                                         <permission require="@WebPermission.AgencyRoster.Delete">
                                             <td class="text-end">
                                                 <button type="button" class="btn btn-sm btn-outline-danger"
@@ -90,10 +87,7 @@
             <div class="card-body">
                 @if (!Model.HasApplications)
                 {
-                    <div class="text-center py-4">
-                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-2" />
-                        <p class="mb-0 text-body-secondary">@Localizer["Guide.AgencyRoster.NoApplications"]</p>
-                    </div>
+                    <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.AgencyRoster.NoApplications"].Value)' />
                 }
                 else
                 {
@@ -124,7 +118,7 @@
                                             }
                                         </td>
                                         <td><span class="badge @a.StatusBadgeClass"><i class="fa-solid fa-circle-info fa-fw" aria-hidden="true"></i> @a.Status</span></td>
-                                        <td><bdi dir="ltr" class="font-data small">@DateF(a.CreatedAt)</bdi></td>
+                                        <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(a.CreatedAt)</bdi></td>
                                         <td class="text-end">
                                             @if (a.IsPending)
                                             {
@@ -171,10 +165,7 @@
             <div class="card-body">
                 @if (!Model.HasSentInvitations)
                 {
-                    <div class="text-center py-4">
-                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-2" />
-                        <p class="mb-0 text-body-secondary">@Localizer["Guide.AgencyRoster.NoSent"]</p>
-                    </div>
+                    <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.AgencyRoster.NoSent"].Value)' />
                 }
                 else
                 {
@@ -196,8 +187,8 @@
                                         <td class="fw-semibold">@i.GuideHandle</td>
                                         <td class="text-end"><bdi dir="ltr" class="font-data">@Pct(i.ProposedCommissionPercentage)</bdi></td>
                                         <td><span class="badge @i.StatusBadgeClass"><i class="fa-solid fa-circle-info fa-fw" aria-hidden="true"></i> @i.Status</span></td>
-                                        <td><bdi dir="ltr" class="font-data small">@DateF(i.ExpiresAt)</bdi></td>
-                                        <td><bdi dir="ltr" class="font-data small">@DateF(i.CreatedAt)</bdi></td>
+                                        <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(i.ExpiresAt)</bdi></td>
+                                        <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(i.CreatedAt)</bdi></td>
                                     </tr>
                                 }
                             </tbody>

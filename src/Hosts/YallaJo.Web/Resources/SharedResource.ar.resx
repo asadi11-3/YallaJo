@@ -13225,4 +13225,37 @@
 <data name="Provider.Flash.CouldNotLoadCalendar" xml:space="preserve">
 <value>تعذّر تحميل التقويم.</value>
 </data>
+<data name="Guide.Status.Approved" xml:space="preserve">
+<value>مقبول</value>
+</data>
+<data name="Guide.Status.Accepted" xml:space="preserve">
+<value>تم القبول</value>
+</data>
+<data name="Guide.Status.Rejected" xml:space="preserve">
+<value>مرفوض</value>
+</data>
+<data name="Guide.Status.Declined" xml:space="preserve">
+<value>تم الرفض</value>
+</data>
+<data name="Guide.Status.Submitted" xml:space="preserve">
+<value>مُرسل</value>
+</data>
+<data name="Guide.Status.Draft" xml:space="preserve">
+<value>مسودة</value>
+</data>
+<data name="Guide.Status.Expired" xml:space="preserve">
+<value>منتهي الصلاحية</value>
+</data>
+<data name="Guide.Status.Active" xml:space="preserve">
+<value>نشط</value>
+</data>
+<data name="Guide.Status.Suspended" xml:space="preserve">
+<value>موقوف</value>
+</data>
+<data name="Guide.Status.Removed" xml:space="preserve">
+<value>محذوف</value>
+</data>
+<data name="Guide.Status.Published" xml:space="preserve">
+<value>منشور</value>
+</data>
 </root>

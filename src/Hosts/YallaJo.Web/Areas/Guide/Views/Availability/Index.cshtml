@@ -1,8 +1,8 @@
 @model YallaJo.Web.Areas.Guide.Models.Availability.AvailabilityVm
 @{
     ViewData["Title"] = Localizer["Guide.Availability.Title"].Value;
-    var culture = CultureInfo.CurrentUICulture;
-    string Date(DateOnly d) => d.ToString("yyyy-MM-dd", culture);
+    // Thin DateOnly adapter — GuideFormat.Date takes DateTime (same yyyy-MM-dd output).
+    string Date(DateOnly d) => GuideFormat.Date(d.ToDateTime(TimeOnly.MinValue));
 }
 
 @await Component.InvokeAsync("GuideSidebar")
@@ -11,7 +11,7 @@
     <div class="container vstack gap-4">
         <div>
             <h1 class="h4 mb-1"><i class="fa-solid fa-calendar-xmark me-2" aria-hidden="true"></i>@Localizer["Guide.Availability.Heading"]</h1>
-            <p class="text-secondary mb-0">@Localizer["Guide.Availability.Subtitle"]</p>
+            <p class="text-body-secondary mb-0">@Localizer["Guide.Availability.Subtitle"]</p>
         </div>
 
         <div class="row g-4">
@@ -53,10 +53,7 @@
                     <div class="card-body">
                         @if (!Model.HasBlocks)
                         {
-                            <div class="text-center py-5">
-                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                <p class="text-secondary mb-0">@Localizer["Guide.Availability.NoBlocks"]</p>
-                            </div>
+                            <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Availability.NoBlocks"].Value)' />
                         }
                         else
                         {
@@ -80,7 +77,7 @@
                                                 <td>
                                                     @if (string.IsNullOrWhiteSpace(block.Reason))
                                                     {
-                                                        <span class="text-secondary" aria-label="@Localizer["Guide.Availability.NoReason"]">&mdash;</span>
+                                                        <span class="text-body-secondary" aria-label="@Localizer["Guide.Availability.NoReason"]">&mdash;</span>
                                                     }
                                                     else
                                                     {

@@ -140,7 +140,7 @@ public sealed class ProfileController : GuideBaseController
     }
 
     private IActionResult HandleMutation(
-        Infrastructure.Api.Contracts.ApiResult result, string successMessage)
+        YallaJo.Web.Infrastructure.Api.Contracts.ApiResult result, string successMessage)
     {
         if (GuardSignOut(result) is { } signOut)
         {

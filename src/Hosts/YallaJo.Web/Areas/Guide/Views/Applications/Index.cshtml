@@ -3,18 +3,12 @@
     ViewData["Title"] = Localizer["Guide.Applications.Title"].Value;
     var culture = CultureInfo.CurrentUICulture;
 
+    // Kept local: nullable input with "—" fallback and N2 precision differ from GuideFormat.Money (N3).
     string Money(decimal? amount, string currency = "JOD")
         => amount is null ? "—" : amount.Value.ToString("N2", culture) + " " + currency;
 
+    // Kept local: "dd MMM yyyy" output differs from GuideFormat.Date (yyyy-MM-dd).
     string Date(DateTime d) => d.ToString("dd MMM yyyy", culture);
-
-    (string Color, string Icon) StatusStyle(string? status) => status?.ToLowerInvariant() switch
-    {
-        "approved" or "accepted" => ("success", "circle-check"),
-        "rejected" or "declined" => ("danger", "circle-xmark"),
-        "pending" or "submitted" => ("warning", "clock"),
-        _ => ("secondary", "circle-info"),
-    };
 }
 
 @await Component.InvokeAsync("GuideSidebar")
@@ -73,10 +67,7 @@
 
                     @if (!Model.HasApplications)
                     {
-                        <div class="text-center py-5">
-                            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                            <p class="text-secondary mb-0">@Localizer["Guide.Applications.NoApplications"]</p>
-                        </div>
+                        <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Applications.NoApplications"].Value)' />
                     }
                     else
                     {
@@ -94,20 +85,19 @@
                                 <tbody>
                                     @foreach (var app in Model.Applications)
                                     {
-                                        var s = StatusStyle(app.Status);
                                         <tr>
                                             <td>
                                                 <div class="fw-semibold">@app.TourTitle</div>
                                                 @if (!string.IsNullOrWhiteSpace(app.Message))
                                                 {
-                                                    <div class="small text-body-secondary text-truncate" style="max-width: 280px;">@app.Message</div>
+                                                    <div class="small text-body-secondary text-truncate yj-cell-truncate" title="@app.Message">@app.Message</div>
                                                 }
                                                 @if (!string.IsNullOrWhiteSpace(app.RejectionReason))
                                                 {
                                                     <div class="small text-danger"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i>@app.RejectionReason</div>
                                                 }
                                             </td>
-                                            <td><span class="badge bg-@s.Color bg-opacity-10 text-@s.Color"><i class="fa-solid fa-@s.Icon fa-fw" aria-hidden="true"></i> @app.Status</span></td>
+                                            <td><partial name="_GuideStatusBadge" model="new StatusBadgeVm(app.Status)" /></td>
                                             <td><bdi dir="ltr" class="font-data">@Money(app.ProposedBasePrice)</bdi></td>
                                             <td><bdi dir="ltr" class="font-data">@Date(app.CreatedAt)</bdi></td>
                                             <td>
@@ -117,7 +107,7 @@
                                                 }
                                                 else
                                                 {
-                                                    <span class="text-secondary">&mdash;</span>
+                                                    <span class="text-body-secondary">&mdash;</span>
                                                 }
                                             </td>
                                         </tr>
@@ -126,22 +116,7 @@
                             </table>
                         </div>
 
-                        @if (Model.TotalPages > 1)
-                        {
-                            <nav class="mt-3" aria-label="@Localizer["Guide.Applications.Pagination"]">
-                                <ul class="pagination pagination-sm mb-0 justify-content-center">
-                                    <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                                        <a class="page-link" asp-area="Guide" asp-controller="Applications" asp-action="Index" asp-route-page="@(Model.Page - 1)">@Localizer["Guide.Common.Previous"]</a>
-                                    </li>
-                                    <li class="page-item disabled">
-                                        <span class="page-link">@Localizer["Guide.Common.PageOf", Model.Page, Model.TotalPages]</span>
-                                    </li>
-                                    <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                                        <a class="page-link" asp-area="Guide" asp-controller="Applications" asp-action="Index" asp-route-page="@(Model.Page + 1)">@Localizer["Guide.Common.Next"]</a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        }
+                        <partial name="_GuidePagination" model='new PaginationVm(Model.Page, Model.TotalPages, Model.HasPreviousPage, Model.HasNextPage, "Applications", Localizer["Guide.Applications.Pagination"].Value)' />
                     }
                 </div>
             </div>

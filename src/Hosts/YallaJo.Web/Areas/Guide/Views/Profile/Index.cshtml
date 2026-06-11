@@ -1,9 +1,6 @@
 @model YallaJo.Web.Areas.Guide.Models.Profile.ProfileVm
 @{
     ViewData["Title"] = Localizer["Guide.Profile.Title"].Value;
-    var culture = CultureInfo.CurrentUICulture;
-    string Count(int n) => n.ToString("N0", culture);
-    string Rating(decimal v) => v.ToString("0.0", culture);
 }
 
 @await Component.InvokeAsync("GuideSidebar")
@@ -21,20 +18,20 @@
                 <div class="col-auto">
                     @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
                     {
-                        <img src="@Model.AvatarUrl" class="rounded-circle" width="96" height="96" alt="@Model.DisplayName" style="object-fit:cover;" />
+                        <img src="@Model.AvatarUrl" class="rounded-circle yj-avatar-96" width="96" height="96" alt="@Model.DisplayName" />
                     }
                     else
                     {
-                        <div class="rounded-circle bg-primary-soft d-flex align-items-center justify-content-center" style="width:96px;height:96px;">
+                        <div class="rounded-circle bg-primary-soft d-flex align-items-center justify-content-center yj-avatar-96">
                             <i class="fa-solid fa-user fs-1 text-primary" aria-hidden="true"></i>
                         </div>
                     }
                 </div>
                 <div class="col">
                     <h2 class="h5 mb-1">@Model.DisplayName</h2>
-                    <div class="hstack gap-3 text-secondary small">
-                        <span><i class="fa-solid fa-star text-warning me-1" aria-hidden="true"></i><bdi dir="ltr">@Rating(Model.AverageRating) (@Count(Model.ReviewCount))</bdi></span>
-                        <span><i class="fa-solid fa-map me-1" aria-hidden="true"></i><bdi dir="ltr">@Localizer["Guide.Profile.ToursCount", Count(Model.TourCount)]</bdi></span>
+                    <div class="hstack gap-3 text-body-secondary small">
+                        <span><i class="fa-solid fa-star text-warning me-1" aria-hidden="true"></i><bdi dir="ltr">@GuideFormat.Rating(Model.AverageRating) (@GuideFormat.Count(Model.ReviewCount))</bdi></span>
+                        <span><i class="fa-solid fa-map me-1" aria-hidden="true"></i><bdi dir="ltr">@Localizer["Guide.Profile.ToursCount", GuideFormat.Count(Model.TourCount)]</bdi></span>
                     </div>
                 </div>
                 <div class="col-12 col-md-auto">
@@ -104,7 +101,7 @@
 
             @if (Model.Languages.Count == 0)
             {
-                <p class="text-secondary small mb-3">@Localizer["Guide.Profile.NoLanguages"]</p>
+                <p class="text-body-secondary small mb-3">@Localizer["Guide.Profile.NoLanguages"]</p>
             }
             else
             {
@@ -161,7 +158,7 @@
 
             @if (Model.Specializations.Count == 0)
             {
-                <p class="text-secondary small mb-3">@Localizer["Guide.Profile.NoSpecializations"]</p>
+                <p class="text-body-secondary small mb-3">@Localizer["Guide.Profile.NoSpecializations"]</p>
             }
             else
             {

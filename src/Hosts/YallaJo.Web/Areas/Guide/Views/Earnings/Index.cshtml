@@ -1,18 +1,8 @@
 @model YallaJo.Web.Areas.Guide.Models.Earnings.EarningsVm
 @{
     ViewData["Title"] = Localizer["Guide.Earnings.Title"].Value;
-    var culture = CultureInfo.CurrentUICulture;
-    string Money(decimal a, string? c) => a.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(c) ? "JOD" : c);
-    string Count(int n) => n.ToString("N0", culture);
-    string Date(DateOnly d) => d.ToString("yyyy-MM-dd", culture);
-    (string Color, string Icon) StatusStyle(string status) => status?.ToLowerInvariant() switch
-    {
-        "paid" or "completed" => ("success", "circle-check"),
-        "pending" => ("warning", "clock"),
-        "cancelled" or "refunded" => ("danger", "circle-xmark"),
-        _ => ("secondary", "circle-info"),
-    };
-    string StatusLabel(string s) => Localizer["Guide.Status." + (string.IsNullOrWhiteSpace(s) ? "Unknown" : s)];
+    // Thin DateOnly adapter — GuideFormat.Date takes DateTime (same yyyy-MM-dd output).
+    string Date(DateOnly d) => GuideFormat.Date(d.ToDateTime(TimeOnly.MinValue));
 }
 
 @await Component.InvokeAsync("GuideSidebar")
@@ -22,48 +12,16 @@
         <h1 class="fs-4 mb-0"><i class="fa-solid fa-arrow-trend-up me-2" aria-hidden="true"></i>@Localizer["Guide.Earnings.Heading"]</h1>
         <div class="row g-4">
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Earnings.NetEarnings"]</h2>
-                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Money(Model.NetEarnings, Model.Currency)</bdi></p>
-                        </div>
-                        <div class="icon-xl bg-success-soft text-success rounded-circle"><i class="fa-solid fa-wallet" aria-hidden="true"></i></div>
-                    </div>
-                </div>
+                <partial name="_GuideStatCard" model='new StatCardVm(Localizer["Guide.Earnings.NetEarnings"].Value, GuideFormat.Money(Model.NetEarnings, Model.Currency), "wallet", "success")' />
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Earnings.ThisMonth"]</h2>
-                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Money(Model.ThisMonth, Model.Currency)</bdi></p>
-                        </div>
-                        <div class="icon-xl bg-primary-soft text-primary rounded-circle"><i class="fa-solid fa-calendar-day" aria-hidden="true"></i></div>
-                    </div>
-                </div>
+                <partial name="_GuideStatCard" model='new StatCardVm(Localizer["Guide.Earnings.ThisMonth"].Value, GuideFormat.Money(Model.ThisMonth, Model.Currency), "calendar-day", "primary")' />
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Earnings.PendingPayout"]</h2>
-                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Money(Model.PendingPayout, Model.Currency)</bdi></p>
-                        </div>
-                        <div class="icon-xl bg-warning-soft text-warning rounded-circle"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></div>
-                    </div>
-                </div>
+                <partial name="_GuideStatCard" model='new StatCardVm(Localizer["Guide.Earnings.PendingPayout"].Value, GuideFormat.Money(Model.PendingPayout, Model.Currency), "hourglass-half", "warning")' />
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Earnings.CommissionDeducted"]</h2>
-                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Money(Model.CommissionDeducted, Model.Currency)</bdi></p>
-                        </div>
-                        <div class="icon-xl bg-info-soft text-info rounded-circle"><i class="fa-solid fa-percent" aria-hidden="true"></i></div>
-                    </div>
-                </div>
+                <partial name="_GuideStatCard" model='new StatCardVm(Localizer["Guide.Earnings.CommissionDeducted"].Value, GuideFormat.Money(Model.CommissionDeducted, Model.Currency), "percent", "info")' />
             </div>
         </div>
 
@@ -71,10 +29,7 @@
             <h2 class="h6 mb-3">@Localizer["Guide.Earnings.ByTour"]</h2>
             @if (!Model.HasByTour)
             {
-                <div class="text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                    <p class="mb-0 text-body-secondary">@Localizer["Guide.Earnings.NoByTour"]</p>
-                </div>
+                <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Earnings.NoByTour"].Value)' />
             }
             else
             {
@@ -94,10 +49,10 @@
                             {
                                 <tr>
                                     <td class="fw-semibold">@row.TourName</td>
-                                    <td class="text-end"><bdi dir="ltr" class="font-data">@Count(row.BookingCount)</bdi></td>
-                                    <td class="text-end"><bdi dir="ltr" class="font-data">@Money(row.GrossAmount, row.Currency)</bdi></td>
-                                    <td class="text-end"><bdi dir="ltr" class="font-data">@Money(row.CommissionAmount, row.Currency)</bdi></td>
-                                    <td class="text-end fw-semibold"><bdi dir="ltr" class="font-data">@Money(row.NetAmount, row.Currency)</bdi></td>
+                                    <td class="text-end"><bdi dir="ltr" class="font-data">@GuideFormat.Count(row.BookingCount)</bdi></td>
+                                    <td class="text-end"><bdi dir="ltr" class="font-data">@GuideFormat.Money(row.GrossAmount, row.Currency)</bdi></td>
+                                    <td class="text-end"><bdi dir="ltr" class="font-data">@GuideFormat.Money(row.CommissionAmount, row.Currency)</bdi></td>
+                                    <td class="text-end fw-semibold"><bdi dir="ltr" class="font-data">@GuideFormat.Money(row.NetAmount, row.Currency)</bdi></td>
                                 </tr>
                             }
                         </tbody>
@@ -110,10 +65,7 @@
             <h2 class="h6 mb-3">@Localizer["Guide.Earnings.History"]</h2>
             @if (!Model.HasHistory)
             {
-                <div class="text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                    <p class="mb-0 text-body-secondary">@Localizer["Guide.Earnings.NoHistory"]</p>
-                </div>
+                <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Earnings.NoHistory"].Value)' />
             }
             else
             {
@@ -131,16 +83,13 @@
                         <tbody>
                             @foreach (var row in Model.History)
                             {
-                                var s = StatusStyle(row.Status);
                                 <tr>
                                     <td><bdi dir="ltr" class="font-data">@Date(row.EarnedDate)</bdi></td>
-                                    <td class="text-end"><bdi dir="ltr" class="font-data">@Money(row.GrossAmount, row.Currency)</bdi></td>
-                                    <td class="text-end"><bdi dir="ltr" class="font-data">@Money(row.CommissionAmount, row.Currency)</bdi></td>
-                                    <td class="text-end fw-semibold"><bdi dir="ltr" class="font-data">@Money(row.NetAmount, row.Currency)</bdi></td>
+                                    <td class="text-end"><bdi dir="ltr" class="font-data">@GuideFormat.Money(row.GrossAmount, row.Currency)</bdi></td>
+                                    <td class="text-end"><bdi dir="ltr" class="font-data">@GuideFormat.Money(row.CommissionAmount, row.Currency)</bdi></td>
+                                    <td class="text-end fw-semibold"><bdi dir="ltr" class="font-data">@GuideFormat.Money(row.NetAmount, row.Currency)</bdi></td>
                                     <td>
-                                        <span class="badge bg-@s.Color bg-opacity-10 text-@s.Color">
-                                            <i class="fa-solid fa-@s.Icon fa-fw" aria-hidden="true"></i> @StatusLabel(row.Status)
-                                        </span>
+                                        <partial name="_GuideStatusBadge" model="new StatusBadgeVm(row.Status)" />
                                     </td>
                                 </tr>
                             }
@@ -148,22 +97,7 @@
                     </table>
                 </div>
 
-                @if (Model.TotalPages > 1)
-                {
-                    <nav class="mt-3" aria-label="@Localizer["Guide.Earnings.Pagination"]">
-                        <ul class="pagination pagination-sm justify-content-center mb-0">
-                            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                                <a class="page-link" asp-area="Guide" asp-controller="Earnings" asp-action="Index" asp-route-page="@(Model.Page - 1)">@Localizer["Guide.Common.Previous"]</a>
-                            </li>
-                            <li class="page-item disabled">
-                                <span class="page-link"><bdi dir="ltr">@Localizer["Guide.Common.PageOf", Model.Page, Model.TotalPages]</bdi></span>
-                            </li>
-                            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                                <a class="page-link" asp-area="Guide" asp-controller="Earnings" asp-action="Index" asp-route-page="@(Model.Page + 1)">@Localizer["Guide.Common.Next"]</a>
-                            </li>
-                        </ul>
-                    </nav>
-                }
+                <partial name="_GuidePagination" model='new PaginationVm(Model.Page, Model.TotalPages, Model.HasPreviousPage, Model.HasNextPage, "Earnings", Localizer["Guide.Earnings.Pagination"].Value)' />
             }
         </div>
     </div>

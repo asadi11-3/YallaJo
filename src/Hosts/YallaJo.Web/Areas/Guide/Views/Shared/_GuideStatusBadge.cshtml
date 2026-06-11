@@ -1,0 +1,8 @@
+@model YallaJo.Web.Areas.Guide.Models.Shared.StatusBadgeVm
+@*
+    Shared status badge (Guide design system, Phase 2).
+    Color + icon + localized text — never color-only (A11Y5). Localizes via Guide.Status.{Key}.
+*@
+<span class="badge bg-@Model.Color bg-opacity-10 text-@Model.Color">
+    <i class="fa-solid fa-@Model.Icon fa-fw" aria-hidden="true"></i> @Localizer["Guide.Status." + Model.Key]
+</span>

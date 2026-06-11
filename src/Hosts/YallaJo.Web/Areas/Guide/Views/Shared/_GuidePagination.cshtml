@@ -1,0 +1,21 @@
+@model YallaJo.Web.Areas.Guide.Models.Shared.PaginationVm
+@*
+    Shared pagination (Guide design system, Phase 2). Page math comes from the VM
+    (D1-paging); pager text is bdi-wrapped so "Page X of Y" doesn't reorder in RTL (RTL3).
+*@
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-3" aria-label="@Model.AriaLabel">
+        <ul class="pagination pagination-sm justify-content-center mb-0">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" asp-area="Guide" asp-controller="@Model.Controller" asp-action="@Model.Action" asp-route-page="@(Model.Page - 1)">@Localizer["Guide.Common.Previous"]</a>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link"><bdi dir="ltr">@Localizer["Guide.Common.PageOf", Model.Page, Model.TotalPages]</bdi></span>
+            </li>
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link" asp-area="Guide" asp-controller="@Model.Controller" asp-action="@Model.Action" asp-route-page="@(Model.Page + 1)">@Localizer["Guide.Common.Next"]</a>
+            </li>
+        </ul>
+    </nav>
+}

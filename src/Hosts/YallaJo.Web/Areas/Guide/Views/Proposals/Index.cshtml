@@ -1,20 +1,6 @@
 @model YallaJo.Web.Areas.Guide.Models.Proposals.ProposalsVm
 @{
     ViewData["Title"] = Localizer["Guide.Proposals.Title"].Value;
-    var culture = CultureInfo.CurrentUICulture;
-    string Money(decimal amount, string? currency)
-        => amount.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(currency) ? "JOD" : currency);
-    string DateF(DateTime d) => d.ToString("yyyy-MM-dd", culture);
-
-    (string Color, string Icon) StatusStyle(string status) => status.ToLowerInvariant() switch
-    {
-        "approved" => ("success", "circle-check"),
-        "rejected" => ("danger", "circle-xmark"),
-        "submitted" or "pendingreview" or "pending" => ("warning", "clock"),
-        "draft" => ("secondary", "pen-ruler"),
-        _ => ("secondary", "circle-info")
-    };
-
     bool CanSubmit(string status) => status.Equals("draft", StringComparison.OrdinalIgnoreCase);
 }
 
@@ -106,10 +92,7 @@
                     <h2 class="card-header-title h5 mb-3">@Localizer["Guide.Proposals.SubmittedHeading"]</h2>
                     @if (!Model.HasProposals)
                     {
-                        <div class="text-center py-5">
-                            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                            <p class="mb-0 text-body-secondary">@Localizer["Guide.Proposals.NoProposals"]</p>
-                        </div>
+                        <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Proposals.NoProposals"].Value)' />
                     }
                     else
                     {
@@ -127,24 +110,21 @@
                                 <tbody>
                                     @foreach (var proposal in Model.Proposals)
                                     {
-                                        var style = StatusStyle(proposal.Status);
                                         <tr>
                                             <td>
                                                 <div class="fw-semibold">@proposal.Title</div>
                                                 @if (!string.IsNullOrWhiteSpace(proposal.ShortDescription))
                                                 {
-                                                    <div class="small text-body-secondary text-truncate" style="max-width: 260px;">
+                                                    <div class="small text-body-secondary text-truncate yj-cell-truncate" title="@proposal.ShortDescription">
                                                         @proposal.ShortDescription
                                                     </div>
                                                 }
                                             </td>
-                                            <td><bdi dir="ltr" class="font-data">@Money(proposal.BasePrice, proposal.Currency)</bdi></td>
+                                            <td><bdi dir="ltr" class="font-data">@GuideFormat.Money(proposal.BasePrice, proposal.Currency)</bdi></td>
                                             <td>
-                                                <span class="badge bg-@style.Color bg-opacity-10 text-@style.Color">
-                                                    <i class="fa-solid fa-@style.Icon fa-fw" aria-hidden="true"></i> @proposal.Status
-                                                </span>
+                                                <partial name="_GuideStatusBadge" model="new StatusBadgeVm(proposal.Status)" />
                                             </td>
-                                            <td><bdi dir="ltr" class="font-data">@DateF(proposal.CreatedAt)</bdi></td>
+                                            <td><bdi dir="ltr" class="font-data">@GuideFormat.Date(proposal.CreatedAt)</bdi></td>
                                             <td class="text-end">
                                                 @if (CanSubmit(proposal.Status))
                                                 {

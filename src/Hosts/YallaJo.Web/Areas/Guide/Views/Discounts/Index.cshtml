@@ -4,6 +4,8 @@
     ViewData["Title"] = Localizer["Guide.Discounts.Title"].Value;
     var culture = CultureInfo.CurrentUICulture;
 
+    // Kept local: discount-specific formats (percentage 0-100 "0.##", money N2, dd MMM yyyy ranges,
+    // usage "x / y") differ from the GuideFormat conventions.
     string FormatValue(DiscountRowVm d) =>
         d.DiscountType == GuideDiscountType.Percentage
             ? d.DiscountValue.ToString("0.##", culture) + "%"
@@ -105,10 +107,7 @@
 
                     @if (!Model.HasDiscounts)
                     {
-                        <div class="text-center py-5">
-                            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                            <p class="text-secondary mb-0">@Localizer["Guide.Discounts.NoDiscounts"]</p>
-                        </div>
+                        <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Discounts.NoDiscounts"].Value)' />
                     }
                     else
                     {
@@ -133,7 +132,7 @@
                                                 <div class="fw-semibold">@d.Name</div>
                                                 @if (!string.IsNullOrWhiteSpace(d.Description))
                                                 {
-                                                    <div class="small text-body-secondary text-truncate" style="max-width: 220px;">@d.Description</div>
+                                                    <div class="small text-body-secondary text-truncate yj-cell-truncate" title="@d.Description">@d.Description</div>
                                                 }
                                             </td>
                                             <td>

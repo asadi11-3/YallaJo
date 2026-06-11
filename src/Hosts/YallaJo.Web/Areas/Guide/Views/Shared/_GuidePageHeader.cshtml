@@ -1,0 +1,10 @@
+@using YallaJo.Web.Areas.Guide.Models.Shared
+@model PageHeaderVm
+@* A11Y6: the single h1 of the page. Icon is decorative (aria-hidden). *@
+<div>
+    <h1 class="h4 mb-0"><i class="fa-solid fa-@Model.Icon me-2" aria-hidden="true"></i>@Model.Title</h1>
+    @if (!string.IsNullOrWhiteSpace(Model.Subtitle))
+    {
+        <p class="text-body-secondary small mb-0 mt-1">@Model.Subtitle</p>
+    }
+</div>

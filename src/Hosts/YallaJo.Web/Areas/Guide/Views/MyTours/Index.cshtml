@@ -1,9 +1,6 @@
 @model YallaJo.Web.Areas.Guide.Models.MyTours.MyToursVm
 @{
     ViewData["Title"] = Localizer["Guide.MyTours.Title"].Value;
-    var culture = CultureInfo.CurrentUICulture;
-    string Date(DateTime d) => d.ToString("yyyy-MM-dd", culture);
-    string Count(int n) => n.ToString("N0", culture);
 }
 
 @await Component.InvokeAsync("GuideSidebar")
@@ -13,21 +10,15 @@
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <h1 class="h4 mb-0"><i class="fa-solid fa-map me-2" aria-hidden="true"></i>@Localizer["Guide.MyTours.Heading"]</h1>
-                <p class="text-secondary mb-0">@Localizer["Guide.MyTours.Subtitle"]</p>
+                <p class="text-body-secondary mb-0">@Localizer["Guide.MyTours.Subtitle"]</p>
             </div>
         </div>
 
         @if (!Model.HasTours)
         {
-            <div class="card card-body border text-center py-5">
-                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3 mx-auto" />
-                <h2 class="h5">@Localizer["Guide.MyTours.NoTours"]</h2>
-                <p class="text-secondary mb-3">@Localizer["Guide.MyTours.NoToursMsg"]</p>
-                <div>
-                    <a class="btn btn-sm btn-primary-soft" asp-area="Guide" asp-controller="Applications" asp-action="Index">
-                        <i class="fa-solid fa-magnifying-glass me-1" aria-hidden="true"></i>@Localizer["Guide.MyTours.FindTours"]
-                    </a>
-                </div>
+            <div class="card card-body border">
+                <h2 class="h5 text-center mb-0">@Localizer["Guide.MyTours.NoTours"]</h2>
+                <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.MyTours.NoToursMsg"].Value, Localizer["Guide.MyTours.FindTours"].Value, Url.Action("Index", "Applications", new { area = "Guide" }))' />
             </div>
         }
         else
@@ -53,7 +44,7 @@
                                         <span class="fw-semibold">@tour.Title</span>
                                         @if (!string.IsNullOrWhiteSpace(tour.Slug))
                                         {
-                                            <div class="text-secondary small"><bdi dir="ltr">@tour.Slug</bdi></div>
+                                            <div class="text-body-secondary small"><bdi dir="ltr">@tour.Slug</bdi></div>
                                         }
                                     </td>
                                     <td>
@@ -73,13 +64,11 @@
                                     <td>
                                         @if (string.IsNullOrWhiteSpace(tour.OfferingStatus))
                                         {
-                                            <span class="text-secondary" aria-label="@Localizer["Guide.MyTours.NoOffering"]">&mdash;</span>
+                                            <span class="text-body-secondary" aria-label="@Localizer["Guide.MyTours.NoOffering"]">&mdash;</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-info bg-opacity-10 text-info">
-                                                <i class="fa-solid fa-circle-info fa-fw" aria-hidden="true"></i> @tour.OfferingStatus
-                                            </span>
+                                            <partial name="_GuideStatusBadge" model="new StatusBadgeVm(tour.OfferingStatus)" />
                                         }
                                     </td>
                                     <td>
@@ -99,11 +88,11 @@
                                     <td>
                                         @if (tour.AssignedAt.HasValue)
                                         {
-                                            <bdi dir="ltr" class="font-data">@Date(tour.AssignedAt.Value)</bdi>
+                                            <bdi dir="ltr" class="font-data">@GuideFormat.Date(tour.AssignedAt.Value)</bdi>
                                         }
                                         else
                                         {
-                                            <span class="text-secondary">&mdash;</span>
+                                            <span class="text-body-secondary">&mdash;</span>
                                         }
                                     </td>
                                     <td class="text-end">
@@ -120,24 +109,7 @@
                 </div>
             </div>
 
-            @if (Model.TotalPages > 1)
-            {
-                <nav aria-label="@Localizer["Guide.MyTours.Pagination"]">
-                    <ul class="pagination justify-content-center mb-0">
-                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                            <a class="page-link" asp-area="Guide" asp-controller="MyTours" asp-action="Index"
-                               asp-route-page="@(Model.Page - 1)">@Localizer["Guide.Common.Previous"]</a>
-                        </li>
-                        <li class="page-item disabled">
-                            <span class="page-link">@Localizer["Guide.Common.PageOf", Model.Page, Model.TotalPages]</span>
-                        </li>
-                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                            <a class="page-link" asp-area="Guide" asp-controller="MyTours" asp-action="Index"
-                               asp-route-page="@(Model.Page + 1)">@Localizer["Guide.Common.Next"]</a>
-                        </li>
-                    </ul>
-                </nav>
-            }
+            <partial name="_GuidePagination" model='new PaginationVm(Model.Page, Model.TotalPages, Model.HasPreviousPage, Model.HasNextPage, "MyTours", Localizer["Guide.MyTours.Pagination"].Value)' />
         }
     </div>
 </section>
