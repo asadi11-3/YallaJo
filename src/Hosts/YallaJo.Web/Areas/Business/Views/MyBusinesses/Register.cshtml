@@ -9,14 +9,22 @@
     ViewData["BusinessNav"] = "Register";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
-}
 
-<partial name="_BusinessSidebar" model="sidebar" />
+    string TypeText(string t)
+    {
+        var v = Localizer["Business.Type." + t];
+        return v.ResourceNotFound ? t : v.Value;
+    }
+    var typeOptions = Model.BusinessTypes
+        .Select(o => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(TypeText(o.Value ?? string.Empty), o.Value, o.Selected))
+        .ToList();
+}
 
 <section class="pt-0">
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-10 col-xl-9 vstack gap-4">
+        <div class="row g-4">
+            <partial name="_BusinessSidebar" model="sidebar" />
+            <div class="col-lg-8 col-xl-9 vstack gap-4">
                 <div>
                     <a class="small text-body-secondary text-decoration-none" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">
                         <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Business.Register.BackToList"]
@@ -54,7 +62,7 @@
                                     </div>
                                     <div class="col-md-4">
                                         <label asp-for="Form.BusinessType" class="form-label">@Localizer["Business.Register.Type"]</label>
-                                        <select asp-for="Form.BusinessType" asp-items="@(new SelectList(Model.BusinessTypes, "Value", "Text"))" class="form-select">
+                                        <select asp-for="Form.BusinessType" asp-items="typeOptions" class="form-select">
                                             <option value="">@Localizer["Business.Register.TypeChoose"]</option>
                                         </select>
                                         <span asp-validation-for="Form.BusinessType" class="text-danger small" role="alert"></span>

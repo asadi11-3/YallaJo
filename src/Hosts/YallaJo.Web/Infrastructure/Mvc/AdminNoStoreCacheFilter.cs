@@ -8,7 +8,9 @@ public sealed class AdminNoStoreCacheFilter : IAsyncResultFilter
     // Auth-gated areas whose responses must never be stored by any cache (UI-PERF-C2).
     // Provider added by the Provider-area modernization (Phase 8): every Provider page
     // is authenticated/personalised, so browsers and proxies must revalidate always.
-    private static readonly string[] NoStoreAreas = ["Admin", "Provider"];
+    // Business added by the Business-area modernization (Phase 0): the whole area is
+    // [Authorize]-gated owner self-service, so responses must never be cached.
+    private static readonly string[] NoStoreAreas = ["Admin", "Provider", "Business"];
 
     public Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
     {

@@ -13489,4 +13489,28 @@
 <data name="Guide.Validation.ImageInvalid" xml:space="preserve">
 <value>يُسمح بملفات الصور فقط.</value>
 </data>
+<data name="Business.Type.Restaurant" xml:space="preserve">
+<value>مطعم</value>
+</data>
+<data name="Business.Type.Hotel" xml:space="preserve">
+<value>فندق</value>
+</data>
+<data name="Business.Type.Shop" xml:space="preserve">
+<value>متجر</value>
+</data>
+<data name="Business.Type.Agency" xml:space="preserve">
+<value>وكالة سفر</value>
+</data>
+<data name="Business.Type.Transport" xml:space="preserve">
+<value>نقل</value>
+</data>
+<data name="Business.Type.Guide" xml:space="preserve">
+<value>مرشد سياحي</value>
+</data>
+<data name="Business.Type.Activity" xml:space="preserve">
+<value>نشاط</value>
+</data>
+<data name="Business.Type.Other" xml:space="preserve">
+<value>أخرى</value>
+</data>
 </root>

@@ -13489,4 +13489,28 @@
 <data name="Guide.Layout.SkipToContent" xml:space="preserve">
 <value>Skip to main content</value>
 </data>
+<data name="Business.Type.Restaurant" xml:space="preserve">
+<value>Restaurant</value>
+</data>
+<data name="Business.Type.Hotel" xml:space="preserve">
+<value>Hotel</value>
+</data>
+<data name="Business.Type.Shop" xml:space="preserve">
+<value>Shop</value>
+</data>
+<data name="Business.Type.Agency" xml:space="preserve">
+<value>Travel agency</value>
+</data>
+<data name="Business.Type.Transport" xml:space="preserve">
+<value>Transport</value>
+</data>
+<data name="Business.Type.Guide" xml:space="preserve">
+<value>Tour guide</value>
+</data>
+<data name="Business.Type.Activity" xml:space="preserve">
+<value>Activity</value>
+</data>
+<data name="Business.Type.Other" xml:space="preserve">
+<value>Other</value>
+</data>
 </root>
