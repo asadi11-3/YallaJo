@@ -50,17 +50,7 @@ public sealed record GuidePricingTierDto(
 // Schedule times are sent as strings ("HH:mm") and parsed to TimeOnly server-side.
 public sealed record CreateScheduleRequest(byte DayOfWeek, string StartTime, string? EndTime);
 
-public sealed record UpdateScheduleRequest(byte DayOfWeek, string StartTime, string? EndTime);
-
 public sealed record CreatePricingTierRequest(
-    string Name,
-    decimal Price,
-    string Currency,
-    int MinParticipants,
-    int MaxParticipants,
-    string? Description);
-
-public sealed record UpdatePricingTierRequest(
     string Name,
     decimal Price,
     string Currency,

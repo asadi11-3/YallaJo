@@ -179,34 +179,43 @@
                                                 }
                                             </td>
                                         </tr>
-                                        <tr class="collapse" id="edit-disc-@d.Id">
+                                        // On a failed edit POST, this row re-renders expanded with the user's submitted values (no data loss).
+                                        var isOpenEdit = Model.OpenEditId == d.Id && Model.EditForm is not null;
+                                        var ef = isOpenEdit ? Model.EditForm! : null;
+                                        <tr class="collapse @(isOpenEdit ? "show" : null)" id="edit-disc-@d.Id">
                                             <td colspan="7">
                                                 <form asp-area="Guide" asp-controller="Discounts" asp-action="Edit" asp-route-id="@d.Id"
                                                       method="post" class="row g-2 align-items-end">
                                                     @Html.AntiForgeryToken()
+                                                    @if (isOpenEdit)
+                                                    {
+                                                        <div class="col-12">
+                                                            <div asp-validation-summary="All" class="text-danger small" role="alert"></div>
+                                                        </div>
+                                                    }
                                                     <div class="col-md-4">
                                                         <label class="form-label small mb-1" for="dn-@d.Id">@Localizer["Guide.Discounts.Name"]</label>
-                                                        <input id="dn-@d.Id" name="Name" value="@d.Name" class="form-control form-control-sm" maxlength="100" required />
+                                                        <input id="dn-@d.Id" name="Name" value="@(ef?.Name ?? d.Name)" class="form-control form-control-sm" maxlength="100" required />
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label small mb-1" for="dv-@d.Id">@Localizer["Guide.Discounts.Value"]</label>
-                                                        <input id="dv-@d.Id" name="DiscountValue" value="@d.DiscountValue.ToString(CultureInfo.InvariantCulture)" type="number" step="0.01" min="0" class="form-control form-control-sm" dir="ltr" required />
+                                                        <input id="dv-@d.Id" name="DiscountValue" value="@((ef?.DiscountValue ?? d.DiscountValue).ToString(CultureInfo.InvariantCulture))" type="number" step="0.01" min="0" class="form-control form-control-sm" dir="ltr" required />
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label small mb-1" for="df-@d.Id">@Localizer["Guide.Discounts.ValidFrom"]</label>
-                                                        <input id="df-@d.Id" name="ValidFrom" value="@d.ValidFrom.ToString("yyyy-MM-dd")" type="date" class="form-control form-control-sm" dir="ltr" required />
+                                                        <input id="df-@d.Id" name="ValidFrom" value="@((ef?.ValidFrom ?? d.ValidFrom).ToString("yyyy-MM-dd"))" type="date" class="form-control form-control-sm" dir="ltr" required />
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label small mb-1" for="du-@d.Id">@Localizer["Guide.Discounts.ValidUntil"]</label>
-                                                        <input id="du-@d.Id" name="ValidUntil" value="@(d.ValidUntil?.ToString("yyyy-MM-dd"))" type="date" class="form-control form-control-sm" dir="ltr" />
+                                                        <input id="du-@d.Id" name="ValidUntil" value="@((isOpenEdit ? ef!.ValidUntil : d.ValidUntil)?.ToString("yyyy-MM-dd"))" type="date" class="form-control form-control-sm" dir="ltr" />
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="form-label small mb-1" for="dd-@d.Id">@Localizer["Guide.Discounts.Description"]</label>
-                                                        <input id="dd-@d.Id" name="Description" value="@d.Description" class="form-control form-control-sm" maxlength="500" />
+                                                        <input id="dd-@d.Id" name="Description" value="@(isOpenEdit ? ef!.Description : d.Description)" class="form-control form-control-sm" maxlength="500" />
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label small mb-1" for="dm-@d.Id">@Localizer["Guide.Discounts.MaxUsage"]</label>
-                                                        <input id="dm-@d.Id" name="MaxUsageCount" value="@d.MaxUsageCount" type="number" min="1" class="form-control form-control-sm" dir="ltr" />
+                                                        <input id="dm-@d.Id" name="MaxUsageCount" value="@(isOpenEdit ? ef!.MaxUsageCount : d.MaxUsageCount)" type="number" min="1" class="form-control form-control-sm" dir="ltr" />
                                                     </div>
                                                     <div class="col-12"><button type="submit" class="btn btn-sm btn-primary">@Localizer["Guide.Discounts.SaveChanges"]</button></div>
                                                 </form>

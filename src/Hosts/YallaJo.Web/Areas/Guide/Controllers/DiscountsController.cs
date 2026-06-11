@@ -74,16 +74,17 @@ public sealed class DiscountsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, EditDiscountFormVm form, CancellationToken ct = default)
     {
+        SetSidebar();
+
         if (form.ValidUntil.HasValue && form.ValidUntil.Value < form.ValidFrom)
         {
-            SetError("Valid-until must be on or after the valid-from date.");
-            return RedirectToAction(nameof(Index));
+            ModelState.AddModelError(nameof(form.ValidUntil), "Valid-until must be on or after the valid-from date.");
         }
 
+        // Re-render with the user's submitted values preserved instead of flash+redirect (no data loss).
         if (!ModelState.IsValid)
         {
-            SetError("Please correct the discount details and try again.");
-            return RedirectToAction(nameof(Index));
+            return await ReloadEditAsync(id, form, ct);
         }
 
         var result = await _discounts.UpdateAsync(id, form, ct);
@@ -92,15 +93,17 @@ public sealed class DiscountsController : BaseController
             return signOut;
         }
 
-        if (result.IsSuccess)
+        if (!result.IsSuccess)
         {
-            SetSuccess("Discount updated.");
-        }
-        else if (!ApplyValidationErrors(result))
-        {
-            SetError(result.Error ?? "Could not update the discount.");
+            if (!ApplyValidationErrors(result))
+            {
+                SetError(result.Error ?? "Could not update the discount.");
+            }
+
+            return await ReloadEditAsync(id, form, ct);
         }
 
+        SetSuccess("Discount updated.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -108,7 +111,6 @@ public sealed class DiscountsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Deactivate(Guid id, CancellationToken ct = default)
     {
-        SetSidebar();
         var result = await _discounts.DeactivateAsync(id, ct);
         if (GuardSignOut(result) is { } signOut)
         {
@@ -122,8 +124,27 @@ public sealed class DiscountsController : BaseController
     private async Task<IActionResult> ReloadAsync(CreateDiscountFormVm form, CancellationToken ct)
     {
         var result = await _discounts.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
         var vm = result.IsSuccess && result.Data is not null ? result.Data : new DiscountsVm();
         vm.Form = form;
+        return View(nameof(Index), vm);
+    }
+
+    private async Task<IActionResult> ReloadEditAsync(Guid id, EditDiscountFormVm form, CancellationToken ct)
+    {
+        var result = await _discounts.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        var vm = result.IsSuccess && result.Data is not null ? result.Data : new DiscountsVm();
+        vm.EditForm = form;
+        vm.OpenEditId = id;
         return View(nameof(Index), vm);
     }
 

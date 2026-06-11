@@ -24,8 +24,17 @@ public sealed class GuideAgencyRosterFacade
 
     public async Task<ApiResult<AgencyRosterVm>> GetRosterAsync(CancellationToken ct = default)
     {
-        var guidesResult = await _api.GetGuidesAsync(ct);
-        if (guidesResult.RequireSignOut)
+        // UI-PERF-API1: independent reads fan out in parallel.
+        var guidesTask = _api.GetGuidesAsync(ct);
+        var applicationsTask = _api.GetApplicationsAsync(ct);
+        var invitationsTask = _api.GetSentInvitationsAsync(ct);
+        await Task.WhenAll(guidesTask, applicationsTask, invitationsTask);
+
+        var guidesResult = await guidesTask; // UI-PERF-R1: no .Result
+        var applicationsResult = await applicationsTask;
+        var invitationsResult = await invitationsTask;
+
+        if (guidesResult.RequireSignOut || applicationsResult.RequireSignOut || invitationsResult.RequireSignOut)
         {
             return ApiResult<AgencyRosterVm>.ForceSignOut();
         }
@@ -33,18 +42,6 @@ public sealed class GuideAgencyRosterFacade
         if (!guidesResult.IsSuccess || guidesResult.Data is null)
         {
             return ApiResult<AgencyRosterVm>.Fail(guidesResult.StatusCode, guidesResult.Error ?? "Could not load your agency roster.");
-        }
-
-        var applicationsResult = await _api.GetApplicationsAsync(ct);
-        if (applicationsResult.RequireSignOut)
-        {
-            return ApiResult<AgencyRosterVm>.ForceSignOut();
-        }
-
-        var invitationsResult = await _api.GetSentInvitationsAsync(ct);
-        if (invitationsResult.RequireSignOut)
-        {
-            return ApiResult<AgencyRosterVm>.ForceSignOut();
         }
 
         var guides = guidesResult.Data
@@ -98,12 +95,18 @@ public sealed class GuideAgencyRosterFacade
     }
 
     /// <summary>Re-populates the available-guides picker on an invite form (e.g. after a validation error).</summary>
-    public async Task PopulateAvailableGuidesAsync(InviteGuideFormVm form, CancellationToken ct = default)
+    public async Task<ApiResult> PopulateAvailableGuidesAsync(InviteGuideFormVm form, CancellationToken ct = default)
     {
         var result = await _api.GetAvailableGuidesAsync(page: 1, pageSize: AvailableGuidesPageSize, ct: ct);
+        if (result.RequireSignOut)
+        {
+            return ApiResult.ForceSignOut();
+        }
+
         form.AvailableGuides = result.IsSuccess && result.Data is not null
             ? result.Data.Select(g => new AvailableGuideOptionVm(g.UserId, g.BusinessName, g.ContactEmail)).ToList()
             : [];
+        return ApiResult.Ok();
     }
 
     public async Task<ApiResult> InviteAsync(InviteGuideFormVm form, CancellationToken ct = default)

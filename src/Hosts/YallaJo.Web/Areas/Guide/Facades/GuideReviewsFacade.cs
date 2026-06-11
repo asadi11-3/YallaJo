@@ -35,8 +35,8 @@ public sealed class GuideReviewsFacade
         var summaryTask = SafeSummaryAsync(guideId, ct);
         await Task.WhenAll(reviewsTask, summaryTask);
 
-        var reviews = reviewsTask.Result;
-        var summary = summaryTask.Result;
+        var reviews = await reviewsTask; // UI-PERF-R1: no .Result
+        var summary = await summaryTask;
 
         var rows = reviews.Items
             .Select(r => new ReviewRowVm(

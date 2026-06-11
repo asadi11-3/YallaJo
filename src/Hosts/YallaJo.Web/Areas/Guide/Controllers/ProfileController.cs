@@ -159,6 +159,11 @@ public sealed class ProfileController : BaseController
     private async Task<IActionResult> ReloadAsync(ProfileFormVm form, CancellationToken ct)
     {
         var result = await _profile.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
         if (result is { IsSuccess: true, Data: not null })
         {
             var vm = result.Data;

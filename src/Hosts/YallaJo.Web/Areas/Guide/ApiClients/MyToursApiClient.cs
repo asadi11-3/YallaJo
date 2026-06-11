@@ -27,18 +27,12 @@ public sealed class MyToursApiClient
     public Task<ApiResult> AddScheduleAsync(Guid tourId, Guid guideId, CreateScheduleRequest req, CancellationToken ct = default) =>
         _api.PostAsync($"{ToursBase}/{tourId}/guide-offerings/{guideId}/schedules", req, ct);
 
-    public Task<ApiResult> UpdateScheduleAsync(Guid tourId, Guid guideId, Guid scheduleId, UpdateScheduleRequest req, CancellationToken ct = default) =>
-        _api.PutAsync($"{ToursBase}/{tourId}/guide-offerings/{guideId}/schedules/{scheduleId}", req, ct);
-
     public Task<ApiResult> DeleteScheduleAsync(Guid tourId, Guid guideId, Guid scheduleId, CancellationToken ct = default) =>
         _api.DeleteAsync($"{ToursBase}/{tourId}/guide-offerings/{guideId}/schedules/{scheduleId}", ct);
 
     // Pricing tiers
     public Task<ApiResult> AddPricingTierAsync(Guid tourId, Guid guideId, CreatePricingTierRequest req, CancellationToken ct = default) =>
         _api.PostAsync($"{ToursBase}/{tourId}/guide-offerings/{guideId}/pricing-tiers", req, ct);
-
-    public Task<ApiResult> UpdatePricingTierAsync(Guid tourId, Guid guideId, Guid tierId, UpdatePricingTierRequest req, CancellationToken ct = default) =>
-        _api.PutAsync($"{ToursBase}/{tourId}/guide-offerings/{guideId}/pricing-tiers/{tierId}", req, ct);
 
     public Task<ApiResult> DeletePricingTierAsync(Guid tourId, Guid guideId, Guid tierId, CancellationToken ct = default) =>
         _api.DeleteAsync($"{ToursBase}/{tourId}/guide-offerings/{guideId}/pricing-tiers/{tierId}", ct);

@@ -5,7 +5,6 @@
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Guide.Tier.Title"].Value;
-    ViewData["GuideNav"] = "Tier";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
     var culture = CultureInfo.CurrentUICulture;

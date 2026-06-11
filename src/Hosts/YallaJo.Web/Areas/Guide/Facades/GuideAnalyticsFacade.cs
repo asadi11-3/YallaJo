@@ -41,6 +41,10 @@ public sealed class GuideAnalyticsFacade
 
         await Task.WhenAll(trendsTask, popularTask, peakTask);
 
+        var trends = await trendsTask; // UI-PERF-R1: no .Result
+        var popular = await popularTask;
+        var peak = await peakTask;
+
         var vm = new AnalyticsVm
         {
             TotalBookings = overview.TotalBookings,
@@ -48,13 +52,13 @@ public sealed class GuideAnalyticsFacade
             CompletedBookings = overview.CompletedBookings,
             CancellationRate = overview.CancellationRate,
             AverageRating = overview.AverageRating,
-            BookingTrends = trendsTask.Result
+            BookingTrends = trends
                 .Select(t => new BookingTrendRowVm(t.Period, t.BookingCount))
                 .ToList(),
-            PopularTours = popularTask.Result
+            PopularTours = popular
                 .Select(p => new PopularTourRowVm(p.TourId, p.TourName, p.BookingCount))
                 .ToList(),
-            PeakDays = peakTask.Result
+            PeakDays = peak
                 .Select(d => new PeakDayRowVm(d.DayOfWeek, d.BookingCount))
                 .ToList(),
         };

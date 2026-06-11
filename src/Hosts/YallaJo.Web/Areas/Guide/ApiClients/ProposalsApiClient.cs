@@ -18,7 +18,6 @@ public sealed class ProposalsApiClient
 
     /// <summary>
     /// GET /api/v1/tours/proposals — list the current guide's proposals.
-    /// NOTE: backend is currently a stub returning an empty array.
     /// </summary>
     public Task<ApiResult<List<TourProposalResponse>>> GetMyProposalsAsync(CancellationToken ct = default)
         => _api.GetAsync<List<TourProposalResponse>>(ProposalsBase, ct);

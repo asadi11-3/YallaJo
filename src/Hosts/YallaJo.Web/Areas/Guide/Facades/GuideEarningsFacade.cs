@@ -34,8 +34,8 @@ public sealed class GuideEarningsFacade
         var historyTask = SafeHistoryAsync(page, pageSize, ct);
         await Task.WhenAll(byTourTask, historyTask);
 
-        var byTour = byTourTask.Result;
-        var history = historyTask.Result;
+        var byTour = await byTourTask; // UI-PERF-R1: no .Result
+        var history = await historyTask;
 
         var vm = new EarningsVm
         {

@@ -47,7 +47,7 @@ public sealed class GuideProposalsFacade
         }
         catch (Exception ex)
         {
-            // The list endpoint is a stub; never block the page on it.
+            // Degrade gracefully (UI-ERR3): never block the page on the list call.
             _logger.LogWarning(ex, "Failed to load tour proposals list");
         }
 

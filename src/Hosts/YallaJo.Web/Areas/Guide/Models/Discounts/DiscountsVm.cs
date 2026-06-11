@@ -8,6 +8,12 @@ public sealed class DiscountsVm
 
     public CreateDiscountFormVm Form { get; set; } = new();
 
+    /// <summary>When an edit POST fails validation, holds the user's submitted values so the row re-renders with input preserved (no data loss).</summary>
+    public EditDiscountFormVm? EditForm { get; set; }
+
+    /// <summary>Id of the discount whose edit row should render expanded (set on failed edit re-render).</summary>
+    public Guid? OpenEditId { get; set; }
+
     public bool HasDiscounts => Discounts.Count > 0;
 }
 

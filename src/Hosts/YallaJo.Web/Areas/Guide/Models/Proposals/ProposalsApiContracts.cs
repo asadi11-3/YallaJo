@@ -2,8 +2,6 @@ namespace YallaJo.Web.Areas.Guide.Models.Proposals;
 
 /// <summary>
 /// A tour proposal as returned by GET /api/v1/tours/proposals.
-/// NOTE: the backend list endpoint is currently a stub that returns an empty
-/// array, so this shape is forward-looking and never actually populated yet.
 /// </summary>
 public sealed record TourProposalResponse(
     Guid Id,

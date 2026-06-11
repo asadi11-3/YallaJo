@@ -69,6 +69,11 @@ public sealed class ProposalsController : BaseController
     private async Task<IActionResult> ReloadAsync(CreateProposalFormVm form, CancellationToken ct)
     {
         var result = await _proposals.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
         var vm = result.IsSuccess && result.Data is not null ? result.Data : new ProposalsVm();
         vm.Form = form;
         return View(nameof(Index), vm);

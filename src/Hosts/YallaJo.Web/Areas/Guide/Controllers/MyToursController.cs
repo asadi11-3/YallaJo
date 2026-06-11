@@ -66,6 +66,11 @@ public sealed class MyToursController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddSchedule(Guid tourId, AddScheduleFormVm form, CancellationToken ct = default)
     {
+        if (InvalidModelRedirect(tourId) is { } invalid)
+        {
+            return invalid;
+        }
+
         var result = await _facade.AddScheduleAsync(tourId, form, ct);
         return HandleMutation(result, tourId, "Schedule added.");
     }
@@ -82,6 +87,11 @@ public sealed class MyToursController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddPricingTier(Guid tourId, AddPricingTierFormVm form, CancellationToken ct = default)
     {
+        if (InvalidModelRedirect(tourId) is { } invalid)
+        {
+            return invalid;
+        }
+
         var result = await _facade.AddPricingTierAsync(tourId, form, ct);
         return HandleMutation(result, tourId, "Pricing tier added.");
     }
@@ -98,6 +108,11 @@ public sealed class MyToursController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EnablePrivateTour(Guid tourId, PrivateTourFormVm form, CancellationToken ct = default)
     {
+        if (InvalidModelRedirect(tourId) is { } invalid)
+        {
+            return invalid;
+        }
+
         var result = await _facade.EnablePrivateTourAsync(tourId, form, ct);
         return HandleMutation(result, tourId, "Private tour enabled.");
     }
@@ -133,6 +148,22 @@ public sealed class MyToursController : BaseController
 
         // The offering no longer exists — return to the tours list, not the offering page.
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>PRG guard: flash the first ModelState error and bounce back to the offering page.</summary>
+    private IActionResult? InvalidModelRedirect(Guid tourId)
+    {
+        if (ModelState.IsValid)
+        {
+            return null;
+        }
+
+        var firstError = ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage)
+            .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
+        SetError(firstError ?? "Please check the form and try again.");
+        return RedirectToAction(nameof(Offering), new { tourId });
     }
 
     private IActionResult HandleMutation(ApiResult result, Guid tourId, string successMessage)

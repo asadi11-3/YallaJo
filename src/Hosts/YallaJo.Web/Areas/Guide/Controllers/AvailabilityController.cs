@@ -74,7 +74,6 @@ public sealed class AvailabilityController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid blockId, CancellationToken ct = default)
     {
-        SetSidebar();
         var result = await _availability.DeleteBlockAsync(blockId, ct);
         if (GuardSignOut(result) is { } signOut)
         {
@@ -88,6 +87,11 @@ public sealed class AvailabilityController : BaseController
     private async Task<IActionResult> ReloadAsync(AddAvailabilityBlockFormVm form, CancellationToken ct)
     {
         var result = await _availability.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
         var vm = result.IsSuccess && result.Data is not null ? result.Data : new AvailabilityVm();
         vm.Form = form;
         return View(nameof(Index), vm);

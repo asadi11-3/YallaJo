@@ -88,6 +88,11 @@ public sealed class AgencyController : BaseController
     private async Task<IActionResult> ReloadAsync(ApplyToAgencyFormVm form, CancellationToken ct)
     {
         var result = await _facade.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
         var vm = result.IsSuccess && result.Data is not null ? result.Data : new AgencyVm();
         vm.ApplyForm = form;
         return View(nameof(Index), vm);

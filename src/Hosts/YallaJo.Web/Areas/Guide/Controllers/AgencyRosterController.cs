@@ -64,7 +64,8 @@ public sealed class AgencyRosterController : BaseController
 
         if (!ModelState.IsValid)
         {
-            await _facade.PopulateAvailableGuidesAsync(form, ct);
+            var repopulate = await _facade.PopulateAvailableGuidesAsync(form, ct);
+            if (GuardSignOut(repopulate) is { } repopulateSignOut) return repopulateSignOut;
             return View(form);
         }
 
@@ -74,7 +75,8 @@ public sealed class AgencyRosterController : BaseController
         if (!result.IsSuccess)
         {
             SetError(result.Error);
-            await _facade.PopulateAvailableGuidesAsync(form, ct);
+            var repopulate = await _facade.PopulateAvailableGuidesAsync(form, ct);
+            if (GuardSignOut(repopulate) is { } repopulateSignOut) return repopulateSignOut;
             return View(form);
         }
 
@@ -99,13 +101,12 @@ public sealed class AgencyRosterController : BaseController
     [RequirePermission(WebPermission.AgencyRoster.Reject)]
     public async Task<IActionResult> Reject(Guid id, string? reason, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(reason))
+        if (RequireReason(reason, "Please provide a reason for rejecting the application.") is { } invalid)
         {
-            SetError("Please provide a reason for rejecting the application.");
-            return RedirectToAction(nameof(Index));
+            return invalid;
         }
 
-        var result = await _facade.RejectApplicationAsync(id, reason, ct);
+        var result = await _facade.RejectApplicationAsync(id, reason!, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Application rejected.");
@@ -117,16 +118,27 @@ public sealed class AgencyRosterController : BaseController
     [RequirePermission(WebPermission.AgencyRoster.Delete)]
     public async Task<IActionResult> Remove(Guid guideUserId, string? reason, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(reason))
+        if (RequireReason(reason, "Please provide a reason for removing the guide.") is { } invalid)
         {
-            SetError("Please provide a reason for removing the guide.");
-            return RedirectToAction(nameof(Index));
+            return invalid;
         }
 
-        var result = await _facade.RemoveGuideAsync(guideUserId, reason, ct);
+        var result = await _facade.RemoveGuideAsync(guideUserId, reason!, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Guide removed from your roster.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>Shared reason-required guard for reject/remove actions; null when the reason is present.</summary>
+    private IActionResult? RequireReason(string? reason, string errorMessage)
+    {
+        if (!string.IsNullOrWhiteSpace(reason))
+        {
+            return null;
+        }
+
+        SetError(errorMessage);
         return RedirectToAction(nameof(Index));
     }
 
