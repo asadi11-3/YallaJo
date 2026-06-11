@@ -184,6 +184,13 @@
     </div>
 </div>
 
+@section Styles {
+    @* Per-page chart bundle (A6/J2) — only the chart views pay for ApexCharts. *@
+    <link rel="stylesheet" type="text/css" href="~/assets/vendor/apexcharts/css/apexcharts.css" />
+}
+
 @section Scripts {
+    @* Deferred scripts execute in document order: ApexCharts is defined before the page script runs. *@
+    <script src="~/assets/vendor/apexcharts/js/apexcharts.min.js" defer></script>
     <script src="~/assets/js/admin-statistics.js" asp-append-version="true" defer></script>
 }

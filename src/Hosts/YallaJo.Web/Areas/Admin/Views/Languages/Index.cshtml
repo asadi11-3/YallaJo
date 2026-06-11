@@ -69,7 +69,7 @@
         @if (Model.Languages.Count == 0)
         {
             <div class="text-center py-5">
-                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <img src="~/assets/images/element/17.svg" loading="lazy" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
                 <p class="mb-3 text-secondary">@Localizer["Admin.Languages.EmptyMessage"]</p>
                 <permission require="@WebPermission.Language.Create">
                     <a href="#Create_Code" class="btn btn-sm btn-primary">

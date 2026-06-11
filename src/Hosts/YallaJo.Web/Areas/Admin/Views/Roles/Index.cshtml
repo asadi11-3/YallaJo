@@ -49,7 +49,7 @@
         {
             @* L6 — empty state carries a CTA. *@
             <div class="text-center py-5">
-                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <img src="~/assets/images/element/17.svg" loading="lazy" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
                 <p class="mb-3 text-secondary">@Localizer["Admin.Roles.EmptyMessage"]</p>
                 <permission require="@WebPermission.Role.Create">
                     <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Roles" asp-action="Index">

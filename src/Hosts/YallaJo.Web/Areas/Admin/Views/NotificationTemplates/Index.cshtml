@@ -37,7 +37,7 @@
     @if (Model.Templates.Count == 0)
     {
         <div class="card-body text-center py-5">
-            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+            <img src="~/assets/images/element/17.svg" loading="lazy" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
             <p class="mb-3 text-secondary">@Localizer["Admin.NotificationTemplates.EmptyMessage"]</p>
             <permission require="@WebPermission.NotificationTemplate.Create">
                 <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="NotificationTemplates" asp-action="Create">@Localizer["Admin.NotificationTemplates.New"]</a>

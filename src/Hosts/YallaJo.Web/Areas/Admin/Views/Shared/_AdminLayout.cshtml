@@ -101,8 +101,8 @@
     <link rel="stylesheet" type="text/css" href="~/assets/vendor/font-awesome/css/all.min.css" />
     <link rel="stylesheet" type="text/css" href="~/assets/vendor/bootstrap-icons/bootstrap-icons.css" />
     <link rel="stylesheet" type="text/css" href="~/assets/vendor/overlay-scrollbar/css/overlayscrollbars.min.css" />
-    <link rel="stylesheet" type="text/css" href="~/assets/vendor/apexcharts/css/apexcharts.css" />
-    <link rel="stylesheet" type="text/css" href="~/assets/vendor/flatpickr/css/flatpickr.min.css" />
+    @* ApexCharts CSS moved to the @section Styles of the chart views (Home, Statistics) — A6/J2.
+       flatpickr removed: no admin view uses a date-range picker. *@
 
     @* Theme CSS (bundles Bootstrap v5.3.0) *@
     <link rel="stylesheet" type="text/css" href="~/assets/css/style.css" />
@@ -315,10 +315,10 @@
     @* Bootstrap JS bundle (served locally; fingerprinted + immutable-cached via .WithStaticAssets()). *@
     <script src="~/assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-    @* Vendor plugins *@
+    @* Vendor plugins. ApexCharts moved to the @section Scripts of the chart views
+       (Home, Statistics) so non-chart admin pages stop paying for it; flatpickr removed —
+       no admin view uses a date-range picker (A6/J2). *@
     <script src="~/assets/vendor/overlay-scrollbar/js/overlayscrollbars.min.js"></script>
-    <script src="~/assets/vendor/apexcharts/js/apexcharts.min.js"></script>
-    <script src="~/assets/vendor/flatpickr/js/flatpickr.min.js"></script>
 
     @* Theme functions *@
     <script src="~/assets/js/functions.js"></script>
