@@ -12808,4 +12808,37 @@
 <data name="Accounts.Bookings.Tab.JoinRequests" xml:space="preserve">
 <value>Join requests</value>
 </data>
+<data name="Accounts.Notifications.JustNow" xml:space="preserve">
+<value>just now</value>
+</data>
+<data name="Accounts.Notifications.MinutesAgo" xml:space="preserve">
+<value>{0}m ago</value>
+</data>
+<data name="Accounts.Notifications.HoursAgo" xml:space="preserve">
+<value>{0}h ago</value>
+</data>
+<data name="Accounts.Notifications.DaysAgo" xml:space="preserve">
+<value>{0}d ago</value>
+</data>
+<data name="Accounts.Notifications.Empty" xml:space="preserve">
+<value>No notifications to show.</value>
+</data>
+<data name="Accounts.Notifications.ManagePreferences" xml:space="preserve">
+<value>Manage notification preferences</value>
+</data>
+<data name="Accounts.Notifications.View" xml:space="preserve">
+<value>View</value>
+</data>
+<data name="Accounts.Notifications.MarkRead" xml:space="preserve">
+<value>Mark as read</value>
+</data>
+<data name="Accounts.Notifications.LoadMore" xml:space="preserve">
+<value>Load more</value>
+</data>
+<data name="Accounts.Notifications.End" xml:space="preserve">
+<value>End of notifications</value>
+</data>
+<data name="Accounts.Notifications.MarkAllRead" xml:space="preserve">
+<value>Mark all read</value>
+</data>
 </root>

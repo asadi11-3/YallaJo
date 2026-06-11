@@ -33,7 +33,6 @@ public sealed class NotificationsController : BaseController
         CancellationToken ct)
     {
         ViewData["AccountNav"] = "Notifications";
-        await PopulateSidebarAsync(ct);
 
         var filter = new NotificationInboxFilterVm
         {
@@ -44,6 +43,12 @@ public sealed class NotificationsController : BaseController
         };
 
         var vm = await _notifications.GetInboxAsync(filter, cursor, ct);
+
+        // Phase 4: AJAX "Load more" (accounts-notifications.js) receives only the list fragment (UI-UX-S1/PE1).
+        if (WantsAjax())
+            return PartialView("_NotificationsList", vm);
+
+        await PopulateSidebarAsync(ct);
         if (vm.LoadError is not null)
         {
             SetError(vm.LoadError);

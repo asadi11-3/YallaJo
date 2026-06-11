@@ -12808,4 +12808,37 @@
 <data name="Accounts.Bookings.Tab.JoinRequests" xml:space="preserve">
 <value>طلبات الانضمام</value>
 </data>
+<data name="Accounts.Notifications.JustNow" xml:space="preserve">
+<value>الآن</value>
+</data>
+<data name="Accounts.Notifications.MinutesAgo" xml:space="preserve">
+<value>قبل {0} د</value>
+</data>
+<data name="Accounts.Notifications.HoursAgo" xml:space="preserve">
+<value>قبل {0} س</value>
+</data>
+<data name="Accounts.Notifications.DaysAgo" xml:space="preserve">
+<value>قبل {0} ي</value>
+</data>
+<data name="Accounts.Notifications.Empty" xml:space="preserve">
+<value>لا توجد إشعارات لعرضها.</value>
+</data>
+<data name="Accounts.Notifications.ManagePreferences" xml:space="preserve">
+<value>إدارة تفضيلات الإشعارات</value>
+</data>
+<data name="Accounts.Notifications.View" xml:space="preserve">
+<value>عرض</value>
+</data>
+<data name="Accounts.Notifications.MarkRead" xml:space="preserve">
+<value>تعليم كمقروء</value>
+</data>
+<data name="Accounts.Notifications.LoadMore" xml:space="preserve">
+<value>تحميل المزيد</value>
+</data>
+<data name="Accounts.Notifications.End" xml:space="preserve">
+<value>نهاية الإشعارات</value>
+</data>
+<data name="Accounts.Notifications.MarkAllRead" xml:space="preserve">
+<value>تعليم الكل كمقروء</value>
+</data>
 </root>
