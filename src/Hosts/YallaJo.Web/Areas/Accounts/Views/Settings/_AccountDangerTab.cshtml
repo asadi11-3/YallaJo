@@ -4,51 +4,50 @@
 
 <div class="card border">
     <div class="card-header border-bottom">
-        <h4 class="card-header-title mb-0">Delete Account</h4>
+        <h4 class="card-header-title mb-0">@Localizer["Accounts.Account.DeleteHeading"]</h4>
     </div>
 
     <div class="card-body">
         <div class="alert alert-warning d-flex align-items-start gap-2" role="alert">
-            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <i class="bi bi-exclamation-triangle-fill fs-5" aria-hidden="true"></i>
             <div>
-                <strong>This will deactivate your account.</strong>
-                Deleting is a soft action &ndash; you can restore your account by signing in
-                again later, but the deactivation takes effect immediately.
+                <strong>@Localizer["Accounts.Account.DeactivateWarning"]</strong>
+                @Localizer["Accounts.Account.SoftActionNote"]
             </div>
         </div>
 
-        <p class="mb-2">Before you go, please note:</p>
+        <p class="mb-2">@Localizer["Accounts.Account.BeforeYouGo"]</p>
         <ul class="list-group list-group-borderless mb-4">
             <li class="list-group-item d-flex">
-                <i class="bi bi-dot text-primary me-1"></i>
-                Your bookings and wishlist remain linked to your account and return if you restore it.
+                <i class="bi bi-dot text-primary me-1" aria-hidden="true"></i>
+                @Localizer["Accounts.Account.Item1"]
             </li>
             <li class="list-group-item d-flex">
-                <i class="bi bi-dot text-primary me-1"></i>
-                You will be signed out of this device once the account is deleted.
+                <i class="bi bi-dot text-primary me-1" aria-hidden="true"></i>
+                @Localizer["Accounts.Account.Item2"]
             </li>
             <li class="list-group-item d-flex">
-                <i class="bi bi-dot text-primary me-1"></i>
-                To use the platform again, just sign in &ndash; you'll be offered the option to restore.
+                <i class="bi bi-dot text-primary me-1" aria-hidden="true"></i>
+                @Localizer["Accounts.Account.Item3"]
             </li>
         </ul>
 
         <div class="form-check mb-4">
             <input class="form-check-input" type="checkbox" id="deleteaccountCheck">
             <label class="form-check-label" for="deleteaccountCheck">
-                Yes, I want to delete my account.
+                @Localizer["Accounts.Account.ConfirmCheckbox"]
             </label>
         </div>
 
         <div class="d-flex flex-wrap gap-2">
             <a asp-area="Accounts" asp-controller="Profile" asp-action="Index" class="btn btn-primary-soft mb-0">
-                Keep my account
+                @Localizer["Accounts.Account.KeepAccount"]
             </a>
             <form asp-area="Accounts" asp-controller="Delete" asp-action="Delete" method="post" class="mb-0"
                   data-confirm="@Localizer["Accounts.Confirm.DeleteAccount"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                 @Html.AntiForgeryToken()
                 <button type="submit" id="deleteAccountBtn" class="btn btn-danger mb-0" disabled>
-                    <i class="bi bi-trash me-1"></i>Delete my account
+                    <i class="bi bi-trash me-1" aria-hidden="true"></i>@Localizer["Accounts.Account.DeleteButton"]
                 </button>
             </form>
         </div>

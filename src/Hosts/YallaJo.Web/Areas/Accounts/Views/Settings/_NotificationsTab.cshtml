@@ -6,8 +6,8 @@
     @* ---------- Notification settings ---------- *@
     <div class="card border">
         <div class="card-header border-bottom">
-            <h4 class="card-header-title mb-0">Notification settings</h4>
-            <p class="mb-0 small">Choose how you want to be notified. Security and payment alerts are always on.</p>
+            <h4 class="card-header-title mb-0">@Localizer["Accounts.Settings.NotificationSettings"]</h4>
+            <p class="mb-0 small">@Localizer["Accounts.Settings.NotificationSettingsHint"]</p>
         </div>
         <div class="card-body">
             <form asp-area="Accounts" asp-controller="Settings" asp-action="UpdateNotifications" method="post" data-loading>
@@ -16,10 +16,10 @@
                     <table class="table table-sm align-middle mb-0">
                         <thead>
                             <tr>
-                                <th scope="col">Activity</th>
-                                <th scope="col" class="text-center">Email</th>
-                                <th scope="col" class="text-center">Push</th>
-                                <th scope="col" class="text-center">In-app</th>
+                                <th scope="col">@Localizer["Accounts.Settings.ColActivity"]</th>
+                                <th scope="col" class="text-center">@Localizer["Accounts.Settings.ColEmail"]</th>
+                                <th scope="col" class="text-center">@Localizer["Accounts.Settings.ColPush"]</th>
+                                <th scope="col" class="text-center">@Localizer["Accounts.Settings.ColInApp"]</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -30,18 +30,21 @@
                                     <td class="text-center">
                                         <div class="form-check form-switch d-inline-block">
                                             <input class="form-check-input" type="checkbox" role="switch"
+                                                   aria-label="@($"{row.Label} – {Localizer["Accounts.Settings.ColEmail"].Value}")"
                                                    name="pref_@(row.Type)_Email" value="true" @(row.Email ? "checked" : "") />
                                         </div>
                                     </td>
                                     <td class="text-center">
                                         <div class="form-check form-switch d-inline-block">
                                             <input class="form-check-input" type="checkbox" role="switch"
+                                                   aria-label="@($"{row.Label} – {Localizer["Accounts.Settings.ColPush"].Value}")"
                                                    name="pref_@(row.Type)_Push" value="true" @(row.Push ? "checked" : "") />
                                         </div>
                                     </td>
                                     <td class="text-center">
                                         <div class="form-check form-switch d-inline-block">
                                             <input class="form-check-input" type="checkbox" role="switch"
+                                                   aria-label="@($"{row.Label} – {Localizer["Accounts.Settings.ColInApp"].Value}")"
                                                    name="pref_@(row.Type)_InApp" value="true" @(row.InApp ? "checked" : "") />
                                         </div>
                                     </td>
@@ -51,7 +54,7 @@
                     </table>
                 </div>
                 <div class="text-end mt-3">
-                    <button type="submit" class="btn btn-primary mb-0">Save preferences</button>
+                    <button type="submit" class="btn btn-primary mb-0">@Localizer["Accounts.Settings.SavePreferences"]</button>
                 </div>
             </form>
         </div>
@@ -60,8 +63,8 @@
     @* ---------- Marketing / newsletter ---------- *@
     <div class="card border">
         <div class="card-header border-bottom">
-            <h4 class="card-header-title mb-0">Marketing &amp; newsletter</h4>
-            <p class="mb-0 small">Manage promotional communication.</p>
+            <h4 class="card-header-title mb-0">@Localizer["Accounts.Settings.Marketing"]</h4>
+            <p class="mb-0 small">@Localizer["Accounts.Settings.MarketingHint"]</p>
         </div>
         <div class="card-body">
             <form asp-area="Accounts" asp-controller="Settings" asp-action="UpdateMarketing" method="post" data-loading>
@@ -69,20 +72,20 @@
                 <div class="form-check form-switch mb-3">
                     <input class="form-check-input" type="checkbox" role="switch" id="emailDigest"
                            name="emailDigest" value="true" @(Model.Marketing.EmailDigest ? "checked" : "") />
-                    <label class="form-check-label" for="emailDigest">Email digest &amp; newsletter</label>
+                    <label class="form-check-label" for="emailDigest">@Localizer["Accounts.Settings.EmailDigest"]</label>
                 </div>
                 <div class="form-check form-switch mb-3">
                     <input class="form-check-input" type="checkbox" role="switch" id="pushNotifications"
                            name="pushNotifications" value="true" @(Model.Marketing.PushNotifications ? "checked" : "") />
-                    <label class="form-check-label" for="pushNotifications">Promotional push notifications</label>
+                    <label class="form-check-label" for="pushNotifications">@Localizer["Accounts.Settings.PromoPush"]</label>
                 </div>
                 <div class="form-check form-switch mb-3">
                     <input class="form-check-input" type="checkbox" role="switch" id="reEngagementCampaigns"
                            name="reEngagementCampaigns" value="true" @(Model.Marketing.ReEngagementCampaigns ? "checked" : "") />
-                    <label class="form-check-label" for="reEngagementCampaigns">Re-engagement campaigns</label>
+                    <label class="form-check-label" for="reEngagementCampaigns">@Localizer["Accounts.Settings.ReEngagement"]</label>
                 </div>
                 <div class="text-end">
-                    <button type="submit" class="btn btn-primary mb-0">Save</button>
+                    <button type="submit" class="btn btn-primary mb-0">@Localizer["Accounts.Common.Save"]</button>
                 </div>
             </form>
         </div>

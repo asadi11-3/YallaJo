@@ -13141,4 +13141,232 @@
 <data name="Accounts.Status.Expired" xml:space="preserve">
 <value>Expired</value>
 </data>
+<data name="Accounts.Common.Save" xml:space="preserve">
+<value>Save</value>
+</data>
+<data name="Accounts.Settings.NotificationSettings" xml:space="preserve">
+<value>Notification settings</value>
+</data>
+<data name="Accounts.Settings.NotificationSettingsHint" xml:space="preserve">
+<value>Choose how you want to be notified. Security and payment alerts are always on.</value>
+</data>
+<data name="Accounts.Settings.ColActivity" xml:space="preserve">
+<value>Activity</value>
+</data>
+<data name="Accounts.Settings.ColEmail" xml:space="preserve">
+<value>Email</value>
+</data>
+<data name="Accounts.Settings.ColPush" xml:space="preserve">
+<value>Push</value>
+</data>
+<data name="Accounts.Settings.ColInApp" xml:space="preserve">
+<value>In-app</value>
+</data>
+<data name="Accounts.Settings.SavePreferences" xml:space="preserve">
+<value>Save preferences</value>
+</data>
+<data name="Accounts.Settings.Marketing" xml:space="preserve">
+<value>Marketing &amp; newsletter</value>
+</data>
+<data name="Accounts.Settings.MarketingHint" xml:space="preserve">
+<value>Manage promotional communication.</value>
+</data>
+<data name="Accounts.Settings.EmailDigest" xml:space="preserve">
+<value>Email digest &amp; newsletter</value>
+</data>
+<data name="Accounts.Settings.PromoPush" xml:space="preserve">
+<value>Promotional push notifications</value>
+</data>
+<data name="Accounts.Settings.ReEngagement" xml:space="preserve">
+<value>Re-engagement campaigns</value>
+</data>
+<data name="Accounts.Settings.UpdatePassword" xml:space="preserve">
+<value>Update password</value>
+</data>
+<data name="Accounts.Settings.PasswordHint" xml:space="preserve">
+<value>Choose a strong password you do not use elsewhere.</value>
+</data>
+<data name="Accounts.Settings.CurrentPassword" xml:space="preserve">
+<value>Current password</value>
+</data>
+<data name="Accounts.Settings.NewPassword" xml:space="preserve">
+<value>New password</value>
+</data>
+<data name="Accounts.Settings.ConfirmNewPassword" xml:space="preserve">
+<value>Confirm new password</value>
+</data>
+<data name="Accounts.Settings.ChangePassword" xml:space="preserve">
+<value>Change password</value>
+</data>
+<data name="Accounts.Settings.SecuritySettings" xml:space="preserve">
+<value>Security settings</value>
+</data>
+<data name="Accounts.Settings.PhoneNumber" xml:space="preserve">
+<value>Phone number</value>
+</data>
+<data name="Accounts.Settings.PrimaryPhone" xml:space="preserve">
+<value>Primary phone</value>
+</data>
+<data name="Accounts.Settings.UpdatePhone" xml:space="preserve">
+<value>Update phone</value>
+</data>
+<data name="Accounts.Settings.ActiveSessions" xml:space="preserve">
+<value>Active sessions</value>
+</data>
+<data name="Accounts.Settings.NoSessions" xml:space="preserve">
+<value>No other active sessions.</value>
+</data>
+<data name="Accounts.Settings.Device" xml:space="preserve">
+<value>Device</value>
+</data>
+<data name="Accounts.Settings.Ip" xml:space="preserve">
+<value>IP</value>
+</data>
+<data name="Accounts.Settings.Started" xml:space="preserve">
+<value>Started</value>
+</data>
+<data name="Accounts.Settings.Actions" xml:space="preserve">
+<value>Actions</value>
+</data>
+<data name="Accounts.Settings.ThisDevice" xml:space="preserve">
+<value>This device</value>
+</data>
+<data name="Accounts.Settings.Trust" xml:space="preserve">
+<value>Trust</value>
+</data>
+<data name="Accounts.Settings.SignOutSession" xml:space="preserve">
+<value>Sign out</value>
+</data>
+<data name="Accounts.Settings.SignOutAll" xml:space="preserve">
+<value>Sign out of all devices</value>
+</data>
+<data name="Accounts.Common.Remove" xml:space="preserve">
+<value>Remove</value>
+</data>
+<data name="Accounts.Devices.Hint" xml:space="preserve">
+<value>Devices registered to receive push notifications.</value>
+</data>
+<data name="Accounts.Devices.None" xml:space="preserve">
+<value>No devices are registered for push notifications.</value>
+</data>
+<data name="Accounts.Devices.Platform" xml:space="preserve">
+<value>Platform</value>
+</data>
+<data name="Accounts.Devices.LastSeen" xml:space="preserve">
+<value>Last seen</value>
+</data>
+<data name="Accounts.Devices.DeviceId" xml:space="preserve">
+<value>Device id</value>
+</data>
+<data name="Accounts.Devices.DeviceIdPlaceholder" xml:space="preserve">
+<value>e.g. my-browser</value>
+</data>
+<data name="Accounts.Devices.Token" xml:space="preserve">
+<value>Token</value>
+</data>
+<data name="Accounts.Devices.TokenPlaceholder" xml:space="preserve">
+<value>Push token</value>
+</data>
+<data name="Accounts.Devices.Register" xml:space="preserve">
+<value>Register</value>
+</data>
+<data name="Accounts.Linked.Hint" xml:space="preserve">
+<value>Connect a social account to sign in faster.</value>
+</data>
+<data name="Accounts.Linked.HelpText" xml:space="preserve">
+<value>To link a social account, sign out and use “Continue with…” on the sign-in page. You can remove a previously linked account below.</value>
+</data>
+<data name="Accounts.Privacy.Hint" xml:space="preserve">
+<value>Manage your personal recommendation &amp; analytics data.</value>
+</data>
+<data name="Accounts.Privacy.DownloadHeading" xml:space="preserve">
+<value>Download my data</value>
+</data>
+<data name="Accounts.Privacy.DownloadHelp" xml:space="preserve">
+<value>Export a copy of the personalization data we hold for you (your interactions, preferences and excluded items) as a JSON file.</value>
+</data>
+<data name="Accounts.Privacy.DownloadButton" xml:space="preserve">
+<value>Download my data (JSON)</value>
+</data>
+<data name="Accounts.Privacy.DeleteHeading" xml:space="preserve">
+<value>Delete my recommendation data</value>
+</data>
+<data name="Accounts.Privacy.DeleteWarning" xml:space="preserve">
+<value>This deletes your recommendation &amp; analytics data only — not your account.</value>
+</data>
+<data name="Accounts.Privacy.DeleteAccountHintPre" xml:space="preserve">
+<value>To delete or deactivate your account, use the</value>
+</data>
+<data name="Accounts.Privacy.AccountTab" xml:space="preserve">
+<value>Account tab</value>
+</data>
+<data name="Accounts.Privacy.DeleteAccountHintPost" xml:space="preserve">
+<value>instead.</value>
+</data>
+<data name="Accounts.Privacy.WhatHappens" xml:space="preserve">
+<value>What happens when you request this:</value>
+</data>
+<data name="Accounts.Privacy.DeleteItem1" xml:space="preserve">
+<value>Your interaction history, personalization preferences and not-interested choices are scheduled for deletion.</value>
+</data>
+<data name="Accounts.Privacy.DeleteItem2" xml:space="preserve">
+<value>Deletion runs after a 30-day window — you can cancel any time before then.</value>
+</data>
+<data name="Accounts.Privacy.DeleteItem3" xml:space="preserve">
+<value>Your bookings, reviews, invoices and account are not affected.</value>
+</data>
+<data name="Accounts.Privacy.DeleteItem4" xml:space="preserve">
+<value>Recommendations will become less personalized.</value>
+</data>
+<data name="Accounts.Privacy.CancelHeading" xml:space="preserve">
+<value>Cancel a scheduled deletion</value>
+</data>
+<data name="Accounts.Privacy.CancelHelp" xml:space="preserve">
+<value>Changed your mind? If a deletion is scheduled, you can cancel it here within the 30-day window. If nothing is scheduled, we will let you know.</value>
+</data>
+<data name="Accounts.Privacy.CancelButton" xml:space="preserve">
+<value>Cancel scheduled deletion</value>
+</data>
+<data name="Accounts.Privacy.ModalTitle" xml:space="preserve">
+<value>Delete recommendation data?</value>
+</data>
+<data name="Accounts.Privacy.ModalBody" xml:space="preserve">
+<value>This schedules deletion of your recommendation &amp; analytics data only (not your account) after a 30-day window. To confirm, type DELETE below.</value>
+</data>
+<data name="Accounts.Privacy.TypeToConfirm" xml:space="preserve">
+<value>Type DELETE to confirm</value>
+</data>
+<data name="Accounts.Privacy.KeepData" xml:space="preserve">
+<value>Keep my data</value>
+</data>
+<data name="Accounts.Account.DeleteHeading" xml:space="preserve">
+<value>Delete account</value>
+</data>
+<data name="Accounts.Account.DeactivateWarning" xml:space="preserve">
+<value>This will deactivate your account.</value>
+</data>
+<data name="Accounts.Account.SoftActionNote" xml:space="preserve">
+<value>Deleting is a soft action — you can restore your account by signing in again later, but the deactivation takes effect immediately.</value>
+</data>
+<data name="Accounts.Account.BeforeYouGo" xml:space="preserve">
+<value>Before you go, please note:</value>
+</data>
+<data name="Accounts.Account.Item1" xml:space="preserve">
+<value>Your bookings and wishlist remain linked to your account and return if you restore it.</value>
+</data>
+<data name="Accounts.Account.Item2" xml:space="preserve">
+<value>You will be signed out of this device once the account is deleted.</value>
+</data>
+<data name="Accounts.Account.Item3" xml:space="preserve">
+<value>To use the platform again, just sign in — you will be offered the option to restore.</value>
+</data>
+<data name="Accounts.Account.ConfirmCheckbox" xml:space="preserve">
+<value>Yes, I want to delete my account.</value>
+</data>
+<data name="Accounts.Account.KeepAccount" xml:space="preserve">
+<value>Keep my account</value>
+</data>
+<data name="Accounts.Account.DeleteButton" xml:space="preserve">
+<value>Delete my account</value>
+</data>
 </root>

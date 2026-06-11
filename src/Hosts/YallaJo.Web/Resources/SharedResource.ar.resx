@@ -13141,4 +13141,232 @@
 <data name="Accounts.Status.Expired" xml:space="preserve">
 <value>منتهٍ</value>
 </data>
+<data name="Accounts.Common.Save" xml:space="preserve">
+<value>حفظ</value>
+</data>
+<data name="Accounts.Settings.NotificationSettings" xml:space="preserve">
+<value>إعدادات الإشعارات</value>
+</data>
+<data name="Accounts.Settings.NotificationSettingsHint" xml:space="preserve">
+<value>اختر كيف تريد أن يتم إشعارك. تنبيهات الأمان والدفع مفعّلة دائمًا.</value>
+</data>
+<data name="Accounts.Settings.ColActivity" xml:space="preserve">
+<value>النشاط</value>
+</data>
+<data name="Accounts.Settings.ColEmail" xml:space="preserve">
+<value>البريد الإلكتروني</value>
+</data>
+<data name="Accounts.Settings.ColPush" xml:space="preserve">
+<value>الإشعارات الفورية</value>
+</data>
+<data name="Accounts.Settings.ColInApp" xml:space="preserve">
+<value>داخل التطبيق</value>
+</data>
+<data name="Accounts.Settings.SavePreferences" xml:space="preserve">
+<value>حفظ التفضيلات</value>
+</data>
+<data name="Accounts.Settings.Marketing" xml:space="preserve">
+<value>التسويق والنشرة الإخبارية</value>
+</data>
+<data name="Accounts.Settings.MarketingHint" xml:space="preserve">
+<value>إدارة الاتصالات الترويجية.</value>
+</data>
+<data name="Accounts.Settings.EmailDigest" xml:space="preserve">
+<value>ملخص البريد والنشرة الإخبارية</value>
+</data>
+<data name="Accounts.Settings.PromoPush" xml:space="preserve">
+<value>إشعارات ترويجية فورية</value>
+</data>
+<data name="Accounts.Settings.ReEngagement" xml:space="preserve">
+<value>حملات إعادة التفاعل</value>
+</data>
+<data name="Accounts.Settings.UpdatePassword" xml:space="preserve">
+<value>تحديث كلمة المرور</value>
+</data>
+<data name="Accounts.Settings.PasswordHint" xml:space="preserve">
+<value>اختر كلمة مرور قوية لا تستخدمها في مكان آخر.</value>
+</data>
+<data name="Accounts.Settings.CurrentPassword" xml:space="preserve">
+<value>كلمة المرور الحالية</value>
+</data>
+<data name="Accounts.Settings.NewPassword" xml:space="preserve">
+<value>كلمة المرور الجديدة</value>
+</data>
+<data name="Accounts.Settings.ConfirmNewPassword" xml:space="preserve">
+<value>تأكيد كلمة المرور الجديدة</value>
+</data>
+<data name="Accounts.Settings.ChangePassword" xml:space="preserve">
+<value>تغيير كلمة المرور</value>
+</data>
+<data name="Accounts.Settings.SecuritySettings" xml:space="preserve">
+<value>إعدادات الأمان</value>
+</data>
+<data name="Accounts.Settings.PhoneNumber" xml:space="preserve">
+<value>رقم الهاتف</value>
+</data>
+<data name="Accounts.Settings.PrimaryPhone" xml:space="preserve">
+<value>الهاتف الأساسي</value>
+</data>
+<data name="Accounts.Settings.UpdatePhone" xml:space="preserve">
+<value>تحديث الهاتف</value>
+</data>
+<data name="Accounts.Settings.ActiveSessions" xml:space="preserve">
+<value>الجلسات النشطة</value>
+</data>
+<data name="Accounts.Settings.NoSessions" xml:space="preserve">
+<value>لا توجد جلسات نشطة أخرى.</value>
+</data>
+<data name="Accounts.Settings.Device" xml:space="preserve">
+<value>الجهاز</value>
+</data>
+<data name="Accounts.Settings.Ip" xml:space="preserve">
+<value>IP</value>
+</data>
+<data name="Accounts.Settings.Started" xml:space="preserve">
+<value>بدأت</value>
+</data>
+<data name="Accounts.Settings.Actions" xml:space="preserve">
+<value>إجراءات</value>
+</data>
+<data name="Accounts.Settings.ThisDevice" xml:space="preserve">
+<value>هذا الجهاز</value>
+</data>
+<data name="Accounts.Settings.Trust" xml:space="preserve">
+<value>الوثوق</value>
+</data>
+<data name="Accounts.Settings.SignOutSession" xml:space="preserve">
+<value>تسجيل الخروج</value>
+</data>
+<data name="Accounts.Settings.SignOutAll" xml:space="preserve">
+<value>تسجيل الخروج من جميع الأجهزة</value>
+</data>
+<data name="Accounts.Common.Remove" xml:space="preserve">
+<value>إزالة</value>
+</data>
+<data name="Accounts.Devices.Hint" xml:space="preserve">
+<value>الأجهزة المسجلة لاستقبال الإشعارات الفورية.</value>
+</data>
+<data name="Accounts.Devices.None" xml:space="preserve">
+<value>لا توجد أجهزة مسجلة للإشعارات الفورية.</value>
+</data>
+<data name="Accounts.Devices.Platform" xml:space="preserve">
+<value>المنصة</value>
+</data>
+<data name="Accounts.Devices.LastSeen" xml:space="preserve">
+<value>آخر ظهور</value>
+</data>
+<data name="Accounts.Devices.DeviceId" xml:space="preserve">
+<value>معرف الجهاز</value>
+</data>
+<data name="Accounts.Devices.DeviceIdPlaceholder" xml:space="preserve">
+<value>مثال: my-browser</value>
+</data>
+<data name="Accounts.Devices.Token" xml:space="preserve">
+<value>الرمز</value>
+</data>
+<data name="Accounts.Devices.TokenPlaceholder" xml:space="preserve">
+<value>رمز الإشعار</value>
+</data>
+<data name="Accounts.Devices.Register" xml:space="preserve">
+<value>تسجيل</value>
+</data>
+<data name="Accounts.Linked.Hint" xml:space="preserve">
+<value>اربط حسابًا اجتماعيًا لتسجيل دخول أسرع.</value>
+</data>
+<data name="Accounts.Linked.HelpText" xml:space="preserve">
+<value>لربط حساب اجتماعي، سجّل الخروج واستخدم ”المتابعة باستخدام…“ في صفحة تسجيل الدخول. يمكنك إزالة حساب مرتبط سابقًا أدناه.</value>
+</data>
+<data name="Accounts.Privacy.Hint" xml:space="preserve">
+<value>إدارة بيانات التوصيات والتحليلات الشخصية الخاصة بك.</value>
+</data>
+<data name="Accounts.Privacy.DownloadHeading" xml:space="preserve">
+<value>تنزيل بياناتي</value>
+</data>
+<data name="Accounts.Privacy.DownloadHelp" xml:space="preserve">
+<value>صدّر نسخة من بيانات التخصيص التي نحتفظ بها لك (تفاعلاتك وتفضيلاتك والعناصر المستبعدة) كملف JSON.</value>
+</data>
+<data name="Accounts.Privacy.DownloadButton" xml:space="preserve">
+<value>تنزيل بياناتي (JSON)</value>
+</data>
+<data name="Accounts.Privacy.DeleteHeading" xml:space="preserve">
+<value>حذف بيانات التوصيات الخاصة بي</value>
+</data>
+<data name="Accounts.Privacy.DeleteWarning" xml:space="preserve">
+<value>يحذف هذا بيانات التوصيات والتحليلات فقط — وليس حسابك.</value>
+</data>
+<data name="Accounts.Privacy.DeleteAccountHintPre" xml:space="preserve">
+<value>لحذف حسابك أو إلغاء تنشيطه، استخدم</value>
+</data>
+<data name="Accounts.Privacy.AccountTab" xml:space="preserve">
+<value>تبويب الحساب</value>
+</data>
+<data name="Accounts.Privacy.DeleteAccountHintPost" xml:space="preserve">
+<value>بدلاً من ذلك.</value>
+</data>
+<data name="Accounts.Privacy.WhatHappens" xml:space="preserve">
+<value>ما الذي يحدث عند طلبك لهذا:</value>
+</data>
+<data name="Accounts.Privacy.DeleteItem1" xml:space="preserve">
+<value>تتم جدولة حذف سجل تفاعلاتك وتفضيلات التخصيص وخيارات غير المهتم.</value>
+</data>
+<data name="Accounts.Privacy.DeleteItem2" xml:space="preserve">
+<value>يتم الحذف بعد مهلة 30 يومًا — يمكنك الإلغاء في أي وقت قبل ذلك.</value>
+</data>
+<data name="Accounts.Privacy.DeleteItem3" xml:space="preserve">
+<value>لا تتأثر حجوزاتك ومراجعاتك وفواتيرك وحسابك.</value>
+</data>
+<data name="Accounts.Privacy.DeleteItem4" xml:space="preserve">
+<value>ستصبح التوصيات أقل تخصيصًا.</value>
+</data>
+<data name="Accounts.Privacy.CancelHeading" xml:space="preserve">
+<value>إلغاء حذف مجدول</value>
+</data>
+<data name="Accounts.Privacy.CancelHelp" xml:space="preserve">
+<value>غيّرت رأيك؟ إذا كان هناك حذف مجدول، يمكنك إلغاؤه هنا خلال مهلة 30 يومًا. إذا لم يكن هناك شيء مجدول، فسنخبرك.</value>
+</data>
+<data name="Accounts.Privacy.CancelButton" xml:space="preserve">
+<value>إلغاء الحذف المجدول</value>
+</data>
+<data name="Accounts.Privacy.ModalTitle" xml:space="preserve">
+<value>حذف بيانات التوصيات؟</value>
+</data>
+<data name="Accounts.Privacy.ModalBody" xml:space="preserve">
+<value>يؤدي هذا إلى جدولة حذف بيانات التوصيات والتحليلات فقط (وليس حسابك) بعد مهلة 30 يومًا. للتأكيد، اكتب DELETE أدناه.</value>
+</data>
+<data name="Accounts.Privacy.TypeToConfirm" xml:space="preserve">
+<value>اكتب DELETE للتأكيد</value>
+</data>
+<data name="Accounts.Privacy.KeepData" xml:space="preserve">
+<value>الاحتفاظ ببياناتي</value>
+</data>
+<data name="Accounts.Account.DeleteHeading" xml:space="preserve">
+<value>حذف الحساب</value>
+</data>
+<data name="Accounts.Account.DeactivateWarning" xml:space="preserve">
+<value>سيؤدي هذا إلى إلغاء تنشيط حسابك.</value>
+</data>
+<data name="Accounts.Account.SoftActionNote" xml:space="preserve">
+<value>الحذف إجراء قابل للتراجع — يمكنك استعادة حسابك بتسجيل الدخول مرة أخرى لاحقًا، لكن إلغاء التنشيط يسري فورًا.</value>
+</data>
+<data name="Accounts.Account.BeforeYouGo" xml:space="preserve">
+<value>قبل أن تغادر، يرجى ملاحظة:</value>
+</data>
+<data name="Accounts.Account.Item1" xml:space="preserve">
+<value>تظل حجوزاتك وقائمة أمنياتك مرتبطة بحسابك وتعود إذا استعدته.</value>
+</data>
+<data name="Accounts.Account.Item2" xml:space="preserve">
+<value>سيتم تسجيل خروجك من هذا الجهاز بمجرد حذف الحساب.</value>
+</data>
+<data name="Accounts.Account.Item3" xml:space="preserve">
+<value>لاستخدام المنصة مرة أخرى، ما عليك سوى تسجيل الدخول — وستُعرض عليك خيارات الاستعادة.</value>
+</data>
+<data name="Accounts.Account.ConfirmCheckbox" xml:space="preserve">
+<value>نعم، أريد حذف حسابي.</value>
+</data>
+<data name="Accounts.Account.KeepAccount" xml:space="preserve">
+<value>الاحتفاظ بحسابي</value>
+</data>
+<data name="Accounts.Account.DeleteButton" xml:space="preserve">
+<value>حذف حسابي</value>
+</data>
 </root>

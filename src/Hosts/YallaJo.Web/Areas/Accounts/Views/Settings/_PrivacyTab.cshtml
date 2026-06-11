@@ -10,59 +10,53 @@
 
 <div class="card border">
     <div class="card-header border-bottom">
-        <h4 class="card-header-title mb-0">Privacy &amp; Data</h4>
-        <p class="small text-muted mb-0 mt-1">Manage your personal recommendation &amp; analytics data.</p>
+        <h4 class="card-header-title mb-0">@Localizer["Accounts.Settings.Tab.Privacy"]</h4>
+        <p class="small text-muted mb-0 mt-1">@Localizer["Accounts.Privacy.Hint"]</p>
     </div>
 
     @* ── Export ───────────────────────────────────────────────── *@
     <div class="card-body border-bottom">
-        <h6 class="mb-1"><i class="bi bi-download me-2"></i>Download my data</h6>
-        <p class="small text-muted mb-3">
-            Export a copy of the personalization data we hold for you (your interactions,
-            preferences and excluded items) as a JSON file.
-        </p>
+        <h6 class="mb-1"><i class="bi bi-download me-2" aria-hidden="true"></i>@Localizer["Accounts.Privacy.DownloadHeading"]</h6>
+        <p class="small text-muted mb-3">@Localizer["Accounts.Privacy.DownloadHelp"]</p>
         <a asp-area="Accounts" asp-controller="Privacy" asp-action="Export"
            class="btn btn-sm btn-primary-soft mb-0">
-            <i class="bi bi-download me-1"></i>Download my data (JSON)
+            <i class="bi bi-download me-1" aria-hidden="true"></i>@Localizer["Accounts.Privacy.DownloadButton"]
         </a>
     </div>
 
     @* ── Delete recommendation data (destructive) ─────────────── *@
     <div class="card-body border-bottom">
-        <h6 class="mb-1 text-danger"><i class="bi bi-shield-x me-2"></i>Delete my recommendation data</h6>
+        <h6 class="mb-1 text-danger"><i class="bi bi-shield-x me-2" aria-hidden="true"></i>@Localizer["Accounts.Privacy.DeleteHeading"]</h6>
         <div class="alert alert-warning d-flex align-items-start gap-2 mb-3" role="alert">
-            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <i class="bi bi-exclamation-triangle-fill fs-5" aria-hidden="true"></i>
             <div class="small">
-                <strong>This deletes your recommendation &amp; analytics data only — not your account.</strong>
-                To delete or deactivate your account, use the
-                <a href="@(Url.Action("Index", "Settings", new { area = "Accounts", tab = "account" }))" class="alert-link">Account tab</a>
-                instead.
+                <strong>@Localizer["Accounts.Privacy.DeleteWarning"]</strong>
+                @Localizer["Accounts.Privacy.DeleteAccountHintPre"]
+                <a href="@(Url.Action("Index", "Settings", new { area = "Accounts", tab = "account" }))" class="alert-link">@Localizer["Accounts.Privacy.AccountTab"]</a>
+                @Localizer["Accounts.Privacy.DeleteAccountHintPost"]
             </div>
         </div>
-        <p class="small text-muted mb-2">What happens when you request this:</p>
+        <p class="small text-muted mb-2">@Localizer["Accounts.Privacy.WhatHappens"]</p>
         <ul class="list-group list-group-borderless small mb-3">
-            <li class="list-group-item d-flex py-1"><i class="bi bi-dot text-danger me-1"></i>Your interaction history, personalization preferences and "not interested" choices are scheduled for deletion.</li>
-            <li class="list-group-item d-flex py-1"><i class="bi bi-dot text-danger me-1"></i>Deletion runs after a <strong>30-day window</strong> — you can cancel any time before then.</li>
-            <li class="list-group-item d-flex py-1"><i class="bi bi-dot text-danger me-1"></i>Your bookings, reviews, invoices and account are <strong>not</strong> affected.</li>
-            <li class="list-group-item d-flex py-1"><i class="bi bi-dot text-danger me-1"></i>Recommendations will become less personalized.</li>
+            <li class="list-group-item d-flex py-1"><i class="bi bi-dot text-danger me-1" aria-hidden="true"></i>@Localizer["Accounts.Privacy.DeleteItem1"]</li>
+            <li class="list-group-item d-flex py-1"><i class="bi bi-dot text-danger me-1" aria-hidden="true"></i>@Localizer["Accounts.Privacy.DeleteItem2"]</li>
+            <li class="list-group-item d-flex py-1"><i class="bi bi-dot text-danger me-1" aria-hidden="true"></i>@Localizer["Accounts.Privacy.DeleteItem3"]</li>
+            <li class="list-group-item d-flex py-1"><i class="bi bi-dot text-danger me-1" aria-hidden="true"></i>@Localizer["Accounts.Privacy.DeleteItem4"]</li>
         </ul>
         <button type="button" class="btn btn-sm btn-outline-danger mb-0"
                 data-bs-toggle="modal" data-bs-target="#deleteDataModal">
-            <i class="bi bi-shield-x me-1"></i>Delete my recommendation data
+            <i class="bi bi-shield-x me-1" aria-hidden="true"></i>@Localizer["Accounts.Privacy.DeleteHeading"]
         </button>
     </div>
 
     @* ── Cancel pending deletion ──────────────────────────────── *@
     <div class="card-body">
-        <h6 class="mb-1"><i class="bi bi-arrow-counterclockwise me-2"></i>Cancel a scheduled deletion</h6>
-        <p class="small text-muted mb-3">
-            Changed your mind? If a deletion is scheduled, you can cancel it here within the
-            30-day window. If nothing is scheduled, we'll let you know.
-        </p>
+        <h6 class="mb-1"><i class="bi bi-arrow-counterclockwise me-2" aria-hidden="true"></i>@Localizer["Accounts.Privacy.CancelHeading"]</h6>
+        <p class="small text-muted mb-3">@Localizer["Accounts.Privacy.CancelHelp"]</p>
         <form asp-area="Accounts" asp-controller="Privacy" asp-action="CancelDeletion" method="post" class="mb-0">
             @Html.AntiForgeryToken()
             <button type="submit" class="btn btn-sm btn-primary-soft mb-0">
-                <i class="bi bi-arrow-counterclockwise me-1"></i>Cancel scheduled deletion
+                <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>@Localizer["Accounts.Privacy.CancelButton"]
             </button>
         </form>
     </div>
@@ -75,23 +69,19 @@
             <form asp-area="Accounts" asp-controller="Privacy" asp-action="DeleteData" method="post" data-loading>
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
-                    <h5 class="modal-title" id="deleteDataModalLabel">Delete recommendation data?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="deleteDataModalLabel">@Localizer["Accounts.Privacy.ModalTitle"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Accounts.Confirm.Close"]"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="small mb-2">
-                        This schedules deletion of your <strong>recommendation &amp; analytics data only</strong>
-                        (not your account) after a 30-day window. To confirm, type
-                        <strong>DELETE</strong> below.
-                    </p>
-                    <label class="form-label small mb-1" for="confirmation">Type DELETE to confirm</label>
+                    <p class="small mb-2">@Localizer["Accounts.Privacy.ModalBody"]</p>
+                    <label class="form-label small mb-1" for="confirmation">@Localizer["Accounts.Privacy.TypeToConfirm"]</label>
                     <input type="text" class="form-control" id="confirmation" name="confirmation"
                            autocomplete="off" placeholder="DELETE" required />
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-primary-soft mb-0" data-bs-dismiss="modal">Keep my data</button>
+                    <button type="button" class="btn btn-sm btn-primary-soft mb-0" data-bs-dismiss="modal">@Localizer["Accounts.Privacy.KeepData"]</button>
                     <button type="submit" class="btn btn-sm btn-danger mb-0">
-                        <i class="bi bi-shield-x me-1"></i>Delete my recommendation data
+                        <i class="bi bi-shield-x me-1" aria-hidden="true"></i>@Localizer["Accounts.Privacy.DeleteHeading"]
                     </button>
                 </div>
             </form>

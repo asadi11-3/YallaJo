@@ -3,13 +3,13 @@
 
 <div class="card border">
     <div class="card-header border-bottom">
-        <h4 class="card-header-title mb-0">Devices</h4>
-        <p class="mb-0 small">Devices registered to receive push notifications.</p>
+        <h4 class="card-header-title mb-0">@Localizer["Accounts.Settings.Tab.Devices"]</h4>
+        <p class="mb-0 small">@Localizer["Accounts.Devices.Hint"]</p>
     </div>
     <div class="card-body">
         @if (Model.Devices.Count == 0)
         {
-            <p class="text-body-secondary small mb-3">No devices are registered for push notifications.</p>
+            <p class="text-body-secondary small mb-3">@Localizer["Accounts.Devices.None"]</p>
         }
         else
         {
@@ -17,17 +17,17 @@
                 <table class="table table-sm align-middle mb-0">
                     <thead>
                         <tr>
-                            <th scope="col">Device</th>
-                            <th scope="col">Platform</th>
-                            <th scope="col">Last seen</th>
-                            <th scope="col" class="text-end">Actions</th>
+                            <th scope="col">@Localizer["Accounts.Settings.Device"]</th>
+                            <th scope="col">@Localizer["Accounts.Devices.Platform"]</th>
+                            <th scope="col">@Localizer["Accounts.Devices.LastSeen"]</th>
+                            <th scope="col" class="text-end">@Localizer["Accounts.Settings.Actions"]</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var d in Model.Devices)
                         {
                             <tr>
-                                <td class="small">@d.DeviceId</td>
+                                <td class="small"><span dir="ltr">@d.DeviceId</span></td>
                                 <td class="small">@d.Platform</td>
                                 <td class="small">@d.LastSeenAt.ToString("d MMM yyyy")</td>
                                 <td class="text-end">
@@ -35,7 +35,7 @@
                                           asp-route-id="@d.Id" method="post" class="d-inline"
                                           data-confirm="@Localizer["Accounts.Confirm.RemoveDevice"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-outline-danger mb-0">Remove</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger mb-0">@Localizer["Accounts.Common.Remove"]</button>
                                     </form>
                                 </td>
                             </tr>
@@ -48,11 +48,11 @@
         <form asp-area="Accounts" asp-controller="Settings" asp-action="RegisterDevice" method="post" class="row g-2 align-items-end" data-loading>
             @Html.AntiForgeryToken()
             <div class="col-sm-4">
-                <label class="form-label" for="deviceId">Device id</label>
-                <input class="form-control" id="deviceId" name="deviceId" placeholder="e.g. my-browser" />
+                <label class="form-label" for="deviceId">@Localizer["Accounts.Devices.DeviceId"]</label>
+                <input class="form-control" id="deviceId" name="deviceId" placeholder="@Localizer["Accounts.Devices.DeviceIdPlaceholder"]" />
             </div>
             <div class="col-sm-3">
-                <label class="form-label" for="platform">Platform</label>
+                <label class="form-label" for="platform">@Localizer["Accounts.Devices.Platform"]</label>
                 <select class="form-select" id="platform" name="platform">
                     <option value="Web">Web</option>
                     <option value="Android">Android</option>
@@ -60,11 +60,11 @@
                 </select>
             </div>
             <div class="col-sm-3">
-                <label class="form-label" for="token">Token</label>
-                <input class="form-control" id="token" name="token" placeholder="Push token" />
+                <label class="form-label" for="token">@Localizer["Accounts.Devices.Token"]</label>
+                <input class="form-control" id="token" name="token" placeholder="@Localizer["Accounts.Devices.TokenPlaceholder"]" />
             </div>
             <div class="col-sm-2 d-grid">
-                <button type="submit" class="btn btn-primary mb-0">Register</button>
+                <button type="submit" class="btn btn-primary mb-0">@Localizer["Accounts.Devices.Register"]</button>
             </div>
         </form>
     </div>
