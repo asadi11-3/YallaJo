@@ -66,56 +66,16 @@
 
                 <div class="row g-4">
                     <div class="col-sm-6 col-xl-3">
-                        <div class="card card-body border h-100">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-xl bg-success bg-opacity-10 rounded-3 text-success">
-                                    <i class="fa-solid fa-book-open fs-5" aria-hidden="true"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <span class="h4 mb-0 font-data d-block"><bdi dir="ltr">@Count(Model.ArticleCount)</bdi></span>
-                                    <span class="small text-body-secondary">@Localizer["Creator.Dashboard.Articles"]</span>
-                                </div>
-                            </div>
-                        </div>
+                        <partial name="_StatCard" model="@(new YallaJo.Web.Areas.Creator.Shared.StatCardVm(Count(Model.ArticleCount), Localizer["Creator.Dashboard.Articles"].Value, "fa-book-open", "success"))" />
                     </div>
                     <div class="col-sm-6 col-xl-3">
-                        <div class="card card-body border h-100">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-xl bg-info bg-opacity-10 rounded-3 text-info">
-                                    <i class="fa-solid fa-eye fs-5" aria-hidden="true"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <span class="h4 mb-0 font-data d-block"><bdi dir="ltr">@Count(Model.TotalViewCount)</bdi></span>
-                                    <span class="small text-body-secondary">@Localizer["Creator.Dashboard.TotalViews"]</span>
-                                </div>
-                            </div>
-                        </div>
+                        <partial name="_StatCard" model="@(new YallaJo.Web.Areas.Creator.Shared.StatCardVm(Count(Model.TotalViewCount), Localizer["Creator.Dashboard.TotalViews"].Value, "fa-eye", "info"))" />
                     </div>
                     <div class="col-sm-6 col-xl-3">
-                        <div class="card card-body border h-100">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-xl bg-warning bg-opacity-10 rounded-3 text-warning">
-                                    <i class="fa-solid fa-thumbs-up fs-5" aria-hidden="true"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <span class="h4 mb-0 font-data d-block"><bdi dir="ltr">@Count(Model.TotalReactionCount)</bdi></span>
-                                    <span class="small text-body-secondary">@Localizer["Creator.Dashboard.Reactions"]</span>
-                                </div>
-                            </div>
-                        </div>
+                        <partial name="_StatCard" model="@(new YallaJo.Web.Areas.Creator.Shared.StatCardVm(Count(Model.TotalReactionCount), Localizer["Creator.Dashboard.Reactions"].Value, "fa-thumbs-up", "warning"))" />
                     </div>
                     <div class="col-sm-6 col-xl-3">
-                        <div class="card card-body border h-100">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-xl bg-primary bg-opacity-10 rounded-3 text-primary">
-                                    <i class="fa-solid fa-users fs-5" aria-hidden="true"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <span class="h4 mb-0 font-data d-block"><bdi dir="ltr">@Count(Model.FollowerCount)</bdi></span>
-                                    <span class="small text-body-secondary">@Localizer["Creator.Dashboard.Followers"]</span>
-                                </div>
-                            </div>
-                        </div>
+                        <partial name="_StatCard" model="@(new YallaJo.Web.Areas.Creator.Shared.StatCardVm(Count(Model.FollowerCount), Localizer["Creator.Dashboard.Followers"].Value, "fa-users", "primary"))" />
                     </div>
                 </div>
 

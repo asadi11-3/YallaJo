@@ -63,34 +63,19 @@
             @* ── Public metrics ────────────────────────────────────────────── *@
             <div class="row g-3">
                 <div class="col-6 col-md">
-                    <div class="card card-body border text-center">
-                        <span class="h5 mb-0 font-data"><bdi dir="ltr">@Count(Model.ArticleCount)</bdi></span>
-                        <span class="small text-body-secondary">@Localizer["Creator.Preview.Articles"]</span>
-                    </div>
+                    <partial name="_StatCard" model="@(new YallaJo.Web.Areas.Creator.Shared.StatCardVm(Count(Model.ArticleCount), Localizer["Creator.Preview.Articles"].Value))" />
                 </div>
                 <div class="col-6 col-md">
-                    <div class="card card-body border text-center">
-                        <span class="h5 mb-0 font-data"><bdi dir="ltr">@Count(Model.FollowerCount)</bdi></span>
-                        <span class="small text-body-secondary">@Localizer["Creator.Preview.Followers"]</span>
-                    </div>
+                    <partial name="_StatCard" model="@(new YallaJo.Web.Areas.Creator.Shared.StatCardVm(Count(Model.FollowerCount), Localizer["Creator.Preview.Followers"].Value))" />
                 </div>
                 <div class="col-6 col-md">
-                    <div class="card card-body border text-center">
-                        <span class="h5 mb-0 font-data"><bdi dir="ltr">@Count(Model.TotalViewCount)</bdi></span>
-                        <span class="small text-body-secondary">@Localizer["Creator.Preview.Views"]</span>
-                    </div>
+                    <partial name="_StatCard" model="@(new YallaJo.Web.Areas.Creator.Shared.StatCardVm(Count(Model.TotalViewCount), Localizer["Creator.Preview.Views"].Value))" />
                 </div>
                 <div class="col-6 col-md">
-                    <div class="card card-body border text-center">
-                        <span class="h5 mb-0 font-data"><bdi dir="ltr">@Count(Model.TotalReactionCount)</bdi></span>
-                        <span class="small text-body-secondary">@Localizer["Creator.Preview.Reactions"]</span>
-                    </div>
+                    <partial name="_StatCard" model="@(new YallaJo.Web.Areas.Creator.Shared.StatCardVm(Count(Model.TotalReactionCount), Localizer["Creator.Preview.Reactions"].Value))" />
                 </div>
                 <div class="col-6 col-md">
-                    <div class="card card-body border text-center">
-                        <span class="h5 mb-0 font-data"><bdi dir="ltr">@Count(Model.TotalCommentCount)</bdi></span>
-                        <span class="small text-body-secondary">@Localizer["Creator.Preview.Comments"]</span>
-                    </div>
+                    <partial name="_StatCard" model="@(new YallaJo.Web.Areas.Creator.Shared.StatCardVm(Count(Model.TotalCommentCount), Localizer["Creator.Preview.Comments"].Value))" />
                 </div>
             </div>
 

@@ -1,0 +1,23 @@
+@model YallaJo.Web.Areas.Creator.Shared.StatCardVm
+@* Shared metric card. Values stay LTR inside <bdi dir="ltr"> (RTL3); colors are semantic Bootstrap tokens (T3). *@
+@if (!string.IsNullOrWhiteSpace(Model.Icon))
+{
+    <div class="card card-body border h-100">
+        <div class="d-flex align-items-center">
+            <div class="icon-xl bg-@Model.ColorClass bg-opacity-10 rounded-3 text-@Model.ColorClass">
+                <i class="fa-solid @Model.Icon fs-5" aria-hidden="true"></i>
+            </div>
+            <div class="ms-3">
+                <span class="h4 mb-0 font-data d-block"><bdi dir="ltr">@Model.Value</bdi></span>
+                <span class="small text-body-secondary">@Model.Label</span>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card card-body border text-center">
+        <span class="h5 mb-0 font-data"><bdi dir="ltr">@Model.Value</bdi></span>
+        <span class="small text-body-secondary">@Model.Label</span>
+    </div>
+}
