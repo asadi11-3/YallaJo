@@ -48,7 +48,7 @@ public sealed class ArticlesController : BaseController
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new MyArticlesVm());
+            return WantsAjax() ? PartialView("_ArticlesResults", new MyArticlesVm()) : View(new MyArticlesVm());
         }
 
         var vm = result.Data;
@@ -68,7 +68,8 @@ public sealed class ArticlesController : BaseController
             };
         }
 
-        return View(vm);
+        // S1/PE1: AJAX refinement returns the results fragment; plain GET renders the full page.
+        return WantsAjax() ? PartialView("_ArticlesResults", vm) : View(vm);
     }
 
     // GET /creator/articles/new

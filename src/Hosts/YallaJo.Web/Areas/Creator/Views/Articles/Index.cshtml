@@ -1,14 +1,10 @@
 @model YallaJo.Web.Areas.Creator.Models.Articles.MyArticlesVm
-@using System.Globalization
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Creator.Articles.Title"].Value;
     var sidebar = ViewBag.Sidebar as YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
                   ?? new YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm();
-    var culture = CultureInfo.CurrentUICulture;
-    string Date(DateTime d) => d.ToString("d MMM yyyy", culture);
-    string Count(int n) => n.ToString("N0", culture);
     string StatusLabel(string? s) => Localizer["Creator.Status." + (string.IsNullOrWhiteSpace(s) ? "Draft" : s)].Value;
 }
 
@@ -25,30 +21,9 @@
             </permission>
         </div>
 
-        @* WL3/NF1: post-delete recovery surfaced as a dismissible Undo toast (bottom-end). CSP-safe static .toast.show. *@
-        @if (Model.ShowUndo)
-        {
-            <div class="toast-container toast-container-elevated position-fixed bottom-0 end-0 p-3">
-                <div class="toast show" role="status" aria-live="polite" aria-atomic="true" data-bs-autohide="false">
-                    <div class="toast-header">
-                        <strong class="me-auto">@Localizer["Creator.Articles.Deleted"]</strong>
-                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="@Localizer["Creator.Articles.Dismiss"]"></button>
-                    </div>
-                    <div class="toast-body d-flex justify-content-between align-items-center gap-3">
-                        <span>@Localizer["Creator.Articles.DeletedNamed", Model.UndoTitle ?? string.Empty]</span>
-                        <form asp-area="Creator" asp-controller="Articles" asp-action="Restore" method="post" class="m-0">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@Model.UndoArticleId" />
-                            <input type="hidden" name="rowVersion" value="@Model.UndoRowVersion" />
-                            <button type="submit" class="btn btn-sm btn-success-soft">@Localizer["Creator.Articles.Undo"]</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        }
-
-        @* Status filter — labelled select + Apply button (A6/J3: no inline onchange). *@
-        <form method="get" asp-area="Creator" asp-controller="Articles" asp-action="Index" class="row g-2 align-items-end">
+        @* Status filter — labelled select + Apply button (A6/J3: no inline onchange).
+           data-yj-listing: intercepted by listing.js for AJAX refinement; plain GET without JS (S1/PE1). *@
+        <form method="get" asp-area="Creator" asp-controller="Articles" asp-action="Index" class="row g-2 align-items-end" data-yj-listing>
             <div class="col-sm-4 col-md-3">
                 <label class="form-label" for="statusFilter">@Localizer["Creator.Articles.StatusLabel"]</label>
                 <select id="statusFilter" name="status" class="form-select">
@@ -71,130 +46,15 @@
             </div>
         </form>
 
-        @if (!Model.HasArticles)
-        {
-            <div class="card border">
-                <div class="card-body text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                    <h2 class="h5">@Localizer["Creator.Articles.EmptyTitle"]</h2>
-                    <p class="text-body-secondary mb-3">
-                        @if (string.IsNullOrEmpty(Model.StatusFilter))
-                        {
-                            @Localizer["Creator.Articles.EmptyMsg"]
-                        }
-                        else
-                        {
-                            @Localizer["Creator.Articles.EmptyMsgFiltered", StatusLabel(Model.StatusFilter)]
-                        }
-                    </p>
-                    <permission require="@WebPermission.Blog.Create">
-                        <a asp-area="Creator" asp-controller="Articles" asp-action="New" class="btn btn-primary">
-                            <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Creator.Articles.WriteFirst"]
-                        </a>
-                    </permission>
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="card border">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th scope="col">@Localizer["Creator.Articles.ColTitle"]</th>
-                                <th scope="col">@Localizer["Creator.Articles.ColStatus"]</th>
-                                <th scope="col">@Localizer["Creator.Articles.ColLanguage"]</th>
-                                <th scope="col">@Localizer["Creator.Articles.ColPublished"]</th>
-                                <th scope="col" class="text-end">@Localizer["Creator.Articles.ColViews"]</th>
-                                <th scope="col" class="text-end">@Localizer["Creator.Articles.ColRead"]</th>
-                                <th scope="col" class="text-end">@Localizer["Creator.Articles.ColActions"]</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var a in Model.Articles)
-                            {
-                                <tr>
-                                    <td>
-                                        <span class="fw-semibold d-block">@a.Title</span>
-                                        <span class="small text-body-secondary"><bdi dir="ltr">/@a.Slug</bdi></span>
-                                    </td>
-                                    <td>
-                                        @if (!string.IsNullOrWhiteSpace(a.Status))
-                                        {
-                                            <span class="badge bg-secondary bg-opacity-10 text-secondary">@StatusLabel(a.Status)</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-body-secondary" aria-label="@Localizer["Creator.Articles.NotSet"]">&mdash;</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (string.IsNullOrWhiteSpace(a.SourceLanguageCode))
-                                        {
-                                            <span class="text-body-secondary" aria-label="@Localizer["Creator.Articles.NotSet"]">&mdash;</span>
-                                        }
-                                        else
-                                        {
-                                            <bdi dir="ltr" class="font-data text-uppercase">@a.SourceLanguageCode</bdi>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (a.PublishedAt.HasValue)
-                                        {
-                                            <bdi dir="ltr" class="font-data">@Date(a.PublishedAt.Value)</bdi>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-body-secondary" aria-label="@Localizer["Creator.Articles.NotSet"]">&mdash;</span>
-                                        }
-                                    </td>
-                                    <td class="text-end"><bdi dir="ltr" class="font-data">@Count(a.ViewCount)</bdi></td>
-                                    <td class="text-end">
-                                        @if (a.ReadTimeMinutes.HasValue)
-                                        {
-                                            <bdi dir="ltr" class="font-data">@Localizer["Creator.Articles.Minutes", a.ReadTimeMinutes.Value]</bdi>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-body-secondary" aria-label="@Localizer["Creator.Articles.NotSet"]">&mdash;</span>
-                                        }
-                                    </td>
-                                    <td class="text-end">
-                                        <permission require="@WebPermission.Blog.Read">
-                                            <a asp-area="Creator" asp-controller="Articles" asp-action="Edit"
-                                               asp-route-id="@a.Id" class="btn btn-sm btn-secondary-soft">@Localizer["Creator.Articles.Edit"]</a>
-                                        </permission>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            @if (Model.Pager.TotalPages > 1)
-            {
-                <nav class="d-flex justify-content-between align-items-center" aria-label="@Localizer["Creator.Articles.Pagination"]">
-                    <span class="small text-body-secondary">
-                        @Localizer["Creator.Articles.PageOf", Model.Pager.PageNumber, Model.Pager.TotalPages]
-                    </span>
-                    <div class="btn-group">
-                        @if (Model.Pager.HasPreviousPage)
-                        {
-                            <a class="btn btn-sm btn-secondary-soft"
-                               asp-area="Creator" asp-controller="Articles" asp-action="Index"
-                               asp-route-page="@(Model.Pager.PageNumber - 1)" asp-route-status="@Model.StatusFilter">@Localizer["Creator.Articles.Previous"]</a>
-                        }
-                        @if (Model.Pager.HasNextPage)
-                        {
-                            <a class="btn btn-sm btn-secondary-soft"
-                               asp-area="Creator" asp-controller="Articles" asp-action="Index"
-                               asp-route-page="@(Model.Pager.PageNumber + 1)" asp-route-status="@Model.StatusFilter">@Localizer["Creator.Articles.Next"]</a>
-                        }
-                    </div>
-                </nav>
-            }
-        }
+        @* S1/L1/A11Y9: AJAX-refined results region; server renders the same fragment without JS (PE1). *@
+        <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+             data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]"
+             data-loading-text="@Localizer["Public.Loading"]">
+            <partial name="_ArticlesResults" model="Model" />
+        </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true"></script>
+}

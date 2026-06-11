@@ -8,7 +8,6 @@
     var sidebar = ViewBag.Sidebar as YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
                   ?? new YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm();
     var culture = CultureInfo.CurrentUICulture;
-    string Date(DateTime d) => d.ToString("d MMM yyyy", culture);
     string Count(long n) => n.ToString("N0", culture);
 }
 
@@ -80,68 +79,16 @@
             </div>
 
             @* ── Published articles ────────────────────────────────────────── *@
-            <div class="card border">
-                <div class="card-header border-bottom">
-                    <h2 class="card-header-title h5 mb-0">@Localizer["Creator.Preview.PublishedArticles"]</h2>
-                </div>
-                <div class="card-body">
-                    @if (!Model.HasArticles)
-                    {
-                        <p class="text-body-secondary mb-0">@Localizer["Creator.Preview.NoArticles"]</p>
-                    }
-                    else
-                    {
-                        <ul class="list-group list-group-borderless">
-                            @foreach (var a in Model.Articles)
-                            {
-                                <li class="list-group-item px-0">
-                                    @* Title links to the canonical public article page (Public/Blog/Post). *@
-                                    <a asp-area="Public" asp-controller="Blog" asp-action="Post" asp-route-slug="@a.Slug"
-                                       class="h6 d-block mb-1">@a.Title</a>
-                                    @if (!string.IsNullOrWhiteSpace(a.Summary))
-                                    {
-                                        <p class="small text-body-secondary mb-1">@a.Summary</p>
-                                    }
-                                    <span class="small text-body-secondary">
-                                        <bdi dir="ltr">@Count(a.ViewCount)</bdi> @Localizer["Creator.Preview.ViewsLabel"]
-                                        @if (a.ReadTimeMinutes.HasValue)
-                                        {
-                                            <span> · @Localizer["Creator.Preview.MinRead", a.ReadTimeMinutes.Value]</span>
-                                        }
-                                        @if (a.PublishedAt.HasValue)
-                                        {
-                                            <span> · <bdi dir="ltr">@Date(a.PublishedAt.Value)</bdi></span>
-                                        }
-                                    </span>
-                                </li>
-                            }
-                        </ul>
-                    }
-                </div>
+            @* S1/L1/A11Y9: AJAX-refined article pages; server renders the same fragment without JS (PE1). *@
+            <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+                 data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]"
+                 data-loading-text="@Localizer["Public.Loading"]">
+                <partial name="_PreviewResults" model="Model" />
             </div>
-
-            @if (Model.Pager.TotalPages > 1)
-            {
-                <nav class="d-flex justify-content-between align-items-center" aria-label="@Localizer["Creator.Preview.Pagination"]">
-                    <span class="small text-body-secondary">
-                        @Localizer["Creator.Preview.PageOf", Model.Pager.PageNumber, Model.Pager.TotalPages]
-                    </span>
-                    <div class="btn-group">
-                        @if (Model.Pager.HasPreviousPage)
-                        {
-                            <a class="btn btn-sm btn-secondary-soft"
-                               asp-area="Creator" asp-controller="Preview" asp-action="Index"
-                               asp-route-page="@(Model.Pager.PageNumber - 1)">@Localizer["Creator.Preview.Previous"]</a>
-                        }
-                        @if (Model.Pager.HasNextPage)
-                        {
-                            <a class="btn btn-sm btn-secondary-soft"
-                               asp-area="Creator" asp-controller="Preview" asp-action="Index"
-                               asp-route-page="@(Model.Pager.PageNumber + 1)">@Localizer["Creator.Preview.Next"]</a>
-                        }
-                    </div>
-                </nav>
-            }
         }
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true"></script>
+}

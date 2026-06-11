@@ -46,7 +46,9 @@ public sealed class PreviewController : BaseController
             return RedirectToAction("Index", "Application");
 
         SetSidebar();
-        return View(result.Data);
+
+        // S1/PE1: AJAX pagination returns the published-articles fragment; plain GET renders the full page.
+        return WantsAjax() ? PartialView("_PreviewResults", result.Data) : View(result.Data);
     }
 
     private void SetSidebar()
