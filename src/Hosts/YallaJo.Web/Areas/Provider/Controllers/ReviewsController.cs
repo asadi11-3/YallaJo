@@ -35,21 +35,16 @@ public sealed class ReviewsController : BaseController
     public async Task<IActionResult> Reply(Guid id, string content, Guid tourId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(content))
-        {
-            SetError("Please enter a reply.");
-            return RedirectToAction(nameof(Index), new { tourId });
-        }
+            return Fail("Please enter a reply.", tourId);
 
         var result = await _reviews.ReplyAsync(id, content, ct);
         if (GuardSignOut(result) is { } signOut)
             return signOut;
 
-        if (result.IsSuccess)
-            SetSuccess("Your reply was posted.");
-        else
-            SetError(result.Error);
+        if (!result.IsSuccess)
+            return Fail(result.Error, tourId);
 
-        return RedirectToAction(nameof(Index), new { tourId });
+        return await SucceedAsync("Your reply was posted.", tourId, ct);
     }
 
     [HttpPost("provider/reviews/{id:guid}/reply/{replyId:guid}/edit")]
@@ -57,21 +52,16 @@ public sealed class ReviewsController : BaseController
     public async Task<IActionResult> EditReply(Guid id, Guid replyId, string content, Guid tourId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(content))
-        {
-            SetError("Please enter a reply.");
-            return RedirectToAction(nameof(Index), new { tourId });
-        }
+            return Fail("Please enter a reply.", tourId);
 
         var result = await _reviews.EditReplyAsync(id, replyId, content, ct);
         if (GuardSignOut(result) is { } signOut)
             return signOut;
 
-        if (result.IsSuccess)
-            SetSuccess("Your reply was updated.");
-        else
-            SetError(result.Error);
+        if (!result.IsSuccess)
+            return Fail(result.Error, tourId);
 
-        return RedirectToAction(nameof(Index), new { tourId });
+        return await SucceedAsync("Your reply was updated.", tourId, ct);
     }
 
     [HttpPost("provider/reviews/{id:guid}/reply/{replyId:guid}/delete")]
@@ -82,12 +72,10 @@ public sealed class ReviewsController : BaseController
         if (GuardSignOut(result) is { } signOut)
             return signOut;
 
-        if (result.IsSuccess)
-            SetSuccess("Your reply was deleted.");
-        else
-            SetError(result.Error);
+        if (!result.IsSuccess)
+            return Fail(result.Error, tourId);
 
-        return RedirectToAction(nameof(Index), new { tourId });
+        return await SucceedAsync("Your reply was deleted.", tourId, ct);
     }
 
     [HttpPost("provider/reviews/{id:guid}/report")]
@@ -98,12 +86,35 @@ public sealed class ReviewsController : BaseController
         if (GuardSignOut(result) is { } signOut)
             return signOut;
 
-        if (result.IsSuccess)
-            SetSuccess("Thanks. Our moderation team will review this report.");
-        else
-            SetError(result.Error);
+        if (!result.IsSuccess)
+            return Fail(result.Error, tourId);
 
+        return await SucceedAsync("Thanks. Our moderation team will review this report.", tourId, ct);
+    }
+
+    /// <summary>
+    /// AJAX requests (JS5/PE1) get a refreshed <c>_ReviewsResults</c> fragment that
+    /// provider-actions.js swaps in place (the success toast comes from the form's
+    /// data-success-message attribute). Non-AJAX requests keep the original PRG flow.
+    /// </summary>
+    private async Task<IActionResult> SucceedAsync(string message, Guid tourId, CancellationToken ct)
+    {
+        if (WantsAjax())
+        {
+            var refreshed = await _reviews.GetAsync(tourId, ct);
+            return PartialView("_ReviewsResults", refreshed.Data ?? new ReviewsVm());
+        }
+
+        SetSuccess(message);
         return RedirectToAction(nameof(Index), new { tourId });
     }
 
+    private IActionResult Fail(string? message, Guid tourId)
+    {
+        if (WantsAjax())
+            return BadRequest(new { error = message });
+
+        SetError(message);
+        return RedirectToAction(nameof(Index), new { tourId });
+    }
 }

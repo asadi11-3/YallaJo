@@ -11,6 +11,7 @@ public static class ProviderBookingsMapper
     {
         Status = status,
         Items = page.Items.Select(i => ToRowVm(i, Lookup(tourNames, i.TourId))).ToList(),
+        NextCursor = page.NextCursor,
     };
 
     public static ProviderBookingRowVm ToRowVm(ProviderBookingItemResponse i, string tourName) => new()

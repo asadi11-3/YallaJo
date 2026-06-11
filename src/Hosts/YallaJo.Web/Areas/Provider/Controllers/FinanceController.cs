@@ -62,4 +62,36 @@ public sealed class FinanceController : BaseController
 
         return View(vm);
     }
+
+    // ── Tab fragments ─────────────────────────────────────────────────────────────
+    // Index SSRs all three panes so the page works without JS (PE1); these endpoints
+    // return the same fragments standalone so scripts can refresh a single tab via
+    // window.YallaJo.api.loadPartial without re-rendering the whole page (MOD8/JS5).
+
+    [HttpGet("provider/finance/tabs/payouts")]
+    public async Task<IActionResult> PayoutsTab(CancellationToken ct = default)
+    {
+        var result = await _earnings.GetEarningsAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess) return BadRequest(new { error = result.Error });
+        return PartialView("_FinancePayoutsTab", result.Data ?? new EarningsVm());
+    }
+
+    [HttpGet("provider/finance/tabs/invoices")]
+    public async Task<IActionResult> InvoicesTab(CancellationToken ct = default)
+    {
+        var result = await _invoices.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess) return BadRequest(new { error = result.Error });
+        return PartialView("_FinanceInvoicesTab", result.Data ?? new ProviderInvoicesVm());
+    }
+
+    [HttpGet("provider/finance/tabs/methods")]
+    public async Task<IActionResult> MethodsTab(CancellationToken ct = default)
+    {
+        var result = await _methods.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess) return BadRequest(new { error = result.Error });
+        return PartialView("_FinanceMethodsTab", result.Data ?? new PaymentMethodsVm());
+    }
 }

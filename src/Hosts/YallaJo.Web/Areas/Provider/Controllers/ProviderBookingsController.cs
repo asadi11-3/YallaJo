@@ -20,18 +20,22 @@ public sealed class ProviderBookingsController : BaseController
     public ProviderBookingsController(ProviderBookingsFacade facade) => _facade = facade;
 
     [HttpGet("provider/bookings/manage")]
-    public async Task<IActionResult> Index(string? status, CancellationToken ct = default)
+    public async Task<IActionResult> Index(string? status, string? cursor = null, CancellationToken ct = default)
     {
-        var result = await _facade.GetListAsync(status, ct);
+        var result = await _facade.GetListAsync(status, cursor, ct);
         if (result.Outcome == ProviderBookingOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome != ProviderBookingOutcome.Ok || result.Data is null)
         {
             SetError(result.Error);
-            return View(new Models.Bookings.ProviderBookingsIndexVm { Status = status });
+            var fallback = new Models.Bookings.ProviderBookingsIndexVm { Status = status };
+            return WantsAjax() ? PartialView("_BookingsResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        // AJAX requests get the table fragment (status filter + cursor Load-more; the
+        // cursor paging here is the sanctioned high-volume exception, plan §4.6).
+        // Full requests keep the SSR page so everything works without JS (PE1).
+        return WantsAjax() ? PartialView("_BookingsResults", result.Data) : View(result.Data);
     }
 
     [HttpGet("provider/bookings/manage/{id:guid}")]

@@ -1,25 +1,7 @@
-@using YallaJo.Web.Areas.Provider.Models.PaymentMethods
 @model YallaJo.Web.Areas.Provider.Models.Finance.ProviderFinanceVm
 @{
     ViewData["Title"] = Localizer["Provider.Finance.Title"].Value;
     ViewData["ProviderNav"] = "Finance";
-
-
-    (string Color, string Icon) PayoutBadge(string? s) => (s ?? "").ToLowerInvariant() switch
-    {
-        "completed" or "paid" => ("success", "circle-check"),
-        "pending" or "processing" or "scheduled" => ("warning", "clock"),
-        "failed" or "rejected" => ("danger", "circle-xmark"),
-        _ => ("secondary", "circle-info"),
-    };
-    (string Color, string Icon) InvoiceBadge(string? s) => (s ?? "").ToLowerInvariant() switch
-    {
-        "paid" or "issued" or "settled" => ("success", "circle-check"),
-        "pending" or "draft" => ("warning", "clock"),
-        "void" or "cancelled" or "refunded" => ("danger", "circle-xmark"),
-        _ => ("secondary", "circle-info"),
-    };
-    string TypeLabel(ProviderPaymentMethodType t) => Localizer["Provider.Finance.MethodType." + t.ToString()];
 }
 
 @await Component.InvokeAsync("ProviderSidebar")
@@ -50,7 +32,8 @@
                         </button>
                     </li>
                     @* "invoices" / "methods" ids are permanent-redirect anchor targets for the
-                       retired /provider/invoices and /provider/payment-methods pages. *@
+                       retired /provider/invoices and /provider/payment-methods pages.
+                       provider-finance.js activates the matching tab from location.hash. *@
                     <li class="nav-item" role="presentation" id="invoices">
                         <button class="nav-link" id="tab-invoices" data-bs-toggle="tab" data-bs-target="#pane-invoices" type="button" role="tab" aria-controls="pane-invoices" aria-selected="false">
                             <i class="fa-solid fa-receipt me-1" aria-hidden="true"></i>@Localizer["Provider.Finance.TabInvoices"]
@@ -64,277 +47,25 @@
                 </ul>
             </div>
             <div class="card-body">
+                @* All three panes are SSR'd so the page stays fully usable without JS (PE1).
+                   GET provider/finance/tabs/{payouts|invoices|methods} return the same fragments
+                   for AJAX refreshes (MOD8). *@
                 <div class="tab-content">
-                    @* ── Payouts ─────────────────────────────────────────────── *@
                     <div class="tab-pane fade show active" id="pane-payouts" role="tabpanel" aria-labelledby="tab-payouts">
-                        @if (!Model.Earnings.HasPayouts)
-                        {
-                            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.Finance.NoPayouts"].Value } })" />
-                        }
-                        else
-                        {
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <caption class="visually-hidden">@Localizer["Provider.Finance.TabPayouts"]</caption>
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th scope="col">@Localizer["Provider.Finance.ColPeriod"]</th>
-                                            <th scope="col" class="text-end">@Localizer["Provider.Finance.ColGross"]</th>
-                                            <th scope="col" class="text-end">@Localizer["Provider.Finance.ColCommission"]</th>
-                                            <th scope="col" class="text-end">@Localizer["Provider.Finance.ColNet"]</th>
-                                            <th scope="col" class="text-center">@Localizer["Provider.Finance.ColItems"]</th>
-                                            <th scope="col">@Localizer["Provider.Finance.ColStatus"]</th>
-                                            <th scope="col">@Localizer["Provider.Finance.ColCreated"]</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var p in Model.Earnings.Payouts)
-                                        {
-                                            var pb = PayoutBadge(p.Status);
-                                            <tr>
-                                                <td><bdi dir="ltr" class="font-data">@Date(p.BatchPeriodStart) – @Date(p.BatchPeriodEnd)</bdi></td>
-                                                <td class="text-end"><bdi dir="ltr" class="font-data">@Money(p.GrossAmount, p.Currency)</bdi></td>
-                                                <td class="text-end text-danger"><bdi dir="ltr" class="font-data">@Money(p.CommissionAmount, p.Currency)</bdi></td>
-                                                <td class="text-end text-success"><bdi dir="ltr" class="font-data">@Money(p.NetAmount, p.Currency)</bdi></td>
-                                                <td class="text-center"><bdi dir="ltr">@Count(p.ItemCount)</bdi></td>
-                                                <td><span class="badge bg-@pb.Color bg-opacity-10 text-@pb.Color"><i class="fa-solid fa-@pb.Icon fa-fw" aria-hidden="true"></i> @(p.Status ?? "—")</span></td>
-                                                <td class="small text-body-secondary"><bdi dir="ltr">@Date(p.CreatedAt)</bdi></td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-
-                        @if (Model.Earnings.HasDisputes)
-                        {
-                            <h2 class="h6 mt-4 mb-2">@Localizer["Provider.Finance.Disputes"]</h2>
-                            <div class="table-responsive">
-                                <table class="table table-sm align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th scope="col">@Localizer["Provider.Finance.ColReason"]</th>
-                                            <th scope="col">@Localizer["Provider.Finance.ColStatus"]</th>
-                                            <th scope="col">@Localizer["Provider.Finance.ColCreated"]</th>
-                                            <th scope="col">@Localizer["Provider.Finance.ColResolved"]</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var d in Model.Earnings.Disputes)
-                                        {
-                                            var db = PayoutBadge(d.Status);
-                                            <tr>
-                                                <td><bdi>@d.Reason</bdi></td>
-                                                <td><span class="badge bg-@db.Color bg-opacity-10 text-@db.Color"><i class="fa-solid fa-@db.Icon fa-fw" aria-hidden="true"></i> @(d.Status ?? "—")</span></td>
-                                                <td class="small"><bdi dir="ltr">@Date(d.CreatedAt)</bdi></td>
-                                                <td class="small">
-                                                    @if (d.ResolvedAt is not null)
-                                                    {
-                                                        <bdi dir="ltr">@Date(d.ResolvedAt.Value)</bdi>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-body-secondary">&mdash;</span>
-                                                    }
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
+                        <partial name="_FinancePayoutsTab" model="Model.Earnings" />
                     </div>
-
-                    @* ── Invoices ────────────────────────────────────────────── *@
                     <div class="tab-pane fade" id="pane-invoices" role="tabpanel" aria-labelledby="tab-invoices">
-                        @if (!Model.Invoices.HasInvoices)
-                        {
-                            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.Finance.NoInvoices"].Value } })" />
-                        }
-                        else
-                        {
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <caption class="visually-hidden">@Localizer["Provider.Finance.TabInvoices"]</caption>
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th scope="col">@Localizer["Provider.Finance.ColInvoiceNumber"]</th>
-                                            <th scope="col">@Localizer["Provider.Finance.ColCustomer"]</th>
-                                            <th scope="col">@Localizer["Provider.Finance.ColIssued"]</th>
-                                            <th scope="col">@Localizer["Provider.Finance.ColStatus"]</th>
-                                            <th scope="col" class="text-end">@Localizer["Provider.Finance.ColTotal"]</th>
-                                            <th scope="col" class="text-end"><span class="visually-hidden">@Localizer["Provider.Finance.Download"]</span></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var inv in Model.Invoices.Invoices)
-                                        {
-                                            var ib = InvoiceBadge(inv.Status);
-                                            <tr>
-                                                <td><bdi dir="ltr" class="font-data">@inv.InvoiceNumber</bdi><div class="small text-body-secondary">@Localizer["Provider.Finance.ItemsCount", Count(inv.ItemCount)]</div></td>
-                                                <td><bdi>@inv.BuyerName</bdi></td>
-                                                <td class="small"><bdi dir="ltr">@Date(inv.IssuedAt)</bdi></td>
-                                                <td><span class="badge bg-@ib.Color bg-opacity-10 text-@ib.Color"><i class="fa-solid fa-@ib.Icon fa-fw" aria-hidden="true"></i> @inv.Status</span></td>
-                                                <td class="text-end"><bdi dir="ltr" class="font-data">@Money(inv.AmountTotal, inv.Currency)</bdi></td>
-                                                <td class="text-end">
-                                                    @if (inv.PdfAvailable)
-                                                    {
-                                                        <permission require="@WebPermission.Invoice.Download">
-                                                            <a class="btn btn-sm btn-primary-soft" asp-area="Provider" asp-controller="Invoices"
-                                                               asp-action="Download" asp-route-id="@inv.Id"><i class="fa-solid fa-download me-1" aria-hidden="true"></i>@Localizer["Provider.Finance.Pdf"]</a>
-                                                        </permission>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-body-secondary small">&mdash;</span>
-                                                    }
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
+                        <partial name="_FinanceInvoicesTab" model="Model.Invoices" />
                     </div>
-
-                    @* ── Methods ─────────────────────────────────────────────── *@
                     <div class="tab-pane fade" id="pane-methods" role="tabpanel" aria-labelledby="tab-methods">
-                        <permission require="@WebPermission.ProviderPaymentMethod.Create">
-                            <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Create" method="post" class="row g-2 align-items-end mb-3">
-                                @Html.AntiForgeryToken()
-                                <div class="col-md-3">
-                                    <label asp-for="Methods.Form.PaymentMethodType" class="form-label small mb-1"></label>
-                                    <select asp-for="Methods.Form.PaymentMethodType" name="PaymentMethodType"
-                                            asp-items="Html.GetEnumSelectList<ProviderPaymentMethodType>()" class="form-select form-select-sm"></select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label asp-for="Methods.Form.DisplayName" class="form-label small mb-1"></label>
-                                    <input asp-for="Methods.Form.DisplayName" name="DisplayName" class="form-control form-control-sm" placeholder="@Localizer["Provider.Finance.DisplayNamePlaceholder"]" />
-                                </div>
-                                <div class="col-md-3">
-                                    <label asp-for="Methods.Form.AccountIdentifier" class="form-label small mb-1"></label>
-                                    <input asp-for="Methods.Form.AccountIdentifier" name="AccountIdentifier" class="form-control form-control-sm" dir="ltr" />
-                                </div>
-                                <div class="col-md-2">
-                                    <label asp-for="Methods.Form.BankName" class="form-label small mb-1"></label>
-                                    <input asp-for="Methods.Form.BankName" name="BankName" class="form-control form-control-sm" />
-                                </div>
-                                <div class="col-md-1 d-grid">
-                                    <button type="submit" class="btn btn-sm btn-primary" aria-label="@Localizer["Provider.Finance.AddMethod"]"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
-                                </div>
-                                <div class="col-12">
-                                    <div class="form-check">
-                                        <input asp-for="Methods.Form.IsDefault" name="IsDefault" value="true" class="form-check-input" />
-                                        <label asp-for="Methods.Form.IsDefault" class="form-check-label small"></label>
-                                    </div>
-                                </div>
-                            </form>
-                        </permission>
-
-                        @if (!Model.Methods.HasMethods)
-                        {
-                            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.Finance.NoMethods"].Value } })" />
-                        }
-                        else
-                        {
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <caption class="visually-hidden">@Localizer["Provider.Finance.TabMethods"]</caption>
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th scope="col">@Localizer["Provider.Finance.ColName"]</th>
-                                            <th scope="col">@Localizer["Provider.Finance.ColType"]</th>
-                                            <th scope="col">@Localizer["Provider.Finance.ColAccount"]</th>
-                                            <th scope="col">@Localizer["Provider.Finance.ColStatus"]</th>
-                                            <th scope="col" class="text-end"><span class="visually-hidden">@Localizer["Provider.Finance.ColActions"]</span></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var m in Model.Methods.Methods)
-                                        {
-                                            <tr>
-                                                <td class="fw-semibold"><bdi>@m.DisplayName</bdi>
-                                                    @if (m.IsDefault) { <span class="badge bg-primary bg-opacity-10 text-primary ms-1">@Localizer["Provider.Finance.Default"]</span> }
-                                                    @if (!string.IsNullOrWhiteSpace(m.BankName)) { <div class="small text-body-secondary"><bdi>@m.BankName</bdi></div> }
-                                                </td>
-                                                <td>@TypeLabel(m.PaymentMethodType)</td>
-                                                <td><bdi dir="ltr" class="font-data small">@m.AccountIdentifier</bdi></td>
-                                                <td>
-                                                    @if (m.IsVerified)
-                                                    {
-                                                        <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Provider.Finance.Verified"]</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-hourglass-half fa-fw" aria-hidden="true"></i> @Localizer["Provider.Finance.Unverified"]</span>
-                                                    }
-                                                </td>
-                                                <td class="text-end">
-                                                    <permission require="@WebPermission.ProviderPaymentMethod.Update">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse"
-                                                                data-bs-target="#fin-edit-@m.Id" aria-expanded="false" aria-controls="fin-edit-@m.Id"
-                                                                aria-label="@Localizer["Provider.Finance.EditMethod", m.DisplayName]"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
-                                                    </permission>
-                                                    <permission require="@WebPermission.ProviderPaymentMethod.Delete">
-                                                        <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Delete" asp-route-id="@m.Id" method="post" class="d-inline"
-                                                              data-confirm="@Localizer["Provider.Finance.DeleteModalBody", m.DisplayName]"
-                                                              data-confirm-title="@Localizer["Provider.Finance.DeleteModalTitle"]"
-                                                              data-confirm-action="@Localizer["Provider.Finance.DeleteConfirm"]"
-                                                              data-confirm-cancel="@Localizer["Provider.Common.Cancel"]">
-                                                            @Html.AntiForgeryToken()
-                                                            <button type="submit" class="btn btn-sm btn-danger-soft"
-                                                                    aria-label="@Localizer["Provider.Finance.DeleteMethod", m.DisplayName]"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
-                                                        </form>
-                                                    </permission>
-                                                </td>
-                                            </tr>
-                                            <permission require="@WebPermission.ProviderPaymentMethod.Update">
-                                                <tr class="collapse" id="fin-edit-@m.Id">
-                                                    <td colspan="5">
-                                                        <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Edit" asp-route-id="@m.Id"
-                                                              method="post" class="row g-2 align-items-end">
-                                                            @Html.AntiForgeryToken()
-                                                            <div class="col-md-3">
-                                                                <label class="form-label small mb-1" for="fin-t-@m.Id">@Localizer["Provider.Finance.ColType"]</label>
-                                                                <select id="fin-t-@m.Id" name="PaymentMethodType" class="form-select form-select-sm">
-                                                                    @foreach (ProviderPaymentMethodType t in Enum.GetValues<ProviderPaymentMethodType>())
-                                                                    {
-                                                                        <option value="@((int)t)" selected="@(m.PaymentMethodType == t)">@TypeLabel(t)</option>
-                                                                    }
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <label class="form-label small mb-1" for="fin-n-@m.Id">@Localizer["Provider.Finance.ColName"]</label>
-                                                                <input id="fin-n-@m.Id" name="DisplayName" value="@m.DisplayName" class="form-control form-control-sm" maxlength="100" required />
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <label class="form-label small mb-1" for="fin-a-@m.Id">@Localizer["Provider.Finance.ColAccount"]</label>
-                                                                <input id="fin-a-@m.Id" name="AccountIdentifier" value="@m.AccountIdentifier" class="form-control form-control-sm" dir="ltr" maxlength="100" required />
-                                                            </div>
-                                                            <div class="col-md-2">
-                                                                <label class="form-label small mb-1" for="fin-b-@m.Id">@Localizer["Provider.Finance.Bank"]</label>
-                                                                <input id="fin-b-@m.Id" name="BankName" value="@m.BankName" class="form-control form-control-sm" maxlength="100" />
-                                                            </div>
-                                                            <div class="col-md-1">
-                                                                <div class="form-check">
-                                                                    <input type="checkbox" name="IsDefault" value="true" class="form-check-input" id="fin-d-@m.Id" @(m.IsDefault ? "checked" : "") />
-                                                                    <label class="form-check-label small" for="fin-d-@m.Id">@Localizer["Provider.Finance.Default"]</label>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-12"><button type="submit" class="btn btn-sm btn-primary">@Localizer["Provider.Finance.SaveChanges"]</button></div>
-                                                        </form>
-                                                    </td>
-                                                </tr>
-                                            </permission>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-
-                        }
+                        <partial name="_FinanceMethodsTab" model="Model.Methods" />
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/provider-finance.js" asp-append-version="true"></script>
+}

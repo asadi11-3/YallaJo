@@ -1,0 +1,132 @@
+@using YallaJo.Web.Areas.Provider.Models.Tours
+@model ProviderToursIndexVm
+@{
+    // Results fragment for /provider/tours — returned standalone when WantsAjax()
+    // (UI-UX-PE1: full page render without JS, AJAX swap with JS via provider-listing.js).
+    string StatusText(string status, string fallback)
+    {
+        var s = Localizer["Provider.Status." + status];
+        return s.ResourceNotFound ? fallback : s.Value;
+    }
+    string StatusIcon(string status) => (status ?? "").ToLowerInvariant() switch
+    {
+        "approved" or "published" => "circle-check",
+        "pending" or "pendingreview" or "submitted" => "clock",
+        "rejected" => "circle-xmark",
+        "archived" => "box-archive",
+        "suspended" => "circle-pause",
+        "draft" => "pen-ruler",
+        _ => "circle-info",
+    };
+}
+
+@if (!Model.HasItems)
+{
+    <div class="card border">
+        <div class="card-body">
+            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.Tours.EmptyTitle"].Value }, { "message", Localizer["Provider.Tours.EmptyMsg"].Value }, { "ctaText", Localizer["Provider.Tours.CreateFirst"].Value }, { "ctaUrl", Url.Action("Create", "Tours", new { area = "Provider" }) }, { "ctaPermission", WebPermission.Tour.Create } })" />
+        </div>
+    </div>
+}
+else
+{
+    <div class="card border">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <caption class="visually-hidden">@Localizer["Provider.Tours.TableCaption"]</caption>
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">@Localizer["Provider.Tours.ColName"]</th>
+                        <th scope="col">@Localizer["Provider.Tours.ColStatus"]</th>
+                        <th scope="col" class="text-end">@Localizer["Provider.Tours.ColPrice"]</th>
+                        <th scope="col">@Localizer["Provider.Tours.ColCreated"]</th>
+                        <th scope="col" class="text-end"><span class="visually-hidden">@Localizer["Provider.Tours.ColActions"]</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Items)
+                    {
+                        <tr>
+                            <td class="fw-semibold"><bdi>@row.Name</bdi></td>
+                            <td>
+                                <span class="badge @row.StatusBadgeClass">
+                                    <i class="fa-solid fa-@(StatusIcon(row.Status)) fa-fw" aria-hidden="true"></i>
+                                    @StatusText(row.Status, row.StatusLabel)
+                                </span>
+                            </td>
+                            <td class="text-end"><bdi dir="ltr" class="font-data">@Money(row.BasePrice, row.Currency)</bdi></td>
+                            <td class="small text-body-secondary"><bdi dir="ltr">@Date(row.CreatedAt)</bdi></td>
+                            <td class="text-end">
+                                <div class="d-inline-flex justify-content-end gap-1 flex-wrap">
+                                    @if (row.CanEdit)
+                                    {
+                                        <permission require="@WebPermission.Tour.Update">
+                                            <a asp-area="Provider" asp-controller="Tours" asp-action="Edit"
+                                               asp-route-id="@row.Id" class="btn btn-sm btn-outline-secondary">@Localizer["Provider.Tours.Edit"]</a>
+                                        </permission>
+                                        <div class="dropdown d-inline">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                                    data-bs-toggle="dropdown" aria-expanded="false"
+                                                    aria-label="@Localizer["Provider.Tours.ManageAria", row.Name]">@Localizer["Provider.Tours.Manage"]</button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@row.Id"><i class="fa-solid fa-tag fa-fw me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.NavPricing"]</a></li>
+                                                <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourSchedules" asp-action="Index" asp-route-id="@row.Id"><i class="fa-solid fa-calendar-days fa-fw me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.NavSchedules"]</a></li>
+                                                <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourWaypoints" asp-action="Index" asp-route-id="@row.Id"><i class="fa-solid fa-location-dot fa-fw me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.NavWaypoints"]</a></li>
+                                                <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourGuides" asp-action="Index" asp-route-id="@row.Id"><i class="fa-solid fa-id-badge fa-fw me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.NavGuides"]</a></li>
+                                                <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourApplications" asp-action="Index" asp-route-id="@row.Id"><i class="fa-solid fa-file-lines fa-fw me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.NavApplications"]</a></li>
+                                                <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourImages" asp-action="Index" asp-route-id="@row.Id"><i class="fa-solid fa-images fa-fw me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.NavImages"]</a></li>
+                                            </ul>
+                                        </div>
+                                    }
+                                    @if (row.CanSubmit)
+                                    {
+                                        <permission require="@WebPermission.Tour.Submit">
+                                            <form asp-area="Provider" asp-controller="Tours" asp-action="Submit"
+                                                  asp-route-id="@row.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">@Localizer["Provider.Tours.Submit"]</button>
+                                            </form>
+                                        </permission>
+                                    }
+                                    @if (row.CanArchive)
+                                    {
+                                        <permission require="@WebPermission.Tour.Archive">
+                                            @* Shared confirm modal via form-ux.js data-confirm (F8/MOD3/MOD5);
+                                               without JS the form posts directly (PE1). *@
+                                            <form asp-area="Provider" asp-controller="Tours" asp-action="Archive"
+                                                  asp-route-id="@row.Id" method="post" class="d-inline"
+                                                  data-confirm="@Localizer["Provider.Tours.ArchiveBody", row.Name]"
+                                                  data-confirm-title="@Localizer["Provider.Tours.ArchiveTitle"]"
+                                                  data-confirm-action="@Localizer["Provider.Tours.ArchiveConfirm"]"
+                                                  data-confirm-cancel="@Localizer["Provider.Tours.Cancel"]">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Provider.Tours.Archive"]</button>
+                                            </form>
+                                        </permission>
+                                    }
+                                    <permission require="@WebPermission.Tour.DeleteOwn">
+                                        <form asp-area="Provider" asp-controller="Tours" asp-action="Delete"
+                                              asp-route-id="@row.Id" method="post" class="d-inline"
+                                              data-confirm="@Localizer["Provider.Tours.DeleteBody", row.Name]"
+                                              data-confirm-title="@Localizer["Provider.Tours.DeleteTitle"]"
+                                              data-confirm-action="@Localizer["Provider.Tours.DeleteConfirm"]"
+                                              data-confirm-cancel="@Localizer["Provider.Tours.Cancel"]">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Provider.Tours.Delete"]</button>
+                                        </form>
+                                    </permission>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <partial name="~/Areas/Public/Views/Shared/_Pagination.cshtml"
+                 model="@(new YallaJo.Web.Areas.Public.Models.Shared.PaginationVm { PageNumber = Model.Page, TotalPages = Model.TotalPages, AriaLabel = Localizer["Provider.Tours.Pagination"].Value })" />
+    }
+}

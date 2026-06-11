@@ -19,10 +19,11 @@ public sealed class ProviderBookingsApiClient
 
     // GET /api/v1/booking/provider/bookings — owner-scoped list
     public Task<ApiResult<ProviderBookingsPageResponse>> GetListAsync(
-        string? status, CancellationToken ct = default)
+        string? status, string? cursor = null, CancellationToken ct = default)
     {
         var query = new Dictionary<string, string?> { ["pageSize"] = "50" };
         if (!string.IsNullOrWhiteSpace(status)) query["status"] = status;
+        if (!string.IsNullOrWhiteSpace(cursor)) query["cursor"] = cursor;
 
         var url = QueryHelpers.AddQueryString($"{Base}/provider/bookings", query);
         return _api.GetAsync<ProviderBookingsPageResponse>(url, ct);

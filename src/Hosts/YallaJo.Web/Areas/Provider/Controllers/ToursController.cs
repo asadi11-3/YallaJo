@@ -36,7 +36,8 @@ public sealed class ToursController : ProviderTourResourceController
         var result = await _facade.GetIndexAsync(status, page, ct);
         return result.Outcome switch
         {
-            ProviderTourOutcome.Ok => View(result.Data),
+            // AJAX listing swap (PE1: PRG/full-view fallback preserved without JS).
+            ProviderTourOutcome.Ok => WantsAjax() ? PartialView("_ToursResults", result.Data) : View(result.Data),
             ProviderTourOutcome.ForceSignOut => RedirectToLogin(),
             ProviderTourOutcome.Forbidden => RedirectToStatus(),
             _ => IndexError(result.Error, status, page),
@@ -223,6 +224,7 @@ public sealed class ToursController : ProviderTourResourceController
     private IActionResult IndexError(string? message, string? status, int page)
     {
         SetError(message);
-        return View(ProviderToursMapper.EmptyIndex(status, page < 1 ? 1 : page, 20));
+        var vm = ProviderToursMapper.EmptyIndex(status, page < 1 ? 1 : page, 20);
+        return WantsAjax() ? PartialView("_ToursResults", vm) : View(vm);
     }
 }

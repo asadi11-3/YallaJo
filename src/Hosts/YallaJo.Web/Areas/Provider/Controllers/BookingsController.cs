@@ -51,12 +51,10 @@ public sealed class BookingsController : BaseController
         if (GuardSignOut(result) is { } signOut)
             return signOut;
 
-        if (result.IsSuccess)
-            SetSuccess("Join request approved.");
-        else
-            SetError(result.Error);
+        if (!result.IsSuccess)
+            return await FailAsync(result.Error, lookupId: null, ct);
 
-        return RedirectToAction(nameof(Index));
+        return await SucceedAsync("Join request approved.", lookupId: null, ct);
     }
 
     [HttpPost("provider/bookings/join-requests/{id:guid}/reject")]
@@ -67,12 +65,10 @@ public sealed class BookingsController : BaseController
         if (GuardSignOut(result) is { } signOut)
             return signOut;
 
-        if (result.IsSuccess)
-            SetSuccess("Join request declined.");
-        else
-            SetError(result.Error);
+        if (!result.IsSuccess)
+            return await FailAsync(result.Error, lookupId: null, ct);
 
-        return RedirectToAction(nameof(Index));
+        return await SucceedAsync("Join request declined.", lookupId: null, ct);
     }
 
     [HttpPost("provider/bookings/{id:guid}/confirm")]
@@ -83,12 +79,10 @@ public sealed class BookingsController : BaseController
         if (GuardSignOut(result) is { } signOut)
             return signOut;
 
-        if (result.IsSuccess)
-            SetSuccess("Booking confirmed.");
-        else
-            SetError(result.Error);
+        if (!result.IsSuccess)
+            return await FailAsync(result.Error, lookupId: id, ct);
 
-        return RedirectToAction(nameof(Index), new { lookupId = id });
+        return await SucceedAsync("Booking confirmed.", lookupId: id, ct);
     }
 
     [HttpPost("provider/bookings/{id:guid}/reject")]
@@ -96,21 +90,42 @@ public sealed class BookingsController : BaseController
     public async Task<IActionResult> RejectBooking(Guid id, string? reason, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(reason))
-        {
-            SetError("Please provide a reason for rejecting the booking.");
-            return RedirectToAction(nameof(Index), new { lookupId = id });
-        }
+            return await FailAsync("Please provide a reason for rejecting the booking.", lookupId: id, ct);
 
         var result = await _bookings.RejectBookingAsync(id, reason, ct);
         if (GuardSignOut(result) is { } signOut)
             return signOut;
 
-        if (result.IsSuccess)
-            SetSuccess("Booking rejected.");
-        else
-            SetError(result.Error);
+        if (!result.IsSuccess)
+            return await FailAsync(result.Error, lookupId: id, ct);
 
-        return RedirectToAction(nameof(Index), new { lookupId = id });
+        return await SucceedAsync("Booking rejected.", lookupId: id, ct);
     }
 
+    /// <summary>
+    /// AJAX (WantsAjax): re-fetch the page state and return the swappable fragment —
+    /// the client toasts its own data-success-message (NF1). No-JS: PRG flash + redirect (PE1).
+    /// </summary>
+    private async Task<IActionResult> SucceedAsync(string message, Guid? lookupId, CancellationToken ct)
+    {
+        if (WantsAjax())
+        {
+            var refreshed = await _bookings.GetAsync(lookupId, ct);
+            return PartialView("_BookingsContent", refreshed.Data ?? new BookingsVm());
+        }
+
+        SetSuccess(message);
+        return RedirectToAction(nameof(Index), lookupId is null ? null : new { lookupId });
+    }
+
+    /// <summary>AJAX: 400 + { error } for the client toast. No-JS: PRG flash + redirect.</summary>
+    private Task<IActionResult> FailAsync(string? message, Guid? lookupId, CancellationToken ct)
+    {
+        if (WantsAjax())
+            return Task.FromResult<IActionResult>(BadRequest(new { error = message }));
+
+        SetError(message);
+        return Task.FromResult<IActionResult>(
+            RedirectToAction(nameof(Index), lookupId is null ? null : new { lookupId }));
+    }
 }

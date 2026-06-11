@@ -12736,4 +12736,43 @@
 <data name="Provider.TourApplications.ApproveBody" xml:space="preserve">
 <value>هل توافق على طلب المرشد هذا؟ سيُمنح مقدم الطلب صلاحية الوصول إلى هذا العرض.</value>
 </data>
+<data name="Provider.Common.ResultsError" xml:space="preserve">
+<value>تعذّر تحميل النتائج.</value>
+</data>
+<data name="Provider.Common.Retry" xml:space="preserve">
+<value>حاول مرة أخرى</value>
+</data>
+<data name="Provider.Common.Loading" xml:space="preserve">
+<value>جارٍ التحميل…</value>
+</data>
+<data name="Provider.Common.LoadMore" xml:space="preserve">
+<value>تحميل المزيد</value>
+</data>
+<data name="Provider.Common.ActionFailed" xml:space="preserve">
+<value>تعذّر إتمام العملية.</value>
+</data>
+<data name="Provider.Bookings.JoinApprovedToast" xml:space="preserve">
+<value>تمت الموافقة على طلب الانضمام.</value>
+</data>
+<data name="Provider.Bookings.JoinDeclinedToast" xml:space="preserve">
+<value>تم رفض طلب الانضمام.</value>
+</data>
+<data name="Provider.Bookings.ConfirmedToast" xml:space="preserve">
+<value>تم تأكيد الحجز.</value>
+</data>
+<data name="Provider.Bookings.RejectedToast" xml:space="preserve">
+<value>تم رفض الحجز.</value>
+</data>
+<data name="Provider.Reviews.ReplyPostedToast" xml:space="preserve">
+<value>تم نشر ردك.</value>
+</data>
+<data name="Provider.Reviews.ReplyUpdatedToast" xml:space="preserve">
+<value>تم تحديث ردك.</value>
+</data>
+<data name="Provider.Reviews.ReplyDeletedToast" xml:space="preserve">
+<value>تم حذف ردك.</value>
+</data>
+<data name="Provider.Reviews.ReportToast" xml:space="preserve">
+<value>شكرًا لك. سيقوم فريق الإشراف بمراجعة هذا البلاغ.</value>
+</data>
 </root>

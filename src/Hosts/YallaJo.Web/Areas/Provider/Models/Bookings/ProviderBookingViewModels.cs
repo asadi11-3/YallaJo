@@ -6,6 +6,9 @@ public sealed class ProviderBookingsIndexVm
 {
     public string? Status { get; init; }
     public IReadOnlyList<ProviderBookingRowVm> Items { get; init; } = [];
+
+    /// <summary>Opaque cursor for the next page; null when there are no more results.</summary>
+    public string? NextCursor { get; init; }
     public bool HasItems => Items.Count > 0;
 
     /// <summary>Status values offered in the filter dropdown.</summary>

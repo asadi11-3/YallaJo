@@ -3,17 +3,6 @@
 @{
     ViewData["Title"] = Localizer["Provider.ProviderBookings.Title"].Value;
     ViewData["ProviderNav"] = "Bookings";
-
-    (string Color, string Icon) StatusBadge(string s) => (s ?? "").ToLowerInvariant() switch
-    {
-        "confirmed" => ("success", "circle-check"),
-        "completed" => ("primary", "flag-checkered"),
-        "awaitingpayment" => ("warning", "hourglass-half"),
-        "pendingconfirmation" => ("warning", "clock"),
-        "cancelled" => ("secondary", "ban"),
-        "rejected" => ("danger", "circle-xmark"),
-        _ => ("secondary", "circle-info"),
-    };
 }
 
 @await Component.InvokeAsync("ProviderSidebar")
@@ -30,7 +19,8 @@
         <div class="card shadow-sm">
             <div class="card-header border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h2 class="card-header-title h5 mb-0">@Localizer["Provider.ProviderBookings.DirectoryHeading"]</h2>
-                <form method="get" asp-action="Index" class="d-flex align-items-end gap-2">
+                @* data-yj-listing: AJAX swap of the results fragment with JS; plain GET without (PE1). *@
+                <form method="get" asp-action="Index" class="d-flex align-items-end gap-2" data-yj-listing>
                     <div>
                         <label class="form-label small mb-1" for="bk-status">@Localizer["Provider.ProviderBookings.StatusFilter"]</label>
                         <select id="bk-status" name="status" class="form-select form-select-sm">
@@ -51,49 +41,16 @@
                     <button type="submit" class="btn btn-sm btn-primary">@Localizer["Provider.ProviderBookings.Apply"]</button>
                 </form>
             </div>
-            <div class="card-body">
-                @if (!Model.HasItems)
-                {
-                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.ProviderBookings.EmptyMessage"].Value } })" />
-                }
-                else
-                {
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th scope="col">@Localizer["Provider.ProviderBookings.ColReference"]</th>
-                                    <th scope="col">@Localizer["Provider.ProviderBookings.ColTour"]</th>
-                                    <th scope="col">@Localizer["Provider.ProviderBookings.ColTraveler"]</th>
-                                    <th scope="col">@Localizer["Provider.ProviderBookings.ColSlot"]</th>
-                                    <th scope="col" class="text-end">@Localizer["Provider.ProviderBookings.ColGuests"]</th>
-                                    <th scope="col" class="text-end">@Localizer["Provider.ProviderBookings.ColTotal"]</th>
-                                    <th scope="col">@Localizer["Provider.ProviderBookings.ColStatus"]</th>
-                                    <th scope="col" class="text-end">@Localizer["Provider.ProviderBookings.ColActions"]</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var b in Model.Items)
-                                {
-                                    var badge = StatusBadge(b.Status);
-                                    <tr>
-                                        <td><bdi dir="ltr" class="font-data">@b.Reference</bdi></td>
-                                        <td class="fw-semibold">@b.TourName</td>
-                                        <td><bdi dir="ltr">@b.TravelerHandle</bdi></td>
-                                        <td class="small"><bdi dir="ltr">@b.SlotLabel</bdi></td>
-                                        <td class="text-end"><bdi dir="ltr" class="font-data">@Count(b.ParticipantCount)</bdi></td>
-                                        <td class="text-end"><bdi dir="ltr" class="font-data">@Money(b.TotalAmount, b.Currency)</bdi></td>
-                                        <td><span class="badge bg-@badge.Color bg-opacity-10 text-@badge.Color"><i class="fa-solid fa-@badge.Icon fa-fw" aria-hidden="true"></i> @Localizer["Provider.Status." + b.Status]</span></td>
-                                        <td class="text-end">
-                                            <a asp-action="Details" asp-route-id="@b.Id" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-gear me-1" aria-hidden="true"></i>@Localizer["Provider.ProviderBookings.Manage"]</a>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
+            <div class="card-body" id="bookingsResults" data-yj-component="provider-listing"
+                 aria-live="polite" aria-busy="false"
+                 data-error-text="@Localizer["Provider.Common.ResultsError"]"
+                 data-retry-text="@Localizer["Provider.Common.Retry"]">
+                <partial name="_BookingsResults" model="Model" />
             </div>
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/provider-listing.js" asp-append-version="true"></script>
+}

@@ -34,9 +34,9 @@ public sealed class ProviderBookingsFacade
 
     public ProviderBookingsFacade(ProviderBookingsApiClient api) => _api = api;
 
-    public async Task<ProviderBookingListResult> GetListAsync(string? status, CancellationToken ct = default)
+    public async Task<ProviderBookingListResult> GetListAsync(string? status, string? cursor = null, CancellationToken ct = default)
     {
-        var result = await _api.GetListAsync(status, ct);
+        var result = await _api.GetListAsync(status, cursor, ct);
         if (result.IsUnauthorized) return new(ProviderBookingOutcome.ForceSignOut);
         if (result.IsForbidden) return new(ProviderBookingOutcome.Forbidden, Error: "You don't have access to provider bookings.");
         if (result.IsValidationError) return new(ProviderBookingOutcome.ValidationError, Error: result.Error ?? "Invalid filter.");
