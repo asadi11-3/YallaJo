@@ -13597,4 +13597,28 @@
 <data name="Accounts.Recommendations.PersonaliseFeed" xml:space="preserve">
 <value>خصص موجزي</value>
 </data>
+<data name="Accounts.Profile.CompleteTitle" xml:space="preserve">
+<value>أكمل ملفك الشخصي</value>
+</data>
+<data name="Accounts.Profile.PersonalInfo" xml:space="preserve">
+<value>المعلومات الشخصية</value>
+</data>
+<data name="Accounts.Profile.ChangeAvatar" xml:space="preserve">
+<value>تغيير</value>
+</data>
+<data name="Accounts.Profile.CheckName" xml:space="preserve">
+<value>الاسم</value>
+</data>
+<data name="Accounts.Profile.CheckEmail" xml:space="preserve">
+<value>البريد الإلكتروني</value>
+</data>
+<data name="Accounts.Profile.CheckMobile" xml:space="preserve">
+<value>رقم الجوال</value>
+</data>
+<data name="Accounts.Profile.CheckDob" xml:space="preserve">
+<value>تاريخ الميلاد</value>
+</data>
+<data name="Accounts.Profile.CheckAddress" xml:space="preserve">
+<value>العنوان</value>
+</data>
 </root>
