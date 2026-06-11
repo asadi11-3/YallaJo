@@ -13621,4 +13621,37 @@
 <data name="Accounts.Profile.CheckAddress" xml:space="preserve">
 <value>Address</value>
 </data>
+<data name="Accounts.Notifications.UnreadBadge" xml:space="preserve">
+<value>{0} unread</value>
+</data>
+<data name="Accounts.Notifications.StatusUnread" xml:space="preserve">
+<value>Unread</value>
+</data>
+<data name="Accounts.Notifications.StatusRead" xml:space="preserve">
+<value>Read</value>
+</data>
+<data name="Accounts.Notifications.StatusAll" xml:space="preserve">
+<value>All</value>
+</data>
+<data name="Accounts.Notifications.FilterType" xml:space="preserve">
+<value>Type</value>
+</data>
+<data name="Accounts.Notifications.AllTypes" xml:space="preserve">
+<value>All types</value>
+</data>
+<data name="Accounts.Support.MyTickets" xml:space="preserve">
+<value>My support tickets</value>
+</data>
+<data name="Accounts.Support.NewTicket" xml:space="preserve">
+<value>New ticket</value>
+</data>
+<data name="Accounts.Support.EmptyMessage" xml:space="preserve">
+<value>You have no support tickets yet.</value>
+</data>
+<data name="Accounts.Support.OpenTicket" xml:space="preserve">
+<value>Open a support ticket</value>
+</data>
+<data name="Accounts.Support.EndOfTickets" xml:space="preserve">
+<value>End of tickets</value>
+</data>
 </root>

@@ -3,7 +3,7 @@
 @using YallaJo.Web.Areas.Accounts.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @{
-    ViewData["Title"] = "Notifications";
+    ViewData["Title"] = Localizer["Accounts.Settings.Tab.Notifications"].Value;
     ViewData["AccountNav"] = "Notifications";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
@@ -20,10 +20,10 @@
                 <div class="card border mb-4">
                     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
                         <h4 class="card-header-title mb-0">
-                            Notifications
+                            @Localizer["Accounts.Settings.Tab.Notifications"]
                             @if (Model.UnreadCount > 0)
                             {
-                                <span class="badge bg-danger bg-opacity-10 text-danger ms-2">@Model.UnreadCount unread</span>
+                                <span class="badge bg-danger bg-opacity-10 text-danger ms-2">@Localizer["Accounts.Notifications.UnreadBadge", Model.UnreadCount]</span>
                             }
                         </h4>
                         @if (Model.UnreadCount > 0)
@@ -38,19 +38,24 @@
                     <div class="card-body border-bottom">
                         <form method="get" asp-area="Accounts" asp-controller="Notifications" asp-action="Index" class="row g-2 align-items-end">
                             <div class="col-sm-3">
-                                <label class="form-label small mb-1" for="status">Status</label>
+                                <label class="form-label small mb-1" for="status">@Localizer["Accounts.JoinRequests.Status"]</label>
                                 <select class="form-select form-select-sm" id="status" name="status">
                                     @foreach (var s in NotificationInboxFilterVm.StatusOptions)
                                     {
-                                        var label = s switch { "unread" => "Unread", "read" => "Read", _ => "All" };
+                                        var label = s switch
+                                        {
+                                            "unread" => Localizer["Accounts.Notifications.StatusUnread"].Value,
+                                            "read" => Localizer["Accounts.Notifications.StatusRead"].Value,
+                                            _ => Localizer["Accounts.Notifications.StatusAll"].Value
+                                        };
                                         <option value="@s" selected="@(string.Equals(s, Model.Filter.Status, StringComparison.OrdinalIgnoreCase))">@label</option>
                                     }
                                 </select>
                             </div>
                             <div class="col-sm-4">
-                                <label class="form-label small mb-1" for="type">Type</label>
+                                <label class="form-label small mb-1" for="type">@Localizer["Accounts.Notifications.FilterType"]</label>
                                 <select class="form-select form-select-sm" id="type" name="type">
-                                    <option value="">All types</option>
+                                    <option value="">@Localizer["Accounts.Notifications.AllTypes"]</option>
                                     @foreach (var group in NotificationInboxFilterVm.TypeGroups)
                                     {
                                         <optgroup label="@group.Key">
@@ -63,15 +68,15 @@
                                 </select>
                             </div>
                             <div class="col-sm-2">
-                                <label class="form-label small mb-1" for="fromDate">From</label>
+                                <label class="form-label small mb-1" for="fromDate">@Localizer["Accounts.Bookings.From"]</label>
                                 <input type="date" class="form-control form-control-sm" id="fromDate" name="fromDate" value="@Model.Filter.FromDate" />
                             </div>
                             <div class="col-sm-2">
-                                <label class="form-label small mb-1" for="toDate">To</label>
+                                <label class="form-label small mb-1" for="toDate">@Localizer["Accounts.Bookings.To"]</label>
                                 <input type="date" class="form-control form-control-sm" id="toDate" name="toDate" value="@Model.Filter.ToDate" />
                             </div>
                             <div class="col-sm-1 d-grid">
-                                <button type="submit" class="btn btn-sm btn-primary mb-0">Filter</button>
+                                <button type="submit" class="btn btn-sm btn-primary mb-0">@Localizer["Accounts.Bookings.Filter"]</button>
                             </div>
                         </form>
                     </div>

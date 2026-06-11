@@ -1,7 +1,7 @@
 @model YallaJo.Web.Areas.Accounts.Models.Support.SupportListVm
 @using YallaJo.Web.Areas.Accounts.Shared
 @{
-    ViewData["Title"] = "Support";
+    ViewData["Title"] = Localizer["Accounts.Nav.Support"].Value;
     ViewData["AccountNav"] = "Support";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
@@ -9,10 +9,10 @@
     string TimeAgo(DateTime utc)
     {
         var span = DateTime.UtcNow - utc;
-        if (span.TotalMinutes < 1) return "just now";
-        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
-        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
-        if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
+        if (span.TotalMinutes < 1) return Localizer["Accounts.Notifications.JustNow"].Value;
+        if (span.TotalMinutes < 60) return string.Format(Localizer["Accounts.Notifications.MinutesAgo"].Value, (int)span.TotalMinutes);
+        if (span.TotalHours < 24) return string.Format(Localizer["Accounts.Notifications.HoursAgo"].Value, (int)span.TotalHours);
+        if (span.TotalDays < 7) return string.Format(Localizer["Accounts.Notifications.DaysAgo"].Value, (int)span.TotalDays);
         return utc.ToString("dd MMM yyyy");
     }
 
@@ -42,10 +42,10 @@
 
                 <div class="card border mb-4">
                     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                        <h4 class="card-header-title mb-0">My Support Tickets</h4>
+                        <h4 class="card-header-title mb-0">@Localizer["Accounts.Support.MyTickets"]</h4>
                         @* Creation reuses the existing public Contact form (FE-1C). *@
                         <a asp-area="Public" asp-controller="Contact" asp-action="Index" class="btn btn-sm btn-primary mb-0">
-                            <i class="bi bi-plus-lg me-1"></i>New ticket
+                            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>@Localizer["Accounts.Support.NewTicket"]
                         </a>
                     </div>
 
@@ -60,10 +60,10 @@
                         @if (!Model.HasItems)
                         {
                             <div class="text-center py-5">
-                                <i class="bi bi-life-preserver fs-1 text-muted d-block mb-2"></i>
-                                <p class="text-muted mb-2">You have no support tickets yet.</p>
+                                <i class="bi bi-life-preserver fs-1 text-muted d-block mb-2" aria-hidden="true"></i>
+                                <p class="text-muted mb-2">@Localizer["Accounts.Support.EmptyMessage"]</p>
                                 <a asp-area="Public" asp-controller="Contact" asp-action="Index" class="btn btn-sm btn-outline-primary">
-                                    Open a support ticket
+                                    @Localizer["Accounts.Support.OpenTicket"]
                                 </a>
                             </div>
                         }
@@ -78,7 +78,7 @@
                                                 <a asp-area="Accounts" asp-controller="Support" asp-action="Details" asp-route-id="@t.Id"
                                                    class="h6 mb-1 d-block text-decoration-none">@t.Subject</a>
                                                 <span class="badge bg-secondary bg-opacity-10 text-secondary small me-2">@t.Category</span>
-                                                <span class="small text-muted" title="@t.CreatedAt.ToString("yyyy-MM-dd HH:mm") UTC">@TimeAgo(t.CreatedAt)</span>
+                                                <span class="small text-muted" dir="ltr" title="@t.CreatedAt.ToString("yyyy-MM-dd HH:mm") UTC">@TimeAgo(t.CreatedAt)</span>
                                             </div>
                                             <span class="badge @StatusClass(t.Status, t.IsClosed) flex-shrink-0">@t.Status</span>
                                         </div>
@@ -89,11 +89,11 @@
                             <div class="text-center mt-3">
                                 @if (Model.HasNextPage)
                                 {
-                                    <a href="@LoadMoreUrl()" class="btn btn-sm btn-outline-secondary">Load more</a>
+                                    <a href="@LoadMoreUrl()" class="btn btn-sm btn-outline-secondary">@Localizer["Accounts.Notifications.LoadMore"]</a>
                                 }
                                 else
                                 {
-                                    <span class="small text-muted">End of tickets</span>
+                                    <span class="small text-muted">@Localizer["Accounts.Support.EndOfTickets"]</span>
                                 }
                             </div>
                         }

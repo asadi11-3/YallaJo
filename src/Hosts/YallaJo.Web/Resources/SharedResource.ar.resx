@@ -13621,4 +13621,37 @@
 <data name="Accounts.Profile.CheckAddress" xml:space="preserve">
 <value>العنوان</value>
 </data>
+<data name="Accounts.Notifications.UnreadBadge" xml:space="preserve">
+<value>{0} غير مقروء</value>
+</data>
+<data name="Accounts.Notifications.StatusUnread" xml:space="preserve">
+<value>غير مقروء</value>
+</data>
+<data name="Accounts.Notifications.StatusRead" xml:space="preserve">
+<value>مقروء</value>
+</data>
+<data name="Accounts.Notifications.StatusAll" xml:space="preserve">
+<value>الكل</value>
+</data>
+<data name="Accounts.Notifications.FilterType" xml:space="preserve">
+<value>النوع</value>
+</data>
+<data name="Accounts.Notifications.AllTypes" xml:space="preserve">
+<value>كل الأنواع</value>
+</data>
+<data name="Accounts.Support.MyTickets" xml:space="preserve">
+<value>تذاكر الدعم الخاصة بي</value>
+</data>
+<data name="Accounts.Support.NewTicket" xml:space="preserve">
+<value>تذكرة جديدة</value>
+</data>
+<data name="Accounts.Support.EmptyMessage" xml:space="preserve">
+<value>ليس لديك تذاكر دعم بعد.</value>
+</data>
+<data name="Accounts.Support.OpenTicket" xml:space="preserve">
+<value>فتح تذكرة دعم</value>
+</data>
+<data name="Accounts.Support.EndOfTickets" xml:space="preserve">
+<value>نهاية التذاكر</value>
+</data>
 </root>
