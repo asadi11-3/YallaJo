@@ -12919,4 +12919,22 @@
 <data name="Accounts.Booking.KeepBooking" xml:space="preserve">
 <value>الاحتفاظ بالحجز</value>
 </data>
+<data name="Accounts.Nav.Overview" xml:space="preserve">
+<value>نظرة عامة</value>
+</data>
+<data name="Accounts.Nav.Support" xml:space="preserve">
+<value>الدعم</value>
+</data>
+<data name="Accounts.Nav.ForYou" xml:space="preserve">
+<value>لك</value>
+</data>
+<data name="Accounts.Nav.Billing" xml:space="preserve">
+<value>الفوترة</value>
+</data>
+<data name="Accounts.Nav.EditProfile" xml:space="preserve">
+<value>تعديل الملف الشخصي</value>
+</data>
+<data name="Accounts.Nav.AvatarAlt" xml:space="preserve">
+<value>صورة الملف الشخصي</value>
+</data>
 </root>

@@ -12919,4 +12919,22 @@
 <data name="Accounts.Booking.KeepBooking" xml:space="preserve">
 <value>Keep booking</value>
 </data>
+<data name="Accounts.Nav.Overview" xml:space="preserve">
+<value>Overview</value>
+</data>
+<data name="Accounts.Nav.Support" xml:space="preserve">
+<value>Support</value>
+</data>
+<data name="Accounts.Nav.ForYou" xml:space="preserve">
+<value>For you</value>
+</data>
+<data name="Accounts.Nav.Billing" xml:space="preserve">
+<value>Billing</value>
+</data>
+<data name="Accounts.Nav.EditProfile" xml:space="preserve">
+<value>Edit profile</value>
+</data>
+<data name="Accounts.Nav.AvatarAlt" xml:space="preserve">
+<value>Profile photo</value>
+</data>
 </root>
