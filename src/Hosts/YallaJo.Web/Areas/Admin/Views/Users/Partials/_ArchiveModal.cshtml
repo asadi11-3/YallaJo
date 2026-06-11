@@ -8,6 +8,7 @@
     var titleId = $"{modalId}-title";
     var bannerId = $"{modalId}-banner";
     var inputId = $"{modalId}-confirm";
+    var confirmToken = Localizer["Admin.Users.Archive.ConfirmToken"].Value;
 }
 <div class="modal fade admin-action-modal" id="@modalId" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bannerId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
@@ -32,8 +33,8 @@
                             @Localizer["Admin.UserModal.Archive.AboutTo", Localizer["Admin.UserModal.ThisUser"].Value]
                         }
                     </p>
-                    <label class="form-label" for="@inputId">@Localizer["Admin.UserModal.Archive.ConfirmLabel", "ARCHIVE"]</label>
-                    <input id="@inputId" name="ConfirmText" type="text" autocomplete="off" required class="form-control" placeholder="ARCHIVE" dir="ltr" />
+                    <label class="form-label" for="@inputId">@Localizer["Admin.UserModal.Archive.ConfirmLabel", confirmToken]</label>
+                    <input id="@inputId" name="ConfirmText" type="text" autocomplete="off" required class="form-control" placeholder="@confirmToken" dir="auto" data-confirm-token="@confirmToken" />
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Admin.UserModal.Cancel"]</button>

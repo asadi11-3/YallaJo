@@ -43,13 +43,15 @@
         if (root.dataset.yjInit === "1") { return; }
         root.dataset.yjInit = "1";
 
-        // 1) Archive: enable Submit only when "ARCHIVE" is typed exactly.
+        // 1) Archive: enable Submit only when the localized confirmation
+        //    token (data-confirm-token, e.g. "ARCHIVE" / "أرشفة") is typed.
         const archiveForm = document.getElementById("archive-form");
         if (archiveForm) {
             const aInput = archiveForm.querySelector('input[name="ConfirmText"]');
             const aSubmit = archiveForm.querySelector("[data-archive-submit]");
             if (aInput && aSubmit) {
-                const syncArchive = function () { aSubmit.disabled = (aInput.value !== "ARCHIVE"); };
+                const aToken = aInput.getAttribute("data-confirm-token") || "ARCHIVE";
+                const syncArchive = function () { aSubmit.disabled = (aInput.value.trim() !== aToken); };
                 aInput.addEventListener("input", syncArchive);
                 syncArchive();
             }

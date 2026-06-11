@@ -1565,7 +1565,7 @@
     <value>About to archive {0}.</value>
   </data>
   <data name="Admin.UserModal.Archive.ConfirmLabel" xml:space="preserve">
-    <value>Type {0} in capitals to confirm:</value>
+    <value>Type {0} to confirm:</value>
   </data>
   <data name="Admin.UserModal.Archive.Submit" xml:space="preserve">
     <value>Archive permanently</value>
@@ -14055,5 +14055,11 @@
   </data>
   <data name="Creator.Status.Removed" xml:space="preserve">
     <value>Removed</value>
+  </data>
+  <data name="Admin.Users.Archive.ConfirmToken" xml:space="preserve">
+    <value>ARCHIVE</value>
+  </data>
+  <data name="Admin.Users.Archive.ConfirmError" xml:space="preserve">
+    <value>Type {0} to confirm the archive.</value>
   </data>
 </root>

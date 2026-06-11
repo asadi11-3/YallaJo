@@ -249,11 +249,11 @@
 
                                 @* Profile dropdown START *@
                                 <li class="nav-item ms-3 dropdown">
-                                    @* PENDING: real per-user avatar wiring. ICurrentUser exposes no avatar/picture
-                                       claim and there is no avatar URL in layout context, so the demo stock photo
-                                       (assets/images/avatar/01.jpg) has been replaced with a neutral icon placeholder
-                                       (Bootstrap Icons, already loaded). When an avatar source becomes available
-                                       (e.g. a profile-picture claim resolved via IApiAssetUrlResolver), swap this for an
+                                    @* TODO(backend, 2026-06-11): real per-user avatar wiring. ICurrentUser exposes no
+                                       avatar/picture claim and no avatar URL exists in layout context, so a neutral
+                                       icon placeholder (Bootstrap Icons, already loaded) is rendered here and in the
+                                       dropdown header below. When an avatar source becomes available (e.g. a
+                                       profile-picture claim resolved via IApiAssetUrlResolver), swap both for an
                                        <img> bound to that value with this icon as the fallback. *@
                                     <a class="avatar avatar-sm p-0" href="#" id="profileDropdown" role="button" data-bs-auto-close="outside" data-bs-display="static" data-bs-toggle="dropdown" aria-expanded="false" aria-label="@displayName">
                                         <i class="bi bi-person-circle avatar-img rounded-2 d-flex align-items-center justify-content-center fs-4 bg-light text-secondary" aria-hidden="true"></i>
@@ -263,7 +263,7 @@
                                         <li class="px-3 mb-3">
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar me-3">
-                                                    @* PENDING real avatar source — neutral icon placeholder (see note above). *@
+                                                    @* Neutral icon placeholder — see TODO(backend) note above. *@
                                                     <i class="bi bi-person-circle avatar-img rounded-circle shadow d-flex align-items-center justify-content-center fs-2 bg-light text-secondary" aria-hidden="true"></i>
                                                 </div>
                                                 <div>

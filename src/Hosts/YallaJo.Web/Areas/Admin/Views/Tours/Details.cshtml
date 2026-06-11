@@ -60,10 +60,10 @@
                     <dd class="col-sm-8"><bdi dir="ltr" class="font-data">@Duration(Model.DurationMinutes)</bdi></dd>
 
                     <dt class="col-sm-4">@Localizer["Admin.Tours.MaxGroupSize"]</dt>
-                    <dd class="col-sm-8">@Model.MaxGroupSize.ToString("N0", culture)</dd>
+                    <dd class="col-sm-8"><bdi dir="ltr" class="font-data">@Model.MaxGroupSize.ToString("N0", culture)</bdi></dd>
 
                     <dt class="col-sm-4">@Localizer["Admin.Tours.MinAge"]</dt>
-                    <dd class="col-sm-8">@(Model.MinAge?.ToString("N0", culture) ?? "—")</dd>
+                    <dd class="col-sm-8"><bdi dir="ltr" class="font-data">@(Model.MinAge?.ToString("N0", culture) ?? "—")</bdi></dd>
 
                     <dt class="col-sm-4">@Localizer["Admin.Tours.BasePrice"]</dt>
                     <dd class="col-sm-8"><bdi dir="ltr" class="font-data">@Model.BasePrice.ToString("0.##", culture) @Model.Currency</bdi></dd>

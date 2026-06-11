@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Admin.Models.Lifecycle;
+using YallaJo.Web.Resources;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 using YallaJo.Web.Areas.Admin.Facades;
@@ -26,7 +28,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class LifecycleController : BaseController
 {
     private readonly LifecycleFacade _facade;
-    public LifecycleController(LifecycleFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
+
+    public LifecycleController(LifecycleFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpPost("admin/users/{userId:guid}/suspend")]
     [ValidateAntiForgeryToken]
@@ -49,17 +57,15 @@ public sealed class LifecycleController : BaseController
     public async Task<IActionResult> Archive(
         Guid userId, AdminArchiveVm vm, CancellationToken ct)
     {
-        // Phase 5C — server-side guard for the typed-ARCHIVE
-        // confirmation. The Archive modal's JS-disabled-button gate is
-        // cosmetic; this validation is authoritative.
-        if (!ModelState.IsValid)
+        // Phase 5C — server-side guard for the typed confirmation token.
+        // The Archive modal's JS-disabled-button gate is cosmetic; this
+        // comparison is authoritative. The expected token is localized
+        // (CON1) so the word the operator must type always matches the
+        // UI language ("ARCHIVE" in English, "أرشفة" in Arabic).
+        var expectedToken = _localizer["Admin.Users.Archive.ConfirmToken"].Value;
+        if (!string.Equals(vm.ConfirmText?.Trim(), expectedToken, StringComparison.Ordinal))
         {
-            var firstError = ModelState.Values
-                .SelectMany(v => v.Errors)
-                .Select(e => e.ErrorMessage)
-                .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m))
-                ?? "Type ARCHIVE in capitals to confirm.";
-            SetError(firstError);
+            SetError(_localizer["Admin.Users.Archive.ConfirmError", expectedToken].Value);
             return RedirectToDetails(userId);
         }
 

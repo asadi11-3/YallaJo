@@ -1565,7 +1565,7 @@
     <value>على وشك أرشفة {0}.</value>
   </data>
   <data name="Admin.UserModal.Archive.ConfirmLabel" xml:space="preserve">
-    <value>اكتب {0} بأحرف كبيرة للتأكيد:</value>
+    <value>اكتب {0} للتأكيد:</value>
   </data>
   <data name="Admin.UserModal.Archive.Submit" xml:space="preserve">
     <value>أرشفة نهائية</value>
@@ -14055,5 +14055,11 @@
 </data>
 <data name="Creator.Articles.Flash.ReorderFailed" xml:space="preserve">
 <value>تعذّر إعادة ترتيب الصور.</value>
+</data>
+<data name="Admin.Users.Archive.ConfirmToken" xml:space="preserve">
+<value>أرشفة</value>
+</data>
+<data name="Admin.Users.Archive.ConfirmError" xml:space="preserve">
+<value>اكتب {0} لتأكيد الأرشفة.</value>
 </data>
 </root>
