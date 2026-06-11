@@ -7,7 +7,7 @@
     // Kept local: commission arrives as a 0-100 percentage ("0.##" + %), unlike GuideFormat.Pct (0-1 fraction).
     string Pct(decimal v) => v.ToString("0.##", culture) + "%";
 }
-<div class="vstack gap-4" data-yj-swap="roster" id="roster-tables">
+<div class="vstack gap-4" data-yj-swap="roster" id="roster-tables" aria-live="polite">
     @* ── Current guides ── *@
     <div class="card border">
         <div class="card-header border-bottom">

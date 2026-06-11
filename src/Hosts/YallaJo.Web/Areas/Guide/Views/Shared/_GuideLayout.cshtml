@@ -58,10 +58,13 @@
 
 <body>
 
+    @* A11Y2: skip link — first focusable element; Bootstrap's visually-hidden-focusable reveals it on focus. *@
+    <a class="visually-hidden-focusable" href="#main-content">@Localizer["Guide.Layout.SkipToContent"]</a>
+
     <partial name="_Navbar2" />
 
     @* **************** MAIN CONTENT START **************** *@
-    <main>
+    <main id="main-content" tabindex="-1">
         <partial name="_Alerts" />
         @RenderBody()
     </main>

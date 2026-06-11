@@ -13486,4 +13486,7 @@
 <data name="Guide.Validation.ImageInvalid" xml:space="preserve">
 <value>Only image files are allowed.</value>
 </data>
+<data name="Guide.Layout.SkipToContent" xml:space="preserve">
+<value>Skip to main content</value>
+</data>
 </root>

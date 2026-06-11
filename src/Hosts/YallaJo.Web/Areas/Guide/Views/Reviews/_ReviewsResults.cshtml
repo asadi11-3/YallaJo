@@ -14,7 +14,7 @@
     // Thin DateOnly adapter — GuideFormat.Date takes DateTime (same yyyy-MM-dd output).
     string Date(DateOnly d) => GuideFormat.Date(d.ToDateTime(TimeOnly.MinValue));
 }
-<div data-yj-swap="reviews">
+<div data-yj-swap="reviews" aria-live="polite">
     @if (!Model.HasReviews)
     {
         <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Reviews.NoReviews"].Value)' />

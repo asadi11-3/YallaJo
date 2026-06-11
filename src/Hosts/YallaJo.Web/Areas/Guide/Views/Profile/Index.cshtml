@@ -228,7 +228,8 @@
 
             <div class="modal fade" id="deactivateProfileModal" tabindex="-1" aria-labelledby="deactivateProfileTitle" aria-describedby="deactivateProfileBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form asp-area="Guide" asp-controller="Profile" asp-action="Deactivate" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deactivateProfileTitle" data-loading>
+                    @* A11Y: Bootstrap injects the dialog/modal ARIA semantics on the .modal root at runtime — keep .modal-content clean. *@
+                    <form asp-area="Guide" asp-controller="Profile" asp-action="Deactivate" method="post" class="modal-content" data-loading>
                         @Html.AntiForgeryToken()
                         <div class="modal-header bg-danger text-white">
                             <h2 class="modal-title h5" id="deactivateProfileTitle">@Localizer["Guide.Profile.DeactivateModalTitle"]</h2>
