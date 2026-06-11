@@ -28,10 +28,9 @@
 
     @* Fonts: the external Google Fonts CDN has been removed (UI-UX-Design.md V3 — no
        third-party font CDN). Self-hosted brand fonts (DM Sans, Poppins, IBM Plex Sans
-       Arabic) DO exist under ~/fonts/ with @@font-face declarations in site.css
-       (V3/V4/A5/X10). This layout does not yet load site.css — see the Auth area master
-       plan P2, which adds it so the funnel matches the rest of the site. Icon fonts
-       (Font Awesome, Bootstrap Icons) remain self-hosted under ~/assets/vendor. *@
+       Arabic) live under ~/fonts/ with @@font-face declarations in site.css
+       (V3/V4/A5/X10), loaded below. Icon fonts (Font Awesome, Bootstrap Icons)
+       remain self-hosted under ~/assets/vendor. *@
 
     @* Plugins CSS *@
     <link rel="stylesheet" type="text/css" href="~/assets/vendor/font-awesome/css/all.min.css" />
@@ -39,6 +38,10 @@
 
     @* Theme CSS (bundles Bootstrap v5.3.0) *@
     <link rel="stylesheet" type="text/css" href="~/assets/css/style.css" />
+
+    @* Project-owned site-wide styles: self-hosted brand @@font-face (DM Sans, Poppins,
+       IBM Plex Sans Arabic via html[lang="ar"]) + shared utilities (V3/V4/A5/X10). *@
+    <link rel="stylesheet" type="text/css" href="~/assets/css/site.css" asp-append-version="true" />
 
     @* Project-owned Auth custom styles (loaded after the theme so it can override). *@
     <link rel="stylesheet" type="text/css" href="~/assets/css/auth.css" asp-append-version="true" />
@@ -67,6 +70,12 @@
 
     @* Bootstrap JS bundle (served locally; fingerprinted + immutable-cached via .WithStaticAssets()). *@
     <script src="~/assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @* Shared AJAX client (window.YallaJo.api — antiforgery header, timeout, 401→sign-in; JS5/SEC7). *@
+    <script src="~/assets/js/api-client.js" asp-append-version="true"></script>
+
+    @* Shared form UX (data-loading spinner L2/F7, YallaJo.toast NF1, data-confirm modal F8). *@
+    <script src="~/assets/js/form-ux.js" asp-append-version="true"></script>
 
     @* Theme functions (password eye-toggle, dark-mode switch wiring, etc.) *@
     <script src="~/assets/js/functions.js"></script>

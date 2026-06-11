@@ -9,6 +9,7 @@ namespace YallaJo.Web.Areas.Auth.Controllers;
 [Area("Auth")]
 [AllowAnonymous]
 [Route("auth/accept-invite")]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)] // C2: carries invite token + password form
 public sealed class AcceptInviteController : BaseController
 {
     private readonly AcceptInviteFacade _facade;

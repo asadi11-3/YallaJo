@@ -203,7 +203,15 @@
                 e.preventDefault(); // double-submit guard
                 return;
             }
-            startLoading(form);
+            // Defer past the bubble phase so client-side validation (jQuery
+            // unobtrusive) or the reCAPTCHA interceptor can cancel the submit
+            // first -- otherwise the spinner strands on a form that never
+            // leaves the page (L2/F7). reCAPTCHA forms re-submit via
+            // form.submit() (no submit event), so recaptcha-field.js engages
+            // the loading state itself for that path.
+            setTimeout(function () {
+                if (!e.defaultPrevented) { startLoading(form); }
+            }, 0);
         }
     }, true);
 

@@ -17,7 +17,7 @@
 
                     <div asp-validation-summary="All" class="text-danger mb-3" role="alert"></div>
 
-                    <form asp-area="Auth" asp-controller="AcceptInvite" asp-action="Index" method="post">
+                    <form asp-area="Auth" asp-controller="AcceptInvite" asp-action="Index" method="post" data-loading>
                         @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="Email" />
                         <input type="hidden" asp-for="Token" />

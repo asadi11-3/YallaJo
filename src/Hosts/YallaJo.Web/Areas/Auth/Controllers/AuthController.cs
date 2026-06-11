@@ -25,6 +25,7 @@ namespace YallaJo.Web.Areas.Auth.Controllers;
 [Area("Auth")]
 [AllowAnonymous]
 [Route("auth")]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)] // C2: credential pages must never be cached
 public sealed class AuthController : BaseController
 {
     private readonly LoginFacade _login;

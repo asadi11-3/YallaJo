@@ -1,38 +1,48 @@
 @model YallaJo.Web.Areas.Auth.Models.ExternalProviders.ExternalAuthCompleteVm
 @{
     ViewData["Title"] = Localizer["Auth.Complete.Title"].Value;
-    @* Interstitial in the external-auth flow: public site chrome (overrides the funnel default). *@
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    @* Interstitial in the external-auth flow: uses the chrome-less funnel layout
+       (_AuthLayout via _ViewStart) — a flash page needs no navbar/footer weight. *@
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-5 text-center">
-            <h1 class="h3 mb-2">@Localizer["Auth.Complete.Title"]</h1>
-            <p class="text-secondary">@Localizer["Auth.Complete.Message"]</p>
+<section class="vh-xxl-100">
+    <div class="container h-100 d-flex px-0 px-sm-4">
+        <div class="row justify-content-center align-items-center m-auto w-100">
+            <div class="col-12 col-md-8 col-lg-5 text-center">
+                <div class="bg-mode shadow rounded-3 p-4 p-sm-6">
+                    @* L1: visible progress while the form auto-submits. *@
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">@Localizer["Auth.External.Completing"]</span>
+                    </div>
+                    <h1 class="h4 mb-2">@Localizer["Auth.Complete.Title"]</h1>
+                    <p class="text-secondary mb-0" aria-live="polite">@Localizer["Auth.External.Completing"]</p>
+                    <p class="text-secondary small">@Localizer["Auth.Complete.Message"]</p>
 
-            <form id="externalAuthCompleteForm"
-                  method="post"
-                  asp-area="Auth"
-                  asp-controller="ExternalAuth"
-                  asp-action="Complete">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="Provider" value="@Model.Provider" />
-                <input type="hidden" name="Ticket" value="@Model.Ticket" />
-                <input type="hidden" name="Mode" value="@Model.Mode" />
-                <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+                    <form id="externalAuthCompleteForm"
+                          method="post"
+                          asp-area="Auth"
+                          asp-controller="ExternalAuth"
+                          asp-action="Complete">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Provider" value="@Model.Provider" />
+                        <input type="hidden" name="Ticket" value="@Model.Ticket" />
+                        <input type="hidden" name="Mode" value="@Model.Mode" />
+                        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
 
-                @* Centralized reCAPTCHA field + script — identical wiring to every
-                   other auth form, with an action that matches the expected flow. *@
-                <partial name="_RecaptchaField" model="@Model.RecaptchaAction" />
+                        @* Centralized reCAPTCHA field + script — identical wiring to every
+                           other auth form, with an action that matches the expected flow. *@
+                        <partial name="_RecaptchaField" model="@Model.RecaptchaAction" />
 
-                <noscript>
-                    <button type="submit" class="btn btn-primary">@Localizer["Auth.Complete.Continue"]</button>
-                </noscript>
-            </form>
+                        @* PE1: without JS the user continues manually. *@
+                        <noscript>
+                            <button type="submit" class="btn btn-primary">@Localizer["Auth.Complete.Continue"]</button>
+                        </noscript>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+</section>
 
 @section Scripts {
     <script src="~/assets/js/external-complete.js" asp-append-version="true"></script>

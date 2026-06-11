@@ -15,6 +15,7 @@ namespace YallaJo.Web.Areas.Auth.Controllers;
 [Area("Auth")]
 [AllowAnonymous]
 [Route("auth/external")]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)] // C2: interstitial carries a one-time auth ticket
 public sealed class ExternalAuthController : BaseController
 {
     private readonly ExternalProvidersFacade _facade;

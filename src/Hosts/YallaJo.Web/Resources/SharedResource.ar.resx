@@ -13822,4 +13822,22 @@
 <data name="Auth.External.ActionFailed" xml:space="preserve">
 <value>تعذّر إكمال العملية. حاول مرة أخرى.</value>
 </data>
+<data name="Auth.TwoFactor.ResendLabel" xml:space="preserve">
+<value>انقر لإعادة الإرسال</value>
+</data>
+<data name="Auth.TwoFactor.ResendCountdown" xml:space="preserve">
+<value>إعادة الإرسال خلال {0} ث</value>
+</data>
+<data name="Auth.TwoFactor.ResendSent" xml:space="preserve">
+<value>تم إرسال رمز جديد.</value>
+</data>
+<data name="Auth.TwoFactor.ResendFailed" xml:space="preserve">
+<value>تعذّر إعادة إرسال الرمز.</value>
+</data>
+<data name="Auth.TwoFactor.ResendRetry" xml:space="preserve">
+<value>تعذّر إعادة إرسال الرمز. حاول مرة أخرى.</value>
+</data>
+<data name="Auth.External.Completing" xml:space="preserve">
+<value>جارٍ إكمال تسجيل الدخول…</value>
+</data>
 </root>
