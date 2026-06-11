@@ -52,4 +52,21 @@ public sealed class SessionsFacade
 
         return ApiResult.Fail(result.Error ?? "Revoke failed.");
     }
+
+    /// <summary>Revokes every session except the caller's current one. Returns the revoked count.</summary>
+    public async Task<ApiResult<int>> RevokeOthersAsync(CancellationToken ct = default)
+    {
+        var result = await _api.RevokeOthersAsync(ct);
+
+        if (result.IsSuccess)
+            return ApiResult<int>.Ok(result.Data?.RevokedCount ?? 0);
+
+        if (result.IsUnauthorized)
+        {
+            await _signIn.SignOutAsync();
+            return ApiResult<int>.ForceSignOut();
+        }
+
+        return ApiResult<int>.Fail(0, result.Error ?? "Revoke failed.");
+    }
 }

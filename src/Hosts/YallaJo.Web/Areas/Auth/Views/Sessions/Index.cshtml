@@ -1,12 +1,9 @@
-@using System.Globalization
 @model YallaJo.Web.Areas.Auth.Models.Sessions.SessionsVm
 @{
     ViewData["Title"] = Localizer["Auth.Sessions.Title"].Value;
     @* Account-management page: opts back into the public site chrome (overrides the
        funnel _AuthLayout default set by the area _ViewStart). *@
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var culture = CultureInfo.CurrentUICulture;
-    string When(DateTime dt) => dt.ToString("g", culture);
 }
 
 <div class="container py-5">
@@ -17,16 +14,35 @@
                     <h1 class="h3 mb-1">@Localizer["Auth.Sessions.Heading"]</h1>
                     <p class="mb-0 text-secondary">@Localizer["Auth.Sessions.Subtitle"]</p>
                 </div>
-                <form asp-area="Auth" asp-controller="Auth" asp-action="LogoutAll" method="post" class="mt-3 mt-sm-0"
-                      data-confirm="@Localizer["Auth.Sessions.SignOutAllConfirm"]"
-                      data-confirm-title="@Localizer["Auth.Sessions.SignOutAll"]"
-                      data-confirm-action="@Localizer["Auth.Sessions.SignOutAll"]">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-warning">
-                        <i class="fa-solid fa-right-from-bracket fa-fw me-1" aria-hidden="true"></i>
-                        @Localizer["Auth.Sessions.SignOutAll"]
-                    </button>
-                </form>
+                <div class="d-flex flex-wrap gap-2 mt-3 mt-sm-0">
+                    @* Common case: keep this session, sign out everywhere else (AJAX partial swap
+                       with PRG fallback — PE1). *@
+                    <form asp-area="Auth" asp-controller="Sessions" asp-action="RevokeOthers" method="post"
+                          data-sessions-ajax
+                          data-confirm="@Localizer["Auth.Sessions.SignOutOthersConfirm"]"
+                          data-confirm-title="@Localizer["Auth.Sessions.SignOutOthers"]"
+                          data-confirm-action="@Localizer["Auth.Sessions.SignOutOthers"]"
+                          data-success-msg="@Localizer["Auth.Sessions.OthersRevokedToast"]"
+                          data-error-msg="@Localizer["Auth.Sessions.ActionFailed"]">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-warning">
+                            <i class="fa-solid fa-laptop fa-fw me-1" aria-hidden="true"></i>
+                            @Localizer["Auth.Sessions.SignOutOthers"]
+                        </button>
+                    </form>
+                    @* Destructive: ends every session including this one (full navigation —
+                       signs the user out, so no AJAX). *@
+                    <form asp-area="Auth" asp-controller="Auth" asp-action="LogoutAll" method="post"
+                          data-confirm="@Localizer["Auth.Sessions.SignOutAllConfirm"]"
+                          data-confirm-title="@Localizer["Auth.Sessions.SignOutAll"]"
+                          data-confirm-action="@Localizer["Auth.Sessions.SignOutAll"]">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fa-solid fa-right-from-bracket fa-fw me-1" aria-hidden="true"></i>
+                            @Localizer["Auth.Sessions.SignOutAll"]
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <div class="card shadow">
@@ -34,96 +50,9 @@
                     <h2 class="card-header-title h5 mb-0">@Localizer["Auth.Sessions.ListHeading"]</h2>
                 </div>
                 <div class="card-body">
-                    @if (!Model.Sessions.Any())
-                    {
-                        <div class="text-center py-5">
-                            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                            <p class="mb-0 text-secondary">@Localizer["Auth.Sessions.EmptyMessage"]</p>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">@Localizer["Auth.Sessions.ColDevice"]</th>
-                                        <th scope="col">@Localizer["Auth.Sessions.ColIp"]</th>
-                                        <th scope="col">@Localizer["Auth.Sessions.ColStarted"]</th>
-                                        <th scope="col">@Localizer["Auth.Sessions.ColExpires"]</th>
-                                        <th scope="col" class="text-end">@Localizer["Auth.Sessions.ColActions"]</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var s in Model.Sessions)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <span class="fw-semibold">@s.DeviceName</span>
-                                                @if (s.IsCurrent)
-                                                {
-                                                    <span class="badge bg-success bg-opacity-10 text-success ms-2">
-                                                        <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i>
-                                                        @Localizer["Auth.Sessions.Current"]
-                                                    </span>
-                                                }
-                                                @if (s.IsTrusted)
-                                                {
-                                                    <span class="badge bg-primary bg-opacity-10 text-primary ms-2">
-                                                        <i class="fa-solid fa-shield-halved fa-fw" aria-hidden="true"></i>
-                                                        @Localizer["Auth.Sessions.Trusted"]
-                                                    </span>
-                                                }
-                                            </td>
-                                            <td>
-                                                @if (string.IsNullOrWhiteSpace(s.IpAddress))
-                                                {
-                                                    <span class="text-secondary" aria-label="@Localizer["Auth.Sessions.NoIp"]">&mdash;</span>
-                                                }
-                                                else
-                                                {
-                                                    <bdi dir="ltr" class="font-data">@s.IpAddress</bdi>
-                                                }
-                                            </td>
-                                            <td><bdi dir="ltr" class="font-data">@When(s.CreatedAt)</bdi></td>
-                                            <td><bdi dir="ltr" class="font-data">@When(s.ExpiresAt)</bdi></td>
-                                            <td class="text-end">
-                                                <div class="d-inline-flex gap-2">
-                                                    @* Trust is one-way today (no untrust endpoint), so the button only
-                                                       renders for devices that are not yet trusted. *@
-                                                    @if (!s.IsTrusted)
-                                                    {
-                                                        <form asp-area="Auth" asp-controller="Devices" asp-action="Trust"
-                                                              asp-route-deviceId="@s.DeviceId" method="post" class="d-inline">
-                                                            @Html.AntiForgeryToken()
-                                                            <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                                                <i class="fa-solid fa-shield-halved fa-fw me-1" aria-hidden="true"></i>
-                                                                @Localizer["Auth.Sessions.Trust"]
-                                                            </button>
-                                                        </form>
-                                                    }
-                                                    @if (!s.IsCurrent)
-                                                    {
-                                                        <form asp-area="Auth" asp-controller="Sessions" asp-action="Revoke"
-                                                              asp-route-sessionId="@s.SessionId" method="post" class="d-inline"
-                                                              data-confirm="@Localizer["Auth.Sessions.RevokeConfirm"]"
-                                                              data-confirm-title="@Localizer["Auth.Sessions.Revoke"]"
-                                                              data-confirm-action="@Localizer["Auth.Sessions.Revoke"]">
-                                                            @Html.AntiForgeryToken()
-                                                            <button type="submit" class="btn btn-sm btn-danger">
-                                                                <i class="fa-solid fa-ban fa-fw me-1" aria-hidden="true"></i>
-                                                                @Localizer["Auth.Sessions.Revoke"]
-                                                            </button>
-                                                        </form>
-                                                    }
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
+                    <div id="sessions-table-container" aria-live="polite">
+                        <partial name="_SessionsTable" model="Model" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -135,3 +64,11 @@
    cross-area render of the Admin _ConfirmModal partial was removed: it registered
    a second capture-phase submit interceptor with a different re-entry flag
    (data-confirmed vs data-yj-confirmed), causing a double confirm modal. *@
+
+@section Styles {
+    <link rel="stylesheet" href="~/assets/css/auth.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script src="~/assets/js/auth-sessions.js" asp-append-version="true"></script>
+}

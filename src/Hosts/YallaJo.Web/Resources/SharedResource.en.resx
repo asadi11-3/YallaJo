@@ -13795,4 +13795,28 @@
 <data name="Auth.External.ProviderNotConfigured" xml:space="preserve">
 <value>Provider is not configured.</value>
 </data>
+<data name="Auth.Devices.Untrusted" xml:space="preserve">
+<value>Device trust removed.</value>
+</data>
+<data name="Auth.Sessions.OthersRevoked" xml:space="preserve">
+<value>{0} other session(s) signed out.</value>
+</data>
+<data name="Auth.Sessions.OthersRevokedToast" xml:space="preserve">
+<value>Signed out of all other devices.</value>
+</data>
+<data name="Auth.Sessions.ActionFailed" xml:space="preserve">
+<value>The action could not be completed. Please try again.</value>
+</data>
+<data name="Auth.Sessions.Untrust" xml:space="preserve">
+<value>Remove trust</value>
+</data>
+<data name="Auth.Sessions.UntrustConfirm" xml:space="preserve">
+<value>This device will no longer be marked as trusted. Continue?</value>
+</data>
+<data name="Auth.Sessions.SignOutOthers" xml:space="preserve">
+<value>Sign out other devices</value>
+</data>
+<data name="Auth.Sessions.SignOutOthersConfirm" xml:space="preserve">
+<value>You will be signed out on every other device, but your current session stays active. Continue?</value>
+</data>
 </root>

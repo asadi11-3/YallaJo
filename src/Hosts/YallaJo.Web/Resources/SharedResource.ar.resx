@@ -13795,4 +13795,28 @@
 <data name="Auth.External.ProviderNotConfigured" xml:space="preserve">
 <value>مزوّد تسجيل الدخول غير مُهيّأ.</value>
 </data>
+<data name="Auth.Devices.Untrusted" xml:space="preserve">
+<value>تمت إزالة الثقة من الجهاز.</value>
+</data>
+<data name="Auth.Sessions.OthersRevoked" xml:space="preserve">
+<value>تم إنهاء {0} من الجلسات الأخرى.</value>
+</data>
+<data name="Auth.Sessions.OthersRevokedToast" xml:space="preserve">
+<value>تم تسجيل الخروج من جميع الأجهزة الأخرى.</value>
+</data>
+<data name="Auth.Sessions.ActionFailed" xml:space="preserve">
+<value>تعذّر إكمال العملية. حاول مرة أخرى.</value>
+</data>
+<data name="Auth.Sessions.Untrust" xml:space="preserve">
+<value>إزالة الثقة</value>
+</data>
+<data name="Auth.Sessions.UntrustConfirm" xml:space="preserve">
+<value>لن يُعد هذا الجهاز موثوقًا بعد الآن. هل تريد المتابعة؟</value>
+</data>
+<data name="Auth.Sessions.SignOutOthers" xml:space="preserve">
+<value>تسجيل الخروج من الأجهزة الأخرى</value>
+</data>
+<data name="Auth.Sessions.SignOutOthersConfirm" xml:space="preserve">
+<value>سيتم تسجيل خروجك من جميع الأجهزة الأخرى مع بقاء جلستك الحالية. هل تريد المتابعة؟</value>
+</data>
 </root>
