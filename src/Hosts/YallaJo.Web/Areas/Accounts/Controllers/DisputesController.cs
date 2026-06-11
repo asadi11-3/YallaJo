@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.Disputes;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -18,10 +20,12 @@ namespace YallaJo.Web.Areas.Accounts.Controllers;
 public sealed class DisputesController : BaseController
 {
     private readonly DisputesFacade _disputes;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public DisputesController(DisputesFacade disputes)
+    public DisputesController(DisputesFacade disputes, IStringLocalizer<SharedResource> localizer)
     {
         _disputes = disputes;
+        _localizer = localizer;
     }
 
     [HttpGet("accounts/disputes")]
@@ -39,7 +43,7 @@ public sealed class DisputesController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please correct the highlighted fields and try again.");
+            SetError(_localizer["Accounts.Msg.FormError"]);
             return BackToTab();
         }
 
@@ -47,9 +51,9 @@ public sealed class DisputesController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Your dispute has been submitted. Our team will review it shortly.");
+            SetSuccess(_localizer["Accounts.Msg.DisputeSubmitted"]);
         else
-            SetError(result.Error ?? "Could not open the dispute.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.DisputeOpenFailed"].Value);
 
         return BackToTab();
     }

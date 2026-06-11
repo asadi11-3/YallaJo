@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -17,10 +19,12 @@ namespace YallaJo.Web.Areas.Accounts.Controllers;
 public sealed class InvoicesController : BaseController
 {
     private readonly InvoicesFacade _invoices;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public InvoicesController(InvoicesFacade invoices)
+    public InvoicesController(InvoicesFacade invoices, IStringLocalizer<SharedResource> localizer)
     {
         _invoices = invoices;
+        _localizer = localizer;
     }
 
     [HttpGet("accounts/invoices")]
@@ -36,7 +40,7 @@ public sealed class InvoicesController : BaseController
 
         if (!result.IsSuccess || result.Data is null)
         {
-            SetError(result.Error ?? "Could not download the invoice.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.InvoiceDownloadFailed"].Value);
             return RedirectToAction("Index", "Payments", new { area = "Accounts", tab = "invoices" });
         }
 

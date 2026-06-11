@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.Bookings;
 using YallaJo.Web.Areas.Accounts.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -16,13 +18,15 @@ public sealed class BookingsController : BaseController
     private readonly ProfileFacade _profile;
     private readonly PaymentsFacade _payments;
     private readonly JoinRequestsFacade _joinRequests;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public BookingsController(BookingsFacade bookings, ProfileFacade profile, PaymentsFacade payments, JoinRequestsFacade joinRequests)
+    public BookingsController(BookingsFacade bookings, ProfileFacade profile, PaymentsFacade payments, JoinRequestsFacade joinRequests, IStringLocalizer<SharedResource> localizer)
     {
         _bookings = bookings;
         _profile = profile;
         _payments = payments;
         _joinRequests = joinRequests;
+        _localizer = localizer;
     }
 
     [HttpGet("accounts/bookings")]
@@ -99,7 +103,7 @@ public sealed class BookingsController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Booking cancelled.");
+            SetSuccess(_localizer["Accounts.Msg.BookingCancelled"]);
         else
             SetError(result.Error);
 
@@ -113,7 +117,7 @@ public sealed class BookingsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length < 10)
         {
-            SetError("Please describe the issue in at least 10 characters.");
+            SetError(_localizer["Accounts.Msg.DisputeMinLength"]);
             return RedirectToAction(nameof(Detail), new { id });
         }
 
@@ -121,9 +125,9 @@ public sealed class BookingsController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Your dispute has been submitted. Our team will review it shortly.");
+            SetSuccess(_localizer["Accounts.Msg.DisputeSubmitted"]);
         else
-            SetError(result.Error ?? "Could not open the dispute.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.DisputeOpenFailed"].Value);
 
         return RedirectToAction(nameof(Detail), new { id });
     }
@@ -141,9 +145,9 @@ public sealed class BookingsController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Payment received. Your booking is being confirmed — this may take a few moments.");
+            SetSuccess(_localizer["Accounts.Msg.PaymentReceived"]);
         else
-            SetError(result.Error ?? "Could not process payment.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.PaymentFailed"].Value);
 
         return RedirectToAction(nameof(Detail), new { id });
     }

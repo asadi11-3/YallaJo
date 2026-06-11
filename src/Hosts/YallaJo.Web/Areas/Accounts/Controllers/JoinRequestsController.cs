@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.JoinRequests;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -17,10 +19,12 @@ namespace YallaJo.Web.Areas.Accounts.Controllers;
 public sealed class JoinRequestsController : BaseController
 {
     private readonly JoinRequestsFacade _joinRequests;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public JoinRequestsController(JoinRequestsFacade joinRequests)
+    public JoinRequestsController(JoinRequestsFacade joinRequests, IStringLocalizer<SharedResource> localizer)
     {
         _joinRequests = joinRequests;
+        _localizer = localizer;
     }
 
     [HttpGet("accounts/join-requests")]
@@ -34,7 +38,7 @@ public sealed class JoinRequestsController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please check the booking reference, slot, and participant count, then try again.");
+            SetError(_localizer["Accounts.Msg.JoinRequestFormError"]);
             return BackToTab();
         }
 
@@ -42,9 +46,9 @@ public sealed class JoinRequestsController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Your request to join the group was sent.");
+            SetSuccess(_localizer["Accounts.Msg.JoinRequestSent"]);
         else
-            SetError(result.Error ?? "Could not submit your join request.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.JoinRequestFailed"].Value);
 
         return BackToTab();
     }
