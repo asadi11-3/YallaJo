@@ -17,7 +17,7 @@
 
 <div class="card border">
     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-        <h4 class="card-header-title mb-0">My Invoices</h4>
+        <h4 class="card-header-title mb-0">@Localizer["Accounts.Billing.MyInvoices"]</h4>
         @if (Model.HasInvoices)
         {
             <span class="badge bg-primary bg-opacity-10 text-primary">@Model.Invoices.Count</span>
@@ -27,11 +27,9 @@
         @if (!Model.HasInvoices)
         {
             <div class="text-center py-5">
-                <i class="bi bi-receipt display-5 text-body-secondary d-block mb-2"></i>
-                <h6 class="mb-1">No invoices yet</h6>
-                <p class="text-body-secondary mb-0">
-                    Invoices appear here after your paid bookings are confirmed.
-                </p>
+                <i class="bi bi-receipt display-5 text-body-secondary d-block mb-2" aria-hidden="true"></i>
+                <h6 class="mb-1">@Localizer["Accounts.Billing.NoInvoices"]</h6>
+                <p class="text-body-secondary mb-0">@Localizer["Accounts.Billing.NoInvoicesHelp"]</p>
             </div>
         }
         else
@@ -40,12 +38,12 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Invoice #</th>
-                            <th>Seller</th>
-                            <th>Issued</th>
-                            <th>Status</th>
-                            <th class="text-end">Total</th>
-                            <th class="text-end">Actions</th>
+                            <th>@Localizer["Accounts.Billing.ColInvoiceNo"]</th>
+                            <th>@Localizer["Accounts.Billing.ColSeller"]</th>
+                            <th>@Localizer["Accounts.Billing.ColIssued"]</th>
+                            <th>@Localizer["Accounts.JoinRequests.Status"]</th>
+                            <th class="text-end">@Localizer["Accounts.Billing.ColTotal"]</th>
+                            <th class="text-end">@Localizer["Accounts.Settings.Actions"]</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -53,9 +51,9 @@
                         {
                             <tr>
                                 <td>
-                                    <span class="fw-semibold">@inv.InvoiceNumber</span>
+                                    <span class="fw-semibold"><span dir="ltr">@inv.InvoiceNumber</span></span>
                                     <div class="small text-body-secondary">
-                                        @inv.ItemCount item@(inv.ItemCount == 1 ? "" : "s")
+                                        @Localizer["Accounts.Billing.ItemCount", inv.ItemCount]
                                     </div>
                                 </td>
                                 <td>@inv.SellerName</td>
@@ -65,7 +63,7 @@
                                         @inv.Status
                                     </span>
                                 </td>
-                                <td class="text-end fw-semibold">@Money(inv.AmountTotal, inv.Currency)</td>
+                                <td class="text-end fw-semibold"><span dir="ltr">@Money(inv.AmountTotal, inv.Currency)</span></td>
                                 <td class="text-end">
                                     @if (inv.PdfAvailable)
                                     {
@@ -73,7 +71,7 @@
                                             <a class="btn btn-sm btn-primary-soft"
                                                asp-area="Accounts" asp-controller="Invoices"
                                                asp-action="Download" asp-route-id="@inv.Id">
-                                                <i class="bi bi-download me-1"></i>PDF
+                                                <i class="bi bi-download me-1" aria-hidden="true"></i>@Localizer["Accounts.Billing.Pdf"]
                                             </a>
                                         </permission>
                                     }

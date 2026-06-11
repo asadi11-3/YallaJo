@@ -13369,4 +13369,103 @@
 <data name="Accounts.Account.DeleteButton" xml:space="preserve">
 <value>حذف حسابي</value>
 </data>
+<data name="Accounts.Billing.TypeBooking" xml:space="preserve">
+<value>حجز</value>
+</data>
+<data name="Accounts.Billing.TypeRefund" xml:space="preserve">
+<value>استرداد</value>
+</data>
+<data name="Accounts.Billing.MyPayments" xml:space="preserve">
+<value>مدفوعاتي</value>
+</data>
+<data name="Accounts.Billing.NoPayments" xml:space="preserve">
+<value>لا توجد مدفوعات بعد</value>
+</data>
+<data name="Accounts.Billing.NoPaymentsHelp" xml:space="preserve">
+<value>سيظهر سجل مدفوعاتك هنا بمجرد إتمام حجز.</value>
+</data>
+<data name="Accounts.Billing.ColDate" xml:space="preserve">
+<value>التاريخ</value>
+</data>
+<data name="Accounts.Billing.ColType" xml:space="preserve">
+<value>النوع</value>
+</data>
+<data name="Accounts.Billing.ColMethod" xml:space="preserve">
+<value>الطريقة</value>
+</data>
+<data name="Accounts.Billing.ColAmount" xml:space="preserve">
+<value>المبلغ</value>
+</data>
+<data name="Accounts.Billing.PaidOn" xml:space="preserve">
+<value>دُفع {0}</value>
+</data>
+<data name="Accounts.Billing.RefundedAmount" xml:space="preserve">
+<value>مُسترد {0}</value>
+</data>
+<data name="Accounts.Billing.MyInvoices" xml:space="preserve">
+<value>فواتيري</value>
+</data>
+<data name="Accounts.Billing.NoInvoices" xml:space="preserve">
+<value>لا توجد فواتير بعد</value>
+</data>
+<data name="Accounts.Billing.NoInvoicesHelp" xml:space="preserve">
+<value>تظهر الفواتير هنا بعد تأكيد حجوزاتك المدفوعة.</value>
+</data>
+<data name="Accounts.Billing.ColInvoiceNo" xml:space="preserve">
+<value>رقم الفاتورة</value>
+</data>
+<data name="Accounts.Billing.ColSeller" xml:space="preserve">
+<value>البائع</value>
+</data>
+<data name="Accounts.Billing.ColIssued" xml:space="preserve">
+<value>تاريخ الإصدار</value>
+</data>
+<data name="Accounts.Billing.ColTotal" xml:space="preserve">
+<value>الإجمالي</value>
+</data>
+<data name="Accounts.Billing.ItemCount" xml:space="preserve">
+<value>{0} عنصر</value>
+</data>
+<data name="Accounts.Billing.Pdf" xml:space="preserve">
+<value>PDF</value>
+</data>
+<data name="Accounts.Billing.MyDisputes" xml:space="preserve">
+<value>نزاعاتي</value>
+</data>
+<data name="Accounts.Billing.OpenDispute" xml:space="preserve">
+<value>فتح نزاع</value>
+</data>
+<data name="Accounts.Billing.NoDisputes" xml:space="preserve">
+<value>لا توجد نزاعات</value>
+</data>
+<data name="Accounts.Billing.NoDisputesHelp" xml:space="preserve">
+<value>إذا حدث خطأ ما في عملية دفع، يمكنك رفع نزاع وسيبحث فريقنا فيه.</value>
+</data>
+<data name="Accounts.Billing.NoDisputablePayments" xml:space="preserve">
+<value>ليس لديك أي مدفوعات يمكن الاعتراض عليها بعد.</value>
+</data>
+<data name="Accounts.Billing.ColReason" xml:space="preserve">
+<value>السبب</value>
+</data>
+<data name="Accounts.Billing.ColOpened" xml:space="preserve">
+<value>تاريخ الفتح</value>
+</data>
+<data name="Accounts.Billing.ColResolution" xml:space="preserve">
+<value>الحل</value>
+</data>
+<data name="Accounts.Billing.Payment" xml:space="preserve">
+<value>الدفعة</value>
+</data>
+<data name="Accounts.Billing.ChoosePayment" xml:space="preserve">
+<value>اختر دفعة…</value>
+</data>
+<data name="Accounts.Billing.ReasonPlaceholder" xml:space="preserve">
+<value>مثال: تم الخصم مرتين</value>
+</data>
+<data name="Accounts.Billing.Description" xml:space="preserve">
+<value>الوصف</value>
+</data>
+<data name="Accounts.Billing.DescriptionPlaceholder" xml:space="preserve">
+<value>صف ما حدث (10 أحرف على الأقل).</value>
+</data>
 </root>

@@ -15,15 +15,15 @@
 
     string PrettyType(string type) => type?.ToLowerInvariant() switch
     {
-        "booking" => "Booking",
-        "refund" => "Refund",
+        "booking" => Localizer["Accounts.Billing.TypeBooking"].Value,
+        "refund" => Localizer["Accounts.Billing.TypeRefund"].Value,
         _ => type ?? "—",
     };
 }
 
 <div class="card border">
     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-        <h4 class="card-header-title mb-0">My Payments</h4>
+        <h4 class="card-header-title mb-0">@Localizer["Accounts.Billing.MyPayments"]</h4>
         @if (Model.HasPayments)
         {
             <span class="badge bg-primary bg-opacity-10 text-primary">@Model.Payments.Count</span>
@@ -33,9 +33,9 @@
         @if (!Model.HasPayments)
         {
             <div class="text-center py-5">
-                <i class="bi bi-credit-card-2-front display-5 text-body-tertiary"></i>
-                <h6 class="mt-3 mb-1">No payments yet</h6>
-                <p class="text-secondary mb-0">Your payment history will appear here once you complete a booking.</p>
+                <i class="bi bi-credit-card-2-front display-5 text-body-tertiary" aria-hidden="true"></i>
+                <h6 class="mt-3 mb-1">@Localizer["Accounts.Billing.NoPayments"]</h6>
+                <p class="text-secondary mb-0">@Localizer["Accounts.Billing.NoPaymentsHelp"]</p>
             </div>
         }
         else
@@ -44,11 +44,11 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Type</th>
-                            <th>Method</th>
-                            <th>Status</th>
-                            <th class="text-end">Amount</th>
+                            <th>@Localizer["Accounts.Billing.ColDate"]</th>
+                            <th>@Localizer["Accounts.Billing.ColType"]</th>
+                            <th>@Localizer["Accounts.Billing.ColMethod"]</th>
+                            <th>@Localizer["Accounts.JoinRequests.Status"]</th>
+                            <th class="text-end">@Localizer["Accounts.Billing.ColAmount"]</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -59,7 +59,7 @@
                                     <span class="fw-semibold">@p.CreatedAt.ToString("dd MMM yyyy")</span>
                                     @if (p.PaidAt is { } paid)
                                     {
-                                        <small class="d-block text-secondary">Paid @paid.ToString("dd MMM yyyy")</small>
+                                        <small class="d-block text-secondary">@Localizer["Accounts.Billing.PaidOn", paid.ToString("dd MMM yyyy")]</small>
                                     }
                                 </td>
                                 <td>@PrettyType(p.PaymentType)</td>
@@ -68,10 +68,10 @@
                                     <span class="badge bg-@(StatusBadge(p.Status)) bg-opacity-10 text-@StatusBadge(p.Status)">@p.Status</span>
                                     @if (p.IsRefunded)
                                     {
-                                        <span class="badge bg-info bg-opacity-10 text-info ms-1">Refunded @Money(p.RefundedTotal, p.Currency)</span>
+                                        <span class="badge bg-info bg-opacity-10 text-info ms-1">@Localizer["Accounts.Billing.RefundedAmount", Money(p.RefundedTotal, p.Currency)]</span>
                                     }
                                 </td>
-                                <td class="text-end fw-semibold">@Money(p.Amount, p.Currency)</td>
+                                <td class="text-end fw-semibold"><span dir="ltr">@Money(p.Amount, p.Currency)</span></td>
                             </tr>
                         }
                     </tbody>

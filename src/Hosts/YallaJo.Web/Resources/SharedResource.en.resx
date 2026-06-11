@@ -13369,4 +13369,103 @@
 <data name="Accounts.Account.DeleteButton" xml:space="preserve">
 <value>Delete my account</value>
 </data>
+<data name="Accounts.Billing.TypeBooking" xml:space="preserve">
+<value>Booking</value>
+</data>
+<data name="Accounts.Billing.TypeRefund" xml:space="preserve">
+<value>Refund</value>
+</data>
+<data name="Accounts.Billing.MyPayments" xml:space="preserve">
+<value>My payments</value>
+</data>
+<data name="Accounts.Billing.NoPayments" xml:space="preserve">
+<value>No payments yet</value>
+</data>
+<data name="Accounts.Billing.NoPaymentsHelp" xml:space="preserve">
+<value>Your payment history will appear here once you complete a booking.</value>
+</data>
+<data name="Accounts.Billing.ColDate" xml:space="preserve">
+<value>Date</value>
+</data>
+<data name="Accounts.Billing.ColType" xml:space="preserve">
+<value>Type</value>
+</data>
+<data name="Accounts.Billing.ColMethod" xml:space="preserve">
+<value>Method</value>
+</data>
+<data name="Accounts.Billing.ColAmount" xml:space="preserve">
+<value>Amount</value>
+</data>
+<data name="Accounts.Billing.PaidOn" xml:space="preserve">
+<value>Paid {0}</value>
+</data>
+<data name="Accounts.Billing.RefundedAmount" xml:space="preserve">
+<value>Refunded {0}</value>
+</data>
+<data name="Accounts.Billing.MyInvoices" xml:space="preserve">
+<value>My invoices</value>
+</data>
+<data name="Accounts.Billing.NoInvoices" xml:space="preserve">
+<value>No invoices yet</value>
+</data>
+<data name="Accounts.Billing.NoInvoicesHelp" xml:space="preserve">
+<value>Invoices appear here after your paid bookings are confirmed.</value>
+</data>
+<data name="Accounts.Billing.ColInvoiceNo" xml:space="preserve">
+<value>Invoice #</value>
+</data>
+<data name="Accounts.Billing.ColSeller" xml:space="preserve">
+<value>Seller</value>
+</data>
+<data name="Accounts.Billing.ColIssued" xml:space="preserve">
+<value>Issued</value>
+</data>
+<data name="Accounts.Billing.ColTotal" xml:space="preserve">
+<value>Total</value>
+</data>
+<data name="Accounts.Billing.ItemCount" xml:space="preserve">
+<value>{0} item(s)</value>
+</data>
+<data name="Accounts.Billing.Pdf" xml:space="preserve">
+<value>PDF</value>
+</data>
+<data name="Accounts.Billing.MyDisputes" xml:space="preserve">
+<value>My disputes</value>
+</data>
+<data name="Accounts.Billing.OpenDispute" xml:space="preserve">
+<value>Open a dispute</value>
+</data>
+<data name="Accounts.Billing.NoDisputes" xml:space="preserve">
+<value>No disputes</value>
+</data>
+<data name="Accounts.Billing.NoDisputesHelp" xml:space="preserve">
+<value>If something went wrong with a payment, you can raise a dispute and our team will look into it.</value>
+</data>
+<data name="Accounts.Billing.NoDisputablePayments" xml:space="preserve">
+<value>You don't have any payments that can be disputed yet.</value>
+</data>
+<data name="Accounts.Billing.ColReason" xml:space="preserve">
+<value>Reason</value>
+</data>
+<data name="Accounts.Billing.ColOpened" xml:space="preserve">
+<value>Opened</value>
+</data>
+<data name="Accounts.Billing.ColResolution" xml:space="preserve">
+<value>Resolution</value>
+</data>
+<data name="Accounts.Billing.Payment" xml:space="preserve">
+<value>Payment</value>
+</data>
+<data name="Accounts.Billing.ChoosePayment" xml:space="preserve">
+<value>Choose a payment…</value>
+</data>
+<data name="Accounts.Billing.ReasonPlaceholder" xml:space="preserve">
+<value>e.g. Charged twice</value>
+</data>
+<data name="Accounts.Billing.Description" xml:space="preserve">
+<value>Description</value>
+</data>
+<data name="Accounts.Billing.DescriptionPlaceholder" xml:space="preserve">
+<value>Describe what happened (at least 10 characters).</value>
+</data>
 </root>
