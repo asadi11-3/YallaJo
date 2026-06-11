@@ -27,9 +27,10 @@
     <link rel="shortcut icon" href="~/assets/images/favicon.ico" />
 
     @* Fonts: the external Google Fonts CDN has been removed (UI-UX-Design.md V3 — no
-       third-party font CDN). No local DM Sans / Poppins font files are bundled, so the
-       theme's existing "DM Sans"/"Poppins" rules fall back to their declared `sans-serif`
-       generic (and Bootstrap's --bs-font-sans-serif system stack). Icon fonts
+       third-party font CDN). Self-hosted brand fonts (DM Sans, Poppins, IBM Plex Sans
+       Arabic) DO exist under ~/fonts/ with @@font-face declarations in site.css
+       (V3/V4/A5/X10). This layout does not yet load site.css — see the Auth area master
+       plan P2, which adds it so the funnel matches the rest of the site. Icon fonts
        (Font Awesome, Bootstrap Icons) remain self-hosted under ~/assets/vendor. *@
 
     @* Plugins CSS *@

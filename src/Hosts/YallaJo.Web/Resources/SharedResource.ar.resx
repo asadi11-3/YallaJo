@@ -13786,4 +13786,13 @@
 <data name="Business.Pagination.Page" xml:space="preserve">
 <value>صفحة {0}</value>
 </data>
+<data name="Auth.Devices.Trusted" xml:space="preserve">
+<value>تم وضع علامة موثوق على الجهاز.</value>
+</data>
+<data name="Auth.Sessions.Revoked" xml:space="preserve">
+<value>تم إنهاء الجلسة.</value>
+</data>
+<data name="Auth.External.ProviderNotConfigured" xml:space="preserve">
+<value>مزوّد تسجيل الدخول غير مُهيّأ.</value>
+</data>
 </root>

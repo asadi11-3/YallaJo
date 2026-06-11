@@ -17,12 +17,12 @@
                     <h1 class="h3 mb-1">@Localizer["Auth.Sessions.Heading"]</h1>
                     <p class="mb-0 text-secondary">@Localizer["Auth.Sessions.Subtitle"]</p>
                 </div>
-                <form asp-area="Auth" asp-controller="Auth" asp-action="LogoutAll" method="post" class="mt-3 mt-sm-0">
+                <form asp-area="Auth" asp-controller="Auth" asp-action="LogoutAll" method="post" class="mt-3 mt-sm-0"
+                      data-confirm="@Localizer["Auth.Sessions.SignOutAllConfirm"]"
+                      data-confirm-title="@Localizer["Auth.Sessions.SignOutAll"]"
+                      data-confirm-action="@Localizer["Auth.Sessions.SignOutAll"]">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-warning"
-                            data-confirm="@Localizer["Auth.Sessions.SignOutAllConfirm"]"
-                            data-confirm-title="@Localizer["Auth.Sessions.SignOutAll"]"
-                            data-confirm-action="@Localizer["Auth.Sessions.SignOutAll"]">
+                    <button type="submit" class="btn btn-warning">
                         <i class="fa-solid fa-right-from-bracket fa-fw me-1" aria-hidden="true"></i>
                         @Localizer["Auth.Sessions.SignOutAll"]
                     </button>
@@ -130,13 +130,8 @@
     </div>
 </div>
 
-@section Scripts {
-    @* F8 — activates the data-confirm attributes on the destructive forms above
-       (Sign out all devices / Revoke session), which were previously inert because
-       the public _Layout (unlike _AdminLayout) renders no confirm-modal partial.
-       The shared partial is self-contained (modal markup + submit interceptor +
-       localized labels) and is rendered here per-page instead of touching the
-       public layout globally. Bootstrap's bundle loads before this section in
-       _Layout, so the script's bootstrap.Modal dependency is satisfied. *@
-    <partial name="~/Areas/Admin/Views/Shared/Partials/_ConfirmModal.cshtml" />
-}
+@* F8/MOD3/MOD5 — the data-confirm attributes on the destructive forms above are
+   handled by form-ux.js, which the public _Layout loads site-wide. The previous
+   cross-area render of the Admin _ConfirmModal partial was removed: it registered
+   a second capture-phase submit interceptor with a different re-entry flag
+   (data-confirmed vs data-yj-confirmed), causing a double confirm modal. *@

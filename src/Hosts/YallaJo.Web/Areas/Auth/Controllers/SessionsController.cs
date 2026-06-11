@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Infrastructure.Mvc;
 using YallaJo.Web.Areas.Auth.Facades;
 using YallaJo.Web.Areas.Auth.Models.Sessions;
@@ -10,7 +11,15 @@ namespace YallaJo.Web.Areas.Auth.Controllers;
 public sealed class SessionsController : BaseController
 {
     private readonly SessionsFacade _facade;
-    public SessionsController(SessionsFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<YallaJo.Web.Resources.SharedResource> _localizer;
+
+    public SessionsController(
+        SessionsFacade facade,
+        IStringLocalizer<YallaJo.Web.Resources.SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
@@ -35,7 +44,7 @@ public sealed class SessionsController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Session revoked.");
+            SetSuccess(_localizer["Auth.Sessions.Revoked"]); // CON1: localized flash
         else
             SetError(result.Error);
 

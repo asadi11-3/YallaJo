@@ -45,7 +45,7 @@ public sealed class ExternalAuthController : BaseController
     public IActionResult Challenge([FromForm] string provider, [FromForm] string? returnUrl, [FromForm] string mode)
     {
         if (!IsProviderAvailable(provider))
-            return BadRequest("Provider is not configured.");
+            return BadRequest(_localizer["Auth.External.ProviderNotConfigured"].Value); // CON1
 
         var safeReturn = NormalizeReturnUrl(returnUrl);
         var safeMode = string.Equals(mode, "link", StringComparison.OrdinalIgnoreCase) ? "link" : "login";
@@ -88,7 +88,7 @@ public sealed class ExternalAuthController : BaseController
     public async Task<IActionResult> Callback(string provider, string? mode)
     {
         if (!IsProviderAvailable(provider))
-            return BadRequest("Provider is not configured.");
+            return BadRequest(_localizer["Auth.External.ProviderNotConfigured"].Value); // CON1
 
         var authResult = await HttpContext.AuthenticateAsync(
             ExternalProviderConstants.ExternalSignInScheme);

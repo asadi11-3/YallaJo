@@ -149,10 +149,8 @@
     </div>
 </div>
 
-@section Scripts {
-    @* F8 — activates the data-confirm attributes on the Unlink forms above. The shared
-       self-contained partial (modal + interceptor + localized labels) is rendered
-       per-page, same as the Sessions page; Bootstrap's bundle loads before this
-       section in _Layout. *@
-    <partial name="~/Areas/Admin/Views/Shared/Partials/_ConfirmModal.cshtml" />
-}
+@* F8/MOD3/MOD5 — the data-confirm attributes on the Unlink forms above are handled
+   by form-ux.js, which the public _Layout loads site-wide. The previous cross-area
+   render of the Admin _ConfirmModal partial was removed: it registered a second
+   capture-phase submit interceptor with a different re-entry flag, causing a
+   double confirm modal. *@

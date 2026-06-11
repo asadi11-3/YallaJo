@@ -13786,4 +13786,13 @@
 <data name="Business.Pagination.Page" xml:space="preserve">
 <value>Page {0}</value>
 </data>
+<data name="Auth.Devices.Trusted" xml:space="preserve">
+<value>Device marked as trusted.</value>
+</data>
+<data name="Auth.Sessions.Revoked" xml:space="preserve">
+<value>Session revoked.</value>
+</data>
+<data name="Auth.External.ProviderNotConfigured" xml:space="preserve">
+<value>Provider is not configured.</value>
+</data>
 </root>
