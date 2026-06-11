@@ -12850,4 +12850,10 @@
 <data name="Accounts.Wishlist.RemoveFailed" xml:space="preserve">
 <value>Could not remove the item. Please try again.</value>
 </data>
+  <data name="Accounts.Recommendations.Dismissed" xml:space="preserve">
+    <value>Removed from your recommendations.</value>
+  </data>
+  <data name="Accounts.Recommendations.DismissFailed" xml:space="preserve">
+    <value>Could not update your recommendations. Please try again.</value>
+  </data>
 </root>

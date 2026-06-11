@@ -70,6 +70,12 @@ public sealed class RecommendationsController : BaseController
         var result = await _recommendations.MarkNotInterestedAsync(kind, entityId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        // Phase 4c: optimistic dismiss (NF6) posts via the shared api client and only needs a status signal.
+        if (WantsAjax())
+            return result.IsSuccess
+                ? Ok(new { dismissed = true })
+                : BadRequest(new { error = result.Error ?? "Could not update this recommendation." });
+
         if (result.IsSuccess)
             SetSuccess("We won't show that again.");
         else

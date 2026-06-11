@@ -12850,4 +12850,10 @@
 <data name="Accounts.Wishlist.RemoveFailed" xml:space="preserve">
 <value>تعذّر إزالة العنصر. يرجى المحاولة مرة أخرى.</value>
 </data>
+  <data name="Accounts.Recommendations.Dismissed" xml:space="preserve">
+    <value>تمت الإزالة من توصياتك.</value>
+  </data>
+  <data name="Accounts.Recommendations.DismissFailed" xml:space="preserve">
+    <value>تعذّر تحديث توصياتك. يرجى المحاولة مرة أخرى.</value>
+  </data>
 </root>

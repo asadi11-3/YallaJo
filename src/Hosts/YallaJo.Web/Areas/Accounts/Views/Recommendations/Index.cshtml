@@ -65,10 +65,11 @@
                         }
                         else
                         {
-                            <div class="row g-4">
+                            @* Phase 4c: optimistic dismiss (NF6) + click tracking (JS5) via accounts-recommendations.js; native PRG preserved (PE1). *@
+                            <div class="row g-4" id="recommendationsGrid" data-yj-component="recommendations" aria-live="polite" data-dismissed-text="@Localizer["Accounts.Recommendations.Dismissed"]" data-failed-text="@Localizer["Accounts.Recommendations.DismissFailed"]">
                                 @foreach (var item in Model.Recommendations)
                                 {
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 js-rec-item">
                                         <div class="card card-body border h-100">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
                                                 <span class="badge bg-primary bg-opacity-10 text-primary">@item.KindLabel</span>
@@ -91,7 +92,7 @@
                                             <h6 class="mb-1">
                                                 @if (item.DetailUrl is { } url)
                                                 {
-                                                    <a class="text-reset" href="@url">@item.Name</a>
+                                                    <a class="text-reset js-rec-link" href="@url" data-track-type="@item.Kind" data-track-id="@item.Id">@item.Name</a>
                                                 }
                                                 else
                                                 {
@@ -230,4 +231,5 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/assets/js/recommendations-onboarding.js" asp-append-version="true" defer></script>
+    <script src="~/assets/js/accounts-recommendations.js" asp-append-version="true"></script>
 }
