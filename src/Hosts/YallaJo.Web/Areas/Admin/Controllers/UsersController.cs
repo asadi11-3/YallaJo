@@ -20,13 +20,20 @@ public sealed class UsersController : BaseController
     {
         var result = await _facade.GetUsersAsync(page, pageSize: 20, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
+
+        // S1/PE1 — same action serves the full page and the listing.js fragment
+        // (WantsAjax = X-Requested-With: fetch). No [OutputCache] ever (C2).
         if (!result.IsSuccess)
         {
             ViewBag.Error = result.Error;
-            return View(new UserListVm());
+            return WantsAjax()
+                ? PartialView("_UsersResults", new UserListVm())
+                : View(new UserListVm());
         }
 
-        return View(result.Data);
+        return WantsAjax()
+            ? PartialView("_UsersResults", result.Data)
+            : View(result.Data);
     }
 
     [HttpGet("admin/users/details/{userId:guid}")]

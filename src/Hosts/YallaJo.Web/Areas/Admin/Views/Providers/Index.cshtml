@@ -11,7 +11,6 @@
 
     var culture = CultureInfo.CurrentCulture;
     string Count(int n) => n.ToString("N0", culture);
-    string Day(DateTime? d) => d?.ToString("yyyy-MM-dd", culture) ?? "—";
 }
 
 @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
@@ -32,7 +31,8 @@
         <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Providers.FiltersHeading"]</h2>
     </div>
     <div class="card-body">
-        <form asp-area="Admin" asp-controller="Providers" asp-action="Index" method="get" class="row g-3 align-items-end">
+        <form asp-area="Admin" asp-controller="Providers" asp-action="Index" method="get" class="row g-3 align-items-end"
+              data-yj-listing>
             <div class="col-sm-6 col-lg-4">
                 <label for="filter-status" class="form-label">@Localizer["Admin.Providers.StatusLabel"]</label>
                 <select id="filter-status" name="status" class="form-select">
@@ -68,97 +68,17 @@
     <div class="card-header border-bottom">
         <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Providers.QueueHeading"]</h2>
     </div>
-    <div class="card-body">
-        @if (!Model.HasItems)
-        {
-            <partial name="Partials/_EmptyState"
-                     model="@(new EmptyStateVm { Message = Localizer["Admin.Providers.EmptyMessage"].Value, CtaText = Localizer["Admin.Providers.EmptyCta"].Value, CtaUrl = Url.Action("Index", "Providers", new { area = "Admin" }) })" />
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr>
-                            <th scope="col">@Localizer["Admin.Providers.ColBusiness"]</th>
-                            <th scope="col">@Localizer["Admin.Providers.ColType"]</th>
-                            <th scope="col">@Localizer["Admin.Providers.ColContact"]</th>
-                            <th scope="col">@Localizer["Admin.Providers.ColStatus"]</th>
-                            <th scope="col" class="text-end">@Localizer["Admin.Providers.ColDocs"]</th>
-                            <th scope="col">@Localizer["Admin.Providers.ColSubmitted"]</th>
-                            <th scope="col" class="text-end">@Localizer["Admin.Providers.ColActions"]</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var row in Model.Items)
-                        {
-                            <tr>
-                                <td>
-                                    <a asp-area="Admin" asp-controller="Providers" asp-action="Details"
-                                       asp-route-id="@row.ApplicationId" class="fw-semibold text-decoration-none">@row.BusinessName</a>
-                                    @if (row.ReapplicationCount > 0)
-                                    {
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary ms-1"
-                                              title="@Localizer["Admin.Providers.Reapplications"]">
-                                            <i class="fa-solid fa-rotate-right fa-fw" aria-hidden="true"></i>
-                                            <bdi class="font-data">@Count(row.ReapplicationCount)</bdi>
-                                            <span class="visually-hidden">@Localizer["Admin.Providers.Reapplications"]</span>
-                                        </span>
-                                    }
-                                </td>
-                                <td>@row.TypeLabel</td>
-                                <td><bdi dir="ltr" class="text-secondary small">@row.ContactEmail</bdi></td>
-                                <td>
-                                    <span class="badge @row.StatusBadgeClass">
-                                        <i class="fa-solid fa-circle-info fa-fw" aria-hidden="true"></i> @row.StatusLabel
-                                    </span>
-                                </td>
-                                <td class="text-end"><bdi class="font-data">@Count(row.DocumentCount)</bdi></td>
-                                <td><bdi class="font-data">@Day(row.SubmittedAt)</bdi></td>
-                                <td class="text-end">
-                                    <div class="d-flex flex-column align-items-end gap-2">
-                                        <a asp-area="Admin" asp-controller="Providers" asp-action="Details"
-                                           asp-route-id="@row.ApplicationId" class="btn btn-sm btn-outline-secondary">
-                                            @Localizer["Admin.Providers.Manage"]
-                                        </a>
-                                        @if (row.CanApprove)
-                                        {
-                                            <permission require="@WebPermission.AdminProviderQueue.Approve">
-                                                <form asp-area="Admin" asp-controller="Providers" asp-action="Approve"
-                                                      asp-route-id="@row.ApplicationId" method="post"
-                                                      data-confirm="@Localizer["Admin.Providers.ApproveConfirm", row.BusinessName]"
-                                                      data-confirm-title="@Localizer["Admin.Providers.ApproveTitle"]"
-                                                      data-confirm-action="@Localizer["Admin.Providers.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-sm btn-outline-success">@Localizer["Admin.Providers.Approve"]</button>
-                                                </form>
-                                            </permission>
-                                        }
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
+    @* S1/L1/A11Y9 — listing.js swaps this fragment on filter/pager refinements. *@
+    <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+         data-error-text="@Localizer["Public.Results.Error"]"
+         data-retry-text="@Localizer["Public.Retry"]"
+         data-loading-text="@Localizer["Public.Loading"]">
+        <partial name="_ProvidersResults" model="Model" />
     </div>
-
-    @if (Model.HasPreviousPage || Model.HasNextPage)
-    {
-        <partial name="Partials/_PaginationFooter"
-                 model="@(new PaginationFooterVm
-                 {
-                     HasPrevious = Model.HasPreviousPage,
-                     HasNext = Model.HasNextPage,
-                     Page = Model.Page,
-                     PreviousUrl = Url.Action("Index", "Providers", new { area = "Admin", status = Model.Status, type = Model.Type, page = Model.Page - 1 }),
-                     NextUrl = Url.Action("Index", "Providers", new { area = "Admin", status = Model.Status, type = Model.Type, page = Model.Page + 1 }),
-                     PreviousText = Localizer["Admin.Providers.Previous"].Value,
-                     NextText = Localizer["Admin.Providers.Next"].Value,
-                     PageLabel = Localizer["Admin.Providers.PageLabel"].Value
-                 })" />
-    }
 </div>
 
 <p class="text-secondary small mt-3 mb-0">@Localizer["Admin.Providers.QueueHint"]</p>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true" defer></script>
+}

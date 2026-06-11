@@ -1,0 +1,114 @@
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Users
+@using YallaJo.Web.Areas.Admin.Models.Shared
+@model YallaJo.Web.Areas.Admin.Models.Users.UserListVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+
+@* Swappable listing fragment (S1/PE1): rendered inline on first load and re-served
+   via WantsAjax() for listing.js fragment swaps. Keep everything that changes with
+   page/filter inside this partial (results + pagination + error/empty states). *@
+
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger m-3 mb-0" role="alert">@vbe</div>
+}
+
+<div class="card-body">
+    @if (Model.Users.Count == 0)
+    {
+        @* L6 — empty state carries a message + a CTA (shared partial). *@
+        <partial name="Partials/_EmptyState"
+                 model="@(new EmptyStateVm
+                 {
+                     Message = Localizer["Admin.Users.EmptyMessage"].Value,
+                     CtaText = Localizer["Admin.Users.EmptyCta"].Value,
+                     CtaUrl = Url.Action("Index", "Home", new { area = "Admin" })
+                 })" />
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="users-table">
+                <thead>
+                    <tr>
+                        <th scope="col">@Localizer["Admin.Users.ColEmail"]</th>
+                        <th scope="col">@Localizer["Admin.Users.ColRoles"]</th>
+                        <th scope="col">@Localizer["Admin.Users.ColStatus"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Users.ColActions"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in Model.Users)
+                    {
+                        @* F10 — the GUID never appears as text; it travels via asp-route-userId only.
+                           Email is the human-readable user name. *@
+                        <tr data-filter-text="@(u.Email + " " + string.Join(" ", u.Roles))">
+                            <td>
+                                <span class="fw-semibold"><bdi dir="ltr">@u.Email</bdi></span>
+                            </td>
+                            <td>
+                                @if (u.Roles.Count == 0)
+                                {
+                                    <span class="text-secondary small" aria-label="@Localizer["Admin.Users.NoRoles"]">—</span>
+                                }
+                                else
+                                {
+                                    foreach (var role in u.Roles)
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary me-1">@role</span>
+                                    }
+                                }
+                            </td>
+                            <td>
+                                <partial name="Partials/_LifecycleBadge"
+                                         model="@(new LifecycleBadgeVm(u.IsActive, null))" />
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm" role="group"
+                                     aria-label="@Localizer["Admin.Users.RowActionsLabel"]">
+                                    @* Manage — gated by User.Read (the page's own permission). *@
+                                    <permission require="@WebPermission.User.Read">
+                                        <a asp-area="Admin" asp-controller="Users"
+                                           asp-action="Details" asp-route-userId="@u.Id"
+                                           class="btn btn-outline-primary">
+                                            <i class="fa-solid fa-user-gear fa-fw" aria-hidden="true"></i>
+                                            <span>@Localizer["Admin.Users.Manage"]</span>
+                                        </a>
+                                    </permission>
+
+                                    @* Audit timeline — gated by System.Read. *@
+                                    <permission require="@WebPermission.System.Read">
+                                        <a asp-area="Admin" asp-controller="AuditLogs"
+                                           asp-action="Index" asp-route-userId="@u.Id"
+                                           class="btn btn-outline-secondary">
+                                            <i class="fa-solid fa-clock-rotate-left fa-fw" aria-hidden="true"></i>
+                                            <span>@Localizer["Admin.Users.Audit"]</span>
+                                        </a>
+                                    </permission>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@* ── Pagination — driven solely by HasPrevious / HasNext (D1, shared partial) ─ *@
+@if (Model.HasPrevious || Model.HasNext)
+{
+    <partial name="Partials/_PaginationFooter"
+             model="@(new PaginationFooterVm
+             {
+                 HasPrevious = Model.HasPrevious,
+                 HasNext = Model.HasNext,
+                 Page = Model.Page,
+                 PreviousUrl = Url.Action("Index", new { page = Model.Page - 1 }),
+                 NextUrl = Url.Action("Index", new { page = Model.Page + 1 }),
+                 PreviousText = Localizer["Admin.Users.Previous"].Value,
+                 NextText = Localizer["Admin.Users.Next"].Value,
+                 PageLabel = Localizer["Admin.Users.PageLabel"].Value
+             })" />
+}

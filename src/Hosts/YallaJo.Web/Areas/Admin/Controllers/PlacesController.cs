@@ -34,6 +34,8 @@ public sealed class PlacesController : BaseController
         var result = await _facade.GetPlacesAsync(page, pageSize, filter, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        // S1/PE1 — same action serves the full page and the listing.js fragment
+        // (WantsAjax = X-Requested-With: fetch). No [OutputCache] ever (C2).
         if (!result.IsSuccess)
         {
             // Same-page (non-redirect) failure: keep ViewBag.Error so the
@@ -41,15 +43,16 @@ public sealed class PlacesController : BaseController
             // established Admin/Tours Index convention (SetError targets the
             // post-redirect flash, which this branch does not perform).
             ViewBag.Error = result.Error;
-            return View(new PlaceListVm
+            var fallback = new PlaceListVm
             {
                 Filter   = filter,
                 Page     = page,
                 PageSize = pageSize,
-            });
+            };
+            return WantsAjax() ? PartialView("_PlacesResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        return WantsAjax() ? PartialView("_PlacesResults", result.Data) : View(result.Data);
     }
 
     // ── Details ──────────────────────────────────────────────────────────────

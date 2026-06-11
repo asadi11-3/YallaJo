@@ -1,0 +1,85 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Admin.Models.Tours
+@using YallaJo.Web.Areas.Admin.Models.Shared
+@model AdminToursIndexVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@* Swappable listing fragment (S1/PE1): served by ToursController.Index for both
+   the full page and listing.js AJAX refinement. *@
+@{
+    var culture = CultureInfo.CurrentCulture;
+    string Date(DateTime d) => d.ToString("yyyy-MM-dd HH:mm", culture);
+    string DateOnly(DateTime d) => d.ToString("yyyy-MM-dd", culture);
+    string Money(decimal amount, string currency) => $"{amount.ToString("0.##", culture)} {currency}";
+}
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger m-3 mb-0" role="alert">@vbe</div>
+}
+<div class="card-body p-0">
+    @if (!Model.HasItems)
+    {
+        <div class="text-center py-5">
+            <i class="fa-solid fa-mountain-sun fa-2x text-secondary mb-3" aria-hidden="true"></i>
+            <p class="mb-3 text-secondary">@Localizer["Admin.Tours.Empty"]</p>
+            <a asp-area="Admin" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                @Localizer["Admin.Tours.AllStatuses"]
+            </a>
+            <p class="text-secondary small mt-3 mb-0">@Localizer["Admin.Tours.EmptyHint"]</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">@Localizer["Admin.Tours.ColName"]</th>
+                        <th scope="col">@Localizer["Admin.Tours.ColStatus"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Tours.ColBasePrice"]</th>
+                        <th scope="col">@Localizer["Admin.Tours.ColSubmitted"]</th>
+                        <th scope="col">@Localizer["Admin.Tours.ColCreated"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Tours.ColActions"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tour in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <span class="fw-semibold">@tour.Name</span>
+                                <div class="text-secondary small"><bdi dir="ltr" class="font-data">@tour.Slug</bdi></div>
+                            </td>
+                            <td><span class="badge @tour.StatusBadgeClass">@tour.Status</span></td>
+                            <td class="text-end"><bdi dir="ltr" class="font-data">@Money(tour.BasePrice, tour.Currency)</bdi></td>
+                            <td>@(tour.SubmittedAt is { } sa ? Date(sa) : "—")</td>
+                            <td>@DateOnly(tour.CreatedAt)</td>
+                            <td class="text-end">
+                                <a asp-area="Admin" asp-controller="Tours" asp-action="Details" asp-route-id="@tour.Id"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fa-solid fa-eye fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Tours.Details"]
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@if (Model.HasPreviousPage || Model.HasNextPage)
+{
+    <partial name="Partials/_PaginationFooter"
+             model="@(new PaginationFooterVm
+             {
+                 HasPrevious = Model.HasPreviousPage,
+                 HasNext = Model.HasNextPage,
+                 Page = Model.PageNumber,
+                 PreviousUrl = Url.Action("Index", "Tours", new { area = "Admin", status = Model.Status, page = Model.PageNumber - 1 }),
+                 NextUrl = Url.Action("Index", "Tours", new { area = "Admin", status = Model.Status, page = Model.PageNumber + 1 }),
+                 PreviousText = Localizer["Admin.Tours.Previous"].Value,
+                 NextText = Localizer["Admin.Tours.Next"].Value,
+                 PageLabel = Localizer["Admin.Tours.PageLabel"].Value
+             })" />
+}

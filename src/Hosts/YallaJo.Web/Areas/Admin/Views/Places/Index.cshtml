@@ -8,22 +8,8 @@
     ViewData["Title"]    = Localizer["Admin.Places.Title"].Value;
     ViewData["AdminNav"] = "Places";
 
-    var f = Model.Filter;
     var culture = CultureInfo.CurrentCulture;
     string Count(int n) => n.ToString("N0", culture);
-
-    // Pager route values (filters preserved). Raw GUID CategoryId is intentionally
-    // omitted from the visible filter UI (F10), so it is not echoed here either.
-    Dictionary<string, string?> RouteValuesFor(int targetPage) => new()
-    {
-        ["page"]                  = targetPage.ToString(CultureInfo.InvariantCulture),
-        ["pageSize"]              = Model.PageSize.ToString(CultureInfo.InvariantCulture),
-        ["Filter.RatingMin"]      = f.RatingMin?.ToString(CultureInfo.InvariantCulture),
-        ["Filter.RatingMax"]      = f.RatingMax?.ToString(CultureInfo.InvariantCulture),
-        ["Filter.City"]           = f.City,
-        ["Filter.Country"]        = f.Country,
-        ["Filter.HasActiveTours"] = f.HasActiveTours?.ToString(),
-    };
 }
 
 <div class="d-sm-flex justify-content-between align-items-center mb-4">
@@ -43,17 +29,15 @@
     </div>
 </div>
 
-@if (ViewBag.Error is string vbe)
-{
-    <div class="alert alert-danger" role="alert">@vbe</div>
-}
+@* ViewBag.Error renders inside the listing fragment so AJAX fallbacks surface it too. *@
 
 <div class="card shadow mb-4">
     <div class="card-header border-bottom">
         <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Places.FiltersHeading"]</h2>
     </div>
     <div class="card-body">
-        <form asp-area="Admin" asp-controller="Places" asp-action="Index" method="get" class="row g-3">
+        <form asp-area="Admin" asp-controller="Places" asp-action="Index" method="get" class="row g-3"
+              data-yj-listing>
             <div class="col-md-3">
                 <label asp-for="Filter.City" class="form-label">@Localizer["Admin.Places.CityLabel"]</label>
                 <input asp-for="Filter.City" class="form-control"
@@ -114,25 +98,16 @@
     <div class="card-header border-bottom">
         <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Places.DirectoryHeading"]</h2>
     </div>
-    <partial name="_Table" model="Model" />
-
-    @if (Model.HasPreviousPage || Model.HasNextPage)
-    {
-        <partial name="Partials/_PaginationFooter"
-                 model="@(new PaginationFooterVm
-                 {
-                     HasPrevious = Model.HasPreviousPage,
-                     HasNext = Model.HasNextPage,
-                     Page = Model.Page,
-                     PreviousUrl = Url.Action("Index", "Places", RouteValuesFor(Model.Page - 1)),
-                     NextUrl = Url.Action("Index", "Places", RouteValuesFor(Model.Page + 1)),
-                     PreviousText = Localizer["Admin.Places.Previous"].Value,
-                     NextText = Localizer["Admin.Places.Next"].Value,
-                     PageLabel = Localizer["Admin.Places.PageLabel"].Value
-                 })" />
-    }
+    @* S1/L1/A11Y9 — listing.js swaps this fragment on filter/pager refinements. *@
+    <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+         data-error-text="@Localizer["Public.Results.Error"]"
+         data-retry-text="@Localizer["Public.Retry"]"
+         data-loading-text="@Localizer["Public.Loading"]">
+        <partial name="_PlacesResults" model="Model" />
+    </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/listing.js" asp-append-version="true" defer></script>
 }

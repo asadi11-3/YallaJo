@@ -29,12 +29,8 @@
     }
 </div>
 
-@* Success/Error flash banners render globally via the shared _Alerts partial. *@
-@if (ViewBag.Error is string vbe)
-{
-    <div class="alert alert-danger" role="alert">@vbe</div>
-}
-
+@* Success/Error flash banners render globally via the shared _Alerts partial;
+   the listing error alert renders inside the swappable fragment (_UsersResults). *@
 <div class="card shadow" data-yj-component="admin-users-list">
     <div class="card-header border-bottom d-sm-flex justify-content-between align-items-center">
         <h2 class="card-header-title h5 mb-2 mb-sm-0">@Localizer["Admin.Users.Directory"]</h2>
@@ -53,107 +49,19 @@
         }
     </div>
 
-    <div class="card-body">
-        @if (Model.Users.Count == 0)
-        {
-            @* L6 — empty state carries a message + a CTA (shared partial). *@
-            <partial name="Partials/_EmptyState"
-                     model="@(new EmptyStateVm
-                     {
-                         Message = Localizer["Admin.Users.EmptyMessage"].Value,
-                         CtaText = Localizer["Admin.Users.EmptyCta"].Value,
-                         CtaUrl = Url.Action("Index", "Home", new { area = "Admin" })
-                     })" />
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="users-table">
-                    <thead>
-                        <tr>
-                            <th scope="col">@Localizer["Admin.Users.ColEmail"]</th>
-                            <th scope="col">@Localizer["Admin.Users.ColRoles"]</th>
-                            <th scope="col">@Localizer["Admin.Users.ColStatus"]</th>
-                            <th scope="col" class="text-end">@Localizer["Admin.Users.ColActions"]</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var u in Model.Users)
-                        {
-                            @* F10 — the GUID never appears as text; it travels via asp-route-userId only.
-                               Email is the human-readable user name. *@
-                            <tr data-filter-text="@(u.Email + " " + string.Join(" ", u.Roles))">
-                                <td>
-                                    <span class="fw-semibold"><bdi dir="ltr">@u.Email</bdi></span>
-                                </td>
-                                <td>
-                                    @if (u.Roles.Count == 0)
-                                    {
-                                        <span class="text-secondary small" aria-label="@Localizer["Admin.Users.NoRoles"]">—</span>
-                                    }
-                                    else
-                                    {
-                                        foreach (var role in u.Roles)
-                                        {
-                                            <span class="badge bg-secondary bg-opacity-10 text-secondary me-1">@role</span>
-                                        }
-                                    }
-                                </td>
-                                <td>
-                                    <partial name="Partials/_LifecycleBadge"
-                                             model="@(new LifecycleBadgeVm(u.IsActive, null))" />
-                                </td>
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm" role="group"
-                                         aria-label="@Localizer["Admin.Users.RowActionsLabel"]">
-                                        @* Manage — gated by User.Read (the page's own permission). *@
-                                        <permission require="@WebPermission.User.Read">
-                                            <a asp-area="Admin" asp-controller="Users"
-                                               asp-action="Details" asp-route-userId="@u.Id"
-                                               class="btn btn-outline-primary">
-                                                <i class="fa-solid fa-user-gear fa-fw" aria-hidden="true"></i>
-                                                <span>@Localizer["Admin.Users.Manage"]</span>
-                                            </a>
-                                        </permission>
-
-                                        @* Audit timeline — gated by System.Read. *@
-                                        <permission require="@WebPermission.System.Read">
-                                            <a asp-area="Admin" asp-controller="AuditLogs"
-                                               asp-action="Index" asp-route-userId="@u.Id"
-                                               class="btn btn-outline-secondary">
-                                                <i class="fa-solid fa-clock-rotate-left fa-fw" aria-hidden="true"></i>
-                                                <span>@Localizer["Admin.Users.Audit"]</span>
-                                            </a>
-                                        </permission>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
+    @* S1/L1/A11Y9 — AJAX listing region: listing.js swaps this fragment in place
+       (skeleton + pushState + popstate + inline retry); JS-off keeps native GETs. *@
+    <div id="listingResults" data-yj-component="listing"
+         aria-live="polite" aria-busy="false"
+         data-error-text="@Localizer["Public.Results.Error"]"
+         data-retry-text="@Localizer["Public.Retry"]"
+         data-loading-text="@Localizer["Public.Loading"]">
+        <partial name="_UsersResults" model="Model" />
     </div>
-
-    @* ── Pagination — driven solely by HasPrevious / HasNext (D1, shared partial) ─ *@
-    @if (Model.HasPrevious || Model.HasNext)
-    {
-        <partial name="Partials/_PaginationFooter"
-                 model="@(new PaginationFooterVm
-                 {
-                     HasPrevious = Model.HasPrevious,
-                     HasNext = Model.HasNext,
-                     Page = Model.Page,
-                     PreviousUrl = Url.Action("Index", new { page = Model.Page - 1 }),
-                     NextUrl = Url.Action("Index", new { page = Model.Page + 1 }),
-                     PreviousText = Localizer["Admin.Users.Previous"].Value,
-                     NextText = Localizer["Admin.Users.Next"].Value,
-                     PageLabel = Localizer["Admin.Users.PageLabel"].Value
-                 })" />
-    }
 </div>
 
 @section Scripts {
-    @* A6/SEC1/J3 — page JS lives in an external CSP-safe file (no inline script). *@
+    @* A6/SEC1/J3 — page JS lives in external CSP-safe files (no inline script). *@
+    <script src="~/assets/js/listing.js" asp-append-version="true" defer></script>
     <script src="~/assets/js/admin-users.js" asp-append-version="true" defer></script>
 }

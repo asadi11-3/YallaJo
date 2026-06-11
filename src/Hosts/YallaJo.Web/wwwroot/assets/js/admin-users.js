@@ -22,16 +22,14 @@
         root.dataset.yjInit = "1";
 
         const input = root.querySelector("[data-yj-users-filter]");
-        const table = root.querySelector("#users-table");
-        if (!input || !table || !table.tBodies.length) { return; }
+        if (!input) { return; }
 
-        const rows = Array.prototype.slice
-            .call(table.tBodies[0].rows)
-            .filter(function (r) { return r.hasAttribute("data-filter-text"); });
-
+        // Rows are queried lazily so the filter keeps working after listing.js
+        // swaps the results fragment (AJAX pagination re-renders the table).
         input.addEventListener("input", function () {
             const q = this.value.trim().toLowerCase();
-            rows.forEach(function (row) {
+            const rows = root.querySelectorAll("#users-table tbody tr[data-filter-text]");
+            Array.prototype.forEach.call(rows, function (row) {
                 const hay = (row.getAttribute("data-filter-text") || "").toLowerCase();
                 row.hidden = !(q.length === 0 || hay.indexOf(q) !== -1);
             });

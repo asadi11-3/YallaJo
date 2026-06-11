@@ -32,13 +32,16 @@ public sealed class ToursController : BaseController
         var result = await _facade.GetListAsync(status, page, DefaultPageSize, sort, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        // S1/PE1 — same action serves the full page and the listing.js fragment
+        // (WantsAjax = X-Requested-With: fetch). No [OutputCache] ever (C2).
         if (!result.IsSuccess || result.Data is null)
         {
             ViewBag.Error = result.Error;
-            return View(new AdminToursIndexVm { Status = status });
+            var fallback = new AdminToursIndexVm { Status = status };
+            return WantsAjax() ? PartialView("_ToursResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        return WantsAjax() ? PartialView("_ToursResults", result.Data) : View(result.Data);
     }
 
     // ── GET /admin/tours/{id} ───────────────────────────────────────────────────────

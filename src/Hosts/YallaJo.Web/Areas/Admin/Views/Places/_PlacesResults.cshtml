@@ -1,0 +1,46 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Admin.Models.Shared
+@model YallaJo.Web.Areas.Admin.Models.Places.PlaceListVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    // Swappable listing fragment (S1/PE1): rendered inline on first load and
+    // returned alone for listing.js (WantsAjax) refinements.
+    var f = Model.Filter;
+
+    // Pager route values (filters preserved). Raw GUID CategoryId is intentionally
+    // omitted from the visible filter UI (F10), so it is not echoed here either.
+    Dictionary<string, string?> RouteValuesFor(int targetPage) => new()
+    {
+        ["page"]                  = targetPage.ToString(CultureInfo.InvariantCulture),
+        ["pageSize"]              = Model.PageSize.ToString(CultureInfo.InvariantCulture),
+        ["Filter.RatingMin"]      = f.RatingMin?.ToString(CultureInfo.InvariantCulture),
+        ["Filter.RatingMax"]      = f.RatingMax?.ToString(CultureInfo.InvariantCulture),
+        ["Filter.City"]           = f.City,
+        ["Filter.Country"]        = f.Country,
+        ["Filter.HasActiveTours"] = f.HasActiveTours?.ToString(),
+    };
+}
+
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger m-3 mb-0" role="alert">@vbe</div>
+}
+
+<partial name="_Table" model="Model" />
+
+@if (Model.HasPreviousPage || Model.HasNextPage)
+{
+    <partial name="Partials/_PaginationFooter"
+             model="@(new PaginationFooterVm
+             {
+                 HasPrevious = Model.HasPreviousPage,
+                 HasNext = Model.HasNextPage,
+                 Page = Model.Page,
+                 PreviousUrl = Url.Action("Index", "Places", RouteValuesFor(Model.Page - 1)),
+                 NextUrl = Url.Action("Index", "Places", RouteValuesFor(Model.Page + 1)),
+                 PreviousText = Localizer["Admin.Places.Previous"].Value,
+                 NextText = Localizer["Admin.Places.Next"].Value,
+                 PageLabel = Localizer["Admin.Places.PageLabel"].Value
+             })" />
+}

@@ -1,8 +1,6 @@
 @using System.Globalization
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.GuideApplications
-@using YallaJo.Web.Infrastructure.Authorization
-@using YallaJo.Web.Areas.Admin.Models.Shared
 @model GuideApplicationsVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -11,8 +9,6 @@
 
     var culture = CultureInfo.CurrentCulture;
     string Count(int n) => n.ToString("N0", culture);
-    string Money(decimal d) => d.ToString("N2", culture);
-    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
 
     var statuses = new[] { "Submitted", "Approved", "Rejected", "Draft" };
     var hasTour = Model.TourId.HasValue && Model.TourId.Value != Guid.Empty;
@@ -31,17 +27,15 @@
     }
 </div>
 
-@if (!string.IsNullOrWhiteSpace(ViewBag.Error as string))
-{
-    <div class="alert alert-danger" role="alert">@ViewBag.Error</div>
-}
+@* ViewBag.Error renders inside the listing fragment so AJAX fallbacks surface it too. *@
 
 <section class="card shadow mb-4" aria-labelledby="ga-filters-heading">
     <div class="card-header border-bottom">
         <h2 id="ga-filters-heading" class="card-header-title h5 mb-0">@Localizer["Admin.GuideApplications.FiltersHeading"]</h2>
     </div>
     <div class="card-body">
-        <form method="get" asp-area="Admin" asp-controller="GuideApplications" asp-action="Index" class="row g-3 align-items-end">
+        <form method="get" asp-area="Admin" asp-controller="GuideApplications" asp-action="Index"
+              class="row g-3 align-items-end" data-yj-listing>
             <div class="col-md-6 col-lg-5">
                 <label for="tourId" class="form-label">@Localizer["Admin.GuideApplications.TourLabel"]</label>
                 <select id="tourId" name="tourId" class="form-select" aria-describedby="tourId-help">
@@ -89,155 +83,15 @@
     <div class="card-header border-bottom">
         <h2 id="ga-directory-heading" class="card-header-title h5 mb-0">@Localizer["Admin.GuideApplications.Directory"]</h2>
     </div>
-    @if (!hasTour)
-    {
-        <div class="card-body">
-            <partial name="Partials/_EmptyState"
-                     model="@(new EmptyStateVm { Message = Localizer["Admin.GuideApplications.ChooseTourMessage"].Value })" />
-        </div>
-    }
-    else if (Model.Applications.Count == 0)
-    {
-        <div class="card-body">
-            <partial name="Partials/_EmptyState"
-                     model="@(new EmptyStateVm { Message = Localizer["Admin.GuideApplications.EmptyMessage"].Value })" />
-        </div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th scope="col">@Localizer["Admin.GuideApplications.ColTour"]</th>
-                        <th scope="col">@Localizer["Admin.GuideApplications.ColGuide"]</th>
-                        <th scope="col" class="text-end">@Localizer["Admin.GuideApplications.ColPrice"]</th>
-                        <th scope="col" class="text-end">@Localizer["Admin.GuideApplications.ColResubmissions"]</th>
-                        <th scope="col">@Localizer["Admin.GuideApplications.ColCreated"]</th>
-                        <th scope="col">@Localizer["Admin.GuideApplications.ColStatus"]</th>
-                        <th scope="col" class="text-end">@Localizer["Admin.GuideApplications.ColActions"]</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var row in Model.Applications)
-                    {
-                        var color = GuideApplicationsMapper.StatusColor(row.Status);
-                        var icon = GuideApplicationsMapper.StatusIcon(row.Status);
-                        var modalId = "rejectModal-" + row.ApplicationId.ToString("N");
-                        var titleId = modalId + "-title";
-                        var bodyId = modalId + "-body";
-                        var reasonId = modalId + "-reason";
-                        var helpId = modalId + "-help";
-                        <tr>
-                            <td>
-                                @if (string.IsNullOrWhiteSpace(row.TourTitle))
-                                {
-                                    <span class="text-secondary">@Localizer["Admin.GuideApplications.NoTour"]</span>
-                                }
-                                else
-                                {
-                                    <span class="fw-semibold">@row.TourTitle</span>
-                                }
-                            </td>
-                            <td>
-                                @if (string.IsNullOrWhiteSpace(row.GuideEmail))
-                                {
-                                    <span class="text-secondary">@Localizer["Admin.GuideApplications.UnknownGuide"]</span>
-                                }
-                                else
-                                {
-                                    <span class="fw-semibold"><bdi dir="ltr">@row.GuideEmail</bdi></span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                @if (row.ProposedBasePrice.HasValue)
-                                {
-                                    <bdi dir="ltr" class="font-data">@Money(row.ProposedBasePrice.Value)</bdi>
-                                }
-                                else
-                                {
-                                    <span class="text-secondary" aria-label="@Localizer["Admin.GuideApplications.NoTour"]">&mdash;</span>
-                                }
-                            </td>
-                            <td class="text-end"><bdi class="font-data">@Count(row.ResubmissionCount)</bdi></td>
-                            <td><bdi dir="ltr" class="font-data">@Date(row.CreatedAt)</bdi></td>
-                            <td>
-                                <span class="badge bg-@color bg-opacity-10 text-@color">
-                                    <i class="fa-solid fa-@icon fa-fw" aria-hidden="true"></i> @Localizer["Admin.GuideApplications.Status." + row.Status]
-                                </span>
-                            </td>
-                            <td class="text-end">
-                                <div class="btn-group">
-                                    <permission require="@WebPermission.GuideApplication.Approve">
-                                        <form method="post" asp-area="Admin" asp-controller="GuideApplications" asp-action="Approve"
-                                              asp-route-tourId="@row.TourId" asp-route-id="@row.ApplicationId" class="d-inline"
-                                              data-confirm="@Localizer["Admin.GuideApplications.ApproveConfirm", row.TourTitle ?? string.Empty]"
-                                              data-confirm-title="@Localizer["Admin.GuideApplications.ApproveTitle"]"
-                                              data-confirm-action="@Localizer["Admin.GuideApplications.ApproveAction"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-success">
-                                                <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.GuideApplications.Approve"]
-                                            </button>
-                                        </form>
-                                    </permission>
-                                    <permission require="@WebPermission.GuideApplication.Reject">
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#@modalId">
-                                            <i class="fa-solid fa-circle-xmark fa-fw" aria-hidden="true"></i> @Localizer["Admin.GuideApplications.Reject"]
-                                        </button>
-                                    </permission>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        @foreach (var row in Model.Applications)
-        {
-            var modalId = "rejectModal-" + row.ApplicationId.ToString("N");
-            var titleId = modalId + "-title";
-            var bodyId = modalId + "-body";
-            var reasonId = modalId + "-reason";
-            var helpId = modalId + "-help";
-            <permission require="@WebPermission.GuideApplication.Reject">
-                <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bodyId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <form method="post" asp-area="Admin" asp-controller="GuideApplications" asp-action="Reject"
-                              asp-route-tourId="@row.TourId" asp-route-id="@row.ApplicationId"
-                              class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
-                            @Html.AntiForgeryToken()
-                            <partial name="Partials/_ModalHeader"
-                                     model="@(new ModalHeaderVm { TitleId = titleId, Title = Localizer["Admin.GuideApplications.RejectTitle"].Value, CloseLabel = Localizer["Admin.GuideApplications.Close"].Value })" />
-                            <div class="modal-body" id="@bodyId">
-                                <label for="@reasonId" class="form-label">@Localizer["Admin.GuideApplications.ReasonLabel"]</label>
-                                <textarea id="@reasonId" name="reason" class="form-control" rows="3" maxlength="1000" required aria-describedby="@helpId"></textarea>
-                                <div id="@helpId" class="form-text">@Localizer["Admin.GuideApplications.ReasonHelp"]</div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.GuideApplications.Cancel"]</button>
-                                <button type="submit" class="btn btn-danger">@Localizer["Admin.GuideApplications.RejectSubmit"]</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </permission>
-        }
-
-        @if (Model.HasPrevious || Model.HasNext)
-        {
-            <partial name="Partials/_PaginationFooter"
-                     model="@(new PaginationFooterVm
-                     {
-                         HasPrevious = Model.HasPrevious,
-                         HasNext = Model.HasNext,
-                         Page = Model.Page,
-                         PreviousUrl = Url.Action("Index", "GuideApplications", new { area = "Admin", tourId = Model.TourId, status = Model.StatusFilter, page = Model.Page - 1 }),
-                         NextUrl = Url.Action("Index", "GuideApplications", new { area = "Admin", tourId = Model.TourId, status = Model.StatusFilter, page = Model.Page + 1 }),
-                         PreviousText = Localizer["Admin.GuideApplications.Previous"].Value,
-                         NextText = Localizer["Admin.GuideApplications.Next"].Value,
-                         PageLabel = Localizer["Admin.GuideApplications.PageLabel"].Value
-                     })" />
-        }
-    }
+    @* S1/L1/A11Y9: listing.js refines this region in place (skeleton, swap, history). *@
+    <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+         data-error-text="@Localizer["Public.Results.Error"]"
+         data-retry-text="@Localizer["Public.Retry"]"
+         data-loading-text="@Localizer["Public.Loading"]">
+        <partial name="_GuideApplicationsResults" model="Model" />
+    </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true" defer></script>
+}

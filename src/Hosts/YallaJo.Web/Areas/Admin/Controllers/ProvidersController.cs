@@ -41,13 +41,22 @@ public sealed class ProvidersController : BaseController
         var result = await _facade.GetQueueAsync(status, type, page, DefaultPageSize, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        // S1/PE1 — same action serves the full page and the listing.js fragment
+        // (WantsAjax = X-Requested-With: fetch). No [OutputCache] ever (C2).
         if (!result.IsSuccess || result.Data is null)
         {
+            var fallback = Models.Providers.ProvidersMapper.EmptyQueue(status, type, page, DefaultPageSize);
+            if (WantsAjax())
+            {
+                ViewBag.Error = result.Error;
+                return PartialView("_ProvidersResults", fallback);
+            }
+
             SetError(result.Error);
-            return View(Models.Providers.ProvidersMapper.EmptyQueue(status, type, page, DefaultPageSize));
+            return View(fallback);
         }
 
-        return View(result.Data);
+        return WantsAjax() ? PartialView("_ProvidersResults", result.Data) : View(result.Data);
     }
 
     // ── GET /admin/providers/{id} ─────────────────────────────────────────────────────
