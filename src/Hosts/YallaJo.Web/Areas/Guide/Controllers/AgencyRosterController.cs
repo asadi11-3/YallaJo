@@ -33,22 +33,11 @@ public sealed class AgencyRosterController : GuideBaseController
         return View(result.Data);
     }
 
+    /// <summary>Phase 3 view reduction: the Invite page was merged into the roster page
+    /// (#invite-guide anchor). The route is kept so existing links 301 to the new home.</summary>
     [HttpGet("guide/agency/roster/invite")]
     [RequirePermission(WebPermission.AgencyRoster.Create)]
-    public async Task<IActionResult> Invite(CancellationToken ct = default)
-    {
-        SetNav("AgencyRoster");
-        var result = await _facade.GetInviteFormAsync(ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-
-        if (!result.IsSuccess || result.Data is null)
-        {
-            SetError(result.Error);
-            return RedirectToAction(nameof(Index));
-        }
-
-        return View(result.Data);
-    }
+    public IActionResult Invite() => RedirectPermanent("/guide/agency/roster#invite-guide");
 
     [HttpPost("guide/agency/roster/invite")]
     [ValidateAntiForgeryToken]
@@ -59,9 +48,7 @@ public sealed class AgencyRosterController : GuideBaseController
 
         if (!ModelState.IsValid)
         {
-            var repopulate = await _facade.PopulateAvailableGuidesAsync(form, ct);
-            if (GuardSignOut(repopulate) is { } repopulateSignOut) return repopulateSignOut;
-            return View(form);
+            return await ReloadRosterAsync(form, ct);
         }
 
         var result = await _facade.InviteAsync(form, ct);
@@ -69,10 +56,12 @@ public sealed class AgencyRosterController : GuideBaseController
 
         if (!result.IsSuccess)
         {
-            SetError(result.Error);
-            var repopulate = await _facade.PopulateAvailableGuidesAsync(form, ct);
-            if (GuardSignOut(repopulate) is { } repopulateSignOut) return repopulateSignOut;
-            return View(form);
+            if (!ApplyValidationErrors(result))
+            {
+                SetError(result.Error);
+            }
+
+            return await ReloadRosterAsync(form, ct);
         }
 
         SetSuccess("Invitation sent.");
@@ -123,6 +112,19 @@ public sealed class AgencyRosterController : GuideBaseController
 
         SetFlash(result, "Guide removed from your roster.");
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>Re-renders the roster page with the submitted invite form (PE1: no-JS POST
+    /// failure keeps the user's input and the #invite-guide section visible).</summary>
+    private async Task<IActionResult> ReloadRosterAsync(InviteGuideFormVm form, CancellationToken ct)
+    {
+        var roster = await _facade.GetRosterAsync(ct);
+        if (GuardSignOut(roster) is { } signOut) return signOut;
+
+        var vm = roster is { IsSuccess: true, Data: not null } ? roster.Data : new AgencyRosterVm();
+        form.AvailableGuides = vm.InviteForm.AvailableGuides;
+        vm.InviteForm = form;
+        return View(nameof(Index), vm);
     }
 
     /// <summary>Shared reason-required guard for reject/remove actions; null when the reason is present.</summary>

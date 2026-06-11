@@ -22,7 +22,7 @@
                     </span>
                 }
                 <permission require="@WebPermission.AgencyRoster.Create">
-                    <a asp-action="Invite" class="btn btn-sm btn-primary">
+                    <a href="#invite-guide" class="btn btn-sm btn-primary">
                         <i class="fa-solid fa-user-plus me-1" aria-hidden="true"></i>@Localizer["Guide.AgencyRoster.InviteGuide"]
                     </a>
                 </permission>
@@ -197,6 +197,20 @@
                 }
             </div>
         </div>
+
+        @* ── Invite a guide (merged from the retired Invite page; anchor target for the 301) ── *@
+        <permission require="@WebPermission.AgencyRoster.Create">
+            <div class="card border" id="invite-guide">
+                <div class="card-header border-bottom">
+                    <h2 class="card-header-title h5 mb-0">
+                        <i class="fa-solid fa-user-plus me-2" aria-hidden="true"></i>@Localizer["Guide.AgencyInvite.Heading"]
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <partial name="_InviteGuideForm" model="Model.InviteForm" />
+                </div>
+            </div>
+        </permission>
     </div>
 </section>
 
@@ -232,4 +246,5 @@
 @section Scripts {
     @* CSP-safe external handler for the reject-reason prompt (A6/SEC1/J3). *@
     <script src="~/assets/js/guide-agency-roster.js" asp-append-version="true" defer></script>
+    <partial name="_ValidationScriptsPartial" />
 }

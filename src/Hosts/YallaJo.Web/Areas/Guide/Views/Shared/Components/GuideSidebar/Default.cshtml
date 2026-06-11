@@ -76,7 +76,8 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("Tier")" aria-current="@(Current("Tier") ? "page" : null)" asp-area="Guide" asp-controller="Tier" asp-action="Index">
+                                @* Tier page merged into Dashboard (Phase 3); deep link to the #tier anchor. *@
+                                <a class="@Nav("Tier")" aria-current="@(Current("Tier") ? "page" : null)" href="@Url.Content("~/guide/dashboard#tier")">
                                     <i class="fa-solid fa-award fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Tier"]
                                 </a>
                             </li>

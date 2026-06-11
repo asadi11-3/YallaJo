@@ -26,7 +26,10 @@
 
         @if (Model.TierProgress is not null)
         {
-            <partial name="_TierProgress" model="Model.TierProgress" />
+            @* Anchor target for the retired /guide/tier page (301 -> /guide/dashboard#tier). *@
+            <div id="tier">
+                <partial name="_TierProgress" model="Model.TierProgress" />
+            </div>
         }
 
         <div class="row g-4">
