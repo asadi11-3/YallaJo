@@ -42,6 +42,29 @@
                             </li>
                         </ul>
 
+                        @if (!isJoinRequestsTab)
+                        {
+                            @* Phase 4e (Accounts plan): date-range filter — PE1 GET form, native date inputs, no JS. *@
+                            <form method="get" asp-area="Accounts" asp-controller="Bookings" asp-action="Index" class="row g-2 align-items-end mb-3">
+                                <input type="hidden" name="tab" value="@Model.ActiveTab" />
+                                <div class="col-6 col-sm-4">
+                                    <label class="form-label small mb-1" for="bookingFrom">@Localizer["Accounts.Bookings.From"]</label>
+                                    <input type="date" class="form-control form-control-sm" id="bookingFrom" name="from" value="@Model.FromDate" />
+                                </div>
+                                <div class="col-6 col-sm-4">
+                                    <label class="form-label small mb-1" for="bookingTo">@Localizer["Accounts.Bookings.To"]</label>
+                                    <input type="date" class="form-control form-control-sm" id="bookingTo" name="to" value="@Model.ToDate" />
+                                </div>
+                                <div class="col-sm-4 d-flex align-items-end gap-2">
+                                    <button type="submit" class="btn btn-sm btn-primary mb-0"><i class="bi bi-funnel me-1" aria-hidden="true"></i>@Localizer["Accounts.Bookings.Filter"]</button>
+                                    @if (!string.IsNullOrEmpty(Model.FromDate) || !string.IsNullOrEmpty(Model.ToDate))
+                                    {
+                                        <a class="btn btn-sm btn-outline-secondary mb-0" asp-area="Accounts" asp-controller="Bookings" asp-action="Index" asp-route-tab="@Model.ActiveTab">@Localizer["Accounts.Bookings.ClearFilter"]</a>
+                                    }
+                                </div>
+                            </form>
+                        }
+
                         @if (isJoinRequestsTab)
                         {
                             <partial name="_JoinRequestsTab" model="Model.JoinRequests ?? new YallaJo.Web.Areas.Accounts.Models.JoinRequests.MyJoinRequestsVm()" />

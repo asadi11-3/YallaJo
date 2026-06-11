@@ -12883,4 +12883,16 @@
 <data name="Accounts.Support.ReplySent" xml:space="preserve">
 <value>Your reply was sent.</value>
 </data>
+<data name="Accounts.Bookings.Filter" xml:space="preserve">
+<value>Filter</value>
+</data>
+<data name="Accounts.Bookings.From" xml:space="preserve">
+<value>From</value>
+</data>
+<data name="Accounts.Bookings.To" xml:space="preserve">
+<value>To</value>
+</data>
+<data name="Accounts.Bookings.ClearFilter" xml:space="preserve">
+<value>Clear</value>
+</data>
 </root>

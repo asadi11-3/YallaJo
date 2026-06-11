@@ -26,7 +26,7 @@ public sealed class BookingsController : BaseController
     }
 
     [HttpGet("accounts/bookings")]
-    public async Task<IActionResult> Index(string? tab, CancellationToken ct)
+    public async Task<IActionResult> Index(string? tab, string? from, string? to, CancellationToken ct)
     {
         ViewData["AccountNav"] = "Bookings";
         await PopulateSidebarAsync(ct);
@@ -34,14 +34,22 @@ public sealed class BookingsController : BaseController
         // Phase 3 (Accounts plan): "join-requests" is rendered as an extra tab on My Trips.
         var isJoinRequestsTab = string.Equals(tab, "join-requests", StringComparison.OrdinalIgnoreCase);
 
-        var result = await _bookings.GetBookingsAsync(isJoinRequestsTab ? null : tab, ct);
+        // Phase 4e (Accounts plan): optional date-range filter on the booking tabs (PE1 GET form).
+        string? fromDate = null, toDate = null;
+        if (!isJoinRequestsTab)
+        {
+            if (DateOnly.TryParse(from, out var f)) fromDate = f.ToString("yyyy-MM-dd");
+            if (DateOnly.TryParse(to, out var t)) toDate = t.ToString("yyyy-MM-dd");
+        }
+
+        var result = await _bookings.GetBookingsAsync(isJoinRequestsTab ? null : tab, fromDate, toDate, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         BookingsVm vm;
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            vm = new BookingsVm { ActiveTab = tab ?? "Upcoming" };
+            vm = new BookingsVm { ActiveTab = tab ?? "Upcoming", FromDate = fromDate, ToDate = toDate };
         }
         else
         {

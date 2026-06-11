@@ -34,10 +34,10 @@ public sealed class BookingsFacade
     private static string NormalizeTab(string? tab) =>
         Tabs.FirstOrDefault(t => string.Equals(t, tab, StringComparison.OrdinalIgnoreCase)) ?? "Upcoming";
 
-    public async Task<ApiResult<BookingsVm>> GetBookingsAsync(string? tab, CancellationToken ct = default)
+    public async Task<ApiResult<BookingsVm>> GetBookingsAsync(string? tab, string? fromDate = null, string? toDate = null, CancellationToken ct = default)
     {
         var activeTab = NormalizeTab(tab);
-        var result = await _api.GetMyBookingsAsync(StatusesFor(activeTab), ct);
+        var result = await _api.GetMyBookingsAsync(StatusesFor(activeTab), fromDate, toDate, ct);
 
         if (result.IsUnauthorized)
             return ApiResult<BookingsVm>.ForceSignOut();
@@ -51,6 +51,8 @@ public sealed class BookingsFacade
             ActiveTab = activeTab,
             Bookings = cards,
             Tabs = Tabs,
+            FromDate = fromDate,
+            ToDate = toDate,
         });
     }
 

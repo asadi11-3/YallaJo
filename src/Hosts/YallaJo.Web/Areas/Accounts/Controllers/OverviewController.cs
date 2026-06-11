@@ -55,7 +55,7 @@ public sealed class OverviewController : BaseController
         // API1: fire all reads together; each sub-read degrades independently so one
         // failing section never 500s the page (ERR2/ERR4).
         var profileTask = _profile.GetAsync(ct);
-        var bookingsTask = _bookings.GetBookingsAsync("Upcoming", ct);
+        var bookingsTask = _bookings.GetBookingsAsync("Upcoming", ct: ct);
         var recsTask = _recommendations.GetAsync(ct);
         var favoritesTask = _wishlist.GetWishlistAsync(ct);
         var bellTask = _notifications.GetBellAsync(ct);

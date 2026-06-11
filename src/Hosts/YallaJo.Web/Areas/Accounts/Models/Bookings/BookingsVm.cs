@@ -13,6 +13,14 @@ public sealed class BookingsVm
     /// Populated only when ActiveTab == "join-requests".
     /// </summary>
     public MyJoinRequestsVm? JoinRequests { get; set; }
+
+    /// <summary>
+    /// Phase 4e (Accounts plan): active date-range filter (ISO yyyy-MM-dd), round-tripped
+    /// into the GET filter form so the selected range survives navigation. Null when unset.
+    /// </summary>
+    public string? FromDate { get; set; }
+
+    public string? ToDate { get; set; }
 }
 
 public sealed class BookingCardVm

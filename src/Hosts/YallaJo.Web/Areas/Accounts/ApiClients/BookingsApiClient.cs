@@ -11,10 +11,19 @@ public sealed class BookingsApiClient
 
     public BookingsApiClient(IApiClient api) => _api = api;
 
-    public Task<ApiResult<MyBookingsPageResponse>> GetMyBookingsAsync(IEnumerable<string> statuses, CancellationToken ct = default)
+    public Task<ApiResult<MyBookingsPageResponse>> GetMyBookingsAsync(
+        IEnumerable<string> statuses,
+        string? fromDate = null,
+        string? toDate = null,
+        CancellationToken ct = default)
     {
         var status = string.Join(',', statuses);
         var path = $"/api/v1/booking/my-bookings?pageSize=50&status={Uri.EscapeDataString(status)}";
+        // Phase 4e: optional date-range filter (backend my-bookings accepts fromDate/toDate; ISO yyyy-MM-dd).
+        if (!string.IsNullOrWhiteSpace(fromDate))
+            path += $"&fromDate={Uri.EscapeDataString(fromDate)}";
+        if (!string.IsNullOrWhiteSpace(toDate))
+            path += $"&toDate={Uri.EscapeDataString(toDate)}";
         return _api.GetAsync<MyBookingsPageResponse>(path, ct);
     }
 
