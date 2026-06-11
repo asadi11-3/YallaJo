@@ -9,6 +9,7 @@ using YallaJo.Web.Areas.Auth.Facades;
 namespace YallaJo.Web.Areas.Auth.Controllers;
 [Area("Auth")]
 [Authorize]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)] // C2: auth-gated account page
 public sealed class ExternalProvidersController : BaseController
 {
     private readonly ExternalProvidersFacade _facade;
@@ -28,6 +29,52 @@ public sealed class ExternalProvidersController : BaseController
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
     {
+        var (vm, signOut) = await BuildVmAsync(ct);
+
+        if (signOut is not null)
+            return signOut;
+
+        return WantsAjax() ? PartialView("_ProvidersList", vm) : View(vm);
+    }
+
+    [HttpPost("auth/externalproviders/unlink/{providerId:guid}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Unlink(Guid providerId, CancellationToken ct)
+    {
+        var result = await _facade.UnlinkAsync(providerId, ct);
+
+        if (GuardSignOut(result) is { } signOut)
+            return signOut;
+
+        if (!result.IsSuccess)
+        {
+            // B6 lockout guard — show the localized explanation rather than relaying
+            // the API's English message.
+            var error = result.IsConflict
+                ? _localizer["Auth.External.LastLoginMethod"].Value
+                : result.Error ?? _localizer["Auth.External.ActionFailed"].Value;
+
+            if (WantsAjax())
+                return BadRequest(new { error });
+
+            SetError(error);
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (WantsAjax())
+        {
+            // PE1: AJAX callers get the refreshed partial; the toast text travels on
+            // the form's data-success-msg attribute.
+            var (vm, _) = await BuildVmAsync(ct);
+            return PartialView("_ProvidersList", vm);
+        }
+
+        SetSuccess(_localizer["Auth.Flash.ProviderUnlinked"].Value);
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<(ExternalProvidersVm Vm, IActionResult? SignOut)> BuildVmAsync(CancellationToken ct)
+    {
         var vm = new ExternalProvidersVm
         {
             IsGoogleAvailable = _availability.IsGoogleAvailable,
@@ -37,7 +84,7 @@ public sealed class ExternalProvidersController : BaseController
         var linked = await _facade.GetLinkedAsync(ct);
 
         if (GuardSignOut(linked) is { } signOut)
-            return signOut;
+            return (vm, signOut);
 
         if (linked.IsSuccess && linked.Data is not null)
         {
@@ -50,33 +97,6 @@ public sealed class ExternalProvidersController : BaseController
             vm.LinkedListUnavailable = true;
         }
 
-        return View(vm);
-    }
-
-    [HttpPost("auth/externalproviders/unlink/{providerId:guid}")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Unlink(Guid providerId, CancellationToken ct)
-    {
-        var result = await _facade.UnlinkAsync(providerId, ct);
-
-        if (GuardSignOut(result) is { } signOut)
-            return signOut;
-
-        if (result.IsSuccess)
-        {
-            SetSuccess(_localizer["Auth.Flash.ProviderUnlinked"].Value);
-        }
-        else if (result.IsConflict)
-        {
-            // B6 lockout guard — show the localized explanation rather than relaying
-            // the API's English message.
-            SetError(_localizer["Auth.External.LastLoginMethod"].Value);
-        }
-        else
-        {
-            SetError(result.Error);
-        }
-
-        return RedirectToAction(nameof(Index));
+        return (vm, null);
     }
 }

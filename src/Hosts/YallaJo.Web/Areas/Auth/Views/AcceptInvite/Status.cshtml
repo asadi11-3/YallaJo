@@ -1,0 +1,40 @@
+@model YallaJo.Web.Areas.Auth.Models.AcceptInvite.InviteStatusVm
+@{
+    @* Part of the anonymous auth funnel — uses the chrome-less _AuthLayout via _ViewStart. *@
+    @* Consolidated status view: replaces the former Expired.cshtml + InvalidLink.cshtml pair
+       (~94% identical markup) — parameterized on Model.Kind. *@
+    var isExpired = Model.Kind == YallaJo.Web.Areas.Auth.Models.AcceptInvite.InviteStatusKind.Expired;
+    var titleKey = isExpired ? "Auth.AcceptInvite.ExpiredTitle" : "Auth.AcceptInvite.InvalidTitle";
+    var headingKey = isExpired ? "Auth.AcceptInvite.ExpiredHeading" : "Auth.AcceptInvite.InvalidHeading";
+    var messageKey = isExpired ? "Auth.AcceptInvite.ExpiredMessage" : "Auth.AcceptInvite.InvalidMessage";
+    var helpKey = isExpired ? "Auth.AcceptInvite.ExpiredHelp" : "Auth.AcceptInvite.InvalidHelp";
+    var iconClass = isExpired ? "fa-clock-rotate-left text-warning" : "fa-link-slash text-danger";
+    ViewData["Title"] = Localizer[titleKey].Value;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-5">
+            <div class="card shadow">
+                <div class="card-body p-4 text-center">
+                    <i class="fa-solid @iconClass fa-2x mb-3" aria-hidden="true"></i>
+                    <h1 class="h3 mb-2">@Localizer[headingKey]</h1>
+                    <p class="text-secondary mb-3">
+                        @Localizer[messageKey]
+                        @if (isExpired && !string.IsNullOrWhiteSpace(Model.Email))
+                        {
+                            @* RTL3: email is Latin data — isolate with bdi dir="ltr" so it doesn't reorder in RTL. *@
+                            <bdi dir="ltr" class="fw-semibold">@Model.Email</bdi>
+                        }
+                    </p>
+                    <div class="alert alert-warning" role="alert">
+                        @Localizer[helpKey]
+                    </div>
+                    <a asp-area="Auth" asp-controller="Auth" asp-action="SignIn" class="btn btn-outline-primary w-100">
+                        @Localizer["Auth.Forgot.BackToSignIn"]
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

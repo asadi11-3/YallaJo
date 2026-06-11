@@ -13819,4 +13819,7 @@
 <data name="Auth.Sessions.SignOutOthersConfirm" xml:space="preserve">
 <value>سيتم تسجيل خروجك من جميع الأجهزة الأخرى مع بقاء جلستك الحالية. هل تريد المتابعة؟</value>
 </data>
+<data name="Auth.External.ActionFailed" xml:space="preserve">
+<value>تعذّر إكمال العملية. حاول مرة أخرى.</value>
+</data>
 </root>

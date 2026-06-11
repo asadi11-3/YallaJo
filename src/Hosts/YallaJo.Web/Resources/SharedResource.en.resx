@@ -13819,4 +13819,7 @@
 <data name="Auth.Sessions.SignOutOthersConfirm" xml:space="preserve">
 <value>You will be signed out on every other device, but your current session stays active. Continue?</value>
 </data>
+<data name="Auth.External.ActionFailed" xml:space="preserve">
+<value>The action could not be completed. Please try again.</value>
+</data>
 </root>
