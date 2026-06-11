@@ -1,0 +1,131 @@
+@model YallaJo.Web.Areas.Guide.Models.MyTours.OfferingDetailVm
+@using YallaJo.Web.Areas.Guide.Models.MyTours
+@{
+    var culture = CultureInfo.CurrentUICulture;
+    // Kept local: N2 precision differs from GuideFormat.Money (N3).
+    string Money(decimal a, string? c) => a.ToString("N2", culture) + " " + (string.IsNullOrWhiteSpace(c) ? "JOD" : c);
+}
+@*
+    AJAX fragment contract (PE1): single-root swappable region for provider-actions.js.
+    MyToursController returns this partial from WantsAjax() branches of pricing-tier mutations.
+*@
+<div class="card border" data-yj-swap="tiers" id="offering-tiers">
+    <div class="card-header bg-transparent">
+        <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-coins me-2" aria-hidden="true"></i>@Localizer["Guide.Offering.PricingTiers"]</h2>
+    </div>
+    <div class="card-body vstack gap-3">
+        @if (Model.PricingTiers.Count == 0)
+        {
+            <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Offering.NoPricingTiers"].Value)' />
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">@Localizer["Guide.Offering.ColName"]</th>
+                            <th scope="col">@Localizer["Guide.Offering.ColPrice"]</th>
+                            <th scope="col">@Localizer["Guide.Offering.ColParticipants"]</th>
+                            <th scope="col">@Localizer["Guide.Offering.ColActive"]</th>
+                            <th scope="col" class="text-end">@Localizer["Guide.Offering.ColActions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in Model.PricingTiers)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="fw-semibold">@p.Name</span>
+                                    @if (!string.IsNullOrWhiteSpace(p.Description))
+                                    {
+                                        <div class="text-body-secondary small">@p.Description</div>
+                                    }
+                                </td>
+                                <td><bdi dir="ltr" class="font-data">@Money(p.Price, p.Currency)</bdi></td>
+                                <td><bdi dir="ltr" class="font-data">@p.MinParticipants&ndash;@p.MaxParticipants</bdi></td>
+                                <td>
+                                    @if (p.IsActive)
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success">
+                                            <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.Common.Yes"]
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                            <i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Guide.Common.No"]
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <form method="post" class="d-inline" data-loading
+                                          asp-area="Guide" asp-controller="MyTours" asp-action="DeletePricingTier"
+                                          asp-route-tourId="@Model.TourId" asp-route-tierId="@p.Id"
+                                          data-yj-ajax data-yj-swap-target="tiers"
+                                          data-success-message='@Localizer["Guide.Offering.Flash.TierRemoved"]'
+                                          data-error-text='@Localizer["Public.Results.Error"]'
+                                          data-confirm='@Localizer["Guide.Offering.DeleteTierBody", p.Name]'
+                                          data-confirm-title='@Localizer["Guide.Offering.DeleteTierTitle"]'
+                                          data-confirm-cancel='@Localizer["Guide.Common.Cancel"]'
+                                          data-confirm-action='@Localizer["Guide.Offering.DeleteTier"]'>
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-danger-soft"
+                                                aria-label="@Localizer["Guide.Offering.DeleteTier"]">
+                                            <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <form method="post" class="row g-2 align-items-end" data-loading
+              asp-area="Guide" asp-controller="MyTours" asp-action="AddPricingTier"
+              asp-route-tourId="@Model.TourId"
+              data-yj-ajax data-yj-swap-target="tiers"
+              data-success-message='@Localizer["Guide.Offering.Flash.TierAdded"]'
+              data-error-text='@Localizer["Public.Results.Error"]'>
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="col-12 text-danger small mb-0"></div>
+            <div class="col-sm-4">
+                <label class="form-label" asp-for="PricingTierForm.Name">@Localizer["Guide.Offering.ColName"]</label>
+                <input class="form-control" asp-for="PricingTierForm.Name" />
+                <span asp-validation-for="PricingTierForm.Name" class="text-danger small"></span>
+            </div>
+            <div class="col-sm-2">
+                <label class="form-label" asp-for="PricingTierForm.Price">@Localizer["Guide.Offering.ColPrice"]</label>
+                <input type="number" step="0.01" class="form-control" dir="ltr" asp-for="PricingTierForm.Price" />
+                <span asp-validation-for="PricingTierForm.Price" class="text-danger small"></span>
+            </div>
+            <div class="col-sm-2">
+                <label class="form-label" asp-for="PricingTierForm.Currency">@Localizer["Guide.Offering.Currency"]</label>
+                <input class="form-control" dir="ltr" asp-for="PricingTierForm.Currency" />
+                <span asp-validation-for="PricingTierForm.Currency" class="text-danger small"></span>
+            </div>
+            <div class="col-sm-2">
+                <label class="form-label" asp-for="PricingTierForm.MinParticipants">@Localizer["Guide.Offering.Min"]</label>
+                <input type="number" class="form-control" dir="ltr" asp-for="PricingTierForm.MinParticipants" />
+                <span asp-validation-for="PricingTierForm.MinParticipants" class="text-danger small"></span>
+            </div>
+            <div class="col-sm-2">
+                <label class="form-label" asp-for="PricingTierForm.MaxParticipants">@Localizer["Guide.Offering.Max"]</label>
+                <input type="number" class="form-control" dir="ltr" asp-for="PricingTierForm.MaxParticipants" />
+                <span asp-validation-for="PricingTierForm.MaxParticipants" class="text-danger small"></span>
+            </div>
+            <div class="col-12">
+                <label class="form-label" asp-for="PricingTierForm.Description">@Localizer["Guide.Offering.Description"]</label>
+                <input class="form-control" asp-for="PricingTierForm.Description" />
+                <span asp-validation-for="PricingTierForm.Description" class="text-danger small"></span>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Guide.Offering.AddTier"]
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

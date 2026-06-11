@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
+using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Areas.Guide.Models.AgencyRoster;
 using YallaJo.Web.Infrastructure.Authorization;
 
@@ -27,10 +28,10 @@ public sealed class AgencyRosterController : GuideBaseController
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new AgencyRosterVm());
+            return WantsAjax() ? PartialView("_RosterTables", new AgencyRosterVm()) : View(new AgencyRosterVm());
         }
 
-        return View(result.Data);
+        return WantsAjax() ? PartialView("_RosterTables", result.Data) : View(result.Data);
     }
 
     /// <summary>Phase 3 view reduction: the Invite page was merged into the roster page
@@ -76,6 +77,8 @@ public sealed class AgencyRosterController : GuideBaseController
         var result = await _facade.ApproveApplicationAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        if (WantsAjax()) return await AjaxResultAsync(result, ct);
+
         SetFlash(result, "Application approved. The guide has been added to your roster.");
         return RedirectToAction(nameof(Index));
     }
@@ -92,6 +95,8 @@ public sealed class AgencyRosterController : GuideBaseController
 
         var result = await _facade.RejectApplicationAsync(id, reason!, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (WantsAjax()) return await AjaxResultAsync(result, ct);
 
         SetFlash(result, "Application rejected.");
         return RedirectToAction(nameof(Index));
@@ -110,6 +115,8 @@ public sealed class AgencyRosterController : GuideBaseController
         var result = await _facade.RemoveGuideAsync(guideUserId, reason!, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        if (WantsAjax()) return await AjaxResultAsync(result, ct);
+
         SetFlash(result, "Guide removed from your roster.");
         return RedirectToAction(nameof(Index));
     }
@@ -127,12 +134,35 @@ public sealed class AgencyRosterController : GuideBaseController
         return View(nameof(Index), vm);
     }
 
+    /// <summary>
+    /// AJAX (WantsAjax) tail for approve/reject/remove writes: 400 + { error } on failure
+    /// (the client toasts it), otherwise the refreshed swappable roster fragment — the
+    /// client toasts its own data-success-message (NF1). No-JS callers keep the PRG flash.
+    /// </summary>
+    private async Task<IActionResult> AjaxResultAsync(ApiResult result, CancellationToken ct)
+    {
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new { error = result.Message });
+        }
+
+        var refreshed = await _facade.GetRosterAsync(ct);
+        if (GuardSignOut(refreshed) is { } signOut) return signOut;
+
+        return PartialView("_RosterTables", refreshed.Data ?? new AgencyRosterVm());
+    }
+
     /// <summary>Shared reason-required guard for reject/remove actions; null when the reason is present.</summary>
     private IActionResult? RequireReason(string? reason, string errorMessage)
     {
         if (!string.IsNullOrWhiteSpace(reason))
         {
             return null;
+        }
+
+        if (WantsAjax())
+        {
+            return BadRequest(new { error = errorMessage });
         }
 
         SetError(errorMessage);

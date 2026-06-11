@@ -28,13 +28,23 @@ public sealed class ApplicationsController : GuideBaseController
             return signOut;
         }
 
+        ApplicationsVm vm;
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new ApplicationsVm());
+            vm = new ApplicationsVm();
+        }
+        else
+        {
+            vm = result.Data;
         }
 
-        return View(result.Data);
+        if (WantsAjax())
+        {
+            return PartialView("_ApplicationsResults", vm);
+        }
+
+        return View(vm);
     }
 
     [HttpPost("guide/applications/apply")]

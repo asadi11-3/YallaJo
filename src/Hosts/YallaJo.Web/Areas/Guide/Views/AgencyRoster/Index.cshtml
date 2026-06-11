@@ -2,9 +2,6 @@
 @model AgencyRosterVm
 @{
     ViewData["Title"] = Localizer["Guide.AgencyRoster.Title"].Value;
-    var culture = CultureInfo.CurrentUICulture;
-    // Kept local: commission arrives as a 0-100 percentage ("0.##" + %), unlike GuideFormat.Pct (0-1 fraction).
-    string Pct(decimal v) => v.ToString("0.##", culture) + "%";
 }
 
 @await Component.InvokeAsync("GuideSidebar")
@@ -29,174 +26,9 @@
             </div>
         </div>
 
-        @* ── Current guides ── *@
-        <div class="card border">
-            <div class="card-header border-bottom">
-                <h2 class="card-header-title h5 mb-0">@Localizer["Guide.AgencyRoster.CurrentGuides"]</h2>
-                <small class="text-body-secondary">@Localizer["Guide.AgencyRoster.CurrentGuidesSubtitle"]</small>
-            </div>
-            <div class="card-body">
-                @if (!Model.HasGuides)
-                {
-                    <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.AgencyRoster.NoGuides"].Value)' />
-                }
-                else
-                {
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th scope="col">@Localizer["Guide.AgencyRoster.ColGuide"]</th>
-                                    <th scope="col" class="text-end">@Localizer["Guide.AgencyRoster.ColCommission"]</th>
-                                    <th scope="col">@Localizer["Guide.AgencyRoster.ColJoined"]</th>
-                                    <permission require="@WebPermission.AgencyRoster.Delete">
-                                        <th scope="col" class="text-end">@Localizer["Guide.AgencyRoster.ColActions"]</th>
-                                    </permission>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var g in Model.Guides)
-                                {
-                                    <tr>
-                                        <td class="fw-semibold">@g.GuideHandle</td>
-                                        <td class="text-end"><bdi dir="ltr" class="font-data">@Pct(g.CommissionPercentage)</bdi></td>
-                                        <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(g.JoinedAt)</bdi></td>
-                                        <permission require="@WebPermission.AgencyRoster.Delete">
-                                            <td class="text-end">
-                                                <button type="button" class="btn btn-sm btn-outline-danger"
-                                                        data-bs-toggle="modal" data-bs-target="#remove-guide-@g.GuideUserId">
-                                                    <i class="fa-solid fa-user-minus me-1" aria-hidden="true"></i>@Localizer["Guide.AgencyRoster.Remove"]
-                                                </button>
-                                            </td>
-                                        </permission>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-            </div>
-        </div>
-
-        @* ── Pending applications ── *@
-        <div class="card border">
-            <div class="card-header border-bottom">
-                <h2 class="card-header-title h5 mb-0">@Localizer["Guide.AgencyRoster.ApplicationsHeading"]</h2>
-                <small class="text-body-secondary">@Localizer["Guide.AgencyRoster.ApplicationsSubtitle"]</small>
-            </div>
-            <div class="card-body">
-                @if (!Model.HasApplications)
-                {
-                    <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.AgencyRoster.NoApplications"].Value)' />
-                }
-                else
-                {
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th scope="col">@Localizer["Guide.AgencyRoster.ColGuide"]</th>
-                                    <th scope="col">@Localizer["Guide.AgencyRoster.ColMessage"]</th>
-                                    <th scope="col">@Localizer["Guide.AgencyRoster.ColStatus"]</th>
-                                    <th scope="col">@Localizer["Guide.AgencyRoster.ColApplied"]</th>
-                                    <th scope="col" class="text-end">@Localizer["Guide.AgencyRoster.ColActions"]</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var a in Model.Applications)
-                                {
-                                    <tr>
-                                        <td class="fw-semibold">@a.GuideHandle</td>
-                                        <td class="small text-body-secondary">
-                                            @if (string.IsNullOrWhiteSpace(a.Message))
-                                            {
-                                                <span aria-label="@Localizer["Guide.AgencyRoster.NoMessage"]">&mdash;</span>
-                                            }
-                                            else
-                                            {
-                                                @a.Message
-                                            }
-                                        </td>
-                                        <td><span class="badge @a.StatusBadgeClass"><i class="fa-solid fa-circle-info fa-fw" aria-hidden="true"></i> @a.Status</span></td>
-                                        <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(a.CreatedAt)</bdi></td>
-                                        <td class="text-end">
-                                            @if (a.IsPending)
-                                            {
-                                                <div class="d-inline-flex gap-1">
-                                                    <permission require="@WebPermission.AgencyRoster.Approve">
-                                                        <form asp-action="Approve" asp-route-id="@a.Id" method="post" class="d-inline">
-                                                            @Html.AntiForgeryToken()
-                                                            <button type="submit" class="btn btn-sm btn-success-soft">
-                                                                <i class="fa-solid fa-check me-1" aria-hidden="true"></i>@Localizer["Guide.AgencyRoster.Approve"]
-                                                            </button>
-                                                        </form>
-                                                    </permission>
-                                                    <permission require="@WebPermission.AgencyRoster.Reject">
-                                                        <form asp-action="Reject" asp-route-id="@a.Id" method="post" class="d-inline" data-yj-reject-reason-form>
-                                                            @Html.AntiForgeryToken()
-                                                            <input type="hidden" name="reason" />
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                                <i class="fa-solid fa-xmark me-1" aria-hidden="true"></i>@Localizer["Guide.AgencyRoster.Reject"]
-                                                            </button>
-                                                        </form>
-                                                    </permission>
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-body-secondary small">&mdash;</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-            </div>
-        </div>
-
-        @* ── Sent invitations ── *@
-        <div class="card border">
-            <div class="card-header border-bottom">
-                <h2 class="card-header-title h5 mb-0">@Localizer["Guide.AgencyRoster.SentHeading"]</h2>
-                <small class="text-body-secondary">@Localizer["Guide.AgencyRoster.SentSubtitle"]</small>
-            </div>
-            <div class="card-body">
-                @if (!Model.HasSentInvitations)
-                {
-                    <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.AgencyRoster.NoSent"].Value)' />
-                }
-                else
-                {
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th scope="col">@Localizer["Guide.AgencyRoster.ColGuide"]</th>
-                                    <th scope="col" class="text-end">@Localizer["Guide.AgencyRoster.ColProposedCommission"]</th>
-                                    <th scope="col">@Localizer["Guide.AgencyRoster.ColStatus"]</th>
-                                    <th scope="col">@Localizer["Guide.AgencyRoster.ColExpires"]</th>
-                                    <th scope="col">@Localizer["Guide.AgencyRoster.ColSent"]</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var i in Model.SentInvitations)
-                                {
-                                    <tr>
-                                        <td class="fw-semibold">@i.GuideHandle</td>
-                                        <td class="text-end"><bdi dir="ltr" class="font-data">@Pct(i.ProposedCommissionPercentage)</bdi></td>
-                                        <td><span class="badge @i.StatusBadgeClass"><i class="fa-solid fa-circle-info fa-fw" aria-hidden="true"></i> @i.Status</span></td>
-                                        <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(i.ExpiresAt)</bdi></td>
-                                        <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(i.CreatedAt)</bdi></td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-            </div>
-        </div>
+        @* Swappable AJAX region (PE1: full PRG without JS — provider-actions.js enhances).
+           The fragment root carries data-yj-swap="roster". *@
+        <partial name="_RosterTables" model="Model" />
 
         @* ── Invite a guide (merged from the retired Invite page; anchor target for the 301) ── *@
         <permission require="@WebPermission.AgencyRoster.Create">
@@ -214,37 +46,35 @@
     </div>
 </section>
 
-<permission require="@WebPermission.AgencyRoster.Delete">
-    @foreach (var g in Model.Guides)
-    {
-        <div class="modal fade" id="remove-guide-@g.GuideUserId" tabindex="-1" aria-labelledby="remove-title-@g.GuideUserId" aria-describedby="remove-body-@g.GuideUserId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="remove-title-@g.GuideUserId">
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="remove-title-@g.GuideUserId">@Localizer["Guide.AgencyRoster.RemoveTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
-                    </div>
-                    <div class="modal-body" id="remove-body-@g.GuideUserId">
-                        <p class="mb-0">@Localizer["Guide.AgencyRoster.RemoveBody", g.GuideHandle]</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
-                        <form asp-action="Remove" asp-route-guideUserId="@g.GuideUserId" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="reason" value="Removed by agency" />
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fa-solid fa-user-minus me-1" aria-hidden="true"></i>@Localizer["Guide.AgencyRoster.RemoveConfirm"]
-                            </button>
-                        </form>
-                    </div>
-                </div>
+@* ── Shared reason modal (MOD8) ──
+   Single instance fed by guide-roster.js: title/confirm text come from the triggering
+   form's data-reason-title/data-reason-action; the value is written back into that
+   form's hidden reason input. The modal itself contains NO form. *@
+<div class="modal fade" id="roster-reason-modal" tabindex="-1" aria-labelledby="roster-reason-title" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="roster-reason-title"></h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label" for="roster-reason-text">@Localizer["Guide.AgencyRoster.ReasonLabel"]</label>
+                <textarea id="roster-reason-text" rows="3" maxlength="500" class="form-control"
+                          aria-describedby="roster-reason-help"></textarea>
+                <div id="roster-reason-help" class="form-text">@Localizer["Guide.AgencyRoster.ReasonHelp"]</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
+                <button type="button" class="btn btn-danger" id="roster-reason-accept"></button>
             </div>
         </div>
-    }
-</permission>
+    </div>
+</div>
 
 @section Scripts {
-    @* CSP-safe external handler for the reject-reason prompt (A6/SEC1/J3). *@
-    <script src="~/assets/js/guide-agency-roster.js" asp-append-version="true" defer></script>
+    @* CSP-safe external handlers (A6/SEC1/J3): provider-actions.js posts the data-yj-ajax
+       forms and swaps the roster fragment; guide-roster.js runs the shared reason modal. *@
+    <script src="~/assets/js/provider-actions.js" asp-append-version="true"></script>
+    <script src="~/assets/js/guide-roster.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
 }

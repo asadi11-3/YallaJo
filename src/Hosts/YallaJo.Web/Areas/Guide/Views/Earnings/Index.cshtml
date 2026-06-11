@@ -1,8 +1,6 @@
 @model YallaJo.Web.Areas.Guide.Models.Earnings.EarningsVm
 @{
     ViewData["Title"] = Localizer["Guide.Earnings.Title"].Value;
-    // Thin DateOnly adapter — GuideFormat.Date takes DateTime (same yyyy-MM-dd output).
-    string Date(DateOnly d) => GuideFormat.Date(d.ToDateTime(TimeOnly.MinValue));
 }
 
 @await Component.InvokeAsync("GuideSidebar")
@@ -63,42 +61,15 @@
 
         <div class="card card-body border">
             <h2 class="h6 mb-3">@Localizer["Guide.Earnings.History"]</h2>
-            @if (!Model.HasHistory)
-            {
-                <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Earnings.NoHistory"].Value)' />
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th scope="col">@Localizer["Guide.Earnings.ColDate"]</th>
-                                <th scope="col" class="text-end">@Localizer["Guide.Earnings.ColGross"]</th>
-                                <th scope="col" class="text-end">@Localizer["Guide.Earnings.ColCommission"]</th>
-                                <th scope="col" class="text-end">@Localizer["Guide.Earnings.ColNet"]</th>
-                                <th scope="col">@Localizer["Guide.Earnings.ColStatus"]</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var row in Model.History)
-                            {
-                                <tr>
-                                    <td><bdi dir="ltr" class="font-data">@Date(row.EarnedDate)</bdi></td>
-                                    <td class="text-end"><bdi dir="ltr" class="font-data">@GuideFormat.Money(row.GrossAmount, row.Currency)</bdi></td>
-                                    <td class="text-end"><bdi dir="ltr" class="font-data">@GuideFormat.Money(row.CommissionAmount, row.Currency)</bdi></td>
-                                    <td class="text-end fw-semibold"><bdi dir="ltr" class="font-data">@GuideFormat.Money(row.NetAmount, row.Currency)</bdi></td>
-                                    <td>
-                                        <partial name="_GuideStatusBadge" model="new StatusBadgeVm(row.Status)" />
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <partial name="_GuidePagination" model='new PaginationVm(Model.Page, Model.TotalPages, Model.HasPreviousPage, Model.HasNextPage, "Earnings", Localizer["Guide.Earnings.Pagination"].Value)' />
-            }
+            @* Phase 4: results fragment swapped via AJAX by listing.js; plain markup without JS (PE1). *@
+            <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+                 data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]" data-loading-text="@Localizer["Public.Loading"]">
+                <partial name="_EarningsResults" model="Model" />
+            </div>
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true"></script>
+}

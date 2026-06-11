@@ -18,7 +18,7 @@
             <div class="col-lg-5">
                 <div class="card card-body border">
                     <h2 class="card-header-title h5 mb-3">@Localizer["Guide.Availability.AddHeading"]</h2>
-                    <form asp-area="Guide" asp-controller="Availability" asp-action="Add" method="post" class="vstack gap-3">
+                    <form asp-area="Guide" asp-controller="Availability" asp-action="Add" method="post" class="vstack gap-3" data-loading>
                         @Html.AntiForgeryToken()
                         <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
                         <div>
@@ -95,11 +95,17 @@
                                                     }
                                                 </td>
                                                 <td class="text-end">
-                                                    <button type="button" class="btn btn-sm btn-outline-danger mb-0"
-                                                            data-bs-toggle="modal" data-bs-target="#del-block-@block.Id"
-                                                            aria-label="@Localizer["Guide.Availability.DeleteLabel"]">
-                                                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
-                                                    </button>
+                                                    <form asp-area="Guide" asp-controller="Availability" asp-action="Delete" asp-route-blockId="@block.Id" method="post" class="d-inline" data-loading
+                                                          data-confirm='@Localizer["Guide.Availability.DeleteBody", Date(block.StartDate), Date(block.EndDate)]'
+                                                          data-confirm-title='@Localizer["Guide.Availability.DeleteTitle"]'
+                                                          data-confirm-action='@Localizer["Guide.Availability.DeleteConfirm"]'
+                                                          data-confirm-cancel='@Localizer["Guide.Common.Cancel"]'>
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger mb-0"
+                                                                aria-label="@Localizer["Guide.Availability.DeleteLabel"]">
+                                                            <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                                        </button>
+                                                    </form>
                                                 </td>
                                             </tr>
                                         }
@@ -114,29 +120,6 @@
     </div>
 </section>
 
-@if (Model.HasBlocks)
-{
-    foreach (var block in Model.Blocks)
-    {
-        <div class="modal fade" id="del-block-@block.Id" tabindex="-1" aria-labelledby="del-block-title-@block.Id" aria-describedby="del-block-body-@block.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="del-block-title-@block.Id">@Localizer["Guide.Availability.DeleteTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
-                    </div>
-                    <div class="modal-body" id="del-block-body-@block.Id">
-                        <p class="mb-0">@Localizer["Guide.Availability.DeleteBody", Date(block.StartDate), Date(block.EndDate)]</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
-                        <form asp-area="Guide" asp-controller="Availability" asp-action="Delete" asp-route-blockId="@block.Id" method="post">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-danger">@Localizer["Guide.Availability.DeleteConfirm"]</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

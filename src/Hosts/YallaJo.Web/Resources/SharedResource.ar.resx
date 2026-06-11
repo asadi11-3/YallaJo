@@ -13258,4 +13258,49 @@
 <data name="Guide.Status.Published" xml:space="preserve">
 <value>منشور</value>
 </data>
+<data name="Guide.Offering.Flash.ScheduleAdded" xml:space="preserve">
+<value>تمت إضافة الجدول.</value>
+</data>
+<data name="Guide.Offering.Flash.ScheduleRemoved" xml:space="preserve">
+<value>تم حذف الجدول.</value>
+</data>
+<data name="Guide.Offering.Flash.TierAdded" xml:space="preserve">
+<value>تمت إضافة فئة التسعير.</value>
+</data>
+<data name="Guide.Offering.Flash.TierRemoved" xml:space="preserve">
+<value>تم حذف فئة التسعير.</value>
+</data>
+<data name="Guide.Offering.Flash.PrivateUpdated" xml:space="preserve">
+<value>تم حفظ إعدادات الجولة الخاصة.</value>
+</data>
+<data name="Guide.Offering.Flash.PrivateDisabled" xml:space="preserve">
+<value>تم تعطيل الجولة الخاصة.</value>
+</data>
+<data name="Guide.AgencyRoster.Flash.ApplicationApproved" xml:space="preserve">
+<value>تمت الموافقة على الطلب. تمت إضافة المرشد إلى قائمتك.</value>
+</data>
+<data name="Guide.AgencyRoster.Flash.ApplicationRejected" xml:space="preserve">
+<value>تم رفض الطلب.</value>
+</data>
+<data name="Guide.AgencyRoster.Flash.GuideRemoved" xml:space="preserve">
+<value>تمت إزالة المرشد من قائمتك.</value>
+</data>
+<data name="Guide.AgencyRoster.RejectTitle" xml:space="preserve">
+<value>رفض الطلب؟</value>
+</data>
+<data name="Guide.AgencyRoster.RejectConfirm" xml:space="preserve">
+<value>رفض الطلب</value>
+</data>
+<data name="Guide.AgencyRoster.ReasonLabel" xml:space="preserve">
+<value>السبب</value>
+</data>
+<data name="Guide.AgencyRoster.ReasonHelp" xml:space="preserve">
+<value>مطلوب. سيتم مشاركته مع المرشد.</value>
+</data>
+<data name="Guide.Profile.RemoveLanguageTitle" xml:space="preserve">
+<value>إزالة اللغة؟</value>
+</data>
+<data name="Guide.Profile.RemoveLanguageConfirm" xml:space="preserve">
+<value>هل أنت متأكد من أنك تريد إزالة {0} من لغاتك؟</value>
+</data>
 </root>

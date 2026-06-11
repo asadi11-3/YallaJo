@@ -17,7 +17,7 @@
             <div class="col-lg-5">
                 <div class="card card-body border h-100">
                     <h2 class="card-header-title h5 mb-3">@Localizer["Guide.Proposals.NewHeading"]</h2>
-                    <form asp-area="Guide" asp-controller="Proposals" asp-action="Create" method="post" class="vstack gap-3">
+                    <form asp-area="Guide" asp-controller="Proposals" asp-action="Create" method="post" class="vstack gap-3" data-loading>
                         @Html.AntiForgeryToken()
                         <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
 
@@ -128,10 +128,16 @@
                                             <td class="text-end">
                                                 @if (CanSubmit(proposal.Status))
                                                 {
-                                                    <button type="button" class="btn btn-sm btn-primary-soft"
-                                                            data-bs-toggle="modal" data-bs-target="#submit-proposal-@proposal.Id">
-                                                        <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Guide.Proposals.Submit"]
-                                                    </button>
+                                                    <form asp-area="Guide" asp-controller="Proposals" asp-action="Submit" asp-route-id="@proposal.Id" method="post" class="d-inline" data-loading
+                                                          data-confirm='@Localizer["Guide.Proposals.SubmitBody", proposal.Title]'
+                                                          data-confirm-title='@Localizer["Guide.Proposals.SubmitTitle"]'
+                                                          data-confirm-action='@Localizer["Guide.Proposals.SubmitConfirm"]'
+                                                          data-confirm-cancel='@Localizer["Guide.Common.Cancel"]'>
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-primary-soft">
+                                                            <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Guide.Proposals.Submit"]
+                                                        </button>
+                                                    </form>
                                                 }
                                                 else
                                                 {
@@ -150,28 +156,6 @@
     </div>
 </section>
 
-@foreach (var proposal in Model.Proposals.Where(p => CanSubmit(p.Status)))
-{
-    <div class="modal fade" id="submit-proposal-@proposal.Id" tabindex="-1" aria-labelledby="submit-title-@proposal.Id" aria-describedby="submit-body-@proposal.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="submit-title-@proposal.Id">
-                <div class="modal-header">
-                    <h2 class="modal-title h5" id="submit-title-@proposal.Id">@Localizer["Guide.Proposals.SubmitTitle"]</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
-                </div>
-                <div class="modal-body" id="submit-body-@proposal.Id">
-                    <p class="mb-0">@Localizer["Guide.Proposals.SubmitBody", proposal.Title]</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
-                    <form asp-area="Guide" asp-controller="Proposals" asp-action="Submit" asp-route-id="@proposal.Id" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Guide.Proposals.SubmitConfirm"]
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

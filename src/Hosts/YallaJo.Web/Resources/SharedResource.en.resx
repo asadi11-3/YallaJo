@@ -13258,4 +13258,49 @@
 <data name="Guide.Status.Published" xml:space="preserve">
 <value>Published</value>
 </data>
+<data name="Guide.Offering.Flash.ScheduleAdded" xml:space="preserve">
+<value>Schedule added.</value>
+</data>
+<data name="Guide.Offering.Flash.ScheduleRemoved" xml:space="preserve">
+<value>Schedule removed.</value>
+</data>
+<data name="Guide.Offering.Flash.TierAdded" xml:space="preserve">
+<value>Pricing tier added.</value>
+</data>
+<data name="Guide.Offering.Flash.TierRemoved" xml:space="preserve">
+<value>Pricing tier removed.</value>
+</data>
+<data name="Guide.Offering.Flash.PrivateUpdated" xml:space="preserve">
+<value>Private tour settings saved.</value>
+</data>
+<data name="Guide.Offering.Flash.PrivateDisabled" xml:space="preserve">
+<value>Private tour disabled.</value>
+</data>
+<data name="Guide.AgencyRoster.Flash.ApplicationApproved" xml:space="preserve">
+<value>Application approved. The guide has been added to your roster.</value>
+</data>
+<data name="Guide.AgencyRoster.Flash.ApplicationRejected" xml:space="preserve">
+<value>Application rejected.</value>
+</data>
+<data name="Guide.AgencyRoster.Flash.GuideRemoved" xml:space="preserve">
+<value>Guide removed from your roster.</value>
+</data>
+<data name="Guide.AgencyRoster.RejectTitle" xml:space="preserve">
+<value>Reject application?</value>
+</data>
+<data name="Guide.AgencyRoster.RejectConfirm" xml:space="preserve">
+<value>Reject application</value>
+</data>
+<data name="Guide.AgencyRoster.ReasonLabel" xml:space="preserve">
+<value>Reason</value>
+</data>
+<data name="Guide.AgencyRoster.ReasonHelp" xml:space="preserve">
+<value>Required. This will be shared with the guide.</value>
+</data>
+<data name="Guide.Profile.RemoveLanguageTitle" xml:space="preserve">
+<value>Remove language?</value>
+</data>
+<data name="Guide.Profile.RemoveLanguageConfirm" xml:space="preserve">
+<value>Are you sure you want to remove {0} from your languages?</value>
+</data>
 </root>

@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Reviews";
 
+    // Kept local: only used by the Average Rating stat card; the list copy lives in _ReviewsResults.
     string Stars(decimal rating)
     {
         var full = (int)Math.Round(rating, MidpointRounding.AwayFromZero);
@@ -9,14 +10,6 @@
         if (full > 5) full = 5;
         return string.Concat(Enumerable.Repeat("★", full)) + string.Concat(Enumerable.Repeat("☆", 5 - full));
     }
-
-    string StatusBadge(string status) => status?.ToLowerInvariant() switch
-    {
-        "published" or "approved" => "success",
-        "awaitingmoderation" or "pending" => "warning",
-        "autohidden" or "removedbyadmin" or "removed" => "danger",
-        _ => "secondary"
-    };
 }
 
 @await Component.InvokeAsync("GuideSidebar")
@@ -61,78 +54,16 @@
                 <h5 class="card-header-title mb-0">What travellers say</h5>
             </div>
             <div class="card-body">
-                @if (!Model.HasReviews)
-                {
-                    <div class="text-center text-body-secondary py-4">
-                        <i class="bi bi-chat-square-heart fs-1 d-block mb-2"></i>
-                        You don't have any reviews yet.
-                    </div>
-                }
-                else
-                {
-                    <div class="vstack gap-3">
-                        @foreach (var review in Model.Reviews)
-                        {
-                            <div class="border rounded p-3">
-                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                                    <div>
-                                        <span class="text-warning fs-5">@Stars(review.Rating)</span>
-                                        <span class="ms-1 fw-semibold">@review.Rating.ToString("0.0")</span>
-                                        @if (review.IsVerifiedBooking)
-                                        {
-                                            <span class="badge bg-success-soft ms-2"><i class="bi bi-patch-check"></i> Verified booking</span>
-                                        }
-                                        <span class="badge bg-@(StatusBadge(review.Status))-soft ms-1">@review.Status</span>
-                                    </div>
-                                    <small class="text-body-secondary">@review.CreatedAt.ToString("dd MMM yyyy")</small>
-                                </div>
-                                @if (!string.IsNullOrWhiteSpace(review.Title))
-                                {
-                                    <h6 class="mt-2 mb-1">@review.Title</h6>
-                                }
-                                <p class="mb-1">@review.Content</p>
-                                <div class="d-flex gap-3 text-body-secondary small">
-                                    @if (review.VisitDate is { } visit)
-                                    {
-                                        <span><i class="bi bi-calendar-event"></i> Visited @visit.ToString("dd MMM yyyy")</span>
-                                    }
-                                    <span><i class="bi bi-hand-thumbs-up"></i> @review.HelpfulVoteCount helpful</span>
-                                </div>
-                                @if (review.Replies.Count > 0)
-                                {
-                                    <div class="mt-3 ps-3 border-start">
-                                        @foreach (var reply in review.Replies)
-                                        {
-                                            <div class="mb-2">
-                                                <div class="small fw-semibold text-body-secondary">
-                                                    <i class="bi bi-reply-fill"></i> Your reply
-                                                    <span class="fw-normal">· @reply.CreatedAt.ToString("dd MMM yyyy")</span>
-                                                </div>
-                                                <div class="small">@reply.Content</div>
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-
-                    @if (Model.TotalPages > 1)
-                    {
-                        <nav class="mt-3">
-                            <ul class="pagination justify-content-center mb-0">
-                                <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                                    <a class="page-link" asp-area="Guide" asp-controller="Reviews" asp-action="Index" asp-route-page="@(Model.Page - 1)">Previous</a>
-                                </li>
-                                <li class="page-item disabled"><span class="page-link">Page @Model.Page of @Model.TotalPages</span></li>
-                                <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                                    <a class="page-link" asp-area="Guide" asp-controller="Reviews" asp-action="Index" asp-route-page="@(Model.Page + 1)">Next</a>
-                                </li>
-                            </ul>
-                        </nav>
-                    }
-                }
+                @* Phase 4: results fragment swapped via AJAX by listing.js; plain markup without JS (PE1). *@
+                <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+                     data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]" data-loading-text="@Localizer["Public.Loading"]">
+                    <partial name="_ReviewsResults" model="Model" />
+                </div>
             </div>
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true"></script>
+}

@@ -27,7 +27,7 @@
                 <div class="vstack gap-4">
                     <div class="card card-body border">
                         <h2 class="card-header-title h5 mb-3">@Localizer["Guide.Agency.ApplyHeading"]</h2>
-                        <form asp-action="Apply" method="post" class="vstack gap-3">
+                        <form asp-action="Apply" method="post" class="vstack gap-3" data-loading>
                             @Html.AntiForgeryToken()
                             <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
                             <div>
@@ -53,11 +53,16 @@
                     <div class="card card-body border">
                         <h2 class="card-header-title h5 mb-3">@Localizer["Guide.Agency.LeaveHeading"]</h2>
                         <p class="text-body-secondary small">@Localizer["Guide.Agency.LeaveMsg"]</p>
-                        <div>
-                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#leaveAgencyModal">
+                        <form asp-action="Leave" method="post" data-loading
+                              data-confirm='@Localizer["Guide.Agency.LeaveModalBody"]'
+                              data-confirm-title='@Localizer["Guide.Agency.LeaveModalTitle"]'
+                              data-confirm-action='@Localizer["Guide.Agency.LeaveConfirm"]'
+                              data-confirm-cancel='@Localizer["Guide.Common.Cancel"]'>
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger">
                                 <i class="fa-solid fa-right-from-bracket me-1" aria-hidden="true"></i>@Localizer["Guide.Agency.Leave"]
                             </button>
-                        </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -112,13 +117,13 @@
                                                 @if (inv.IsPending && !inv.IsExpired)
                                                 {
                                                     <div class="d-inline-flex gap-2">
-                                                        <form asp-action="Accept" asp-route-id="@inv.Id" method="post" class="d-inline">
+                                                        <form asp-action="Accept" asp-route-id="@inv.Id" method="post" class="d-inline" data-loading>
                                                             @Html.AntiForgeryToken()
                                                             <button type="submit" class="btn btn-sm btn-success-soft">
                                                                 <i class="fa-solid fa-check me-1" aria-hidden="true"></i>@Localizer["Guide.Agency.Accept"]
                                                             </button>
                                                         </form>
-                                                        <form asp-action="Decline" asp-route-id="@inv.Id" method="post" class="d-inline">
+                                                        <form asp-action="Decline" asp-route-id="@inv.Id" method="post" class="d-inline" data-loading>
                                                             @Html.AntiForgeryToken()
                                                             <button type="submit" class="btn btn-sm btn-danger-soft">
                                                                 <i class="fa-solid fa-xmark me-1" aria-hidden="true"></i>@Localizer["Guide.Agency.Decline"]
@@ -148,25 +153,6 @@
     </div>
 </section>
 
-<div class="modal fade" id="leaveAgencyModal" tabindex="-1" aria-labelledby="leaveAgencyTitle" aria-describedby="leaveAgencyBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="leaveAgencyTitle">
-            <div class="modal-header">
-                <h2 class="modal-title h5" id="leaveAgencyTitle">@Localizer["Guide.Agency.LeaveModalTitle"]</h2>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
-            </div>
-            <div class="modal-body" id="leaveAgencyBody">
-                <p class="mb-0">@Localizer["Guide.Agency.LeaveModalBody"]</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
-                <form asp-action="Leave" method="post" class="d-inline">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fa-solid fa-right-from-bracket me-1" aria-hidden="true"></i>@Localizer["Guide.Agency.LeaveConfirm"]
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

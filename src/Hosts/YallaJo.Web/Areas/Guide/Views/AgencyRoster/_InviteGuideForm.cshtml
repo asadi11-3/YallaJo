@@ -8,7 +8,7 @@
 }
 else
 {
-    <form asp-action="Invite" method="post" class="vstack gap-3">
+    <form asp-action="Invite" method="post" class="vstack gap-3" data-loading>
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
         <div>

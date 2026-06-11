@@ -29,13 +29,23 @@ public sealed class MyToursController : GuideBaseController
             return signOut;
         }
 
+        MyToursVm vm;
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new MyToursVm());
+            vm = new MyToursVm();
+        }
+        else
+        {
+            vm = result.Data;
         }
 
-        return View(result.Data);
+        if (WantsAjax())
+        {
+            return PartialView("_MyToursResults", vm);
+        }
+
+        return View(vm);
     }
 
     [HttpGet("guide/tours/{tourId:guid}")]
@@ -67,7 +77,7 @@ public sealed class MyToursController : GuideBaseController
         }
 
         var result = await _facade.AddScheduleAsync(tourId, form, ct);
-        return HandleMutation(result, tourId, "Schedule added.");
+        return await HandleMutationAsync(result, tourId, "Schedule added.", "_OfferingSchedules", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/schedules/{scheduleId:guid}/delete")]
@@ -75,7 +85,7 @@ public sealed class MyToursController : GuideBaseController
     public async Task<IActionResult> DeleteSchedule(Guid tourId, Guid scheduleId, CancellationToken ct = default)
     {
         var result = await _facade.DeleteScheduleAsync(tourId, scheduleId, ct);
-        return HandleMutation(result, tourId, "Schedule removed.");
+        return await HandleMutationAsync(result, tourId, "Schedule removed.", "_OfferingSchedules", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/pricing-tiers")]
@@ -88,7 +98,7 @@ public sealed class MyToursController : GuideBaseController
         }
 
         var result = await _facade.AddPricingTierAsync(tourId, form, ct);
-        return HandleMutation(result, tourId, "Pricing tier added.");
+        return await HandleMutationAsync(result, tourId, "Pricing tier added.", "_OfferingPricingTiers", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/pricing-tiers/{tierId:guid}/delete")]
@@ -96,7 +106,7 @@ public sealed class MyToursController : GuideBaseController
     public async Task<IActionResult> DeletePricingTier(Guid tourId, Guid tierId, CancellationToken ct = default)
     {
         var result = await _facade.DeletePricingTierAsync(tourId, tierId, ct);
-        return HandleMutation(result, tourId, "Pricing tier removed.");
+        return await HandleMutationAsync(result, tourId, "Pricing tier removed.", "_OfferingPricingTiers", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/private-tour")]
@@ -109,7 +119,7 @@ public sealed class MyToursController : GuideBaseController
         }
 
         var result = await _facade.EnablePrivateTourAsync(tourId, form, ct);
-        return HandleMutation(result, tourId, "Private tour enabled.");
+        return await HandleMutationAsync(result, tourId, "Private tour enabled.", "_OfferingPrivateTour", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/private-tour/delete")]
@@ -117,7 +127,7 @@ public sealed class MyToursController : GuideBaseController
     public async Task<IActionResult> DisablePrivateTour(Guid tourId, CancellationToken ct = default)
     {
         var result = await _facade.DisablePrivateTourAsync(tourId, ct);
-        return HandleMutation(result, tourId, "Private tour disabled.");
+        return await HandleMutationAsync(result, tourId, "Private tour disabled.", "_OfferingPrivateTour", ct);
     }
 
     // POST /guide/tours/{tourId}/offering/remove — remove the guide's whole offering on this tour.
@@ -145,7 +155,11 @@ public sealed class MyToursController : GuideBaseController
         return RedirectToAction(nameof(Index));
     }
 
-    /// <summary>PRG guard: flash the first ModelState error and bounce back to the offering page.</summary>
+    /// <summary>
+    /// Guard for invalid ModelState. AJAX (WantsAjax): return the first error as
+    /// <c>400 { error }</c> so provider-actions.js toasts it. Otherwise PRG: flash the
+    /// first ModelState error and bounce back to the offering page.
+    /// </summary>
     private IActionResult? InvalidModelRedirect(Guid tourId)
     {
         if (ModelState.IsValid)
@@ -157,15 +171,44 @@ public sealed class MyToursController : GuideBaseController
             .SelectMany(v => v.Errors)
             .Select(e => e.ErrorMessage)
             .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
+
+        if (WantsAjax())
+        {
+            return BadRequest(new { error = firstError ?? "Please check the form and try again." });
+        }
+
         SetError(firstError ?? "Please check the form and try again.");
         return RedirectToAction(nameof(Offering), new { tourId });
     }
 
-    private IActionResult HandleMutation(ApiResult result, Guid tourId, string successMessage)
+    /// <summary>
+    /// Shared epilogue for offering mutations. AJAX (WantsAjax): on failure return
+    /// <c>400 { error }</c> (toasted by provider-actions.js); on success re-fetch the
+    /// offering and return the swappable fragment named by <paramref name="fragmentName"/>
+    /// so the client replaces just that card (PE1). Otherwise: flash + PRG redirect.
+    /// </summary>
+    private async Task<IActionResult> HandleMutationAsync(
+        ApiResult result, Guid tourId, string successMessage, string fragmentName, CancellationToken ct)
     {
         if (GuardSignOut(result) is { } signOut)
         {
             return signOut;
+        }
+
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+            {
+                return BadRequest(new { error = result.Message ?? "The action could not be completed." });
+            }
+
+            var refreshed = await _facade.GetOfferingDetailAsync(tourId, ct);
+            if (GuardSignOut(refreshed) is { } so)
+            {
+                return so;
+            }
+
+            return PartialView(fragmentName, refreshed.Data ?? new OfferingDetailVm());
         }
 
         SetFlash(result, successMessage);

@@ -28,12 +28,22 @@ public sealed class EarningsController : GuideBaseController
             return signOut;
         }
 
+        EarningsVm vm;
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new EarningsVm());
+            vm = new EarningsVm();
+        }
+        else
+        {
+            vm = result.Data;
         }
 
-        return View(result.Data);
+        if (WantsAjax())
+        {
+            return PartialView("_EarningsResults", vm);
+        }
+
+        return View(vm);
     }
 }

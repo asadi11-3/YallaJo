@@ -80,7 +80,7 @@
                                         @if (req.IsPending && !req.IsExpired)
                                         {
                                             <div class="d-inline-flex gap-2">
-                                                <form asp-area="Guide" asp-controller="JoinRequests" asp-action="Approve" method="post" class="d-inline">
+                                                <form asp-area="Guide" asp-controller="JoinRequests" asp-action="Approve" method="post" class="d-inline" data-loading>
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="RequestId" value="@req.Id" />
                                                     <button type="submit" class="btn btn-sm btn-success-soft">
@@ -130,7 +130,7 @@
                             <h2 class="modal-title h5" id="reject-req-title-@req.Id">@Localizer["Guide.JoinRequests.RejectTitle"]</h2>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
                         </div>
-                        <form asp-area="Guide" asp-controller="JoinRequests" asp-action="Reject" method="post">
+                        <form asp-area="Guide" asp-controller="JoinRequests" asp-action="Reject" method="post" data-loading>
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="RequestId" value="@req.Id" />
                             <div class="modal-body" id="reject-req-body-@req.Id">
@@ -150,4 +150,8 @@
             </div>
         }
     }
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

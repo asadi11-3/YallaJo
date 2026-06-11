@@ -1,0 +1,75 @@
+@model YallaJo.Web.Areas.Guide.Models.MyTours.OfferingDetailVm
+@using YallaJo.Web.Areas.Guide.Models.MyTours
+@{
+    var culture = CultureInfo.CurrentUICulture;
+    // Kept local: Num has no GuideFormat equivalent.
+    string Num(decimal v) => v.ToString("N2", culture);
+}
+@*
+    AJAX fragment contract (PE1): single-root swappable region for provider-actions.js.
+    MyToursController returns this partial from WantsAjax() branches of private-tour mutations.
+*@
+<div class="card border" data-yj-swap="private" id="offering-private">
+    <div class="card-header bg-transparent">
+        <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-user-lock me-2" aria-hidden="true"></i>@Localizer["Guide.Offering.PrivateTour"]</h2>
+    </div>
+    <div class="card-body vstack gap-3">
+        @if (Model.OffersPrivateTour)
+        {
+            <p class="mb-0">
+                @Localizer["Guide.Offering.PrivateEnabledPrefix"]
+                <span class="badge bg-success bg-opacity-10 text-success">
+                    <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.Offering.Enabled"]
+                </span>
+                @if (Model.PrivateTourPriceMultiplier.HasValue)
+                {
+                    <span class="ms-2">@Localizer["Guide.Offering.Multiplier"] <strong class="font-data"><bdi dir="ltr">@Num(Model.PrivateTourPriceMultiplier.Value)</bdi></strong></span>
+                }
+                @if (Model.PrivateTourFlatPrice.HasValue)
+                {
+                    <span class="ms-2">@Localizer["Guide.Offering.FlatPrice"] <strong class="font-data"><bdi dir="ltr">@Num(Model.PrivateTourFlatPrice.Value)</bdi></strong></span>
+                }
+            </p>
+            <form method="post" data-loading
+                  asp-area="Guide" asp-controller="MyTours" asp-action="DisablePrivateTour"
+                  asp-route-tourId="@Model.TourId"
+                  data-yj-ajax data-yj-swap-target="private"
+                  data-success-message='@Localizer["Guide.Offering.Flash.PrivateDisabled"]'
+                  data-error-text='@Localizer["Public.Results.Error"]'>
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-danger-soft">
+                    <i class="fa-solid fa-circle-xmark me-1" aria-hidden="true"></i>@Localizer["Guide.Offering.DisablePrivate"]
+                </button>
+            </form>
+        }
+        else
+        {
+            <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Offering.PrivateNotEnabled"].Value)' />
+        }
+
+        <form method="post" class="row g-2 align-items-end" data-loading
+              asp-area="Guide" asp-controller="MyTours" asp-action="EnablePrivateTour"
+              asp-route-tourId="@Model.TourId"
+              data-yj-ajax data-yj-swap-target="private"
+              data-success-message='@Localizer["Guide.Offering.Flash.PrivateUpdated"]'
+              data-error-text='@Localizer["Public.Results.Error"]'>
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="col-12 text-danger small mb-0"></div>
+            <div class="col-sm-4">
+                <label class="form-label" asp-for="PrivateTourForm.Multiplier">@Localizer["Guide.Offering.MultiplierLabel"]</label>
+                <input type="number" step="0.01" class="form-control" dir="ltr" asp-for="PrivateTourForm.Multiplier" />
+                <span asp-validation-for="PrivateTourForm.Multiplier" class="text-danger small"></span>
+            </div>
+            <div class="col-sm-4">
+                <label class="form-label" asp-for="PrivateTourForm.FlatPrice">@Localizer["Guide.Offering.FlatPriceLabel"]</label>
+                <input type="number" step="0.01" class="form-control" dir="ltr" asp-for="PrivateTourForm.FlatPrice" />
+                <span asp-validation-for="PrivateTourForm.FlatPrice" class="text-danger small"></span>
+            </div>
+            <div class="col-sm-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-check me-1" aria-hidden="true"></i>@(Model.OffersPrivateTour ? Localizer["Guide.Offering.UpdatePrivate"] : Localizer["Guide.Offering.EnablePrivate"])
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

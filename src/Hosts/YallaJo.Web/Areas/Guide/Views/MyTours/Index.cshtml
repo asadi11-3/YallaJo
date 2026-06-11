@@ -14,102 +14,14 @@
             </div>
         </div>
 
-        @if (!Model.HasTours)
-        {
-            <div class="card card-body border">
-                <h2 class="h5 text-center mb-0">@Localizer["Guide.MyTours.NoTours"]</h2>
-                <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.MyTours.NoToursMsg"].Value, Localizer["Guide.MyTours.FindTours"].Value, Url.Action("Index", "Applications", new { area = "Guide" }))' />
-            </div>
-        }
-        else
-        {
-            <div class="card border">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th scope="col">@Localizer["Guide.MyTours.ColTour"]</th>
-                                <th scope="col">@Localizer["Guide.MyTours.ColRole"]</th>
-                                <th scope="col">@Localizer["Guide.MyTours.ColOffering"]</th>
-                                <th scope="col">@Localizer["Guide.MyTours.ColPrivate"]</th>
-                                <th scope="col">@Localizer["Guide.MyTours.ColAssigned"]</th>
-                                <th scope="col" class="text-end">@Localizer["Guide.MyTours.ColActions"]</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var tour in Model.Tours)
-                            {
-                                <tr>
-                                    <td>
-                                        <span class="fw-semibold">@tour.Title</span>
-                                        @if (!string.IsNullOrWhiteSpace(tour.Slug))
-                                        {
-                                            <div class="text-body-secondary small"><bdi dir="ltr">@tour.Slug</bdi></div>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (tour.IsProposer)
-                                        {
-                                            <span class="badge bg-primary bg-opacity-10 text-primary">
-                                                <i class="fa-solid fa-lightbulb fa-fw" aria-hidden="true"></i> @Localizer["Guide.MyTours.RoleProposer"]
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                                                <i class="fa-solid fa-user-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.MyTours.RoleAssigned"]
-                                            </span>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (string.IsNullOrWhiteSpace(tour.OfferingStatus))
-                                        {
-                                            <span class="text-body-secondary" aria-label="@Localizer["Guide.MyTours.NoOffering"]">&mdash;</span>
-                                        }
-                                        else
-                                        {
-                                            <partial name="_GuideStatusBadge" model="new StatusBadgeVm(tour.OfferingStatus)" />
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (tour.OffersPrivateTour)
-                                        {
-                                            <span class="badge bg-success bg-opacity-10 text-success">
-                                                <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.Common.Yes"]
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                                                <i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Guide.Common.No"]
-                                            </span>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (tour.AssignedAt.HasValue)
-                                        {
-                                            <bdi dir="ltr" class="font-data">@GuideFormat.Date(tour.AssignedAt.Value)</bdi>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-body-secondary">&mdash;</span>
-                                        }
-                                    </td>
-                                    <td class="text-end">
-                                        <a class="btn btn-sm btn-primary-soft"
-                                           asp-area="Guide" asp-controller="MyTours" asp-action="Offering"
-                                           asp-route-tourId="@tour.TourId">
-                                            <i class="fa-solid fa-gear me-1" aria-hidden="true"></i>@Localizer["Guide.MyTours.ManageOffering"]
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <partial name="_GuidePagination" model='new PaginationVm(Model.Page, Model.TotalPages, Model.HasPreviousPage, Model.HasNextPage, "MyTours", Localizer["Guide.MyTours.Pagination"].Value)' />
-        }
+        @* Phase 4: results fragment swapped via AJAX by listing.js; plain markup without JS (PE1). *@
+        <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+             data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]" data-loading-text="@Localizer["Public.Loading"]">
+            <partial name="_MyToursResults" model="Model" />
+        </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true"></script>
+}

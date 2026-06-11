@@ -20,12 +20,23 @@ public sealed class ReviewsController : GuideBaseController
 
         var result = await _reviews.GetAsync(page, DefaultPageSize, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
+
+        ReviewsVm vm;
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new ReviewsVm());
+            vm = new ReviewsVm();
+        }
+        else
+        {
+            vm = result.Data;
         }
 
-        return View(result.Data);
+        if (WantsAjax())
+        {
+            return PartialView("_ReviewsResults", vm);
+        }
+
+        return View(vm);
     }
 }

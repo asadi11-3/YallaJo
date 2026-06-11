@@ -31,7 +31,7 @@
             <div class="col-lg-5">
                 <div class="card card-body border h-100">
                     <h2 class="card-header-title h5 mb-3"><i class="fa-solid fa-plus me-2" aria-hidden="true"></i>@Localizer["Guide.Discounts.CreateHeading"]</h2>
-                    <form asp-area="Guide" asp-controller="Discounts" asp-action="Create" method="post">
+                    <form asp-area="Guide" asp-controller="Discounts" asp-action="Create" method="post" data-loading>
                         @Html.AntiForgeryToken()
                         <div asp-validation-summary="ModelOnly" class="text-danger small mb-2" role="alert"></div>
 
@@ -164,11 +164,17 @@
                                                         aria-label="@Localizer["Guide.Discounts.EditLabel", d.Name]"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
                                                 @if (d.IsActive)
                                                 {
-                                                    <button type="button" class="btn btn-sm btn-outline-danger"
-                                                            data-bs-toggle="modal" data-bs-target="#deact-disc-@d.Id"
-                                                            aria-label="@Localizer["Guide.Discounts.DeactivateLabel", d.Name]">
-                                                        <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
-                                                    </button>
+                                                    <form asp-area="Guide" asp-controller="Discounts" asp-action="Deactivate" asp-route-id="@d.Id" method="post" class="d-inline" data-loading
+                                                          data-confirm='@Localizer["Guide.Discounts.DeactivateBody", d.Name]'
+                                                          data-confirm-title='@Localizer["Guide.Discounts.DeactivateTitle"]'
+                                                          data-confirm-action='@Localizer["Guide.Discounts.DeactivateConfirm"]'
+                                                          data-confirm-cancel='@Localizer["Guide.Common.Cancel"]'>
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                                aria-label="@Localizer["Guide.Discounts.DeactivateLabel", d.Name]">
+                                                            <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                                                        </button>
+                                                    </form>
                                                 }
                                             </td>
                                         </tr>
@@ -178,7 +184,7 @@
                                         <tr class="collapse @(isOpenEdit ? "show" : null)" id="edit-disc-@d.Id">
                                             <td colspan="7">
                                                 <form asp-area="Guide" asp-controller="Discounts" asp-action="Edit" asp-route-id="@d.Id"
-                                                      method="post" class="row g-2 align-items-end">
+                                                      method="post" class="row g-2 align-items-end" data-loading>
                                                     @Html.AntiForgeryToken()
                                                     @if (isOpenEdit)
                                                     {
@@ -225,32 +231,6 @@
     </div>
 </section>
 
-@if (Model.HasDiscounts)
-{
-    foreach (var d in Model.Discounts)
-    {
-        if (d.IsActive)
-        {
-            <div class="modal fade" id="deact-disc-@d.Id" tabindex="-1" aria-labelledby="deact-disc-title-@d.Id" aria-describedby="deact-disc-body-@d.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="deact-disc-title-@d.Id">@Localizer["Guide.Discounts.DeactivateTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
-                        </div>
-                        <div class="modal-body" id="deact-disc-body-@d.Id">
-                            <p class="mb-0">@Localizer["Guide.Discounts.DeactivateBody", d.Name]</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
-                            <form asp-area="Guide" asp-controller="Discounts" asp-action="Deactivate" asp-route-id="@d.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-danger">@Localizer["Guide.Discounts.DeactivateConfirm"]</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-    }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

@@ -1,0 +1,115 @@
+@model YallaJo.Web.Areas.Guide.Models.MyTours.OfferingDetailVm
+@using YallaJo.Web.Areas.Guide.Models.MyTours
+@*
+    AJAX fragment contract (PE1): single-root swappable region for provider-actions.js.
+    MyToursController returns this partial from WantsAjax() branches of schedule mutations.
+*@
+<div class="card border" data-yj-swap="schedules" id="offering-schedules">
+    <div class="card-header bg-transparent">
+        <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-calendar-week me-2" aria-hidden="true"></i>@Localizer["Guide.Offering.Schedules"]</h2>
+    </div>
+    <div class="card-body vstack gap-3">
+        @if (Model.Schedules.Count == 0)
+        {
+            <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Offering.NoSchedules"].Value)' />
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">@Localizer["Guide.Offering.ColDay"]</th>
+                            <th scope="col">@Localizer["Guide.Offering.ColStart"]</th>
+                            <th scope="col">@Localizer["Guide.Offering.ColEnd"]</th>
+                            <th scope="col">@Localizer["Guide.Offering.ColActive"]</th>
+                            <th scope="col" class="text-end">@Localizer["Guide.Offering.ColActions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.Schedules)
+                        {
+                            <tr>
+                                <td>@OfferingDetailVm.DayName(s.DayOfWeek)</td>
+                                <td><bdi dir="ltr" class="font-data">@s.StartTime</bdi></td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(s.EndTime))
+                                    {
+                                        <span class="text-body-secondary">&mdash;</span>
+                                    }
+                                    else
+                                    {
+                                        <bdi dir="ltr" class="font-data">@s.EndTime</bdi>
+                                    }
+                                </td>
+                                <td>
+                                    @if (s.IsActive)
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success">
+                                            <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.Common.Yes"]
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                            <i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Guide.Common.No"]
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <form method="post" class="d-inline" data-loading
+                                          asp-area="Guide" asp-controller="MyTours" asp-action="DeleteSchedule"
+                                          asp-route-tourId="@Model.TourId" asp-route-scheduleId="@s.Id"
+                                          data-yj-ajax data-yj-swap-target="schedules"
+                                          data-success-message='@Localizer["Guide.Offering.Flash.ScheduleRemoved"]'
+                                          data-error-text='@Localizer["Public.Results.Error"]'
+                                          data-confirm='@Localizer["Guide.Offering.DeleteScheduleBody", OfferingDetailVm.DayName(s.DayOfWeek)]'
+                                          data-confirm-title='@Localizer["Guide.Offering.DeleteScheduleTitle"]'
+                                          data-confirm-cancel='@Localizer["Guide.Common.Cancel"]'
+                                          data-confirm-action='@Localizer["Guide.Offering.DeleteSchedule"]'>
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-danger-soft"
+                                                aria-label="@Localizer["Guide.Offering.DeleteSchedule"]">
+                                            <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <form method="post" class="row g-2 align-items-end" data-loading
+              asp-area="Guide" asp-controller="MyTours" asp-action="AddSchedule"
+              asp-route-tourId="@Model.TourId"
+              data-yj-ajax data-yj-swap-target="schedules"
+              data-success-message='@Localizer["Guide.Offering.Flash.ScheduleAdded"]'
+              data-error-text='@Localizer["Public.Results.Error"]'>
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="col-12 text-danger small mb-0"></div>
+            <div class="col-sm-3">
+                <label class="form-label" asp-for="ScheduleForm.DayOfWeek">@Localizer["Guide.Offering.ColDay"]</label>
+                <select class="form-select" asp-for="ScheduleForm.DayOfWeek"
+                        asp-items="@(new SelectList(OfferingDetailVm.DayOptions, nameof(DayOptionVm.Value), nameof(DayOptionVm.Label)))"></select>
+                <span asp-validation-for="ScheduleForm.DayOfWeek" class="text-danger small"></span>
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label" asp-for="ScheduleForm.StartTime">@Localizer["Guide.Offering.ColStart"]</label>
+                <input type="time" class="form-control" dir="ltr" asp-for="ScheduleForm.StartTime" />
+                <span asp-validation-for="ScheduleForm.StartTime" class="text-danger small"></span>
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label" asp-for="ScheduleForm.EndTime">@Localizer["Guide.Offering.ColEnd"]</label>
+                <input type="time" class="form-control" dir="ltr" asp-for="ScheduleForm.EndTime" />
+                <span asp-validation-for="ScheduleForm.EndTime" class="text-danger small"></span>
+            </div>
+            <div class="col-sm-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Guide.Offering.AddSchedule"]
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
