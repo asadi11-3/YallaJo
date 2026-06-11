@@ -15,7 +15,7 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
-                        <form asp-action="Apply" method="post" class="row g-3">
+                        <form asp-action="Apply" method="post" data-loading class="row g-3">
                             @Html.AntiForgeryToken()
 
                             <div class="col-md-6">

@@ -38,6 +38,36 @@
                             }
                         </select>
                     </div>
+                    <div>
+                        <label class="form-label small mb-1" for="bk-from">@Localizer["Provider.ProviderBookings.FromDate"]</label>
+                        <input id="bk-from" name="fromDate" type="date" dir="ltr" class="form-control form-control-sm"
+                               value="@Model.FromDate"/>
+                    </div>
+                    <div>
+                        <label class="form-label small mb-1" for="bk-to">@Localizer["Provider.ProviderBookings.ToDate"]</label>
+                        <input id="bk-to" name="toDate" type="date" dir="ltr" class="form-control form-control-sm"
+                               value="@Model.ToDate"/>
+                    </div>
+                    @if (Model.TourOptions.Count > 0)
+                    {
+                        <div>
+                            <label class="form-label small mb-1" for="bk-tour">@Localizer["Provider.ProviderBookings.TourFilter"]</label>
+                            <select id="bk-tour" name="tourId" class="form-select form-select-sm">
+                                <option value="">@Localizer["Provider.ProviderBookings.AllTours"]</option>
+                                @foreach (var t in Model.TourOptions)
+                                {
+                                    if (Model.TourId == t.Id)
+                                    {
+                                        <option value="@t.Id" selected>@t.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@t.Id">@t.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    }
                     <button type="submit" class="btn btn-sm btn-primary">@Localizer["Provider.ProviderBookings.Apply"]</button>
                 </form>
             </div>

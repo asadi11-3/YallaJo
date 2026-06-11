@@ -60,10 +60,17 @@
                     <div class="card-body">
                         @if (Model.IsEdit)
                         {
-                            <form asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId" method="post">
+                            @* F5/PROV3/F9: provider-tour-form.js autosaves drafts to localStorage and guards unload. *@
+                            <form asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId" method="post" data-loading
+                                  data-yj-tour-form data-yj-draft-key="yallajo:provider:tour-draft:@(User.FindFirst("sub")?.Value ?? User.Identity?.Name ?? "anon"):@Model.TourId"
+                                  data-yj-draft-found="@Localizer["Provider.TourForm.DraftFound"]"
+                                  data-yj-draft-restore="@Localizer["Provider.TourForm.DraftRestore"]"
+                                  data-yj-draft-discard="@Localizer["Provider.TourForm.DraftDiscard"]"
+                                  data-yj-draft-restored="@Localizer["Provider.TourForm.DraftRestoredToast"]">
                                 @Html.AntiForgeryToken()
                                 <partial name="_Form" model="Model" />
-                                <div class="mt-4 d-flex flex-wrap gap-2">
+                                @* D5: sticky on mobile so save/cancel stay reachable on the long form. *@
+                                <div class="mt-4 d-flex flex-wrap gap-2 yj-sticky-actions">
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.SaveChanges"]
                                     </button>
@@ -73,10 +80,17 @@
                         }
                         else
                         {
-                            <form asp-area="Provider" asp-controller="Tours" asp-action="Create" method="post">
+                            @* F5/PROV3/F9: provider-tour-form.js autosaves drafts to localStorage and guards unload. *@
+                            <form asp-area="Provider" asp-controller="Tours" asp-action="Create" method="post" data-loading
+                                  data-yj-tour-form data-yj-draft-key="yallajo:provider:tour-draft:@(User.FindFirst("sub")?.Value ?? User.Identity?.Name ?? "anon"):new"
+                                  data-yj-draft-found="@Localizer["Provider.TourForm.DraftFound"]"
+                                  data-yj-draft-restore="@Localizer["Provider.TourForm.DraftRestore"]"
+                                  data-yj-draft-discard="@Localizer["Provider.TourForm.DraftDiscard"]"
+                                  data-yj-draft-restored="@Localizer["Provider.TourForm.DraftRestoredToast"]">
                                 @Html.AntiForgeryToken()
                                 <partial name="_Form" model="Model" />
-                                <div class="mt-4 d-flex flex-wrap gap-2">
+                                @* D5: sticky on mobile so save/cancel stay reachable on the long form. *@
+                                <div class="mt-4 d-flex flex-wrap gap-2 yj-sticky-actions">
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.CreateSubmit"]
                                     </button>
@@ -95,7 +109,7 @@
                                 @if (Model.CanSubmit)
                                 {
                                     <permission require="@WebPermission.Tour.Submit">
-                                        <form asp-area="Provider" asp-controller="Tours" asp-action="Submit" asp-route-id="@Model.TourId" method="post" class="d-inline">
+                                        <form asp-area="Provider" asp-controller="Tours" asp-action="Submit" asp-route-id="@Model.TourId" method="post" data-loading class="d-inline">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-outline-primary"><i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.Submit"]</button>
                                         </form>
@@ -104,7 +118,7 @@
                                 @if (Model.CanArchive)
                                 {
                                     <permission require="@WebPermission.Tour.Archive">
-                                        <form asp-area="Provider" asp-controller="Tours" asp-action="Archive" asp-route-id="@Model.TourId" method="post" class="d-inline"
+                                        <form asp-area="Provider" asp-controller="Tours" asp-action="Archive" asp-route-id="@Model.TourId" method="post" data-loading class="d-inline"
                                               data-confirm="@Localizer["Provider.Tours.ArchiveBody", Model.Name]"
                                               data-confirm-title="@Localizer["Provider.Tours.ArchiveTitle"]"
                                               data-confirm-action="@Localizer["Provider.Tours.ArchiveConfirm"]"

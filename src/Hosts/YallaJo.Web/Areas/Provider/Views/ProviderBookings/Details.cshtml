@@ -124,7 +124,8 @@
             </div>
 
             <div class="col-lg-4">
-                <div class="card shadow-sm">
+                @* D5: sticky on mobile so confirm/reject actions stay reachable below the long detail card. *@
+                <div class="card shadow-sm yj-sticky-actions">
                     <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.ProviderBookings.ActionsHeading"]</h2></div>
                     <div class="card-body d-grid gap-3">
                         @if (!Model.HasAnyAction)
@@ -135,7 +136,7 @@
                         @if (Model.CanConfirm)
                         {
                             <permission require="@WebPermission.TourBooking.Confirm">
-                                <form asp-action="Confirm" asp-route-id="@Model.Id" method="post"
+                                <form asp-action="Confirm" asp-route-id="@Model.Id" method="post" data-loading
                                       data-confirm="@Localizer["Provider.ProviderBookings.ConfirmBody"]"
                                       data-confirm-title="@Localizer["Provider.ProviderBookings.ConfirmTitle"]"
                                       data-confirm-action="@Localizer["Provider.ProviderBookings.Confirm"]"
@@ -179,7 +180,7 @@
     <permission require="@WebPermission.TourBooking.Complete">
         <div class="modal fade" id="completeModal" tabindex="-1" aria-labelledby="complete-title" aria-describedby="complete-body" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-action="Complete" asp-route-id="@Model.Id" method="post" class="modal-content">
+                <form asp-action="Complete" asp-route-id="@Model.Id" method="post" data-loading class="modal-content">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h2 class="modal-title h5" id="complete-title">@Localizer["Provider.ProviderBookings.CompleteTitle"]</h2>
@@ -201,7 +202,7 @@
     <permission require="@WebPermission.TourBooking.Reject">
         <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="reject-title" aria-describedby="reject-help" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-action="Reject" asp-route-id="@Model.Id" method="post" class="modal-content">
+                <form asp-action="Reject" asp-route-id="@Model.Id" method="post" data-loading class="modal-content">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h2 class="modal-title h5" id="reject-title">@Localizer["Provider.ProviderBookings.RejectTitle"]</h2>
@@ -227,7 +228,7 @@
     <permission require="@WebPermission.TourBooking.Cancel">
         <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancel-title" aria-describedby="cancel-help" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="modal-content">
+                <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" data-loading class="modal-content">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h2 class="modal-title h5" id="cancel-title">@Localizer["Provider.ProviderBookings.CancelTitle"]</h2>

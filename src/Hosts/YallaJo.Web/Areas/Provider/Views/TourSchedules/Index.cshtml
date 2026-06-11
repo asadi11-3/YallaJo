@@ -83,7 +83,7 @@
                                                     </a>
                                                 </permission>
                                                 <permission require="@WebPermission.TourSchedule.Delete">
-                                                    <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id" method="post" class="d-inline"
+                                                    <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id" method="post" data-loading class="d-inline"
                                                           data-confirm="@Localizer["Provider.TourSchedules.DeleteBody", s.DayLabel]"
                                                           data-confirm-title="@Localizer["Provider.TourSchedules.DeleteTitle"]"
                                                           data-confirm-action="@Localizer["Provider.TourSchedules.DeleteConfirm"]"

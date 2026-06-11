@@ -133,13 +133,19 @@ public sealed class ProviderFacade
     public async Task<ApiResult> ReplaceDocumentAsync(
         ReplaceProviderDocumentVm vm, CancellationToken ct = default)
     {
-        var request = new ReplaceProviderDocumentRequest(
-            FileUrl:       vm.FileUrl.Trim(),
-            FileName:      vm.FileName.Trim(),
-            FileSizeBytes: vm.FileSizeBytes,
-            ExpiresAt:     vm.ExpiresAt);
+        // F10: real multipart upload — no manual URL/size typing (UX plan Phase 5).
+        if (vm.File is null || vm.File.Length == 0)
+            return ApiResult.Fail(400, "Please choose a file to upload.");
 
-        var result = await _api.ReplaceDocumentAsync(vm.DocumentId, request, ct);
+        await using var stream = vm.File.OpenReadStream();
+
+        var result = await _api.ReplaceDocumentUploadAsync(
+            vm.DocumentId,
+            stream,
+            vm.File.FileName,
+            vm.File.ContentType,
+            vm.ExpiresAt,
+            ct);
 
         if (result.IsSuccess) return ApiResult.Ok();
         if (result.IsUnauthorized) return ApiResult.ForceSignOut();

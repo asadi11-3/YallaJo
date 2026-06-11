@@ -101,7 +101,7 @@
                                                     </a>
                                                 </permission>
                                                 <permission require="@WebPermission.TourPricingTier.Delete">
-                                                    <form asp-area="Provider" asp-controller="TourPricing" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-tierId="@tier.Id" method="post" class="d-inline"
+                                                    <form asp-area="Provider" asp-controller="TourPricing" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-tierId="@tier.Id" method="post" data-loading class="d-inline"
                                                           data-confirm="@Localizer["Provider.TourPricing.DeleteBody", tier.Name]"
                                                           data-confirm-title="@Localizer["Provider.TourPricing.DeleteTitle"]"
                                                           data-confirm-action="@Localizer["Provider.TourPricing.DeleteConfirm"]"

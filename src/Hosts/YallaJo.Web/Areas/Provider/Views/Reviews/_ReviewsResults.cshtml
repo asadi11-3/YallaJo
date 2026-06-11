@@ -70,7 +70,7 @@
                                 <div class="small mb-2"><bdi>@r.ReplyContent</bdi></div>
                                 <div class="d-flex gap-3">
                                     <a class="small text-primary" data-bs-toggle="collapse" href="#edit-reply-@r.Id" role="button"><i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Edit"]</a>
-                                    <form method="post" class="d-inline"
+                                    <form method="post" data-loading class="d-inline"
                                           asp-area="Provider" asp-controller="Reviews" asp-action="DeleteReply"
                                           asp-route-id="@r.Id" asp-route-replyId="@r.ReplyId" asp-route-tourId="@Model.SelectedTourId"
                                           data-yj-ajax data-yj-swap-target="reviews"
@@ -85,7 +85,7 @@
                                     </form>
                                 </div>
                                 <div class="collapse mt-2" id="edit-reply-@r.Id">
-                                    <form method="post" asp-area="Provider" asp-controller="Reviews" asp-action="EditReply"
+                                    <form method="post" data-loading asp-area="Provider" asp-controller="Reviews" asp-action="EditReply"
                                           asp-route-id="@r.Id" asp-route-replyId="@r.ReplyId" asp-route-tourId="@Model.SelectedTourId"
                                           data-yj-ajax data-yj-swap-target="reviews"
                                           data-success-message="@Localizer["Provider.Reviews.ReplyUpdatedToast"]"
@@ -110,7 +110,7 @@
                         @if (!r.HasReply)
                         {
                             <div class="collapse mt-3" id="reply-@r.Id">
-                                <form method="post" asp-area="Provider" asp-controller="Reviews" asp-action="Reply" asp-route-id="@r.Id" asp-route-tourId="@Model.SelectedTourId"
+                                <form method="post" data-loading asp-area="Provider" asp-controller="Reviews" asp-action="Reply" asp-route-id="@r.Id" asp-route-tourId="@Model.SelectedTourId"
                                       data-yj-ajax data-yj-swap-target="reviews"
                                       data-success-message="@Localizer["Provider.Reviews.ReplyPostedToast"]"
                                       data-error-text="@Localizer["Provider.Common.ActionFailed"]">
@@ -123,7 +123,7 @@
                         }
 
                         <div class="collapse mt-3" id="report-@r.Id">
-                            <form method="post" asp-area="Provider" asp-controller="Reviews" asp-action="Report" asp-route-id="@r.Id" asp-route-tourId="@Model.SelectedTourId"
+                            <form method="post" data-loading asp-area="Provider" asp-controller="Reviews" asp-action="Report" asp-route-id="@r.Id" asp-route-tourId="@Model.SelectedTourId"
                                   data-yj-ajax data-yj-swap-target="reviews"
                                   data-success-message="@Localizer["Provider.Reviews.ReportToast"]"
                                   data-error-text="@Localizer["Provider.Common.ActionFailed"]">

@@ -12817,4 +12817,61 @@
 <data name="Provider.TourAvailability.CalendarHeading" xml:space="preserve">
 <value>Monthly overview</value>
 </data>
+<data name="Provider.TourForm.DraftFound" xml:space="preserve">
+<value>You have an unsaved draft of this form from a previous visit.</value>
+</data>
+<data name="Provider.TourForm.DraftRestore" xml:space="preserve">
+<value>Restore draft</value>
+</data>
+<data name="Provider.TourForm.DraftDiscard" xml:space="preserve">
+<value>Discard draft</value>
+</data>
+<data name="Provider.TourForm.DraftDiscardTitle" xml:space="preserve">
+<value>Discard saved draft?</value>
+</data>
+<data name="Provider.TourForm.DraftDiscardBody" xml:space="preserve">
+<value>Your locally saved draft will be deleted. This cannot be undone.</value>
+</data>
+<data name="Provider.TourForm.DraftRestoredToast" xml:space="preserve">
+<value>Draft restored.</value>
+</data>
+<data name="Provider.Packages.NoToursAvailable" xml:space="preserve">
+<value>You have no published tours to include yet.</value>
+</data>
+<data name="Provider.Status.ReplaceFileLabel" xml:space="preserve">
+<value>New file</value>
+</data>
+<data name="Provider.Status.ReplaceFileHelp" xml:space="preserve">
+<value>Upload a replacement document (PDF or image, up to 10 MB).</value>
+</data>
+<data name="Provider.ProviderBookings.FromDate" xml:space="preserve">
+<value>From date</value>
+</data>
+<data name="Provider.ProviderBookings.ToDate" xml:space="preserve">
+<value>To date</value>
+</data>
+<data name="Provider.ProviderBookings.TourFilter" xml:space="preserve">
+<value>Listing</value>
+</data>
+<data name="Provider.ProviderBookings.AllTours" xml:space="preserve">
+<value>All listings</value>
+</data>
+<data name="Provider.TourWaypoints.DragHandleAria" xml:space="preserve">
+<value>Drag to reorder waypoint {0}</value>
+</data>
+<data name="Provider.TourWaypoints.ReorderSavedToast" xml:space="preserve">
+<value>Waypoint order saved.</value>
+</data>
+<data name="Provider.TourWaypoints.ReorderFailedToast" xml:space="preserve">
+<value>Could not save the new order. The list was restored.</value>
+</data>
+<data name="Provider.TourImages.PreviewAlt" xml:space="preserve">
+<value>Preview of the selected image</value>
+</data>
+<data name="Provider.TourImages.FileTooLarge" xml:space="preserve">
+<value>This file is larger than 5 MB. Please choose a smaller image.</value>
+</data>
+<data name="Provider.TourImages.InvalidType" xml:space="preserve">
+<value>Only JPG, PNG or WebP images are allowed.</value>
+</data>
 </root>

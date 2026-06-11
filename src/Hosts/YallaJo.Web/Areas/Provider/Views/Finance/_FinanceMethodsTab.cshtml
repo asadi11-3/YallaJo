@@ -7,7 +7,7 @@
     private string TypeLabel(ProviderPaymentMethodType t) => Localizer["Provider.Finance.MethodType." + t].Value;
 }
 <permission require="@WebPermission.ProviderPaymentMethod.Create">
-    <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Create" method="post" class="row g-2 align-items-end mb-3">
+    <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Create" method="post" data-loading class="row g-2 align-items-end mb-3">
         @Html.AntiForgeryToken()
         <div class="col-md-3">
             <label asp-for="Form.PaymentMethodType" class="form-label small mb-1"></label>
@@ -83,7 +83,7 @@ else
                                         aria-label="@Localizer["Provider.Finance.EditMethod", m.DisplayName]"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
                             </permission>
                             <permission require="@WebPermission.ProviderPaymentMethod.Delete">
-                                <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Delete" asp-route-id="@m.Id" method="post" class="d-inline"
+                                <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Delete" asp-route-id="@m.Id" method="post" data-loading class="d-inline"
                                       data-confirm="@Localizer["Provider.Finance.DeleteModalBody", m.DisplayName]"
                                       data-confirm-title="@Localizer["Provider.Finance.DeleteModalTitle"]"
                                       data-confirm-action="@Localizer["Provider.Finance.DeleteConfirm"]"
@@ -99,7 +99,7 @@ else
                         <tr class="collapse" id="fin-edit-@m.Id">
                             <td colspan="5">
                                 <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Edit" asp-route-id="@m.Id"
-                                      method="post" class="row g-2 align-items-end">
+                                      method="post" data-loading class="row g-2 align-items-end">
                                     @Html.AntiForgeryToken()
                                     <div class="col-md-3">
                                         <label class="form-label small mb-1" for="fin-t-@m.Id">@Localizer["Provider.Finance.ColType"]</label>

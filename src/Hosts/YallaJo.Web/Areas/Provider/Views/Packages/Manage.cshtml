@@ -31,7 +31,7 @@
             <div class="mt-2 mt-sm-0 d-flex gap-2">
                 <a asp-action="Index" class="btn btn-sm btn-secondary-soft"><i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.AllPackages"]</a>
                 <permission require="@WebPermission.Package.Update">
-                    <form asp-action="Submit" asp-route-id="@Model.Id" method="post" class="d-inline"
+                    <form asp-action="Submit" asp-route-id="@Model.Id" method="post" data-loading class="d-inline"
                           data-confirm="@Localizer["Provider.Packages.SubmitBody", Model.Name]"
                           data-confirm-title="@Localizer["Provider.Packages.SubmitTitle"]"
                           data-confirm-action="@Localizer["Provider.Packages.SubmitConfirm"]"
@@ -41,7 +41,7 @@
                     </form>
                 </permission>
                 <permission require="@WebPermission.Package.Delete">
-                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline"
+                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" data-loading class="d-inline"
                           data-confirm="@Localizer["Provider.Packages.DeleteBody", Model.Name]"
                           data-confirm-title="@Localizer["Provider.Packages.DeleteTitle"]"
                           data-confirm-action="@Localizer["Provider.Packages.DeleteConfirm"]"
@@ -104,7 +104,7 @@
                             </ul>
                         }
                         <permission require="@WebPermission.Package.Update">
-                            <form asp-action="AddInclusion" asp-route-id="@Model.Id" method="post" class="input-group input-group-sm">
+                            <form asp-action="AddInclusion" asp-route-id="@Model.Id" method="post" data-loading class="input-group input-group-sm">
                                 @Html.AntiForgeryToken()
                                 <label class="visually-hidden" for="add-inc">@Localizer["Provider.Packages.AddInclusionLabel"]</label>
                                 <input id="add-inc" name="description" class="form-control" maxlength="500" placeholder="@Localizer["Provider.Packages.AddInclusionPlaceholder"]" required />

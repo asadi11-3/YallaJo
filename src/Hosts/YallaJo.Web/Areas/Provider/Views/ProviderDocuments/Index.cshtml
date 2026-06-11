@@ -27,7 +27,7 @@
                     <div class="card shadow-sm h-100">
                         <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.Documents.UploadHeading"]</h2></div>
                         <div class="card-body">
-                            <form asp-action="Upload" method="post" enctype="multipart/form-data" class="vstack gap-3">
+                            <form asp-action="Upload" method="post" data-loading enctype="multipart/form-data" class="vstack gap-3">
                                 @Html.AntiForgeryToken()
                                 <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
                                 <div>
@@ -111,7 +111,7 @@
                                         </div>
                                         <permission require="@WebPermission.ProviderDocument.Update">
                                             <div class="collapse mt-2" id="replace-@d.Id">
-                                                <form asp-action="Replace" asp-route-id="@d.Id" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
+                                                <form asp-action="Replace" asp-route-id="@d.Id" method="post" data-loading enctype="multipart/form-data" class="row g-2 align-items-end">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="rowVersion" value="@d.RowVersion" />
                                                     <div class="col-md-6">

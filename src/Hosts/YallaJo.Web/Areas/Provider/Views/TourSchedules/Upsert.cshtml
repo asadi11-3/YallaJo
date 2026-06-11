@@ -33,7 +33,7 @@
                     <div class="card-body">
                         @if (Model.IsEdit)
                         {
-                            <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Edit" asp-route-id="@Model.TourId" asp-route-scheduleId="@Model.ScheduleId" method="post">
+                            <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Edit" asp-route-id="@Model.TourId" asp-route-scheduleId="@Model.ScheduleId" method="post" data-loading>
                                 @Html.AntiForgeryToken()
                                 <partial name="_Form" model="Model" />
                                 <div class="d-flex flex-wrap gap-2 mt-4">
@@ -44,7 +44,7 @@
                         }
                         else
                         {
-                            <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId" method="post">
+                            <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId" method="post" data-loading>
                                 @Html.AntiForgeryToken()
                                 <partial name="_Form" model="Model" />
                                 <div class="d-flex flex-wrap gap-2 mt-4">

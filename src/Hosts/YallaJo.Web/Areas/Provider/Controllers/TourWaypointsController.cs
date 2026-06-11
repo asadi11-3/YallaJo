@@ -173,6 +173,15 @@ public sealed class TourWaypointsController : ProviderTourResourceController
         var result = await _facade.ReorderAsync(id, waypointIds, ct);
         if (result.Outcome == TourWaypointOutcome.ForceSignOut) return RedirectToLogin();
 
+        // NF6: drag-and-drop posts via AJAX and only needs a status — the client
+        // already moved the row optimistically and rolls back on failure.
+        if (WantsAjax())
+        {
+            return result.Outcome == TourWaypointOutcome.Ok
+                ? Ok()
+                : BadRequest(new { error = result.Error ?? "Could not reorder the waypoints." });
+        }
+
         if (result.Outcome == TourWaypointOutcome.Ok)
             SetSuccess("Route order updated.");
         else

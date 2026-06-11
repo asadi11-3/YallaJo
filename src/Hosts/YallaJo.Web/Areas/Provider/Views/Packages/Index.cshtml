@@ -25,7 +25,7 @@
                             <h2 class="card-header-title h5 mb-0">@Localizer["Provider.Packages.CreateHeading"]</h2>
                         </div>
                         <div class="card-body">
-                            <form asp-action="Create" method="post" class="vstack gap-3">
+                            <form asp-action="Create" method="post" data-loading class="vstack gap-3">
                                 @Html.AntiForgeryToken()
                                 <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
 
@@ -73,8 +73,22 @@
 
                                 <div>
                                     <label asp-for="Create.IncludedTourIds" class="form-label">@Localizer["Provider.Packages.IncludedToursLabel"]</label>
-                                    <textarea asp-for="Create.IncludedTourIds" rows="2" dir="ltr" class="form-control font-data" aria-describedby="pkg-tours-help"></textarea>
-                                    <small id="pkg-tours-help" class="form-text">@Localizer["Provider.Packages.IncludedToursHelp"]</small>
+                                    @* F10: multi-select of the provider's own tours (no GUID paste). SSR select = no-JS path (PE1); Choices.js enhances it. *@
+                                    <select asp-for="Create.IncludedTourIds" multiple class="form-select" size="5" aria-describedby="pkg-tours-help"
+                                            data-yj-multiselect>
+                                        @foreach (var t in Model.TourOptions)
+                                        {
+                                            <option value="@t.Id">@t.Name</option>
+                                        }
+                                    </select>
+                                    @if (Model.TourOptions.Count == 0)
+                                    {
+                                        <small id="pkg-tours-help" class="form-text">@Localizer["Provider.Packages.NoToursAvailable"]</small>
+                                    }
+                                    else
+                                    {
+                                        <small id="pkg-tours-help" class="form-text">@Localizer["Provider.Packages.IncludedToursHelp"]</small>
+                                    }
                                 </div>
 
                                 <div>
@@ -139,7 +153,7 @@
                                                     <div class="btn-group btn-group-sm" role="group" aria-label="@Localizer["Provider.Packages.ColActions"]">
                                                         <a asp-action="Manage" asp-route-id="@p.Id" class="btn btn-outline-primary"><i class="fa-solid fa-gear me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.Manage"]</a>
                                                         <permission require="@WebPermission.Package.Delete">
-                                                            <form asp-action="Delete" asp-route-id="@p.Id" method="post" class="d-inline"
+                                                            <form asp-action="Delete" asp-route-id="@p.Id" method="post" data-loading class="d-inline"
                                                                   data-confirm="@Localizer["Provider.Packages.DeleteBody", p.Name]"
                                                                   data-confirm-title="@Localizer["Provider.Packages.DeleteTitle"]"
                                                                   data-confirm-action="@Localizer["Provider.Packages.DeleteConfirm"]"
@@ -189,4 +203,8 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    @* F10: Choices.js enhances the included-tours multi-select (vendored, PE1 SSR fallback). *@
+    <link rel="stylesheet" href="~/assets/vendor/choices/css/choices.min.css" />
+    <script src="~/assets/vendor/choices/js/choices.min.js" asp-append-version="true"></script>
+    <script src="~/assets/js/provider-packages.js" asp-append-version="true"></script>
 }

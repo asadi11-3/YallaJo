@@ -19,11 +19,17 @@ public sealed class ProviderBookingsApiClient
 
     // GET /api/v1/booking/provider/bookings — owner-scoped list
     public Task<ApiResult<ProviderBookingsPageResponse>> GetListAsync(
-        string? status, string? cursor = null, CancellationToken ct = default)
+        string? status, string? cursor = null,
+        string? fromDate = null, string? toDate = null, Guid? tourId = null,
+        CancellationToken ct = default)
     {
         var query = new Dictionary<string, string?> { ["pageSize"] = "50" };
         if (!string.IsNullOrWhiteSpace(status)) query["status"] = status;
         if (!string.IsNullOrWhiteSpace(cursor)) query["cursor"] = cursor;
+        // Phase 5: date-range + tour filters (API already supports them; YYYY-MM-DD).
+        if (!string.IsNullOrWhiteSpace(fromDate)) query["fromDate"] = fromDate;
+        if (!string.IsNullOrWhiteSpace(toDate)) query["toDate"] = toDate;
+        if (tourId.HasValue) query["tourId"] = tourId.Value.ToString();
 
         var url = QueryHelpers.AddQueryString($"{Base}/provider/bookings", query);
         return _api.GetAsync<ProviderBookingsPageResponse>(url, ct);

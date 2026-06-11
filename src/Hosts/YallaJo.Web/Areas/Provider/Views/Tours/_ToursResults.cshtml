@@ -82,7 +82,7 @@ else
                                     {
                                         <permission require="@WebPermission.Tour.Submit">
                                             <form asp-area="Provider" asp-controller="Tours" asp-action="Submit"
-                                                  asp-route-id="@row.Id" method="post" class="d-inline">
+                                                  asp-route-id="@row.Id" method="post" data-loading class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-sm btn-outline-primary">@Localizer["Provider.Tours.Submit"]</button>
                                             </form>
@@ -94,7 +94,7 @@ else
                                             @* Shared confirm modal via form-ux.js data-confirm (F8/MOD3/MOD5);
                                                without JS the form posts directly (PE1). *@
                                             <form asp-area="Provider" asp-controller="Tours" asp-action="Archive"
-                                                  asp-route-id="@row.Id" method="post" class="d-inline"
+                                                  asp-route-id="@row.Id" method="post" data-loading class="d-inline"
                                                   data-confirm="@Localizer["Provider.Tours.ArchiveBody", row.Name]"
                                                   data-confirm-title="@Localizer["Provider.Tours.ArchiveTitle"]"
                                                   data-confirm-action="@Localizer["Provider.Tours.ArchiveConfirm"]"
@@ -106,7 +106,7 @@ else
                                     }
                                     <permission require="@WebPermission.Tour.DeleteOwn">
                                         <form asp-area="Provider" asp-controller="Tours" asp-action="Delete"
-                                              asp-route-id="@row.Id" method="post" class="d-inline"
+                                              asp-route-id="@row.Id" method="post" data-loading class="d-inline"
                                               data-confirm="@Localizer["Provider.Tours.DeleteBody", row.Name]"
                                               data-confirm-title="@Localizer["Provider.Tours.DeleteTitle"]"
                                               data-confirm-action="@Localizer["Provider.Tours.DeleteConfirm"]"

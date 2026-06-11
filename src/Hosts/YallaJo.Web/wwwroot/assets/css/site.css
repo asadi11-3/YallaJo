@@ -230,3 +230,18 @@ html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
         transform: none;
     }
 }
+
+/* Provider Phase 5 — sticky bottom action bar (D5, mobile <=768px).
+   Logical properties only so the bar survives RTL without overrides (RTL1). */
+@media (max-width: 768px) {
+    .yj-sticky-actions {
+        position: sticky;
+        inset-block-end: 0;
+        z-index: 1020;
+        background-color: var(--bs-body-bg);
+        border-block-start: 1px solid var(--bs-border-color);
+        padding-block: .5rem;
+        padding-inline: .75rem;
+        margin-inline: calc(-1 * var(--bs-gutter-x, .75rem));
+    }
+}

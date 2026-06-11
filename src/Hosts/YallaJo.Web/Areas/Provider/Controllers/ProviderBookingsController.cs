@@ -20,15 +20,21 @@ public sealed class ProviderBookingsController : BaseController
     public ProviderBookingsController(ProviderBookingsFacade facade) => _facade = facade;
 
     [HttpGet("provider/bookings/manage")]
-    public async Task<IActionResult> Index(string? status, string? cursor = null, CancellationToken ct = default)
+    public async Task<IActionResult> Index(
+        string? status, string? cursor = null,
+        string? fromDate = null, string? toDate = null, Guid? tourId = null,
+        CancellationToken ct = default)
     {
-        var result = await _facade.GetListAsync(status, cursor, ct);
+        var result = await _facade.GetListAsync(status, cursor, fromDate, toDate, tourId, ct);
         if (result.Outcome == ProviderBookingOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome != ProviderBookingOutcome.Ok || result.Data is null)
         {
             SetError(result.Error);
-            var fallback = new Models.Bookings.ProviderBookingsIndexVm { Status = status };
+            var fallback = new Models.Bookings.ProviderBookingsIndexVm
+            {
+                Status = status, FromDate = fromDate, ToDate = toDate, TourId = tourId,
+            };
             return WantsAjax() ? PartialView("_BookingsResults", fallback) : View(fallback);
         }
 

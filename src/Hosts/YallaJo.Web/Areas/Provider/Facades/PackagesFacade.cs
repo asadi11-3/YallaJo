@@ -35,11 +35,13 @@ public sealed class PackagesFacade
     private const int DefaultPageSize = 20;
 
     private readonly PackagesApiClient _api;
+    private readonly ProviderToursApiClient _tours;
     private readonly IOutputCacheStore _cache;
 
-    public PackagesFacade(PackagesApiClient api, IOutputCacheStore cache)
+    public PackagesFacade(PackagesApiClient api, ProviderToursApiClient tours, IOutputCacheStore cache)
     {
         _api = api;
+        _tours = tours;
         _cache = cache;
     }
 
@@ -47,13 +49,29 @@ public sealed class PackagesFacade
     {
         if (page < 1) page = 1;
 
-        var result = await _api.GetPackagesAsync(page, DefaultPageSize, ct);
+        // API1: packages list + tour options (F10 included-tours picker) in parallel.
+        var packagesTask = _api.GetPackagesAsync(page, DefaultPageSize, ct);
+        var toursTask = _tours.GetMyToursAsync(1, 100, status: null, sort: null, ct);
+        await Task.WhenAll(packagesTask, toursTask);
+
+        var result = packagesTask.Result;
         if (result.IsUnauthorized) return new(PackageOutcome.ForceSignOut);
         if (result.IsForbidden) return new(PackageOutcome.Forbidden, Error: "You don't have access to packages.");
         if (!result.IsSuccess || result.Data is null)
             return new(PackageOutcome.ValidationError, Error: result.Error ?? "Could not load packages.");
 
-        return new(PackageOutcome.Ok, PackagesMapper.ToIndexVm(result.Data));
+        var vm = PackagesMapper.ToIndexVm(result.Data);
+
+        // F10: soft-degrade — picker simply has no options when the lookup fails (ERR3).
+        var tours = toursTask.Result;
+        if (tours.IsSuccess && tours.Data is not null)
+        {
+            vm.TourOptions = tours.Data.Items
+                .Select(t => new PackageTourOptionVm { Id = t.Id, Name = t.Name })
+                .ToList();
+        }
+
+        return new(PackageOutcome.Ok, vm);
     }
 
     public async Task<PackageManageResult> GetManageAsync(Guid id, CancellationToken ct = default)

@@ -63,8 +63,8 @@ else
             @* With JS the button appends the next page in place; without JS the
                anchor fallback navigates with the cursor in the query string (PE1). *@
             <a class="btn btn-sm btn-outline-primary" data-yj-load-more
-               href="@Url.Action("Index", "ProviderBookings", new { area = "Provider", status = Model.Status, cursor = Model.NextCursor })"
-               data-url="@Url.Action("Index", "ProviderBookings", new { area = "Provider", status = Model.Status, cursor = Model.NextCursor })">
+               href="@Url.Action("Index", "ProviderBookings", new { area = "Provider", status = Model.Status, fromDate = Model.FromDate, toDate = Model.ToDate, tourId = Model.TourId, cursor = Model.NextCursor })"
+               data-url="@Url.Action("Index", "ProviderBookings", new { area = "Provider", status = Model.Status, fromDate = Model.FromDate, toDate = Model.ToDate, tourId = Model.TourId, cursor = Model.NextCursor })">
                 @Localizer["Provider.Common.LoadMore"]
             </a>
         </div>

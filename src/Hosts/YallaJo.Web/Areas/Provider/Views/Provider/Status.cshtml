@@ -101,7 +101,7 @@
                             @if (Model.CanReapply)
                             {
                                 <permission require="@WebPermission.ProviderApplication.Update">
-                                    <form asp-action="Reapply" method="post" class="mt-3">
+                                    <form asp-action="Reapply" method="post" data-loading class="mt-3">
                                         @Html.AntiForgeryToken()
                                         <button type="submit" class="btn btn-primary"><i class="fa-solid fa-rotate-right me-1" aria-hidden="true"></i>@Localizer["Provider.Onboarding.Reapply"]</button>
                                         <div class="form-text">@Localizer["Provider.Onboarding.ReapplyNote", Model.ReapplyAttemptsRemaining, Model.ReapplyMaxAttempts]</div>
@@ -152,26 +152,22 @@
                                             {
                                                 <permission require="@WebPermission.ProviderApplication.Update">
                                                     <div class="collapse mt-2" id="@replaceId">
-                                                        <form asp-action="ReplaceDocument" method="post" class="row g-2 align-items-end">
+                                                        @* F10/Phase 5: real file upload replaces the manual FileUrl/FileName/Size inputs. *@
+                                                        <form asp-action="ReplaceDocument" method="post" enctype="multipart/form-data" class="row g-2 align-items-end" data-loading>
                                                             @Html.AntiForgeryToken()
                                                             <input type="hidden" name="DocumentId" value="@doc.DocumentId" />
-                                                            <div class="col-md-4">
-                                                                <label class="form-label" for="rfu-@doc.DocumentId">@Localizer["Provider.Onboarding.ReplaceFileUrl"]</label>
-                                                                <input id="rfu-@doc.DocumentId" name="FileUrl" type="url" dir="ltr" class="form-control" value="@doc.FileUrl" />
+                                                            <div class="col-md-6">
+                                                                <label class="form-label" for="rff-@doc.DocumentId">@Localizer["Provider.Status.ReplaceFileLabel"]</label>
+                                                                <input id="rff-@doc.DocumentId" name="File" type="file" class="form-control"
+                                                                       accept="@YallaJo.Web.Areas.Provider.Models.ProviderDocumentUploadVm.AcceptAttribute"
+                                                                       aria-describedby="rff-help-@doc.DocumentId" required />
+                                                                <div id="rff-help-@doc.DocumentId" class="form-text">@Localizer["Provider.Status.ReplaceFileHelp"]</div>
                                                             </div>
                                                             <div class="col-md-3">
-                                                                <label class="form-label" for="rfn-@doc.DocumentId">@Localizer["Provider.Onboarding.ReplaceFileName"]</label>
-                                                                <input id="rfn-@doc.DocumentId" name="FileName" type="text" dir="ltr" class="form-control" value="@doc.FileName" />
-                                                            </div>
-                                                            <div class="col-md-2">
-                                                                <label class="form-label" for="rfs-@doc.DocumentId">@Localizer["Provider.Onboarding.ReplaceSize"]</label>
-                                                                <input id="rfs-@doc.DocumentId" name="FileSizeBytes" type="number" min="1" dir="ltr" class="form-control" />
-                                                            </div>
-                                                            <div class="col-md-2">
                                                                 <label class="form-label" for="rfe-@doc.DocumentId">@Localizer["Provider.Onboarding.ReplaceExpiry"]</label>
                                                                 <input id="rfe-@doc.DocumentId" name="ExpiresAt" type="date" dir="ltr" class="form-control" value="@(doc.ExpiresAt?.ToString("yyyy-MM-dd"))" />
                                                             </div>
-                                                            <div class="col-md-1 d-grid">
+                                                            <div class="col-md-3 d-grid">
                                                                 <button type="submit" class="btn btn-outline-primary btn-sm">@Localizer["Provider.Onboarding.Save"]</button>
                                                             </div>
                                                         </form>
@@ -189,7 +185,7 @@
                                     <hr />
                                     <h3 class="h6 mb-2">@Localizer["Provider.Onboarding.UploadHeading"]</h3>
                                     <p class="small text-body-secondary mb-2">@Localizer["Provider.Onboarding.UploadHelp"]</p>
-                                    <form asp-action="UploadDocument" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
+                                    <form asp-action="UploadDocument" method="post" data-loading enctype="multipart/form-data" class="row g-2 align-items-end">
                                         @Html.AntiForgeryToken()
                                         <div class="col-md-4">
                                             <label for="DocumentType" class="form-label">@Localizer["Provider.Onboarding.DocumentType"]</label>
@@ -221,7 +217,7 @@
                     @if (Model.CanSubmit)
                     {
                         <permission require="@WebPermission.ProviderApplication.Submit">
-                            <form asp-action="Submit" method="post">
+                            <form asp-action="Submit" method="post" data-loading>
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-success"><i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Provider.Onboarding.SubmitForReview"]</button>
                             </form>

@@ -25,9 +25,13 @@
                     <h2 id="upload-heading" class="card-header-title h5 mb-0">@Localizer["Provider.TourImages.UploadHeading"]</h2>
                 </div>
                 <div class="card-body">
+                    @* Phase 5: provider-images.js adds client preview + size/type pre-check (server SEC4 stays authoritative). *@
                     <form asp-area="Provider" asp-controller="TourImages" asp-action="Upload"
                           asp-route-id="@Model.TourId" method="post" enctype="multipart/form-data"
-                          class="row g-2 align-items-end">
+                          class="row g-2 align-items-end" data-loading data-yj-image-upload
+                          data-yj-too-large="@Localizer["Provider.TourImages.FileTooLarge"]"
+                          data-yj-invalid-type="@Localizer["Provider.TourImages.InvalidType"]"
+                          data-yj-preview-alt="@Localizer["Provider.TourImages.PreviewAlt"]">
                         @Html.AntiForgeryToken()
                         <div class="col-md-8">
                             <label for="File" class="form-label">@Localizer["Provider.TourImages.FileLabel"]</label>
@@ -38,6 +42,9 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fa-solid fa-upload me-1" aria-hidden="true"></i>@Localizer["Provider.TourImages.Upload"]
                             </button>
+                        </div>
+                        <div class="col-12 d-none" data-yj-preview-wrap>
+                            <img src="" alt="" width="160" height="120" class="object-cover rounded border" data-yj-preview />
                         </div>
                     </form>
                     <div id="image-help" class="form-text mt-2">@Localizer["Provider.TourImages.UploadHelp"]</div>
@@ -83,7 +90,7 @@
                                         </a>
                                         <permission require="@WebPermission.Attachment.Delete">
                                             <form asp-area="Provider" asp-controller="TourImages" asp-action="Delete"
-                                                  asp-route-id="@Model.TourId" asp-route-attachmentId="@img.Id" method="post" class="d-inline"
+                                                  asp-route-id="@Model.TourId" asp-route-attachmentId="@img.Id" method="post" data-loading class="d-inline"
                                                   data-confirm="@Localizer["Provider.TourImages.DeleteBody", imgName]"
                                                   data-confirm-title="@Localizer["Provider.TourImages.DeleteTitle"]"
                                                   data-confirm-action="@Localizer["Provider.TourImages.DeleteConfirm"]"
@@ -105,3 +112,8 @@
     </div>
 </section>
 
+
+@section Scripts {
+    @* Phase 5: image preview + pre-checks (PE1: plain multipart post without JS). *@
+    <script src="~/assets/js/provider-images.js" asp-append-version="true"></script>
+}

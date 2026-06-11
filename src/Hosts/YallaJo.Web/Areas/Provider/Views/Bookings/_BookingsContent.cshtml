@@ -84,7 +84,7 @@
                                         @if (jr.IsPending)
                                         {
                                             <div class="d-inline-flex gap-2">
-                                                <form asp-action="ApproveJoin" asp-route-id="@jr.Id" method="post" class="d-inline"
+                                                <form asp-action="ApproveJoin" asp-route-id="@jr.Id" method="post" data-loading class="d-inline"
                                                       data-yj-ajax data-yj-swap-target="bookings"
                                                       data-success-message="@Localizer["Provider.Bookings.JoinApprovedToast"]"
                                                       data-error-text="@Localizer["Provider.Common.ActionFailed"]"
@@ -123,7 +123,7 @@
             <small class="text-body-secondary">@Localizer["Provider.Bookings.LookupSubtitle"]</small>
         </div>
         <div class="card-body">
-            <form asp-action="Lookup" method="post" class="row g-2 align-items-end mb-0">
+            <form asp-action="Lookup" method="post" data-loading class="row g-2 align-items-end mb-0">
                 @Html.AntiForgeryToken()
                 <div class="col-sm-8 col-md-9">
                     <label class="form-label" for="lookupId">@Localizer["Provider.Bookings.LookupLabel"]</label>
@@ -213,7 +213,7 @@
                     <div class="d-flex flex-wrap gap-2">
                         @if (b.IsConfirmable)
                         {
-                            <form asp-action="ConfirmBooking" asp-route-id="@b.Id" method="post" class="d-inline"
+                            <form asp-action="ConfirmBooking" asp-route-id="@b.Id" method="post" data-loading class="d-inline"
                                   data-yj-ajax data-yj-swap-target="bookings"
                                   data-success-message="@Localizer["Provider.Bookings.ConfirmedToast"]"
                                   data-error-text="@Localizer["Provider.Common.ActionFailed"]"
@@ -237,7 +237,7 @@
                     {
                         <div class="modal fade" id="rejectBookingModal" tabindex="-1" aria-labelledby="rejectBookingTitle" aria-describedby="rejectBookingBody" data-bs-backdrop="static" data-bs-keyboard="false">
                             <div class="modal-dialog modal-dialog-centered">
-                                <form asp-action="RejectBooking" asp-route-id="@b.Id" method="post" class="modal-content"
+                                <form asp-action="RejectBooking" asp-route-id="@b.Id" method="post" data-loading class="modal-content"
                                       data-yj-ajax data-yj-swap-target="bookings"
                                       data-success-message="@Localizer["Provider.Bookings.RejectedToast"]"
                                       data-error-text="@Localizer["Provider.Common.ActionFailed"]">
@@ -269,7 +269,7 @@
     {
         <div class="modal fade" id="declineJoin-@jr.Id.ToString("N")" tabindex="-1" aria-labelledby="declineJoinTitle-@jr.Id.ToString("N")" aria-describedby="declineJoinBody-@jr.Id.ToString("N")" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-action="RejectJoin" asp-route-id="@jr.Id" method="post" class="modal-content"
+                <form asp-action="RejectJoin" asp-route-id="@jr.Id" method="post" data-loading class="modal-content"
                       data-yj-ajax data-yj-swap-target="bookings"
                       data-success-message="@Localizer["Provider.Bookings.JoinDeclinedToast"]"
                       data-error-text="@Localizer["Provider.Common.ActionFailed"]">

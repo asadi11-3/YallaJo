@@ -66,3 +66,121 @@
             .catch(function () { /* suggestions are best-effort; SSR options remain */ });
     }
 })();
+
+/*
+ * Tour draft autosave (F5/PROV3/PROV4/F9).
+ * - Saves form fields to localStorage under data-yj-draft-key (debounced).
+ * - Shows a recovery banner when a draft exists on load (PROV3).
+ * - Clears the draft on successful submit; warns before unload when dirty (F9).
+ * Progressive enhancement only: without JS the form posts normally (PE1).
+ */
+(function () {
+    "use strict";
+
+    var form = document.querySelector("form[data-yj-tour-form]");
+    if (!form || form.dataset.yjDraftInit === "1") { return; }
+    form.dataset.yjDraftInit = "1";
+
+    var key = form.dataset.yjDraftKey;
+    if (!key || !window.localStorage) { return; }
+
+    var dirty = false;
+    var saveTimer = null;
+
+    function fieldList() {
+        return Array.prototype.filter.call(
+            form.querySelectorAll("input[name], select[name], textarea[name]"),
+            function (el) {
+                return el.type !== "hidden" && el.type !== "submit" && el.name !== "__RequestVerificationToken";
+            });
+    }
+
+    function snapshot() {
+        var data = {};
+        fieldList().forEach(function (el) {
+            if (el.type === "checkbox") { data[el.name] = el.checked; }
+            else { data[el.name] = el.value; }
+        });
+        return data;
+    }
+
+    function save() {
+        try { window.localStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data: snapshot() })); }
+        catch (_) { /* storage full/blocked — autosave silently off */ }
+    }
+
+    function clearDraft() {
+        try { window.localStorage.removeItem(key); } catch (_) { }
+        dirty = false;
+    }
+
+    function restore(data) {
+        fieldList().forEach(function (el) {
+            if (!(el.name in data)) { return; }
+            if (el.type === "checkbox") { el.checked = !!data[el.name]; }
+            else { el.value = data[el.name]; }
+        });
+        if (window.YallaJo && window.YallaJo.toast) {
+            window.YallaJo.toast(form.dataset.yjDraftRestored || "Draft restored.", "success");
+        }
+    }
+
+    function showBanner(data) {
+        var banner = document.createElement("div");
+        banner.className = "alert alert-info d-flex flex-wrap align-items-center gap-2 mb-3";
+        banner.setAttribute("role", "status");
+        var msg = document.createElement("span");
+        msg.className = "me-auto";
+        msg.textContent = form.dataset.yjDraftFound || "You have an unsaved draft.";
+        var restoreBtn = document.createElement("button");
+        restoreBtn.type = "button";
+        restoreBtn.className = "btn btn-sm btn-primary";
+        restoreBtn.textContent = form.dataset.yjDraftRestore || "Restore draft";
+        var discardBtn = document.createElement("button");
+        discardBtn.type = "button";
+        discardBtn.className = "btn btn-sm btn-outline-secondary";
+        discardBtn.textContent = form.dataset.yjDraftDiscard || "Discard draft";
+        restoreBtn.addEventListener("click", function () {
+            restore(data);
+            banner.remove();
+        });
+        discardBtn.addEventListener("click", function () {
+            clearDraft();
+            banner.remove();
+        });
+        banner.appendChild(msg);
+        banner.appendChild(restoreBtn);
+        banner.appendChild(discardBtn);
+        form.insertBefore(banner, form.firstChild);
+    }
+
+    // PROV3: offer recovery when a previous draft exists.
+    try {
+        var raw = window.localStorage.getItem(key);
+        if (raw) {
+            var parsed = JSON.parse(raw);
+            if (parsed && parsed.data) { showBanner(parsed.data); }
+        }
+    } catch (_) { clearDraft(); }
+
+    // Debounced autosave on input/change (F5).
+    function onEdit() {
+        dirty = true;
+        if (saveTimer) { window.clearTimeout(saveTimer); }
+        saveTimer = window.setTimeout(save, 800);
+    }
+    form.addEventListener("input", onEdit);
+    form.addEventListener("change", onEdit);
+
+    // Successful submit clears the draft and disarms the unload guard.
+    form.addEventListener("submit", function () {
+        clearDraft();
+    });
+
+    // F9: warn before navigating away with unsaved edits.
+    window.addEventListener("beforeunload", function (e) {
+        if (!dirty) { return; }
+        e.preventDefault();
+        e.returnValue = "";
+    });
+}());
