@@ -26,21 +26,32 @@ public sealed class SecurityDbInitializer(
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        // Roles + claims: idempotent per-row. Insert only what's missing so newly
-        // added roles (e.g. Provider/Creator/Guest) seed into an already-seeded DB
-        // without skipping them just because *some* roles already exist.
-        var existingRoleIds = (await dbContext.Roles
-                .Select(r => r.Id)
-                .ToListAsync(cancellationToken))
-            .ToHashSet();
+        // Roles + claims: idempotent per-row, keyed by NAME to match the
+        // IX_Roles_Name_Unique index. Other paths (e.g. SecurityDataSeeder)
+        // create roles by name with generated ids, so an id-based existence
+        // check can re-insert an existing name and fail the whole batch.
+        // Resolve the effective id per role name so claims and user-role
+        // assignments always bind to the row that actually exists in the DB.
+        var roleIdByName = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+        foreach (var existing in await dbContext.Roles
+                     .Select(r => new { r.Id, r.Name })
+                     .ToListAsync(cancellationToken))
+        {
+            roleIdByName[existing.Name] = existing.Id;
+        }
 
         var newRoles = CreateRoles()
-            .Where(r => !existingRoleIds.Contains(r.Id))
+            .Where(r => !roleIdByName.ContainsKey(r.Name))
             .ToList();
 
         if (newRoles.Count > 0)
         {
             dbContext.Roles.AddRange(newRoles);
+
+            foreach (var role in newRoles)
+            {
+                roleIdByName[role.Name] = role.Id;
+            }
         }
 
         // Role claims: idempotent per (RoleId, ClaimValue) pair.
@@ -50,7 +61,7 @@ public sealed class SecurityDbInitializer(
             .Select(c => (c.RoleId, c.ClaimValue))
             .ToHashSet();
 
-        var newClaims = CreateRoleClaims()
+        var newClaims = CreateRoleClaims(roleIdByName)
             .Where(c => !existingClaimKeys.Contains((c.RoleId, c.ClaimValue)))
             .ToList();
 
@@ -73,7 +84,7 @@ public sealed class SecurityDbInitializer(
         if (newProfiles.Count > 0)
         {
             var users = CreateUsers(newProfiles);
-            var userRoles = CreateUserRoles(users, newProfiles);
+            var userRoles = CreateUserRoles(users, newProfiles, roleIdByName);
 
             dbContext.Users.AddRange(users);
             dbContext.UserRoles.AddRange(userRoles);
@@ -150,13 +161,14 @@ public sealed class SecurityDbInitializer(
 
     private static List<UserRole> CreateUserRoles(
         IEnumerable<User> users,
-        IReadOnlyList<SeedUserProfile> profiles)
+        IReadOnlyList<SeedUserProfile> profiles,
+        IReadOnlyDictionary<string, Guid> roleIdByName)
     {
         var byId = profiles.ToDictionary(p => p.UserId);
         return users.Select(user =>
         {
             var profile = byId[user.Id];
-            if (!RoleIds.TryGetValue(profile.Role, out var roleId))
+            if (!roleIdByName.TryGetValue(profile.Role, out var roleId))
             {
                 throw new InvalidOperationException(
                     $"Seed user '{profile.Email}' references role '{profile.Role}' which is not seeded. " +
@@ -166,7 +178,7 @@ public sealed class SecurityDbInitializer(
         }).ToList();
     }
 
-    private static List<RoleClaim> CreateRoleClaims()
+    private static List<RoleClaim> CreateRoleClaims(IReadOnlyDictionary<string, Guid> roleIdByName)
     {
         var claimMap = new Dictionary<string, string[]>
         {
@@ -183,7 +195,7 @@ public sealed class SecurityDbInitializer(
         var claims = new List<RoleClaim>();
         foreach (var (roleName, values) in claimMap)
         {
-            var roleId = RoleIds[roleName];
+            var roleId = roleIdByName[roleName];
             claims.AddRange(values.Select(value => RoleClaim.Create(roleId, "permission", value)));
         }
 
