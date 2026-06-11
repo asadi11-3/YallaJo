@@ -20,6 +20,15 @@
     var storageKey = "yj.article.draft." + articleId;
     var AUTOSAVE_MS = 30000;
 
+    // Localized UI strings (CON1): provided via data-* on the form, with English fallbacks.
+    // recoveryPrompt uses {0} for the saved-at timestamp; recoveryPromptUnknown is the no-time variant.
+    var i18n = {
+        recoveryPrompt: form.getAttribute("data-recovery-prompt") || "An unsaved draft from {0} was found.",
+        recoveryPromptUnknown: form.getAttribute("data-recovery-prompt-unknown") || "An unsaved draft from a previous session was found.",
+        recoveryRestore: form.getAttribute("data-recovery-restore") || "Restore draft",
+        recoveryDiscard: form.getAttribute("data-recovery-discard") || "Discard"
+    };
+
     // Fields tracked for autosave + dirty detection. Content is handled separately
     // (it lives in Quill when available, otherwise in the backing textarea).
     var fieldNames = ["Title", "Slug", "SourceLanguageCode", "Summary", "Content", "MetaTitle", "MetaDescription"];
@@ -175,17 +184,19 @@
         } catch (e) { /* ignore */ }
 
         var msg = document.createElement("span");
-        msg.textContent = "An unsaved draft from " + (when || "a previous session") + " was found.";
+        msg.textContent = when
+            ? i18n.recoveryPrompt.replace("{0}", when)
+            : i18n.recoveryPromptUnknown;
 
         var actions = document.createElement("span");
         var restore = document.createElement("button");
         restore.type = "button";
         restore.className = "btn btn-sm btn-warning me-2";
-        restore.textContent = "Restore draft";
+        restore.textContent = i18n.recoveryRestore;
         var discard = document.createElement("button");
         discard.type = "button";
         discard.className = "btn btn-sm btn-secondary-soft";
-        discard.textContent = "Discard";
+        discard.textContent = i18n.recoveryDiscard;
 
         restore.addEventListener("click", function () {
             applyDraft(data);

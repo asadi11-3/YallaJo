@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Creator.Facades;
 using YallaJo.Web.Areas.Creator.Models.Articles;
 using YallaJo.Web.Areas.Creator.Models.Articles.Images;
 using YallaJo.Web.Areas.Creator.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Creator.Controllers;
 
@@ -29,11 +31,16 @@ public sealed class ArticlesController : BaseController
 
     private readonly CreatorArticlesFacade _facade;
     private readonly CreatorArticleImagesFacade _images;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public ArticlesController(CreatorArticlesFacade facade, CreatorArticleImagesFacade images)
+    public ArticlesController(
+        CreatorArticlesFacade facade,
+        CreatorArticleImagesFacade images,
+        IStringLocalizer<SharedResource> localizer)
     {
         _facade = facade;
         _images = images;
+        _localizer = localizer;
     }
 
     // GET /creator/articles
@@ -99,11 +106,11 @@ public sealed class ArticlesController : BaseController
         if (!result.IsSuccess)
         {
             if (!ApplyValidationErrors(result))
-                ModelState.AddModelError(string.Empty, result.Error ?? "Could not create your article.");
+                ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Creator.Articles.Flash.CreateFailed"].Value);
             return View("Editor", form);
         }
 
-        SetSuccess("Your draft article was created.");
+        SetSuccess(_localizer["Creator.Articles.Flash.DraftCreated"]);
         return RedirectToAction(nameof(Edit), new { id = result.Data });
     }
 
@@ -155,11 +162,11 @@ public sealed class ArticlesController : BaseController
         if (!result.IsSuccess)
         {
             if (!ApplyValidationErrors(result))
-                ModelState.AddModelError(string.Empty, result.Error ?? "Could not update your article.");
+                ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Creator.Articles.Flash.UpdateFailed"].Value);
             return View("Editor", form);
         }
 
-        SetSuccess("Your article was updated.");
+        SetSuccess(_localizer["Creator.Articles.Flash.Updated"]);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -171,14 +178,14 @@ public sealed class ArticlesController : BaseController
     {
         if (string.IsNullOrEmpty(rowVersion))
         {
-            SetError("Missing version token. Please refresh and try again.");
+            SetError(_localizer["Creator.Articles.Flash.MissingVersion"]);
             return RedirectToAction(nameof(Edit), new { id });
         }
 
         var result = await _facade.SubmitForReviewAsync(id, rowVersion, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Your article was submitted for review.", "Could not submit your article for review.");
+        SetFlash(result, _localizer["Creator.Articles.Flash.Submitted"].Value, _localizer["Creator.Articles.Flash.SubmitFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -190,7 +197,7 @@ public sealed class ArticlesController : BaseController
     {
         if (string.IsNullOrEmpty(rowVersion))
         {
-            SetError("Missing version token. Please refresh and try again.");
+            SetError(_localizer["Creator.Articles.Flash.MissingVersion"]);
             return RedirectToAction(nameof(Index));
         }
 
@@ -213,7 +220,7 @@ public sealed class ArticlesController : BaseController
             TempData[UndoTitleKey] = data.Title;
         }
 
-        SetSuccess("Your article was deleted.");
+        SetSuccess(_localizer["Creator.Articles.Flash.Deleted"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -225,14 +232,14 @@ public sealed class ArticlesController : BaseController
     {
         if (string.IsNullOrEmpty(rowVersion))
         {
-            SetError("This article can no longer be restored from here.");
+            SetError(_localizer["Creator.Articles.Flash.RestoreUnavailable"]);
             return RedirectToAction(nameof(Index));
         }
 
         var result = await _facade.RestoreAsync(id, rowVersion, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Your article was restored.", "Could not restore your article.");
+        SetFlash(result, _localizer["Creator.Articles.Flash.Restored"].Value, _localizer["Creator.Articles.Flash.RestoreFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -259,7 +266,7 @@ public sealed class ArticlesController : BaseController
     {
         if (string.IsNullOrEmpty(rowVersion))
         {
-            SetError("Missing version token. Please refresh and try again.");
+            SetError(_localizer["Creator.Articles.Flash.MissingVersion"]);
             return RedirectToAction(nameof(Edit), new { id });
         }
 
@@ -269,14 +276,14 @@ public sealed class ArticlesController : BaseController
 
         if (resolvedTourId is not { } linkTourId || linkTourId == Guid.Empty)
         {
-            SetError("Pick a tour from the suggestions.");
+            SetError(_localizer["Creator.Articles.Flash.PickTour"]);
             return RedirectToAction(nameof(Edit), new { id });
         }
 
         var result = await _facade.LinkTourAsync(id, linkTourId, rowVersion, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Tour linked to your article.", "Could not link the tour.");
+        SetFlash(result, _localizer["Creator.Articles.Flash.TourLinked"].Value, _localizer["Creator.Articles.Flash.TourLinkFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -288,14 +295,14 @@ public sealed class ArticlesController : BaseController
     {
         if (string.IsNullOrEmpty(rowVersion))
         {
-            SetError("Missing version token. Please refresh and try again.");
+            SetError(_localizer["Creator.Articles.Flash.MissingVersion"]);
             return RedirectToAction(nameof(Edit), new { id });
         }
 
         var result = await _facade.UnlinkTourAsync(id, tourId, rowVersion, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Tour unlinked from your article.", "Could not unlink the tour.");
+        SetFlash(result, _localizer["Creator.Articles.Flash.TourUnlinked"].Value, _localizer["Creator.Articles.Flash.TourUnlinkFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -311,7 +318,7 @@ public sealed class ArticlesController : BaseController
         var result = await _images.UploadAsync(id, files ?? [], existingCount, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Image(s) uploaded.", result.Error ?? "Could not upload image(s).");
+        SetFlash(result, _localizer["Creator.Articles.Flash.ImagesUploaded"].Value, result.Error ?? _localizer["Creator.Articles.Flash.ImagesUploadFailed"].Value);
         return await ImagesResultAsync(id, ct);
     }
 
@@ -324,7 +331,7 @@ public sealed class ArticlesController : BaseController
         var result = await _images.DeleteAsync(attachmentId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Image deleted.", "Could not delete the image.");
+        SetFlash(result, _localizer["Creator.Articles.Flash.ImageDeleted"].Value, _localizer["Creator.Articles.Flash.ImageDeleteFailed"].Value);
         return await ImagesResultAsync(id, ct);
     }
 
@@ -337,7 +344,7 @@ public sealed class ArticlesController : BaseController
         var result = await _images.SetPrimaryAsync(id, attachmentId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Primary image updated.", "Could not set the primary image.");
+        SetFlash(result, _localizer["Creator.Articles.Flash.PrimarySet"].Value, _localizer["Creator.Articles.Flash.PrimaryFailed"].Value);
         return await ImagesResultAsync(id, ct);
     }
 
@@ -350,14 +357,14 @@ public sealed class ArticlesController : BaseController
     {
         if (orderedAttachmentIds is null || orderedAttachmentIds.Count == 0)
         {
-            SetError("No image order was provided.");
+            SetError(_localizer["Creator.Articles.Flash.NoImageOrder"]);
             return RedirectToAction(nameof(Edit), new { id });
         }
 
         var result = await _images.ReorderAsync(id, orderedAttachmentIds, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Image order updated.", "Could not reorder the images.");
+        SetFlash(result, _localizer["Creator.Articles.Flash.ImagesReordered"].Value, _localizer["Creator.Articles.Flash.ReorderFailed"].Value);
         return await ImagesResultAsync(id, ct);
     }
 

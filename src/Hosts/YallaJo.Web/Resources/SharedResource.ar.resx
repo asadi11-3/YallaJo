@@ -13906,4 +13906,142 @@
 <data name="Creator.Editor.DraftSavedLocally" xml:space="preserve">
 <value>تم حفظ المسودة محليًا · {0}</value>
 </data>
+<data name="Creator.Editor.DraftRecoveryPrompt" xml:space="preserve">
+<value>تم العثور على مسودة غير محفوظة من {0}.</value>
+</data>
+<data name="Creator.Editor.DraftRecoveryUnknown" xml:space="preserve">
+<value>تم العثور على مسودة غير محفوظة من جلسة سابقة.</value>
+</data>
+<data name="Creator.Editor.DraftRestore" xml:space="preserve">
+<value>استعادة المسودة</value>
+</data>
+<data name="Creator.Editor.DraftDiscard" xml:space="preserve">
+<value>تجاهل</value>
+</data>
+<data name="Creator.Profile.Flash.UpdateFailed" xml:space="preserve">
+<value>تعذّر تحديث ملفك الشخصي.</value>
+</data>
+<data name="Creator.Profile.Flash.Updated" xml:space="preserve">
+<value>تم تحديث ملف صانع المحتوى الخاص بك.</value>
+</data>
+<data name="Creator.Profile.Flash.AvatarUrlInvalid" xml:space="preserve">
+<value>يرجى إدخال رابط صورة رمزية صالح.</value>
+</data>
+<data name="Creator.Profile.Flash.AvatarUpdated" xml:space="preserve">
+<value>تم تحديث صورتك الرمزية.</value>
+</data>
+<data name="Creator.Profile.Flash.AvatarFailed" xml:space="preserve">
+<value>تعذّر تحديث صورتك الرمزية.</value>
+</data>
+<data name="Creator.Profile.Flash.ChooseImage" xml:space="preserve">
+<value>يرجى اختيار صورة للتحميل.</value>
+</data>
+<data name="Creator.Profile.Flash.ConfirmDeactivate" xml:space="preserve">
+<value>يرجى تأكيد رغبتك في إلغاء تنشيط ملف صانع المحتوى الخاص بك.</value>
+</data>
+<data name="Creator.Profile.Flash.Deactivated" xml:space="preserve">
+<value>تم إلغاء تنشيط ملف صانع المحتوى الخاص بك. لديك 60 يومًا لإعادة التنشيط قبل إزالته نهائيًا.</value>
+</data>
+<data name="Creator.Profile.Flash.DeactivateFailed" xml:space="preserve">
+<value>تعذّر إلغاء تنشيط ملف صانع المحتوى الخاص بك.</value>
+</data>
+<data name="Creator.Application.Flash.CreateFailed" xml:space="preserve">
+<value>تعذّر إنشاء طلب صانع المحتوى الخاص بك.</value>
+</data>
+<data name="Creator.Application.Flash.DraftCreated" xml:space="preserve">
+<value>تم إنشاء طلب صانع المحتوى كمسودة. راجعه وأرسله عندما تكون جاهزًا.</value>
+</data>
+<data name="Creator.Application.Flash.NoApplication" xml:space="preserve">
+<value>لا يوجد طلب حالي لتحديثه.</value>
+</data>
+<data name="Creator.Application.Flash.UpdateFailed" xml:space="preserve">
+<value>تعذّر تحديث طلب صانع المحتوى الخاص بك.</value>
+</data>
+<data name="Creator.Application.Flash.Updated" xml:space="preserve">
+<value>تم تحديث طلب صانع المحتوى الخاص بك.</value>
+</data>
+<data name="Creator.Application.Flash.Submitted" xml:space="preserve">
+<value>تم إرسال طلب صانع المحتوى الخاص بك للمراجعة.</value>
+</data>
+<data name="Creator.Application.Flash.SubmitFailed" xml:space="preserve">
+<value>تعذّر إرسال طلب صانع المحتوى الخاص بك.</value>
+</data>
+<data name="Creator.Application.Flash.InviteRedeemed" xml:space="preserve">
+<value>تم استخدام الدعوة. تم بدء طلب صانع المحتوى الخاص بك.</value>
+</data>
+<data name="Creator.Articles.Flash.CreateFailed" xml:space="preserve">
+<value>تعذّر إنشاء مقالك.</value>
+</data>
+<data name="Creator.Articles.Flash.DraftCreated" xml:space="preserve">
+<value>تم إنشاء مسودة مقالك.</value>
+</data>
+<data name="Creator.Articles.Flash.UpdateFailed" xml:space="preserve">
+<value>تعذّر تحديث مقالك.</value>
+</data>
+<data name="Creator.Articles.Flash.Updated" xml:space="preserve">
+<value>تم تحديث مقالك.</value>
+</data>
+<data name="Creator.Articles.Flash.MissingVersion" xml:space="preserve">
+<value>رمز الإصدار مفقود. يرجى تحديث الصفحة والمحاولة مرة أخرى.</value>
+</data>
+<data name="Creator.Articles.Flash.Submitted" xml:space="preserve">
+<value>تم إرسال مقالك للمراجعة.</value>
+</data>
+<data name="Creator.Articles.Flash.SubmitFailed" xml:space="preserve">
+<value>تعذّر إرسال مقالك للمراجعة.</value>
+</data>
+<data name="Creator.Articles.Flash.Deleted" xml:space="preserve">
+<value>تم حذف مقالك.</value>
+</data>
+<data name="Creator.Articles.Flash.RestoreUnavailable" xml:space="preserve">
+<value>لم يعد بالإمكان استعادة هذا المقال من هنا.</value>
+</data>
+<data name="Creator.Articles.Flash.Restored" xml:space="preserve">
+<value>تمت استعادة مقالك.</value>
+</data>
+<data name="Creator.Articles.Flash.RestoreFailed" xml:space="preserve">
+<value>تعذّر استعادة مقالك.</value>
+</data>
+<data name="Creator.Articles.Flash.PickTour" xml:space="preserve">
+<value>اختر جولة من الاقتراحات.</value>
+</data>
+<data name="Creator.Articles.Flash.TourLinked" xml:space="preserve">
+<value>تم ربط الجولة بمقالك.</value>
+</data>
+<data name="Creator.Articles.Flash.TourLinkFailed" xml:space="preserve">
+<value>تعذّر ربط الجولة.</value>
+</data>
+<data name="Creator.Articles.Flash.TourUnlinked" xml:space="preserve">
+<value>تم إلغاء ربط الجولة من مقالك.</value>
+</data>
+<data name="Creator.Articles.Flash.TourUnlinkFailed" xml:space="preserve">
+<value>تعذّر إلغاء ربط الجولة.</value>
+</data>
+<data name="Creator.Articles.Flash.ImagesUploaded" xml:space="preserve">
+<value>تم تحميل الصور.</value>
+</data>
+<data name="Creator.Articles.Flash.ImagesUploadFailed" xml:space="preserve">
+<value>تعذّر تحميل الصور.</value>
+</data>
+<data name="Creator.Articles.Flash.ImageDeleted" xml:space="preserve">
+<value>تم حذف الصورة.</value>
+</data>
+<data name="Creator.Articles.Flash.ImageDeleteFailed" xml:space="preserve">
+<value>تعذّر حذف الصورة.</value>
+</data>
+<data name="Creator.Articles.Flash.PrimarySet" xml:space="preserve">
+<value>تم تحديث الصورة الرئيسية.</value>
+</data>
+<data name="Creator.Articles.Flash.PrimaryFailed" xml:space="preserve">
+<value>تعذّر تعيين الصورة الرئيسية.</value>
+</data>
+<data name="Creator.Articles.Flash.NoImageOrder" xml:space="preserve">
+<value>لم يتم توفير ترتيب للصور.</value>
+</data>
+<data name="Creator.Articles.Flash.ImagesReordered" xml:space="preserve">
+<value>تم تحديث ترتيب الصور.</value>
+</data>
+<data name="Creator.Articles.Flash.ReorderFailed" xml:space="preserve">
+<value>تعذّر إعادة ترتيب الصور.</value>
+</data>
 </root>

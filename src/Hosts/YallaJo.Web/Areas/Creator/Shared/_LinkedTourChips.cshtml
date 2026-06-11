@@ -10,7 +10,7 @@
         @foreach (var chip in Model.LinkedTours.OrderBy(t => t.SortOrder))
         {
             <li class="badge text-bg-light border d-inline-flex align-items-center gap-2 py-2 px-3">
-                <span class="text-truncate" style="max-inline-size: 14rem;"><bdi>@chip.DisplayName</bdi></span>
+                <span class="text-truncate tour-chip-name"><bdi>@chip.DisplayName</bdi></span>
                 <permission require="@WebPermission.BlogTourLink.Delete">
                     <form asp-area="Creator" asp-controller="Articles" asp-action="UnlinkTour"
                           asp-route-id="@Model.Id" asp-route-tourId="@chip.TourId" method="post" class="d-inline-flex"

@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Creator.Facades;
 using YallaJo.Web.Areas.Creator.Models.Application;
 using YallaJo.Web.Areas.Creator.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Creator.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Creator.Controllers;
 public sealed class ApplicationController : BaseController
 {
     private readonly CreatorApplicationFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public ApplicationController(CreatorApplicationFacade facade) => _facade = facade;
+    public ApplicationController(CreatorApplicationFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     // GET /creator/application
     [HttpGet("creator/application")]
@@ -57,12 +64,12 @@ public sealed class ApplicationController : BaseController
             // Validation errors bind to fields; other failures (e.g. 409 active-exists)
             // render inline in the form's validation summary.
             if (!ApplyValidationErrors(result))
-                ModelState.AddModelError(string.Empty, result.Error ?? "Could not create your creator application.");
+                ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Creator.Application.Flash.CreateFailed"].Value);
             await _facade.PopulateNicheOptionsAsync(form, ct);
             return View(nameof(Index), form);
         }
 
-        SetSuccess("Your creator application was created as a draft. Review it and submit when ready.");
+        SetSuccess(_localizer["Creator.Application.Flash.DraftCreated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -76,7 +83,7 @@ public sealed class ApplicationController : BaseController
 
         if (form.ApplicationId is not { } applicationId)
         {
-            SetError("There is no existing application to update.");
+            SetError(_localizer["Creator.Application.Flash.NoApplication"]);
             return RedirectToAction(nameof(Index));
         }
 
@@ -92,12 +99,12 @@ public sealed class ApplicationController : BaseController
         if (!result.IsSuccess)
         {
             if (!ApplyValidationErrors(result))
-                ModelState.AddModelError(string.Empty, result.Error ?? "Could not update your creator application.");
+                ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Creator.Application.Flash.UpdateFailed"].Value);
             await _facade.PopulateNicheOptionsAsync(form, ct);
             return View(nameof(Index), form);
         }
 
-        SetSuccess("Your creator application was updated.");
+        SetSuccess(_localizer["Creator.Application.Flash.Updated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -110,8 +117,8 @@ public sealed class ApplicationController : BaseController
         var result = await _facade.SubmitAsync(applicationId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Your creator application was submitted for review.",
-            "Could not submit your creator application.");
+        SetFlash(result, _localizer["Creator.Application.Flash.Submitted"].Value,
+            _localizer["Creator.Application.Flash.SubmitFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -140,7 +147,7 @@ public sealed class ApplicationController : BaseController
             return await IndexWithInviteAsync(form, ct);
         }
 
-        SetSuccess("Invitation redeemed. Your creator application has been started.");
+        SetSuccess(_localizer["Creator.Application.Flash.InviteRedeemed"]);
         return RedirectToAction(nameof(Index));
     }
 

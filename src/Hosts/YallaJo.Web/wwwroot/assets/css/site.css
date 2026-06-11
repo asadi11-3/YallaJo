@@ -248,3 +248,9 @@ html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
 
 /* Native <details> disclosure rendered as a card (PE1 no-JS collapse). */
 details.card > summary { cursor: pointer; list-style-position: inside; }
+
+/* ---- Creator Phase 9 utilities (UI-PERF-X6, RTL1 logical properties) ---- */
+/* Linked-tour chip name truncation (Creator article editor). */
+.tour-chip-name { max-inline-size: 14rem; }
+/* Tour autocomplete suggestion listbox (Creator article editor). */
+.tour-suggest-list { z-index: 1080; max-block-size: 16rem; overflow-y: auto; }

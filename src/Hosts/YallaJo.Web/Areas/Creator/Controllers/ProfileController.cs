@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Creator.Facades;
 using YallaJo.Web.Areas.Creator.Models.Profile;
 using YallaJo.Web.Areas.Creator.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Creator.Controllers;
 
@@ -22,8 +24,13 @@ namespace YallaJo.Web.Areas.Creator.Controllers;
 public sealed class ProfileController : BaseController
 {
     private readonly CreatorProfileFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public ProfileController(CreatorProfileFacade facade) => _facade = facade;
+    public ProfileController(CreatorProfileFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     // GET /creator/profile
     [HttpGet("creator/profile")]
@@ -66,11 +73,11 @@ public sealed class ProfileController : BaseController
         {
             // 409 (slug taken) and other non-validation errors render inline.
             if (!ApplyValidationErrors(result))
-                ModelState.AddModelError(string.Empty, result.Error ?? "Could not update your profile.");
+                ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Creator.Profile.Flash.UpdateFailed"].Value);
             return ReeditView(form);
         }
 
-        SetSuccess("Your creator profile was updated.");
+        SetSuccess(_localizer["Creator.Profile.Flash.Updated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -82,14 +89,14 @@ public sealed class ProfileController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError(FirstModelError() ?? "Please enter a valid avatar URL.");
+            SetError(FirstModelError() ?? _localizer["Creator.Profile.Flash.AvatarUrlInvalid"].Value);
             return RedirectToAction(nameof(Index));
         }
 
         var result = await _facade.UpdateAvatarAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Your avatar was updated.", "Could not update your avatar.");
+        SetFlash(result, _localizer["Creator.Profile.Flash.AvatarUpdated"].Value, _localizer["Creator.Profile.Flash.AvatarFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -101,14 +108,14 @@ public sealed class ProfileController : BaseController
     {
         if (avatarFile is null)
         {
-            SetError("Please choose an image to upload.");
+            SetError(_localizer["Creator.Profile.Flash.ChooseImage"]);
             return RedirectToAction(nameof(Index));
         }
 
         var result = await _facade.UploadAvatarFileAsync(profileId, avatarFile, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Your avatar was updated.", "Could not update your avatar.");
+        SetFlash(result, _localizer["Creator.Profile.Flash.AvatarUpdated"].Value, _localizer["Creator.Profile.Flash.AvatarFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -120,7 +127,7 @@ public sealed class ProfileController : BaseController
     {
         if (!confirm)
         {
-            SetError("Please confirm that you want to deactivate your creator profile.");
+            SetError(_localizer["Creator.Profile.Flash.ConfirmDeactivate"]);
             return RedirectToAction(nameof(Index));
         }
 
@@ -128,8 +135,8 @@ public sealed class ProfileController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result,
-            "Your creator profile has been deactivated. You have 60 days to reactivate before it is permanently removed.",
-            "Could not deactivate your creator profile.");
+            _localizer["Creator.Profile.Flash.Deactivated"].Value,
+            _localizer["Creator.Profile.Flash.DeactivateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 

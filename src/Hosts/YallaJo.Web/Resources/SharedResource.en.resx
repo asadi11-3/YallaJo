@@ -13906,4 +13906,142 @@
   <data name="Creator.Editor.DraftSavedLocally" xml:space="preserve">
     <value>Draft saved locally · {0}</value>
   </data>
+  <data name="Creator.Editor.DraftRecoveryPrompt" xml:space="preserve">
+    <value>An unsaved draft from {0} was found.</value>
+  </data>
+  <data name="Creator.Editor.DraftRecoveryUnknown" xml:space="preserve">
+    <value>An unsaved draft from a previous session was found.</value>
+  </data>
+  <data name="Creator.Editor.DraftRestore" xml:space="preserve">
+    <value>Restore draft</value>
+  </data>
+  <data name="Creator.Editor.DraftDiscard" xml:space="preserve">
+    <value>Discard</value>
+  </data>
+  <data name="Creator.Profile.Flash.UpdateFailed" xml:space="preserve">
+    <value>Could not update your profile.</value>
+  </data>
+  <data name="Creator.Profile.Flash.Updated" xml:space="preserve">
+    <value>Your creator profile was updated.</value>
+  </data>
+  <data name="Creator.Profile.Flash.AvatarUrlInvalid" xml:space="preserve">
+    <value>Please enter a valid avatar URL.</value>
+  </data>
+  <data name="Creator.Profile.Flash.AvatarUpdated" xml:space="preserve">
+    <value>Your avatar was updated.</value>
+  </data>
+  <data name="Creator.Profile.Flash.AvatarFailed" xml:space="preserve">
+    <value>Could not update your avatar.</value>
+  </data>
+  <data name="Creator.Profile.Flash.ChooseImage" xml:space="preserve">
+    <value>Please choose an image to upload.</value>
+  </data>
+  <data name="Creator.Profile.Flash.ConfirmDeactivate" xml:space="preserve">
+    <value>Please confirm that you want to deactivate your creator profile.</value>
+  </data>
+  <data name="Creator.Profile.Flash.Deactivated" xml:space="preserve">
+    <value>Your creator profile has been deactivated. You have 60 days to reactivate before it is permanently removed.</value>
+  </data>
+  <data name="Creator.Profile.Flash.DeactivateFailed" xml:space="preserve">
+    <value>Could not deactivate your creator profile.</value>
+  </data>
+  <data name="Creator.Application.Flash.CreateFailed" xml:space="preserve">
+    <value>Could not create your creator application.</value>
+  </data>
+  <data name="Creator.Application.Flash.DraftCreated" xml:space="preserve">
+    <value>Your creator application was created as a draft. Review it and submit when ready.</value>
+  </data>
+  <data name="Creator.Application.Flash.NoApplication" xml:space="preserve">
+    <value>There is no existing application to update.</value>
+  </data>
+  <data name="Creator.Application.Flash.UpdateFailed" xml:space="preserve">
+    <value>Could not update your creator application.</value>
+  </data>
+  <data name="Creator.Application.Flash.Updated" xml:space="preserve">
+    <value>Your creator application was updated.</value>
+  </data>
+  <data name="Creator.Application.Flash.Submitted" xml:space="preserve">
+    <value>Your creator application was submitted for review.</value>
+  </data>
+  <data name="Creator.Application.Flash.SubmitFailed" xml:space="preserve">
+    <value>Could not submit your creator application.</value>
+  </data>
+  <data name="Creator.Application.Flash.InviteRedeemed" xml:space="preserve">
+    <value>Invitation redeemed. Your creator application has been started.</value>
+  </data>
+  <data name="Creator.Articles.Flash.CreateFailed" xml:space="preserve">
+    <value>Could not create your article.</value>
+  </data>
+  <data name="Creator.Articles.Flash.DraftCreated" xml:space="preserve">
+    <value>Your draft article was created.</value>
+  </data>
+  <data name="Creator.Articles.Flash.UpdateFailed" xml:space="preserve">
+    <value>Could not update your article.</value>
+  </data>
+  <data name="Creator.Articles.Flash.Updated" xml:space="preserve">
+    <value>Your article was updated.</value>
+  </data>
+  <data name="Creator.Articles.Flash.MissingVersion" xml:space="preserve">
+    <value>Missing version token. Please refresh and try again.</value>
+  </data>
+  <data name="Creator.Articles.Flash.Submitted" xml:space="preserve">
+    <value>Your article was submitted for review.</value>
+  </data>
+  <data name="Creator.Articles.Flash.SubmitFailed" xml:space="preserve">
+    <value>Could not submit your article for review.</value>
+  </data>
+  <data name="Creator.Articles.Flash.Deleted" xml:space="preserve">
+    <value>Your article was deleted.</value>
+  </data>
+  <data name="Creator.Articles.Flash.RestoreUnavailable" xml:space="preserve">
+    <value>This article can no longer be restored from here.</value>
+  </data>
+  <data name="Creator.Articles.Flash.Restored" xml:space="preserve">
+    <value>Your article was restored.</value>
+  </data>
+  <data name="Creator.Articles.Flash.RestoreFailed" xml:space="preserve">
+    <value>Could not restore your article.</value>
+  </data>
+  <data name="Creator.Articles.Flash.PickTour" xml:space="preserve">
+    <value>Pick a tour from the suggestions.</value>
+  </data>
+  <data name="Creator.Articles.Flash.TourLinked" xml:space="preserve">
+    <value>Tour linked to your article.</value>
+  </data>
+  <data name="Creator.Articles.Flash.TourLinkFailed" xml:space="preserve">
+    <value>Could not link the tour.</value>
+  </data>
+  <data name="Creator.Articles.Flash.TourUnlinked" xml:space="preserve">
+    <value>Tour unlinked from your article.</value>
+  </data>
+  <data name="Creator.Articles.Flash.TourUnlinkFailed" xml:space="preserve">
+    <value>Could not unlink the tour.</value>
+  </data>
+  <data name="Creator.Articles.Flash.ImagesUploaded" xml:space="preserve">
+    <value>Image(s) uploaded.</value>
+  </data>
+  <data name="Creator.Articles.Flash.ImagesUploadFailed" xml:space="preserve">
+    <value>Could not upload image(s).</value>
+  </data>
+  <data name="Creator.Articles.Flash.ImageDeleted" xml:space="preserve">
+    <value>Image deleted.</value>
+  </data>
+  <data name="Creator.Articles.Flash.ImageDeleteFailed" xml:space="preserve">
+    <value>Could not delete the image.</value>
+  </data>
+  <data name="Creator.Articles.Flash.PrimarySet" xml:space="preserve">
+    <value>Primary image updated.</value>
+  </data>
+  <data name="Creator.Articles.Flash.PrimaryFailed" xml:space="preserve">
+    <value>Could not set the primary image.</value>
+  </data>
+  <data name="Creator.Articles.Flash.NoImageOrder" xml:space="preserve">
+    <value>No image order was provided.</value>
+  </data>
+  <data name="Creator.Articles.Flash.ImagesReordered" xml:space="preserve">
+    <value>Image order updated.</value>
+  </data>
+  <data name="Creator.Articles.Flash.ReorderFailed" xml:space="preserve">
+    <value>Could not reorder the images.</value>
+  </data>
 </root>

@@ -28,7 +28,11 @@
 
         <form asp-area="Creator" asp-controller="Articles" asp-action="@postAction"
               asp-route-id="@(Model.IsNew ? null : Model.Id?.ToString())" method="post" class="card border"
-              id="articleEditorForm" data-loading data-article-id="@(Model.IsNew ? "new" : Model.Id?.ToString())">
+              id="articleEditorForm" data-loading data-article-id="@(Model.IsNew ? "new" : Model.Id?.ToString())"
+              data-recovery-prompt="@Localizer["Creator.Editor.DraftRecoveryPrompt"]"
+              data-recovery-prompt-unknown="@Localizer["Creator.Editor.DraftRecoveryUnknown"]"
+              data-recovery-restore="@Localizer["Creator.Editor.DraftRestore"]"
+              data-recovery-discard="@Localizer["Creator.Editor.DraftDiscard"]">
             <div class="card-body vstack gap-3">
                 <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
 
@@ -158,9 +162,8 @@
                                        role="combobox" aria-expanded="false" aria-controls="tourSearchList"
                                        aria-autocomplete="list" aria-describedby="tour-search-help"
                                        autocomplete="off" placeholder="@Localizer["Creator.Editor.TourSearchPlaceholder"]" />
-                                <ul id="tourSearchList" class="list-group position-absolute w-100 shadow-sm mt-1"
-                                    role="listbox" aria-label="@Localizer["Creator.Editor.TourSearchLabel"]"
-                                    style="z-index: 1080; max-block-size: 16rem; overflow-y: auto;" hidden></ul>
+                                 <ul id="tourSearchList" class="list-group position-absolute w-100 shadow-sm mt-1 tour-suggest-list"
+                                     role="listbox" aria-label="@Localizer["Creator.Editor.TourSearchLabel"]" hidden></ul>
                                 <div id="tour-search-help" class="form-text">@Localizer["Creator.Editor.TourSearchHelp"]</div>
                                 <div class="form-text text-body-secondary" data-tour-empty hidden>@Localizer["Creator.Editor.TourNoResults"]</div>
                             </div>
