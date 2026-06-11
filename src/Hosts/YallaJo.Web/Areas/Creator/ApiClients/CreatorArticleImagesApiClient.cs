@@ -36,6 +36,25 @@ public sealed class CreatorArticleImagesApiClient
             formFields: fields, formFieldName: "file", ct: ct);
     }
 
+    /// <summary>
+    /// POST /attachments/images?entityType=Blog&amp;entityId={blogId} — uploads up to 20
+    /// images in a single multipart request (API7; replaces the per-file upload loop).
+    /// The server assigns AttachmentType=Image and a batch-relative SortOrder; the caller
+    /// re-orders afterwards when the article already had images.
+    /// </summary>
+    public Task<ApiResult<BulkUploadImagesResponse>> UploadManyAsync(
+        Guid blogId, IReadOnlyList<ApiUploadFile> files, CancellationToken ct = default)
+    {
+        var fields = new Dictionary<string, string>
+        {
+            ["EntityType"] = BlogEntityType,
+            ["EntityId"]   = blogId.ToString(),
+        };
+
+        return _api.PostFilesAsync<BulkUploadImagesResponse>(
+            $"{Base}/images", files, formFields: fields, formFieldName: "files", ct: ct);
+    }
+
     /// <summary>DELETE /attachments/{id} (Attachment.Delete; hard delete, ownership-guarded).</summary>
     public Task<ApiResult> DeleteAsync(Guid attachmentId, CancellationToken ct = default)
         => _api.DeleteAsync($"{Base}/{attachmentId}", ct);

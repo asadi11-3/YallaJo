@@ -110,7 +110,17 @@
                 }
                 else
                 {
-                    <partial name="_ArticleImages" model="Model.Images" />
+                    <div id="articleImagesHost"
+                         data-yj-component="article-images"
+                         data-msg-uploaded="@Localizer["Creator.Images.Toast.Uploaded"]"
+                         data-msg-deleted="@Localizer["Creator.Images.Toast.Deleted"]"
+                         data-msg-primary="@Localizer["Creator.Images.Toast.PrimarySet"]"
+                         data-msg-reordered="@Localizer["Creator.Images.Toast.Reordered"]"
+                         data-msg-error="@Localizer["Creator.Images.Toast.Failed"]"
+                         aria-live="polite"
+                         aria-busy="false">
+                        <partial name="_ArticleImages" model="Model.Images" />
+                    </div>
                 }
             </div>
         </div>
@@ -231,4 +241,5 @@
 @section Scripts {
     <script src="~/assets/vendor/quill/js/quill.min.js" asp-append-version="true"></script>
     <script src="~/assets/js/creator-article-editor.js" asp-append-version="true" defer></script>
+    <script src="~/assets/js/creator-article-images.js" asp-append-version="true" defer></script>
 }

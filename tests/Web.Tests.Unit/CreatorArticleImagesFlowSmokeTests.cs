@@ -391,6 +391,24 @@ public sealed class CreatorArticleImagesFlowSmokeTests
             return Task.FromResult(ApiResult<T>.Fail(_state.UploadStatus, "upload failed"));
         }
 
+        public Task<ApiResult<T>> PostFilesAsync<T>(string path, IReadOnlyList<ApiUploadFile> files,
+            IReadOnlyDictionary<string, string>? formFields = null, string formFieldName = "files", CancellationToken ct = default)
+        {
+            _factory.AttachmentApiHits++;
+            _factory.UploadCount += files.Count;
+            if (_state.UploadStatus is >= 200 and < 300)
+            {
+                var ids = string.Join(",", files.Select(_ => $"\"{Guid.NewGuid()}\""));
+                var json = $$"""{ "uploadedAttachmentIds": [{{ids}}], "errors": [] }""";
+                var data = System.Text.Json.JsonSerializer.Deserialize<T>(
+                    json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                return Task.FromResult(data is null
+                    ? ApiResult<T>.Fail(_state.UploadStatus, "parse")
+                    : ApiResult<T>.Ok(data, _state.UploadStatus));
+            }
+            return Task.FromResult(ApiResult<T>.Fail(_state.UploadStatus, "upload failed"));
+        }
+
         public Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default)
         {
             if (IsAttachmentPath(path)) _factory.AttachmentApiHits++;

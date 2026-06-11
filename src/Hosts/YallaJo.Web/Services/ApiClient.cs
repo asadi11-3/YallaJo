@@ -239,6 +239,41 @@ public sealed class ApiClient : IApiClient
             return await _http.SendAsync(request, ct);
         }, ct);
 
+    public Task<ApiResult<T>> PostFilesAsync<T>(
+        string path,
+        IReadOnlyList<ApiUploadFile> files,
+        IReadOnlyDictionary<string, string>? formFields = null,
+        string formFieldName = "files",
+        CancellationToken ct = default) =>
+        SendWithBodyAsync<T>(path, async () =>
+        {
+            using var multipart = new MultipartFormDataContent();
+
+            // Each StreamContent is owned by `multipart` (disposed with it); do not wrap
+            // in its own `using`, which would dispose the stream before SendAsync runs.
+            foreach (var file in files)
+            {
+                var streamContent = new StreamContent(file.Stream);
+                streamContent.Headers.ContentType =
+                    new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+                multipart.Add(streamContent, formFieldName, file.FileName);
+            }
+
+            if (formFields is not null)
+            {
+                foreach (var kvp in formFields)
+                {
+                    multipart.Add(new StringContent(kvp.Value), kvp.Key);
+                }
+            }
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, path)
+            {
+                Content = multipart,
+            };
+            return await _http.SendAsync(request, ct);
+        }, ct);
+
     public Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default) =>
         SendNoBodyAsync(path, () => _http.DeleteAsync(path, ct), ct);
 

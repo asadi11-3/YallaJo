@@ -59,6 +59,20 @@ public interface IApiClient
         string formFieldName = "file",
         CancellationToken ct = default);
 
+    /// <summary>
+    /// POST several files in a single multipart request (e.g. bulk image upload, API7).
+    /// All files are sent under the same <paramref name="formFieldName"/>. Default
+    /// implementation returns 501 so existing test doubles keep compiling; the concrete
+    /// <see cref="ApiClient"/> overrides it.
+    /// </summary>
+    Task<ApiResult<T>> PostFilesAsync<T>(
+        string path,
+        IReadOnlyList<ApiUploadFile> files,
+        IReadOnlyDictionary<string, string>? formFields = null,
+        string formFieldName = "files",
+        CancellationToken ct = default) =>
+        Task.FromResult(ApiResult<T>.Fail(501, "Multi-file upload is not supported by this API client."));
+
     Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default);
 
     /// <summary>

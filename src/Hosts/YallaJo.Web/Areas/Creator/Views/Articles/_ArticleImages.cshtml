@@ -9,17 +9,19 @@
 @if (Model.CanAddMore)
 {
     <permission require="@WebPermission.Attachment.Create">
-        <form asp-area="Creator" asp-controller="Articles" asp-action="UploadImages"
-              asp-route-id="@Model.BlogId" method="post" enctype="multipart/form-data" class="mb-3">
+        <form id="imageUploadForm" asp-area="Creator" asp-controller="Articles" asp-action="UploadImages"
+              asp-route-id="@Model.BlogId" method="post" enctype="multipart/form-data" class="mb-3" data-loading
+              data-remaining="@Model.RemainingSlots">
             <input type="hidden" name="existingCount" value="@Model.Images.Count" />
             <label class="form-label" for="imageFiles">
                 @Localizer["Creator.Images.AddLabel"] <span class="text-body-secondary">@Localizer["Creator.Images.AddHint", Model.RemainingSlots]</span>
             </label>
             <div class="input-group">
                 <input id="imageFiles" type="file" name="files" class="form-control"
-                       accept="image/jpeg,image/png,image/gif,image/webp" multiple />
+                       accept="image/jpeg,image/png,image/gif,image/webp" multiple aria-describedby="imageFilesInfo" />
                 <button type="submit" class="btn btn-primary"><i class="fa-solid fa-upload me-1" aria-hidden="true"></i>@Localizer["Creator.Images.Upload"]</button>
             </div>
+            <span id="imageFilesInfo" class="form-text" aria-live="polite"></span>
         </form>
     </permission>
 }
@@ -98,38 +100,21 @@ else
                                 }
                             </permission>
                             <permission require="@WebPermission.Attachment.Delete">
-                                <button type="button" class="btn btn-outline-danger" title="@Localizer["Creator.Images.Delete"]" aria-label="@Localizer["Creator.Images.Delete"]"
-                                        data-bs-toggle="modal" data-bs-target="#deleteImageModal_@img.Id">
-                                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
-                                </button>
+                                <form asp-area="Creator" asp-controller="Articles" asp-action="DeleteImage"
+                                      asp-route-id="@Model.BlogId" asp-route-attachmentId="@img.Id" method="post" class="d-inline"
+                                      data-confirm="@Localizer["Creator.Images.DeleteBody"]"
+                                      data-confirm-title="@Localizer["Creator.Images.DeleteTitle"]"
+                                      data-confirm-action="@Localizer["Creator.Images.DeleteConfirm"]"
+                                      data-confirm-cancel="@Localizer["Creator.Images.Cancel"]">
+                                    <button type="submit" class="btn btn-outline-danger" title="@Localizer["Creator.Images.Delete"]" aria-label="@Localizer["Creator.Images.Delete"]">
+                                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                    </button>
+                                </form>
                             </permission>
                         </div>
                     </div>
                 </div>
             </div>
-
-            @* Per-image delete confirmation modal *@
-            <permission require="@WebPermission.Attachment.Delete">
-                <div class="modal fade" id="deleteImageModal_@img.Id" tabindex="-1" aria-labelledby="deleteImageModalLabel_@img.Id"
-                     aria-describedby="deleteImageModalBody_@img.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <form asp-area="Creator" asp-controller="Articles" asp-action="DeleteImage"
-                              asp-route-id="@Model.BlogId" asp-route-attachmentId="@img.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
-                            <div class="modal-header">
-                                <h2 class="modal-title h5" id="deleteImageModalLabel_@img.Id">@Localizer["Creator.Images.DeleteTitle"]</h2>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Creator.Images.Cancel"]"></button>
-                            </div>
-                            <div class="modal-body" id="deleteImageModalBody_@img.Id">
-                                <p class="mb-0">@Localizer["Creator.Images.DeleteBody"]</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Creator.Images.Cancel"]</button>
-                                <button type="submit" class="btn btn-danger">@Localizer["Creator.Images.DeleteConfirm"]</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </permission>
         }
     </div>
 }

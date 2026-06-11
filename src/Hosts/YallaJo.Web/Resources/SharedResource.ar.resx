@@ -13832,6 +13832,21 @@
 <value>تم مسح قائمة أمنياتك.</value>
 </data>
 <data name="Accounts.Support.CloseTicketBtn" xml:space="preserve">
-<value>إغلاق التذكرة</value>
+<value>????? ???????</value>
+</data>
+<data name="Creator.Images.Toast.Uploaded" xml:space="preserve">
+<value>تم رفع الصور.</value>
+</data>
+<data name="Creator.Images.Toast.Deleted" xml:space="preserve">
+<value>تم حذف الصورة.</value>
+</data>
+<data name="Creator.Images.Toast.PrimarySet" xml:space="preserve">
+<value>تم تحديث الصورة الرئيسية.</value>
+</data>
+<data name="Creator.Images.Toast.Reordered" xml:space="preserve">
+<value>تم تحديث ترتيب الصور.</value>
+</data>
+<data name="Creator.Images.Toast.Failed" xml:space="preserve">
+<value>حدث خطأ ما. يرجى المحاولة مرة أخرى.</value>
 </data>
 </root>

@@ -39,50 +39,82 @@ public sealed class CreatorArticleImagesFacade
             return ApiResult.Fail(422,
                 $"You can add {remaining} more image(s); you selected {files.Count}.");
 
+        // Fail-fast client-side validation; only forward the files that pass (server
+        // remains the source of truth for magic-byte checks — SEC4).
         var errors = new List<string>();
-        var uploaded = 0;
-        var sortOrder = existingCount;
-
+        var valid = new List<IFormFile>();
         foreach (var file in files)
         {
             var validationError = ArticleImagesMapper.ValidateImage(file.FileName, file.ContentType, file.Length);
             if (validationError is not null)
-            {
                 errors.Add(validationError);
-                continue;
-            }
-
-            await using var stream = file.OpenReadStream();
-            var result = await _images
-                .UploadAsync(blogId, stream, file.FileName, file.ContentType, sortOrder, ct)
-                .ConfigureAwait(false);
-
-            if (result.RequireSignOut) return ApiResult.ForceSignOut();
-
-            if (result.IsSuccess)
-            {
-                uploaded++;
-                sortOrder++;
-            }
-            else if (result.IsForbidden)
-            {
-                return ApiResult.Fail(403, "You don't have permission to upload images to this article.");
-            }
             else
-            {
-                errors.Add($"\"{file.FileName}\": {result.Error ?? "upload failed"}");
-            }
+                valid.Add(file);
         }
 
-        if (uploaded == 0)
+        if (valid.Count == 0)
             return ApiResult.Fail(422, errors.Count > 0
                 ? "No images were uploaded. " + string.Join(" ", errors)
                 : "No images were uploaded.");
 
-        if (errors.Count > 0)
-            return ApiResult.Fail(207, $"Uploaded {uploaded} image(s); some failed: {string.Join(" ", errors)}");
+        // Capture the existing order BEFORE uploading: the bulk endpoint assigns a
+        // batch-relative SortOrder (0..n-1) that would otherwise clash with existing rows.
+        IReadOnlyList<Guid> existingIds = [];
+        if (existingCount > 0)
+        {
+            var listResult = await _images.ListAsync(blogId, ct).ConfigureAwait(false);
+            if (listResult.RequireSignOut) return ApiResult.ForceSignOut();
+            if (listResult.IsSuccess && listResult.Data is not null)
+                existingIds = listResult.Data.OrderBy(i => i.SortOrder).Select(i => i.Id).ToList();
+        }
 
-        return ApiResult.Ok(200);
+        // One multipart request for the whole batch (API7).
+        var streams = new List<Stream>(valid.Count);
+        try
+        {
+            var uploads = new List<ApiUploadFile>(valid.Count);
+            foreach (var file in valid)
+            {
+                var stream = file.OpenReadStream();
+                streams.Add(stream);
+                uploads.Add(new ApiUploadFile(stream, file.FileName, file.ContentType));
+            }
+
+            var result = await _images.UploadManyAsync(blogId, uploads, ct).ConfigureAwait(false);
+
+            if (result.RequireSignOut) return ApiResult.ForceSignOut();
+            if (result.IsForbidden)
+                return ApiResult.Fail(403, "You don't have permission to upload images to this article.");
+            if (!result.IsSuccess || result.Data is null)
+                return ApiResult.Fail(result.StatusCode, result.Error ?? "No images were uploaded.");
+
+            var data = result.Data;
+            foreach (var serverError in data.Errors)
+                errors.Add(serverError);
+
+            var uploaded = data.UploadedAttachmentIds.Count;
+            if (uploaded == 0)
+                return ApiResult.Fail(422, errors.Count > 0
+                    ? "No images were uploaded. " + string.Join(" ", errors)
+                    : "No images were uploaded.");
+
+            // Re-anchor SortOrder so the new images follow the existing ones (best-effort).
+            if (existingIds.Count > 0)
+            {
+                var ordered = existingIds.Concat(data.UploadedAttachmentIds).ToList();
+                await _images.ReorderAsync(blogId, ordered, ct).ConfigureAwait(false);
+            }
+
+            if (errors.Count > 0)
+                return ApiResult.Fail(207, $"Uploaded {uploaded} image(s); some failed: {string.Join(" ", errors)}");
+
+            return ApiResult.Ok(200);
+        }
+        finally
+        {
+            foreach (var stream in streams)
+                await stream.DisposeAsync().ConfigureAwait(false);
+        }
     }
 
     public async Task<ApiResult> DeleteAsync(Guid attachmentId, CancellationToken ct = default)

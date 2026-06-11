@@ -35,3 +35,15 @@ public sealed class UploadAttachmentResponse
     public string Url { get; init; } = string.Empty;
     public long FileSize { get; init; }
 }
+
+/// <summary>
+/// Response of the bulk image-upload endpoint
+/// (POST /api/v1/content-core/attachments/images, up to 20 files in one request — API7).
+/// The server uploads each file and reports per-file failures in <see cref="Errors"/>
+/// without aborting the whole batch.
+/// </summary>
+public sealed class BulkUploadImagesResponse
+{
+    public IReadOnlyList<Guid> UploadedAttachmentIds { get; init; } = [];
+    public IReadOnlyList<string> Errors { get; init; } = [];
+}

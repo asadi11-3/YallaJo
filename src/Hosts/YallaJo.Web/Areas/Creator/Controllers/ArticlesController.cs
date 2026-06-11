@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Creator.Facades;
 using YallaJo.Web.Areas.Creator.Models.Articles;
+using YallaJo.Web.Areas.Creator.Models.Articles.Images;
 using YallaJo.Web.Areas.Creator.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
@@ -289,7 +290,7 @@ public sealed class ArticlesController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Image(s) uploaded.", result.Error ?? "Could not upload image(s).");
-        return RedirectToAction(nameof(Edit), new { id });
+        return await ImagesResultAsync(id, ct);
     }
 
     // POST /creator/articles/{id}/images/{attachmentId}/delete  — Attachment.Delete
@@ -302,7 +303,7 @@ public sealed class ArticlesController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Image deleted.", "Could not delete the image.");
-        return RedirectToAction(nameof(Edit), new { id });
+        return await ImagesResultAsync(id, ct);
     }
 
     // POST /creator/articles/{id}/images/{attachmentId}/primary  — EntityImage.Update
@@ -315,7 +316,7 @@ public sealed class ArticlesController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Primary image updated.", "Could not set the primary image.");
-        return RedirectToAction(nameof(Edit), new { id });
+        return await ImagesResultAsync(id, ct);
     }
 
     // POST /creator/articles/{id}/images/reorder  — Attachment.Update
@@ -335,6 +336,19 @@ public sealed class ArticlesController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Image order updated.", "Could not reorder the images.");
+        return await ImagesResultAsync(id, ct);
+    }
+
+    // For AJAX (PE1 progressive enhancement) return the refreshed gallery fragment;
+    // otherwise fall back to the classic PRG redirect so no-JS clients keep working.
+    private async Task<IActionResult> ImagesResultAsync(Guid id, CancellationToken ct)
+    {
+        if (WantsAjax())
+        {
+            var images = await _images.GetImagesAsync(id, ct);
+            return PartialView("_ArticleImages", images.Data ?? new ArticleImagesVm { BlogId = id });
+        }
+
         return RedirectToAction(nameof(Edit), new { id });
     }
 

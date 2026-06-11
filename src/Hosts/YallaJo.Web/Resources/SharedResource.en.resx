@@ -13834,4 +13834,19 @@
 <data name="Accounts.Support.CloseTicketBtn" xml:space="preserve">
 <value>Close ticket</value>
 </data>
+<data name="Creator.Images.Toast.Uploaded" xml:space="preserve">
+<value>Images uploaded.</value>
+</data>
+<data name="Creator.Images.Toast.Deleted" xml:space="preserve">
+<value>Image deleted.</value>
+</data>
+<data name="Creator.Images.Toast.PrimarySet" xml:space="preserve">
+<value>Primary image updated.</value>
+</data>
+<data name="Creator.Images.Toast.Reordered" xml:space="preserve">
+<value>Image order updated.</value>
+</data>
+<data name="Creator.Images.Toast.Failed" xml:space="preserve">
+<value>Something went wrong. Please try again.</value>
+</data>
 </root>
