@@ -245,3 +245,6 @@ html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
 .toast-container-elevated { z-index: 1090; }
 /* 4:3 gallery thumbnail (Creator article images). */
 .img-thumb-4x3 { aspect-ratio: 4 / 3; object-fit: cover; }
+
+/* Native <details> disclosure rendered as a card (PE1 no-JS collapse). */
+details.card > summary { cursor: pointer; list-style-position: inside; }

@@ -17,8 +17,7 @@
                 @Localizer["Creator.Application.Heading"]
             </h1>
             <permission require="@WebPermission.Creator.RedeemInvitation">
-                <a asp-area="Creator" asp-controller="Application" asp-action="Invite"
-                   class="btn btn-sm btn-primary-soft mt-2 mt-sm-0">
+                <a href="#invite" class="btn btn-sm btn-primary-soft mt-2 mt-sm-0">
                     <i class="fa-solid fa-envelope-open-text me-1" aria-hidden="true"></i>
                     @Localizer["Creator.Application.RedeemInvitation"]
                 </a>
@@ -108,5 +107,36 @@
                 </permission>
             }
         }
+
+        @* ── Invitation redemption (merged from the retired Invite page; PE1 native <details>, no JS) ── *@
+        <permission require="@WebPermission.Creator.RedeemInvitation">
+            @{ var inviteOpen = ViewData["InviteOpen"] as bool? == true; }
+            <details id="invite" class="card border" open="@inviteOpen">
+                <summary class="card-header bg-transparent">
+                    <span class="h6 mb-0">
+                        <i class="fa-solid fa-envelope-open-text me-2 text-primary" aria-hidden="true"></i>
+                        @Localizer["Creator.Invite.Heading"]
+                    </span>
+                </summary>
+                <form asp-area="Creator" asp-controller="Application" asp-action="Invite" method="post">
+                    <div class="card-body vstack gap-3">
+                        <div>
+                            <label for="Token" class="form-label">@Localizer["Creator.Invite.TokenLabel"]</label>
+                            <input type="text" id="Token" name="Token" value="@(ViewData["InviteToken"] as string)"
+                                   class="form-control" dir="ltr" aria-describedby="token-help"
+                                   placeholder="@Localizer["Creator.Invite.TokenPlaceholder"]" />
+                            <div id="token-help" class="form-text">@Localizer["Creator.Invite.TokenHelp"]</div>
+                            @Html.ValidationMessage("Token", new { @class = "text-danger small", role = "alert" })
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>
+                            @Localizer["Creator.Invite.Redeem"]
+                        </button>
+                    </div>
+                </form>
+            </details>
+        </permission>
     </div>
 </section>

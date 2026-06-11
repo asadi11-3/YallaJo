@@ -115,14 +115,11 @@ public sealed class ApplicationController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
-    // GET /creator/application/invite  — Creator.RedeemInvitation
+    // GET /creator/application/invite — permanently merged into the application hub (view reduction).
     [HttpGet("creator/application/invite")]
     [RequirePermission(WebPermission.Creator.RedeemInvitation)]
     public IActionResult Invite()
-    {
-        SetSidebar();
-        return View(new RedeemInvitationVm());
-    }
+        => RedirectToActionPermanent(nameof(Index), "Application", new { area = "Creator" }, fragment: "invite");
 
     // POST /creator/application/invite  (redeem token) — Creator.RedeemInvitation
     [HttpPost("creator/application/invite")]
@@ -130,10 +127,8 @@ public sealed class ApplicationController : BaseController
     [RequirePermission(WebPermission.Creator.RedeemInvitation)]
     public async Task<IActionResult> Invite(RedeemInvitationVm form, CancellationToken ct = default)
     {
-        SetSidebar();
-
         if (!ModelState.IsValid)
-            return View(form);
+            return await IndexWithInviteAsync(form, ct);
 
         var result = await _facade.RedeemAsync(form.Token, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -142,11 +137,26 @@ public sealed class ApplicationController : BaseController
         {
             if (!ApplyValidationErrors(result))
                 SetError(result.Error);
-            return View(form);
+            return await IndexWithInviteAsync(form, ct);
         }
 
         SetSuccess("Invitation redeemed. Your creator application has been started.");
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// Re-renders the application hub with the invite disclosure expanded after a failed
+    /// token redemption, so validation errors appear inline on the merged page (PE1).
+    /// </summary>
+    private async Task<IActionResult> IndexWithInviteAsync(RedeemInvitationVm form, CancellationToken ct)
+    {
+        SetSidebar();
+        ViewData["InviteOpen"] = true;
+        ViewData["InviteToken"] = form.Token;
+
+        var result = await _facade.GetApplicationFormAsync(ct);
+        var vm = result.IsSuccess && result.Data is not null ? result.Data : new CreatorApplicationFormVm();
+        return View(nameof(Index), vm);
     }
 
     private void SetSidebar()
