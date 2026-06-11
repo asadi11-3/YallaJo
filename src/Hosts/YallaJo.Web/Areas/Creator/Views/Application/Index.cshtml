@@ -67,7 +67,7 @@
 
             @if (Model.IsNew)
             {
-                <form asp-area="Creator" asp-controller="Application" asp-action="@postAction" method="post" class="card border">
+                <form asp-area="Creator" asp-controller="Application" asp-action="@postAction" method="post" class="card border" data-loading>
                     <partial name="_ApplicationFormFields" model="Model" />
                     <div class="card-footer d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
@@ -80,7 +80,7 @@
             else
             {
                 <permission require="@WebPermission.Creator.Update">
-                    <form asp-area="Creator" asp-controller="Application" asp-action="@postAction" method="post" class="card border">
+                    <form asp-area="Creator" asp-controller="Application" asp-action="@postAction" method="post" class="card border" data-loading>
                         <input type="hidden" asp-for="ApplicationId" />
                         <input type="hidden" asp-for="Status" />
                         <partial name="_ApplicationFormFields" model="Model" />
@@ -97,7 +97,7 @@
             @if (Model.CanSubmit)
             {
                 <permission require="@WebPermission.Creator.Submit">
-                    <form asp-area="Creator" asp-controller="Application" asp-action="Submit" method="post">
+                    <form asp-area="Creator" asp-controller="Application" asp-action="Submit" method="post" data-loading>
                         <input type="hidden" name="applicationId" value="@Model.ApplicationId" />
                         <button type="submit" class="btn btn-success">
                             <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>
@@ -118,7 +118,7 @@
                         @Localizer["Creator.Invite.Heading"]
                     </span>
                 </summary>
-                <form asp-area="Creator" asp-controller="Application" asp-action="Invite" method="post">
+                <form asp-area="Creator" asp-controller="Application" asp-action="Invite" method="post" data-loading>
                     <div class="card-body vstack gap-3">
                         <div>
                             <label for="Token" class="form-label">@Localizer["Creator.Invite.TokenLabel"]</label>

@@ -28,7 +28,7 @@
 
         <form asp-area="Creator" asp-controller="Articles" asp-action="@postAction"
               asp-route-id="@(Model.IsNew ? null : Model.Id?.ToString())" method="post" class="card border"
-              id="articleEditorForm" data-article-id="@(Model.IsNew ? "new" : Model.Id?.ToString())">
+              id="articleEditorForm" data-loading data-article-id="@(Model.IsNew ? "new" : Model.Id?.ToString())">
             <div class="card-body vstack gap-3">
                 <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
 
@@ -89,10 +89,16 @@
                     </div>
                 </div>
             </div>
-            <div class="card-footer d-flex gap-2">
+            <div class="card-footer d-flex gap-2 align-items-center">
                 <button type="submit" class="btn btn-primary">
                     <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>@(Model.IsNew ? Localizer["Creator.Editor.SaveDraft"] : Localizer["Creator.Editor.SaveChanges"])
                 </button>
+                @* F5 autosave status. Populated by creator-article-editor.js; the {0} placeholder
+                   receives the local save time. Local-only (no server autosync). A11Y9 aria-live. *@
+                <span id="draftSavedIndicator" class="small text-body-secondary ms-auto" aria-live="polite"
+                      data-draft-saved-template="@Localizer["Creator.Editor.DraftSavedLocally"]" hidden>
+                    <i class="fa-solid fa-cloud-arrow-up me-1" aria-hidden="true"></i><span data-draft-saved-text></span>
+                </span>
             </div>
         </form>
 
@@ -143,7 +149,7 @@
                            hidden GUID; with JS off the typed name posts as tourQuery and the server
                            resolves it (PE1). *@
                         <form asp-area="Creator" asp-controller="Articles" asp-action="LinkTour"
-                              asp-route-id="@Model.Id" method="post" class="row g-2 align-items-end">
+                              asp-route-id="@Model.Id" method="post" class="row g-2 align-items-end" data-loading>
                             <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
                             <input type="hidden" id="tourId" name="tourId" />
                             <div class="col-sm-8 position-relative">
@@ -179,7 +185,7 @@
                 {
                     <permission require="@WebPermission.Blog.Submit">
                         <form asp-area="Creator" asp-controller="Articles" asp-action="Submit"
-                              asp-route-id="@Model.Id" method="post">
+                              asp-route-id="@Model.Id" method="post" data-loading>
                             <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
                             <button type="submit" class="btn btn-success">
                                 <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Creator.Editor.SubmitForReview"]
@@ -187,32 +193,21 @@
                         </form>
                     </permission>
                 }
+                @* F8: destructive confirm via shared form-ux modal (data-confirm), safe-default
+                   Cancel autofocus; no bespoke per-page modal needed. *@
                 <permission require="@WebPermission.Blog.DeleteOwn">
-                    <button type="button" class="btn btn-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteArticleModal">
-                        <i class="fa-solid fa-trash me-1" aria-hidden="true"></i>@Localizer["Creator.Editor.Delete"]
-                    </button>
-                </permission>
-            </div>
-
-            <div class="modal fade" id="deleteArticleModal" tabindex="-1" aria-labelledby="deleteArticleModalLabel"
-                 aria-describedby="deleteArticleModalBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
                     <form asp-area="Creator" asp-controller="Articles" asp-action="Delete"
-                          asp-route-id="@Model.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="deleteArticleModalLabel">@Localizer["Creator.Editor.DeleteTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Creator.Editor.Cancel"]"></button>
-                        </div>
-                        <div class="modal-body" id="deleteArticleModalBody">
-                            <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
-                            <p class="mb-0">@Localizer["Creator.Editor.DeleteBody", Model.Title]</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Creator.Editor.Cancel"]</button>
-                            <button type="submit" class="btn btn-danger">@Localizer["Creator.Editor.DeleteConfirm"]</button>
-                        </div>
+                          asp-route-id="@Model.Id" method="post" class="ms-auto" data-loading
+                          data-confirm="@Localizer["Creator.Editor.DeleteBody", Model.Title]"
+                          data-confirm-title="@Localizer["Creator.Editor.DeleteTitle"]"
+                          data-confirm-action="@Localizer["Creator.Editor.DeleteConfirm"]"
+                          data-confirm-cancel="@Localizer["Creator.Editor.Cancel"]">
+                        <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fa-solid fa-trash me-1" aria-hidden="true"></i>@Localizer["Creator.Editor.Delete"]
+                        </button>
                     </form>
-                </div>
+                </permission>
             </div>
         }
     </div>

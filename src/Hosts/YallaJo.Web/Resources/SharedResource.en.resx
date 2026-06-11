@@ -13903,4 +13903,7 @@
   <data name="Creator.Dashboard.Attention.Deleted" xml:space="preserve">
     <value>Recently deleted</value>
   </data>
+  <data name="Creator.Editor.DraftSavedLocally" xml:space="preserve">
+    <value>Draft saved locally · {0}</value>
+  </data>
 </root>

@@ -92,6 +92,27 @@
 
     var storageOk = hasStorage();
 
+    // ── F5: "Draft saved locally · {time}" indicator (A11Y9 aria-live) ─────
+    var savedIndicator = document.getElementById("draftSavedIndicator");
+    var savedTextEl = savedIndicator ? savedIndicator.querySelector("[data-draft-saved-text]") : null;
+    var savedTemplate = savedIndicator ? (savedIndicator.getAttribute("data-draft-saved-template") || "") : "";
+
+    function updateSavedIndicator(savedAt) {
+        if (!savedIndicator || !savedTextEl) {
+            return;
+        }
+        var when = "";
+        try {
+            when = new Date(savedAt).toLocaleTimeString();
+        } catch (e) {
+            when = "";
+        }
+        savedTextEl.textContent = savedTemplate
+            ? savedTemplate.replace("{0}", when)
+            : when;
+        savedIndicator.hidden = false;
+    }
+
     function snapshot() {
         syncContent();
         var data = { savedAt: new Date().toISOString() };
@@ -105,11 +126,14 @@
     }
 
     function saveDraft() {
+        var data;
         if (!storageOk) {
             return;
         }
         try {
-            window.localStorage.setItem(storageKey, JSON.stringify(snapshot()));
+            data = snapshot();
+            window.localStorage.setItem(storageKey, JSON.stringify(data));
+            updateSavedIndicator(data.savedAt);
         } catch (e) {
             /* quota / disabled — non-blocking */
         }

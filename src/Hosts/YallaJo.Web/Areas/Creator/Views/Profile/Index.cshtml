@@ -51,7 +51,7 @@
         else
         {
             @* Profile details (PUT /profile/mine). *@
-            <form asp-area="Creator" asp-controller="Profile" asp-action="Update" method="post" class="card border">
+            <form asp-area="Creator" asp-controller="Profile" asp-action="Update" method="post" class="card border" data-loading>
                 <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Creator.Profile.DetailsHeading"]</h2></div>
                 <div class="card-body vstack gap-3">
                     <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
@@ -116,7 +116,7 @@
 
             <details class="mt-n2">
                 <summary class="small text-body-secondary">@Localizer["Creator.Profile.AvatarUrlFallback"]</summary>
-                <form asp-area="Creator" asp-controller="Profile" asp-action="Avatar" method="post" class="card border mt-2">
+                <form asp-area="Creator" asp-controller="Profile" asp-action="Avatar" method="post" class="card border mt-2" data-loading>
                     <div class="card-body">
                         <label class="form-label" for="avatarUrlField">@Localizer["Creator.Profile.AvatarLabel"]</label>
                         <div class="input-group">
@@ -142,7 +142,9 @@
             <div class="modal fade" id="deactivateModal" tabindex="-1" aria-labelledby="deactivateModalLabel" aria-describedby="deactivateModalBody" aria-hidden="true"
                  data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form asp-area="Creator" asp-controller="Profile" asp-action="Deactivate" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deactivateModalLabel">
+                    @* MOD3/MOD5: kept as a bespoke modal (not generic data-confirm) because it hosts a
+                       REQUIRED confirmation checkbox; static backdrop + Cancel safe-default focus. *@
+                    <form asp-area="Creator" asp-controller="Profile" asp-action="Deactivate" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deactivateModalLabel" data-loading>
                         <div class="modal-header">
                             <h2 class="modal-title h5" id="deactivateModalLabel">@Localizer["Creator.Profile.ModalTitle"]</h2>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Creator.Profile.Cancel"]"></button>
