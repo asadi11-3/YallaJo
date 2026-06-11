@@ -1,12 +1,19 @@
 @model YallaJo.Web.Areas.Accounts.Models.Bookings.BookingsVm
 @using YallaJo.Web.Areas.Accounts.Shared
 @{
-    ViewData["Title"] = "My Bookings";
+    ViewData["Title"] = Localizer["Navbar.MyBookings"].Value;
     ViewData["AccountNav"] = "Bookings";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
     var tabs = Model.Tabs;
     var isJoinRequestsTab = string.Equals(Model.ActiveTab, "join-requests", StringComparison.OrdinalIgnoreCase);
+    string TabLabel(string t) => t switch
+    {
+        "Upcoming" => Localizer["Accounts.Bookings.Tab.Upcoming"].Value,
+        "Canceled" => Localizer["Accounts.Bookings.Tab.Canceled"].Value,
+        "Completed" => Localizer["Accounts.Bookings.Tab.Completed"].Value,
+        _ => t
+    };
 }
 
 <section class="pt-3">
@@ -19,7 +26,7 @@
 
                 <div class="card border">
                     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                        <h4 class="card-header-title mb-0">My Bookings</h4>
+                        <h4 class="card-header-title mb-0">@Localizer["Navbar.MyBookings"]</h4>
                     </div>
 
                     <div class="card-body">
@@ -29,7 +36,7 @@
                                 <li class="nav-item">
                                     <a class="nav-link @(!isJoinRequestsTab && Model.ActiveTab == tab ? "active" : "")"
                                        asp-area="Accounts" asp-controller="Bookings" asp-action="Index" asp-route-tab="@tab">
-                                        @tab
+                                        @TabLabel(tab)
                                     </a>
                                 </li>
                             }
@@ -74,8 +81,8 @@
                             @* Phase 1: shared empty state (UI-UX-L6) *@
                             <partial name="~/Areas/Public/Views/Shared/_EmptyState.cshtml" view-data='@(new ViewDataDictionary(ViewData)
                             {
-                                { "title", $"No {Model.ActiveTab.ToLower()} bookings" },
-                                { "message", "When you book a tour it will show up here." }
+                                { "title", Localizer["Accounts.Bookings.EmptyTitle"].Value },
+                                { "message", Localizer["Accounts.Bookings.EmptyMessage"].Value }
                             })' />
                         }
                         else
@@ -93,7 +100,7 @@
                                                 else
                                                 {
                                                     <div class="bg-light rounded-start w-100 h-100 d-flex align-items-center justify-content-center min-h-120">
-                                                        <i class="bi bi-geo-alt display-6 text-secondary"></i>
+                                                        <i class="bi bi-geo-alt display-6 text-secondary" aria-hidden="true"></i>
                                                     </div>
                                                 }
                                             </div>
@@ -102,18 +109,18 @@
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                                         <div>
                                                             <h6 class="mb-1">@b.TourName</h6>
-                                                            <p class="small text-muted mb-0">Ref: @b.Reference</p>
+                                                            <p class="small text-muted mb-0">@Localizer["Accounts.Bookings.RefLabel"] <bdi>@b.Reference</bdi></p>
                                                         </div>
                                                         <partial name="_StatusBadge" model="@b.Status" />
                                                     </div>
                                                     <div class="d-flex flex-wrap gap-3 small text-muted mb-3">
-                                                        <span><i class="bi bi-people me-1"></i>@b.ParticipantCount guest(s)</span>
-                                                        <span><i class="bi bi-calendar3 me-1"></i>@b.Date.ToString("d MMM yyyy")</span>
-                                                        <span><i class="bi bi-cash me-1"></i>@b.TotalAmount.ToString("0.00") @b.Currency</span>
+                                                        <span><i class="bi bi-people me-1" aria-hidden="true"></i>@Localizer["Accounts.Booking.GuestCount", b.ParticipantCount]</span>
+                                                        <span><i class="bi bi-calendar3 me-1" aria-hidden="true"></i>@b.Date.ToString("d MMM yyyy")</span>
+                                                        <span><i class="bi bi-cash me-1" aria-hidden="true"></i><span dir="ltr">@b.TotalAmount.ToString("0.00") @b.Currency</span></span>
                                                     </div>
                                                     <a class="btn btn-sm btn-primary-soft mb-0"
                                                        asp-area="Accounts" asp-controller="Bookings" asp-action="Detail" asp-route-id="@b.Id">
-                                                        Manage Booking
+                                                        @Localizer["Accounts.Bookings.ManageBooking"]
                                                     </a>
                                                 </div>
                                             </div>

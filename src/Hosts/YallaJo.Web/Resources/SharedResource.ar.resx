@@ -12988,4 +12988,25 @@
 <data name="Accounts.Booking.GuestCount" xml:space="preserve">
 <value>{0} ضيف</value>
 </data>
+<data name="Accounts.Bookings.Tab.Upcoming" xml:space="preserve">
+<value>قادمة</value>
+</data>
+<data name="Accounts.Bookings.Tab.Canceled" xml:space="preserve">
+<value>ملغاة</value>
+</data>
+<data name="Accounts.Bookings.Tab.Completed" xml:space="preserve">
+<value>مكتملة</value>
+</data>
+<data name="Accounts.Bookings.EmptyTitle" xml:space="preserve">
+<value>لا توجد حجوزات هنا بعد</value>
+</data>
+<data name="Accounts.Bookings.EmptyMessage" xml:space="preserve">
+<value>عند حجزك لجولة ستظهر هنا.</value>
+</data>
+<data name="Accounts.Bookings.RefLabel" xml:space="preserve">
+<value>المرجع:</value>
+</data>
+<data name="Accounts.Bookings.ManageBooking" xml:space="preserve">
+<value>إدارة الحجز</value>
+</data>
 </root>

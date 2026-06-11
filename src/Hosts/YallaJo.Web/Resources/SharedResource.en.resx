@@ -12988,4 +12988,25 @@
 <data name="Accounts.Booking.GuestCount" xml:space="preserve">
 <value>{0} guest(s)</value>
 </data>
+<data name="Accounts.Bookings.Tab.Upcoming" xml:space="preserve">
+<value>Upcoming</value>
+</data>
+<data name="Accounts.Bookings.Tab.Canceled" xml:space="preserve">
+<value>Canceled</value>
+</data>
+<data name="Accounts.Bookings.Tab.Completed" xml:space="preserve">
+<value>Completed</value>
+</data>
+<data name="Accounts.Bookings.EmptyTitle" xml:space="preserve">
+<value>No bookings here yet</value>
+</data>
+<data name="Accounts.Bookings.EmptyMessage" xml:space="preserve">
+<value>When you book a tour it will show up here.</value>
+</data>
+<data name="Accounts.Bookings.RefLabel" xml:space="preserve">
+<value>Ref:</value>
+</data>
+<data name="Accounts.Bookings.ManageBooking" xml:space="preserve">
+<value>Manage booking</value>
+</data>
 </root>
