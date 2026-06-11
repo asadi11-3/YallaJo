@@ -121,7 +121,12 @@ public sealed class ArticlesController : BaseController
     {
         SetSidebar();
 
-        var result = await _facade.GetEditorAsync(id, ct);
+        // Editor prefetch and image listing are independent reads — fan out (API1).
+        var editorTask = _facade.GetEditorAsync(id, ct);
+        var imagesTask = _images.GetImagesAsync(id, ct);
+        await Task.WhenAll(editorTask, imagesTask);
+
+        var result = await editorTask;
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (!result.IsSuccess || result.Data is null)
@@ -132,8 +137,8 @@ public sealed class ArticlesController : BaseController
 
         var vm = result.Data;
 
-        // Load the article's images (best-effort: a failure here must not block editing).
-        var imagesResult = await _images.GetImagesAsync(id, ct);
+        // Attach the article's images (best-effort: a failure here must not block editing).
+        var imagesResult = await imagesTask;
         if (imagesResult is { IsSuccess: true, Data: { } imagesVm })
             vm.Images = imagesVm;
 

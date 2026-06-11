@@ -13,6 +13,7 @@
             <div class="d-sm-flex align-items-center">
                 <div class="avatar avatar-xl flex-shrink-0">
                     <img class="avatar-img rounded-circle border border-white border-3"
+                         width="112" height="112"
                          src="@(string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl)"
                          alt="@(string.IsNullOrWhiteSpace(Model.DisplayName) ? Localizer["Creator.Nav.DefaultName"].Value : Model.DisplayName)">
                 </div>
