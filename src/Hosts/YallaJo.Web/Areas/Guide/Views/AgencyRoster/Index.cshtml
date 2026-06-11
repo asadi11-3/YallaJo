@@ -1,20 +1,13 @@
-@using System.Globalization
-@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Guide.Models.AgencyRoster
-@using YallaJo.Web.Areas.Guide.Shared
-@using YallaJo.Web.Infrastructure.Authorization
 @model AgencyRosterVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Guide.AgencyRoster.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
     var culture = CultureInfo.CurrentUICulture;
     string Pct(decimal v) => v.ToString("0.##", culture) + "%";
     string DateF(DateTime d) => d.ToString("yyyy-MM-dd", culture);
 }
 
-<partial name="_GuideSidebar" model="sidebar" />
+@await Component.InvokeAsync("GuideSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

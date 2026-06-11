@@ -1,16 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Profile;
-using YallaJo.Web.Areas.Guide.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class ProfileController : BaseController
+public sealed class ProfileController : GuideBaseController
 {
     private const long MaxImageBytes = 5 * 1024 * 1024; // 5 MB
 
@@ -21,7 +16,7 @@ public sealed class ProfileController : BaseController
     [HttpGet("guide/profile")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Profile");
         var result = await _profile.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut)
         {
@@ -41,7 +36,7 @@ public sealed class ProfileController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(ProfileFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Profile");
         if (!ModelState.IsValid)
         {
             return await ReloadAsync(form, ct);
@@ -196,11 +191,5 @@ public sealed class ProfileController : BaseController
 
         error = string.Empty;
         return true;
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "Profile";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

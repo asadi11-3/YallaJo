@@ -1,9 +1,6 @@
 @model YallaJo.Web.Areas.Guide.Models.Reviews.ReviewsVm
-@using YallaJo.Web.Areas.Guide.Shared
 @{
     ViewData["Title"] = "Reviews";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
 
     string Stars(decimal rating)
     {
@@ -22,7 +19,7 @@
     };
 }
 
-<partial name="_GuideSidebar" model="sidebar" />
+@await Component.InvokeAsync("GuideSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

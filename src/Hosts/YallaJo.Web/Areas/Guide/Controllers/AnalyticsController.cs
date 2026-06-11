@@ -1,15 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Analytics;
-using YallaJo.Web.Areas.Guide.Shared;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class AnalyticsController : BaseController
+public sealed class AnalyticsController : GuideBaseController
 {
     private readonly GuideAnalyticsFacade _analytics;
 
@@ -18,7 +13,7 @@ public sealed class AnalyticsController : BaseController
     [HttpGet("guide/analytics")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Analytics");
 
         var result = await _analytics.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut)
@@ -33,11 +28,5 @@ public sealed class AnalyticsController : BaseController
         }
 
         return View(result.Data);
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "Analytics";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

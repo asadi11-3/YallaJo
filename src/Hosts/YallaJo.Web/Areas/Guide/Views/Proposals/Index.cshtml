@@ -1,12 +1,6 @@
 @model YallaJo.Web.Areas.Guide.Models.Proposals.ProposalsVm
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Areas.Guide.Shared
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Guide.Proposals.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
     var culture = CultureInfo.CurrentUICulture;
     string Money(decimal amount, string? currency)
         => amount.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(currency) ? "JOD" : currency);
@@ -24,7 +18,7 @@
     bool CanSubmit(string status) => status.Equals("draft", StringComparison.OrdinalIgnoreCase);
 }
 
-<partial name="_GuideSidebar" model="sidebar" />
+@await Component.InvokeAsync("GuideSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

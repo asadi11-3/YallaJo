@@ -1,20 +1,13 @@
 @model YallaJo.Web.Areas.Guide.Models.MyTours.OfferingDetailVm
-@using System.Globalization
-@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Guide.Models.MyTours
-@using YallaJo.Web.Areas.Guide.Shared
-@using YallaJo.Web.Infrastructure.Authorization
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Guide.Offering.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
     var culture = CultureInfo.CurrentUICulture;
     string Money(decimal a, string? c) => a.ToString("N2", culture) + " " + (string.IsNullOrWhiteSpace(c) ? "JOD" : c);
     string Num(decimal v) => v.ToString("N2", culture);
 }
 
-<partial name="_GuideSidebar" model="sidebar" />
+@await Component.InvokeAsync("GuideSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

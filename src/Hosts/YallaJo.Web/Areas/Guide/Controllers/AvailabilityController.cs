@@ -1,15 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Availability;
-using YallaJo.Web.Areas.Guide.Shared;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class AvailabilityController : BaseController
+public sealed class AvailabilityController : GuideBaseController
 {
     private readonly GuideAvailabilityFacade _availability;
 
@@ -18,7 +13,7 @@ public sealed class AvailabilityController : BaseController
     [HttpGet("guide/availability")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Availability");
         var result = await _availability.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut)
         {
@@ -38,7 +33,7 @@ public sealed class AvailabilityController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Add(AddAvailabilityBlockFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Availability");
 
         if (form.EndDate < form.StartDate)
         {
@@ -95,11 +90,5 @@ public sealed class AvailabilityController : BaseController
         var vm = result.IsSuccess && result.Data is not null ? result.Data : new AvailabilityVm();
         vm.Form = form;
         return View(nameof(Index), vm);
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "Availability";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Guide.ApiClients;
 using YallaJo.Web.Areas.Guide.Models.MyTours;
+using YallaJo.Web.Areas.Guide.Services;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Areas.Guide.Facades;
@@ -11,12 +12,14 @@ public sealed class GuideMyToursFacade
     private const string TimeFormat = "HH:mm";
 
     private readonly MyToursApiClient _api;
+    private readonly GuideIdAccessor _guideId;
     private readonly IOutputCacheStore _cache;
     private readonly ILogger<GuideMyToursFacade> _logger;
 
-    public GuideMyToursFacade(MyToursApiClient api, IOutputCacheStore cache, ILogger<GuideMyToursFacade> logger)
+    public GuideMyToursFacade(MyToursApiClient api, GuideIdAccessor guideId, IOutputCacheStore cache, ILogger<GuideMyToursFacade> logger)
     {
         _api = api;
+        _guideId = guideId;
         _cache = cache;
         _logger = logger;
     }
@@ -169,8 +172,8 @@ public sealed class GuideMyToursFacade
     {
         try
         {
-            var profile = await _api.GetMyProfileAsync(ct);
-            return profile is { IsSuccess: true, Data: not null } ? profile.Data.Id : null;
+            // Delegates to the per-request memoized accessor (kills the GET /guides/me N+1 before every mutation).
+            return await _guideId.GetGuideIdAsync(ct);
         }
         catch (Exception ex)
         {

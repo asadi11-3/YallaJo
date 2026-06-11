@@ -1,15 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Applications;
-using YallaJo.Web.Areas.Guide.Shared;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class ApplicationsController : BaseController
+public sealed class ApplicationsController : GuideBaseController
 {
     private const int DefaultPageSize = 20;
 
@@ -25,7 +20,7 @@ public sealed class ApplicationsController : BaseController
             page = 1;
         }
 
-        SetSidebar();
+        SetNav("Applications");
 
         var result = await _applications.GetAsync(page, DefaultPageSize, ct);
         if (GuardSignOut(result) is { } signOut)
@@ -46,7 +41,7 @@ public sealed class ApplicationsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Apply(ApplyForTourFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Applications");
 
         if (!ModelState.IsValid)
         {
@@ -84,11 +79,5 @@ public sealed class ApplicationsController : BaseController
         var vm = result is { IsSuccess: true, Data: not null } ? result.Data : new ApplicationsVm();
         vm.Form = form;
         return View(nameof(Index), vm);
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "Applications";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

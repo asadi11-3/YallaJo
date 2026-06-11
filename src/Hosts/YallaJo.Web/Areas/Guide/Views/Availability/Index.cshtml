@@ -1,17 +1,11 @@
 @model YallaJo.Web.Areas.Guide.Models.Availability.AvailabilityVm
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Areas.Guide.Shared
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Guide.Availability.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
     var culture = CultureInfo.CurrentUICulture;
     string Date(DateOnly d) => d.ToString("yyyy-MM-dd", culture);
 }
 
-<partial name="_GuideSidebar" model="sidebar" />
+@await Component.InvokeAsync("GuideSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

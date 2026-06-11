@@ -1,15 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Earnings;
-using YallaJo.Web.Areas.Guide.Shared;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class EarningsController : BaseController
+public sealed class EarningsController : GuideBaseController
 {
     private const int DefaultPageSize = 20;
 
@@ -25,7 +20,7 @@ public sealed class EarningsController : BaseController
             page = 1;
         }
 
-        SetSidebar();
+        SetNav("Earnings");
 
         var result = await _earnings.GetAsync(page, DefaultPageSize, ct);
         if (GuardSignOut(result) is { } signOut)
@@ -40,11 +35,5 @@ public sealed class EarningsController : BaseController
         }
 
         return View(result.Data);
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "Earnings";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

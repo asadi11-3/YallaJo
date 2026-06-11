@@ -1,19 +1,13 @@
 @model YallaJo.Web.Areas.Guide.Models.Analytics.AnalyticsVm
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Areas.Guide.Shared
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Guide.Analytics.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
     var culture = CultureInfo.CurrentUICulture;
     string Count(int n) => n.ToString("N0", culture);
     string Pct(decimal value) => value.ToString("N1", culture) + "%";
     int Bar(int value, int max) => max <= 0 ? 0 : (int)Math.Round(value * 100.0 / max);
 }
 
-<partial name="_GuideSidebar" model="sidebar" />
+@await Component.InvokeAsync("GuideSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

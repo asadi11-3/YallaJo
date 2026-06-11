@@ -1,10 +1,7 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.AgencyRoster;
-using YallaJo.Web.Areas.Guide.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
@@ -13,10 +10,8 @@ namespace YallaJo.Web.Areas.Guide.Controllers;
 /// guide self-service <see cref="AgencyController"/> (/guide/agency). Gated by the
 /// AgencyRoster permission; the backend additionally enforces agency-ownership.
 /// </summary>
-[Area("Guide")]
-[Authorize]
 [RequirePermission(WebPermission.AgencyRoster.Read)]
-public sealed class AgencyRosterController : BaseController
+public sealed class AgencyRosterController : GuideBaseController
 {
     private readonly GuideAgencyRosterFacade _facade;
 
@@ -25,7 +20,7 @@ public sealed class AgencyRosterController : BaseController
     [HttpGet("guide/agency/roster")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("AgencyRoster");
         var result = await _facade.GetRosterAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
@@ -42,7 +37,7 @@ public sealed class AgencyRosterController : BaseController
     [RequirePermission(WebPermission.AgencyRoster.Create)]
     public async Task<IActionResult> Invite(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("AgencyRoster");
         var result = await _facade.GetInviteFormAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
@@ -60,7 +55,7 @@ public sealed class AgencyRosterController : BaseController
     [RequirePermission(WebPermission.AgencyRoster.Create)]
     public async Task<IActionResult> Invite(InviteGuideFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("AgencyRoster");
 
         if (!ModelState.IsValid)
         {
@@ -140,11 +135,5 @@ public sealed class AgencyRosterController : BaseController
 
         SetError(errorMessage);
         return RedirectToAction(nameof(Index));
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "AgencyRoster";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

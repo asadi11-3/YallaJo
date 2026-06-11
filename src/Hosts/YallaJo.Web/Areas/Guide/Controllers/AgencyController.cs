@@ -1,16 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Agency;
-using YallaJo.Web.Areas.Guide.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class AgencyController : BaseController
+public sealed class AgencyController : GuideBaseController
 {
     private readonly GuideAgencyFacade _facade;
 
@@ -20,7 +15,7 @@ public sealed class AgencyController : BaseController
     [RequirePermission(WebPermission.GuideAgency.Read)]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Agency");
         var result = await _facade.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
@@ -37,7 +32,7 @@ public sealed class AgencyController : BaseController
     [RequirePermission(WebPermission.GuideAgency.Create)]
     public async Task<IActionResult> Apply(ApplyToAgencyFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Agency");
         if (!ModelState.IsValid) return await ReloadAsync(form, ct);
 
         var result = await _facade.ApplyAsync(form, ct);
@@ -96,11 +91,5 @@ public sealed class AgencyController : BaseController
         var vm = result.IsSuccess && result.Data is not null ? result.Data : new AgencyVm();
         vm.ApplyForm = form;
         return View(nameof(Index), vm);
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "Agency";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

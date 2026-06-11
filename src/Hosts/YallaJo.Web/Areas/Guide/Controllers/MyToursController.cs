@@ -1,17 +1,12 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.MyTours;
-using YallaJo.Web.Areas.Guide.Shared;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class MyToursController : BaseController
+public sealed class MyToursController : GuideBaseController
 {
     private const int DefaultPageSize = 20;
 
@@ -22,7 +17,7 @@ public sealed class MyToursController : BaseController
     [HttpGet("guide/tours")]
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("MyTours");
         if (page < 1)
         {
             page = 1;
@@ -46,7 +41,7 @@ public sealed class MyToursController : BaseController
     [HttpGet("guide/tours/{tourId:guid}")]
     public async Task<IActionResult> Offering(Guid tourId, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("MyTours");
         var result = await _facade.GetOfferingDetailAsync(tourId, ct);
         if (GuardSignOut(result) is { } signOut)
         {
@@ -175,11 +170,5 @@ public sealed class MyToursController : BaseController
 
         SetFlash(result, successMessage);
         return RedirectToAction(nameof(Offering), new { tourId });
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "MyTours";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

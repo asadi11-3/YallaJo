@@ -130,6 +130,10 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 // and exposed through IApiClient so it keeps its resilience pipeline + JWT handler).
 builder.Services.AddFeatureServices();
 
+// GuideIdAccessor: scoped per-request memoization of GET /guides/me (guideId +
+// sidebar identity) — not covered by the ApiClient/Facade suffix convention.
+builder.Services.AddScoped<YallaJo.Web.Areas.Guide.Services.GuideIdAccessor>();
+
 // ── Output caching ────────────────────────────────────────────────────────────
 // Server-side output caching (NOT response caching — browsers send
 // Cache-Control: max-age=0 which defeats that). By default output caching does

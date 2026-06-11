@@ -1,44 +1,46 @@
-@using YallaJo.Web.Infrastructure.Authorization
-@using Microsoft.Extensions.Localization
-@inject YallaJo.Web.Infrastructure.Identity.ICurrentUser CurrentUser
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
-@model YallaJo.Web.Areas.Guide.Shared.GuideSidebarVm
+@using YallaJo.Web.Areas.Guide.ViewComponents
+@using YallaJo.Web.Infrastructure.Identity
+@inject ICurrentUser CurrentUser
+@model GuideSidebarViewModel
 @{
     var active = ViewData["GuideNav"] as string ?? "Dashboard";
     string Nav(string key) => active == key ? "nav-link active" : "nav-link";
     bool Current(string key) => active == key;
     bool Has(string permission) => CurrentUser.HasPermission(permission);
 }
-
 <section class="pt-4">
     <div class="container">
         <div class="card rounded-3 border p-3 pb-2">
             <div class="d-sm-flex align-items-center">
-                <div class="avatar avatar-xl flex-shrink-0">
-                    <img class="avatar-img rounded-circle border border-white border-3" width="80" height="80"
+                <div class="avatar avatar-xl mb-2 mb-sm-0">
+                    <img class="avatar-img rounded-circle border border-white border-3"
+                         width="80" height="80"
                          src="@(string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl)"
-                         alt="@Localizer["Guide.Nav.AvatarAlt"]">
+                         alt="@Localizer["Guide.Nav.AvatarAlt"]" />
                 </div>
                 <div class="ms-sm-3 mt-2 mt-sm-0">
-                    <h2 class="h5 mb-0"><span class="fw-light">@Localizer["Guide.Nav.Greeting"]</span> @(string.IsNullOrWhiteSpace(Model.DisplayName) ? Localizer["Guide.Nav.DefaultName"].Value : Model.DisplayName)</h2>
-                    @if (!string.IsNullOrWhiteSpace(Model.Email))
-                    {
-                        <span class="small text-body-secondary"><bdi dir="ltr">@Model.Email</bdi></span>
-                    }
+                    <h2 class="h5 mb-0">
+                        <span class="fw-light">@Localizer["Guide.Nav.Greeting"]</span>
+                        @(string.IsNullOrWhiteSpace(Model.DisplayName) ? Localizer["Guide.Nav.DefaultName"].Value : Model.DisplayName)
+                    </h2>
                 </div>
-                <span class="badge bg-primary-soft ms-sm-auto mt-2 mt-sm-0">@Localizer["Guide.Nav.Badge"]</span>
+                <div class="ms-sm-auto mt-2 mt-sm-0">
+                    <span class="badge bg-primary-soft">@Localizer["Guide.Nav.Badge"]</span>
+                </div>
             </div>
 
-            <button class="btn btn-primary w-100 d-block d-xl-none mt-3"
-                    type="button" data-bs-toggle="offcanvas" data-bs-target="#guideDashboardMenu"
+            <button class="btn btn-primary w-100 d-block d-xl-none mt-3" type="button"
+                    data-bs-toggle="offcanvas" data-bs-target="#guideDashboardMenu"
                     aria-controls="guideDashboardMenu">
-                <i class="fa-solid fa-bars fa-fw me-1" aria-hidden="true"></i> @Localizer["Guide.Nav.Menu"]
+                <i class="fa-solid fa-bars me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Menu"]
             </button>
 
-            <div class="offcanvas-xl offcanvas-end mt-xl-3" tabindex="-1" id="guideDashboardMenu" aria-label="@Localizer["Guide.Nav.Aria"]">
-                <div class="offcanvas-header">
+            <div class="offcanvas-xl offcanvas-end mt-xl-3" tabindex="-1" id="guideDashboardMenu"
+                 aria-label="@Localizer["Guide.Nav.Aria"]">
+                <div class="offcanvas-header justify-content-between">
                     <h2 class="offcanvas-title h5">@Localizer["Guide.Nav.Menu"]</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#guideDashboardMenu" aria-label="@Localizer["Guide.Nav.Close"]"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
+                            data-bs-target="#guideDashboardMenu" aria-label="@Localizer["Guide.Nav.Close"]"></button>
                 </div>
                 <div class="offcanvas-body p-3 p-xl-0">
                     <nav class="navbar navbar-expand-xl w-100" aria-label="@Localizer["Guide.Nav.Aria"]">

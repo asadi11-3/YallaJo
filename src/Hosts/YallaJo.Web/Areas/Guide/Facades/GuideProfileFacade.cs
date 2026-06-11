@@ -1,5 +1,6 @@
 using YallaJo.Web.Areas.Guide.ApiClients;
 using YallaJo.Web.Areas.Guide.Models.Profile;
+using YallaJo.Web.Areas.Guide.Services;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Areas.Guide.Facades;
@@ -10,11 +11,13 @@ namespace YallaJo.Web.Areas.Guide.Facades;
 public sealed class GuideProfileFacade
 {
     private readonly ProfileApiClient _api;
+    private readonly GuideIdAccessor _guideId;
     private readonly ILogger<GuideProfileFacade> _logger;
 
-    public GuideProfileFacade(ProfileApiClient api, ILogger<GuideProfileFacade> logger)
+    public GuideProfileFacade(ProfileApiClient api, GuideIdAccessor guideId, ILogger<GuideProfileFacade> logger)
     {
         _api = api;
+        _guideId = guideId;
         _logger = logger;
     }
 
@@ -107,7 +110,14 @@ public sealed class GuideProfileFacade
             form.HasFirstAid,
             string.IsNullOrWhiteSpace(form.MoTALicenseNumber) ? null : form.MoTALicenseNumber);
 
-        return await _api.UpdateProfileAsync(guideId.Value, request, ct);
+        var result = await _api.UpdateProfileAsync(guideId.Value, request, ct);
+        if (result.IsSuccess)
+        {
+            // Profile fields feed the cached sidebar identity — drop the stale entry.
+            _guideId.Invalidate();
+        }
+
+        return result;
     }
 
     public async Task<ApiResult> AddLanguageAsync(Guid languageId, string proficiency, CancellationToken ct = default)
@@ -179,18 +189,21 @@ public sealed class GuideProfileFacade
         }
 
         var url = upload.Data.Url!;
-        return isAvatar
+        var persist = isAvatar
             ? await _api.UpdateAvatarAsync(url, ct)
             : await _api.UpdateCoverImageAsync(url, ct);
+        if (persist.IsSuccess && isAvatar)
+        {
+            // Avatar feeds the cached sidebar identity — drop the stale entry.
+            _guideId.Invalidate();
+        }
+
+        return persist;
     }
 
-    private async Task<Guid?> ResolveGuideIdAsync(CancellationToken ct)
-    {
-        var profileResult = await _api.GetMyProfileAsync(ct);
-        return profileResult is { IsSuccess: true, Data: not null }
-            ? profileResult.Data.Id
-            : null;
-    }
+    private Task<Guid?> ResolveGuideIdAsync(CancellationToken ct) =>
+        // Delegates to the per-request memoized accessor (kills the GET /guides/me N+1 before every mutation).
+        _guideId.GetGuideIdAsync(ct);
 
     private async Task<List<SpecializationResponse>> SafeSpecializationsAsync(CancellationToken ct)
     {

@@ -1,15 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Proposals;
-using YallaJo.Web.Areas.Guide.Shared;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class ProposalsController : BaseController
+public sealed class ProposalsController : GuideBaseController
 {
     private readonly GuideProposalsFacade _proposals;
 
@@ -18,7 +13,7 @@ public sealed class ProposalsController : BaseController
     [HttpGet("guide/proposals")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Proposals");
         var result = await _proposals.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
@@ -34,7 +29,7 @@ public sealed class ProposalsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateProposalFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Proposals");
         if (!ModelState.IsValid)
         {
             return await ReloadAsync(form, ct);
@@ -77,11 +72,5 @@ public sealed class ProposalsController : BaseController
         var vm = result.IsSuccess && result.Data is not null ? result.Data : new ProposalsVm();
         vm.Form = form;
         return View(nameof(Index), vm);
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "Proposals";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }
