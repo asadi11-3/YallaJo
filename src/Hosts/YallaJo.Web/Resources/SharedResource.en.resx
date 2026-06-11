@@ -12841,4 +12841,13 @@
 <data name="Accounts.Notifications.MarkAllRead" xml:space="preserve">
 <value>Mark all read</value>
 </data>
+<data name="Accounts.Wishlist.Removed" xml:space="preserve">
+<value>Removed from your wishlist.</value>
+</data>
+<data name="Accounts.Wishlist.Undo" xml:space="preserve">
+<value>Undo</value>
+</data>
+<data name="Accounts.Wishlist.RemoveFailed" xml:space="preserve">
+<value>Could not remove the item. Please try again.</value>
+</data>
 </root>

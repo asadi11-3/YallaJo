@@ -12841,4 +12841,13 @@
 <data name="Accounts.Notifications.MarkAllRead" xml:space="preserve">
 <value>تعليم الكل كمقروء</value>
 </data>
+<data name="Accounts.Wishlist.Removed" xml:space="preserve">
+<value>تمت الإزالة من قائمة أمنياتك.</value>
+</data>
+<data name="Accounts.Wishlist.Undo" xml:space="preserve">
+<value>تراجع</value>
+</data>
+<data name="Accounts.Wishlist.RemoveFailed" xml:space="preserve">
+<value>تعذّر إزالة العنصر. يرجى المحاولة مرة أخرى.</value>
+</data>
 </root>

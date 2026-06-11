@@ -20,6 +20,9 @@ public sealed class WishlistController : BaseController
         _profile = profile;
     }
 
+    // TODO(backend) Accounts plan Phase 4: add GET /api/v1/social/favorites/with-details
+    // (kills the per-item N+1 hydration) and GET /api/v1/social/favorites/count
+    // (WL4 navbar wishlist badge). Deferred: perf/nice-to-have, not correctness.
     [HttpGet("accounts/wishlist")]
     public async Task<IActionResult> Index(CancellationToken ct)
     {

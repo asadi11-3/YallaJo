@@ -52,7 +52,11 @@
                         }
                         else
                         {
-                            <div class="row g-3" id="wishlistGrid">
+                            @* Phase 4b: optimistic remove + Undo (WL2/WL3, NF6); native form POST still works with JS off (PE1). *@
+                            <div class="row g-3" id="wishlistGrid" data-yj-component="wishlist" aria-live="polite"
+                                 data-removed-text="@Localizer["Accounts.Wishlist.Removed"]"
+                                 data-undo-text="@Localizer["Accounts.Wishlist.Undo"]"
+                                 data-failed-text="@Localizer["Accounts.Wishlist.RemoveFailed"]">
                                 @foreach (var item in Model.Items)
                                 {
                                     <div class="col-md-6 wishlist-item"
@@ -118,29 +122,5 @@
 </section>
 
 @section Scripts {
-    <script>
-        (function () {
-            var sort = document.getElementById('wishlistSort');
-            var grid = document.getElementById('wishlistGrid');
-            if (!sort || !grid) return;
-
-            sort.addEventListener('change', function () {
-                var items = Array.prototype.slice.call(grid.querySelectorAll('.wishlist-item'));
-                var mode = sort.value;
-                items.sort(function (a, b) {
-                    switch (mode) {
-                        case 'title':
-                            return (a.dataset.title || '').localeCompare(b.dataset.title || '');
-                        case 'rating':
-                            return parseFloat(b.dataset.rating || '0') - parseFloat(a.dataset.rating || '0');
-                        case 'price':
-                            return parseFloat(a.dataset.price || '0') - parseFloat(b.dataset.price || '0');
-                        default: // recent
-                            return new Date(b.dataset.added) - new Date(a.dataset.added);
-                    }
-                });
-                items.forEach(function (el) { grid.appendChild(el); });
-            });
-        })();
-    </script>
+    <script src="~/assets/js/accounts-wishlist.js" asp-append-version="true"></script>
 }
