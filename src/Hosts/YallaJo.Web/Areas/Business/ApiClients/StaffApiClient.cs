@@ -19,4 +19,24 @@ public sealed class StaffApiClient
 
     public Task<ApiResult> RemoveAsync(Guid staffId, CancellationToken ct = default) =>
         _api.DeleteAsync($"{Base}/staff/{staffId:D}", ct);
+
+    /// <summary>User lookup (B1): typeahead via <paramref name="q"/> or batch enrichment via <paramref name="ids"/>.</summary>
+    public Task<ApiResult<List<UserLookupItemResponse>>> LookupUsersAsync(
+        string? q, IEnumerable<Guid>? ids = null, CancellationToken ct = default)
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            query.Add($"q={Uri.EscapeDataString(q.Trim())}");
+        }
+
+        var idList = ids?.Distinct().ToList();
+        if (idList is { Count: > 0 })
+        {
+            query.Add($"ids={string.Join(",", idList.Select(i => i.ToString("D")))}");
+        }
+
+        query.Add("limit=20");
+        return _api.GetAsync<List<UserLookupItemResponse>>($"/api/v1/users/lookup?{string.Join("&", query)}", ct);
+    }
 }

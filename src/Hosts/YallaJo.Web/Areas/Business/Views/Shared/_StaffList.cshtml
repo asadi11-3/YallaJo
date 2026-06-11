@@ -40,9 +40,22 @@
                         @foreach (var s in Model.Staff)
                         {
                             ordinal++;
-                            var memberLabel = Localizer["Business.Staff.StaffLabel", Count(ordinal)].Value;
+                            @* D-5: real identity from B1 enrichment; ordinal label only as fallback. *@
+                            var memberLabel = !string.IsNullOrWhiteSpace(s.DisplayName)
+                                ? s.DisplayName!
+                                : Localizer["Business.Staff.StaffLabel", Count(ordinal)].Value;
                             <tr>
-                                <td class="fw-semibold">@memberLabel</td>
+                                <td>
+                                    <span class="fw-semibold d-block"><bdi>@memberLabel</bdi></span>
+                                    @if (!string.IsNullOrWhiteSpace(s.Email))
+                                    {
+                                        <small class="text-body-secondary"><bdi dir="ltr">@s.Email</bdi></small>
+                                    }
+                                    else if (string.IsNullOrWhiteSpace(s.DisplayName))
+                                    {
+                                        <small class="text-body-secondary font-data"><bdi dir="ltr">@s.UserId</bdi></small>
+                                    }
+                                </td>
                                 <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@Localizer["Business.Staff.Role." + s.Role]</span></td>
                                 <td class="text-end">
                                     <permission require="@WebPermission.BusinessStaff.Delete">

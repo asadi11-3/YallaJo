@@ -113,6 +113,18 @@ public sealed class MyBusinessesFacade
         return result;
     }
 
+    /// <summary>
+    /// Typeahead place lookup for the Register form's searchable picker.
+    /// Failures are non-fatal for the page; the controller returns an empty list.
+    /// </summary>
+    public async Task<ApiResult<List<PlaceLookupItemResponse>>> LookupPlacesAsync(string term, CancellationToken ct = default)
+    {
+        var result = await _api.LookupPlacesAsync(term, 10, ct);
+        if (result.IsUnauthorized)
+            return ApiResult<List<PlaceLookupItemResponse>>.ForceSignOut();
+        return result;
+    }
+
     public async Task<ApiResult> ResubmitAsync(Guid id, CancellationToken ct = default)
     {
         var result = await Normalize(_api.ResubmitAsync(id, ct), "Could not resubmit the business for review.");

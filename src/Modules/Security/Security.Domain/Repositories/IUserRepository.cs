@@ -24,4 +24,14 @@ public interface IUserRepository : IRepository<User, Guid>
 
     /// <summary>Stored password hash for the user, or null when the user does not exist. B6.</summary>
     Task<string?> GetPasswordHashAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Lightweight lookup for typeahead pickers (B1): matches active users by primary-email
+    /// substring (<paramref name="query"/>) and/or exact ids. Results capped at <paramref name="limit"/>.
+    /// </summary>
+    Task<IReadOnlyList<User>> SearchAsync(
+        string? query,
+        IReadOnlyCollection<Guid>? ids,
+        int limit,
+        CancellationToken ct = default);
 }

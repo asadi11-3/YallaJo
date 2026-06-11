@@ -17,3 +17,12 @@ public sealed class BusinessStaffItemResponse
 }
 
 public sealed record AddBusinessStaffApiRequest(Guid UserId, BusinessStaffRole Role);
+
+/// <summary>Row shape of GET /api/v1/users/lookup (B1) — typeahead + batch identity enrichment.</summary>
+public sealed class UserLookupItemResponse
+{
+    public Guid Id { get; set; }
+    public string DisplayName { get; set; } = "";
+    public string? Email { get; set; }
+    public string? AvatarUrl { get; set; }
+}

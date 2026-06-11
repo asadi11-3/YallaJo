@@ -12,6 +12,7 @@ using Security.Application.Queries.Dtos;
 using Security.Application.Queries.GetSecurityMe;
 using Security.Application.Queries.GetUser;
 using Security.Application.Queries.ListUsers;
+using Security.Application.Queries.LookupUsers;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -27,6 +28,7 @@ internal static class UserEndpoints
     {
         MapMeEndpoint(group);
         MapListUsersEndpoint(group);
+        MapLookupUsersEndpoint(group);
         MapGetUserEndpoint(group);
         MapActivateUserEndpoint(group);
         MapDeactivateUserEndpoint(group);
@@ -68,6 +70,67 @@ internal static class UserEndpoints
         .Produces<PagedUsersResponse>(StatusCodes.Status200OK)
         .WithSummary("List users with pagination")
         .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Read))
+        .RequireAuthorization();
+    }
+
+    /// <summary>
+    /// [Backend] B1: lightweight user lookup for typeahead pickers and batch identity
+    /// enrichment. Auth-only (no admin permission); anti-enumeration mitigations:
+    /// min query length 2, result cap 20, ids cap 50, bare requests rejected with 400,
+    /// and the DTO carries no roles/claims/state.
+    /// </summary>
+    private static void MapLookupUsersEndpoint(RouteGroupBuilder group)
+    {
+        group.MapGet("/users/lookup", async (
+            ISender sender,
+            CancellationToken ct,
+            string? q = null,
+            string? ids = null,
+            int limit = 10) =>
+        {
+            var query = string.IsNullOrWhiteSpace(q) ? null : q.Trim();
+            if (query is { Length: < 2 })
+            {
+                return Results.BadRequest(new { error = "Query must be at least 2 characters." });
+            }
+
+            List<Guid>? idList = null;
+            if (!string.IsNullOrWhiteSpace(ids))
+            {
+                idList = [];
+                foreach (var token in ids.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    if (!Guid.TryParse(token, out var parsed))
+                    {
+                        return Results.BadRequest(new { error = "ids must be a comma-separated list of GUIDs." });
+                    }
+
+                    idList.Add(parsed);
+                }
+
+                if (idList.Count > 50)
+                {
+                    return Results.BadRequest(new { error = "At most 50 ids are allowed per request." });
+                }
+            }
+
+            if (query is null && idList is not { Count: > 0 })
+            {
+                return Results.BadRequest(new { error = "Provide a search query (q) or an id list (ids)." });
+            }
+
+            var clampedLimit = Math.Clamp(limit, 1, 20);
+            var effectiveLimit = idList is { Count: > 0 }
+                ? Math.Max(clampedLimit, idList.Count) // batch enrichment must return every requested id
+                : clampedLimit;
+
+            var result = await sender.Send(new LookupUsersQuery(query, idList, effectiveLimit), ct);
+            return result.ToApiResult();
+        })
+        .WithName("LookupUsers")
+        .Produces<IReadOnlyList<UserLookupDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .WithSummary("Typeahead/batch user lookup by email or ids (max 20 rows; auth required)")
         .RequireAuthorization();
     }
 

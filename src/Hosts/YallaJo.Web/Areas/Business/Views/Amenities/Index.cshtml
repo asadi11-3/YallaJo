@@ -1,4 +1,5 @@
 @using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Business.Models.Amenities
 @using YallaJo.Web.Areas.Business.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Business.Models.Amenities.AmenitiesVm
@@ -53,7 +54,14 @@
                                         </div>
                                         <div class="mb-3">
                                             <label asp-for="Form.Icon" class="form-label">@Localizer["Business.Amenities.Icon"]</label>
-                                            <input asp-for="Form.Icon" class="form-control" dir="ltr" placeholder="fa-wifi" aria-describedby="amenity-icon-help" />
+                                            @* D-13: curated icon choices instead of free-text Font Awesome class entry. *@
+                                            <select asp-for="Form.Icon" class="form-select" aria-describedby="amenity-icon-help">
+                                                <option value="">@Localizer["Business.Amenities.IconNone"]</option>
+                                                @foreach (var (value, suffix) in AmenitiesMapper.IconOptions)
+                                                {
+                                                    <option value="@value">@Localizer["Business.Amenities.Icon." + suffix]</option>
+                                                }
+                                            </select>
                                             <div id="amenity-icon-help" class="form-text">@Localizer["Business.Amenities.IconHelp"]</div>
                                             <span asp-validation-for="Form.Icon" class="text-danger small" role="alert"></span>
                                         </div>

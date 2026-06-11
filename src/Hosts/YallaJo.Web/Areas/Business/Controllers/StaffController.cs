@@ -36,6 +36,38 @@ public sealed class StaffController : BusinessControllerBase
         return View(result.Data);
     }
 
+    /// <summary>
+    /// JSON proxy for the staff picker typeahead (F10/JS5 — the browser never calls the API host).
+    /// Same permission as adding staff; debounced 300ms client-side (J4).
+    /// </summary>
+    [HttpGet("business/businesses/{id:guid}/staff/lookup")]
+    [RequirePermission(WebPermission.BusinessStaff.Create)]
+    public async Task<IActionResult> Lookup(Guid id, string? q, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
+        {
+            return Json(Array.Empty<object>());
+        }
+
+        var result = await _facade.LookupAsync(q.Trim(), ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            return Json(Array.Empty<object>());
+        }
+
+        return Json(result.Data.Select(u => new
+        {
+            id = u.Id,
+            displayName = u.DisplayName,
+            email = u.Email,
+        }));
+    }
+
     [HttpPost("business/businesses/{id:guid}/staff/add")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.BusinessStaff.Create)]

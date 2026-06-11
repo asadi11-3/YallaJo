@@ -12,7 +12,12 @@ public sealed class StaffVm
     public bool HasStaff => Staff.Count > 0;
 }
 
-public sealed record StaffRowVm(Guid Id, Guid UserId, BusinessStaffRole Role);
+public sealed record StaffRowVm(
+    Guid Id,
+    Guid UserId,
+    BusinessStaffRole Role,
+    string? DisplayName = null,
+    string? Email = null);
 
 public sealed class AddStaffFormVm
 {

@@ -47,7 +47,12 @@
                                     <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post" data-loading
                                           data-crud-success="@Localizer["Business.Staff.Added"]">
                                         @Html.AntiForgeryToken()
-                                        <div class="mb-3">
+                                        @* Searchable user picker (F10): JS upgrades the raw ID input to a combobox; without JS the labeled input stays usable (PE1). *@
+                                        <div class="mb-3"
+                                             data-yj-component="staff-picker"
+                                             data-lookup-url="@Url.Action("Lookup", "Staff", new { id = Model.BusinessId })"
+                                             data-search-placeholder="@Localizer["Business.Staff.SearchPlaceholder"]"
+                                             data-no-results="@Localizer["Business.Staff.NoResults"]">
                                             <label asp-for="Form.UserId" class="form-label">@Localizer["Business.Staff.UserId"]</label>
                                             <input asp-for="Form.UserId" class="form-control font-data" dir="ltr" autocomplete="off"
                                                    aria-describedby="staff-user-help" />
@@ -87,4 +92,5 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/assets/js/business-crud.js" asp-append-version="true" defer></script>
+    <script src="~/assets/js/business-staff.js" asp-append-version="true" defer></script>
 }

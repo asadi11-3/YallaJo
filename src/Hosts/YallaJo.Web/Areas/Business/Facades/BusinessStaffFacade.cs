@@ -42,15 +42,40 @@ public sealed class BusinessStaffFacade
             return ApiResult<StaffVm>.Fail(staff.StatusCode, staff.Error ?? "Could not load the staff members.");
         }
 
+        // D-5/API7: one batch ids= lookup enriches every row with a real identity.
+        // Lookup failures are non-fatal — rows fall back to the raw UserId display.
+        IReadOnlyDictionary<Guid, UserLookupItemResponse>? lookup = null;
+        var userIds = staff.Data.Select(s => s.UserId).Distinct().ToList();
+        if (userIds.Count > 0)
+        {
+            var users = await _api.LookupUsersAsync(q: null, ids: userIds, ct);
+            if (users is { IsSuccess: true, Data: not null })
+            {
+                lookup = users.Data.ToDictionary(u => u.Id);
+            }
+        }
+
         var vm = new StaffVm
         {
             BusinessId = businessId,
             BusinessName = detail.Data.Name,
             Status = detail.Data.Status,
-            Staff = StaffMapper.ToRows(staff.Data),
+            Staff = StaffMapper.ToRows(staff.Data, lookup),
         };
 
         return ApiResult<StaffVm>.Ok(vm);
+    }
+
+    /// <summary>Typeahead user search for the staff picker (F10). Returns normalized failures.</summary>
+    public async Task<ApiResult<List<UserLookupItemResponse>>> LookupAsync(string q, CancellationToken ct = default)
+    {
+        var result = await _api.LookupUsersAsync(q, ids: null, ct);
+        if (result.IsUnauthorized)
+        {
+            return ApiResult<List<UserLookupItemResponse>>.ForceSignOut();
+        }
+
+        return result;
     }
 
     public async Task<ApiResult> AddAsync(Guid businessId, AddStaffFormVm form, CancellationToken ct = default)

@@ -51,6 +51,22 @@ public sealed class MyBusinessesApiClient
         return _api.GetAsync<PlaceOptionsResponse>(url, ct);
     }
 
+    /// <summary>
+    /// Typeahead place search (GET /api/v1/places/lookup). Powers the Register
+    /// form's searchable place picker; the full options list remains the no-JS path.
+    /// </summary>
+    public Task<ApiResult<List<PlaceLookupItemResponse>>> LookupPlacesAsync(
+        string term, int pageSize = 10, CancellationToken ct = default)
+    {
+        var query = new Dictionary<string, string?>
+        {
+            ["term"] = term,
+            ["pageSize"] = pageSize.ToString(CultureInfo.InvariantCulture),
+        };
+        var url = QueryHelpers.AddQueryString("/api/v1/places/lookup", query);
+        return _api.GetAsync<List<PlaceLookupItemResponse>>(url, ct);
+    }
+
     public Task<ApiResult> UpdateAsync(Guid id, UpdateBusinessApiRequest request, CancellationToken ct = default)
         => _api.PutAsync($"{Base}/{id:D}", request, ct);
 

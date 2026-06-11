@@ -70,7 +70,12 @@
 
                                     <div class="col-md-8">
                                         <label asp-for="Form.PlaceId" class="form-label">@Localizer["Business.Register.Place"]</label>
-                                        <select asp-for="Form.PlaceId" id="placeSelect" class="form-select" aria-describedby="place-help">
+                                        @* D-12: business-register.js upgrades this select to a typeahead via /places/lookup; the select stays as the no-JS path (PE1). *@
+                                        <select asp-for="Form.PlaceId" id="placeSelect" class="form-select" aria-describedby="place-help"
+                                                data-lookup-url="@Url.Action("PlacesLookup", "MyBusinesses")"
+                                                data-search-placeholder="@Localizer["Business.Register.PlaceSearchPlaceholder"]"
+                                                data-search-label="@Localizer["Business.Register.PlaceSearchLabel"]"
+                                                data-no-results="@Localizer["Business.Register.PlaceNoResults"]">
                                             <option value="">@Localizer["Business.Register.PlaceChoose"]</option>
                                             @foreach (var p in Model.Places)
                                             {

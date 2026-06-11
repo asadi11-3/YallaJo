@@ -104,6 +104,26 @@ public sealed class MyBusinessesController : BaseController
         return RedirectToAction(nameof(Manage), new { id });
     }
 
+    /// <summary>
+    /// JSON proxy for the Register form's place typeahead (JS5: the browser never
+    /// calls the API host directly). Backed by GET /api/v1/places/lookup.
+    /// </summary>
+    [HttpGet("business/businesses/places/lookup")]
+    [RequirePermission(WebPermission.Business.Create)]
+    public async Task<IActionResult> PlacesLookup(string? q, CancellationToken ct = default)
+    {
+        var term = q?.Trim();
+        if (string.IsNullOrEmpty(term) || term.Length < 2)
+            return Json(Array.Empty<object>());
+
+        var result = await _facade.LookupPlacesAsync(term, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess || result.Data is null)
+            return Json(Array.Empty<object>());
+
+        return Json(result.Data.Select(p => new { id = p.Id, name = p.Name, city = p.City }));
+    }
+
     [HttpPost("business/businesses/{id:guid}/resubmit")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.Business.Submit)]

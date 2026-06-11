@@ -13549,4 +13549,82 @@
 <data name="Business.Services.Added" xml:space="preserve">
 <value>تمت إضافة الخدمة.</value>
 </data>
+<data name="Business.Staff.SearchPlaceholder" xml:space="preserve">
+<value>ابحث بالبريد الإلكتروني…</value>
+</data>
+<data name="Business.Staff.NoResults" xml:space="preserve">
+<value>لا يوجد مستخدمون مطابقون.</value>
+</data>
+<data name="Business.Register.PlaceSearchPlaceholder" xml:space="preserve">
+<value>ابحث عن الأماكن…</value>
+</data>
+<data name="Business.Register.PlaceSearchLabel" xml:space="preserve">
+<value>البحث عن الأماكن</value>
+</data>
+<data name="Business.Register.PlaceNoResults" xml:space="preserve">
+<value>لا توجد أماكن مطابقة.</value>
+</data>
+<data name="Business.Amenities.IconNone" xml:space="preserve">
+<value>بدون أيقونة</value>
+</data>
+<data name="Business.Amenities.Icon.Wifi" xml:space="preserve">
+<value>واي فاي</value>
+</data>
+<data name="Business.Amenities.Icon.Parking" xml:space="preserve">
+<value>موقف سيارات</value>
+</data>
+<data name="Business.Amenities.Icon.Restaurant" xml:space="preserve">
+<value>مطعم</value>
+</data>
+<data name="Business.Amenities.Icon.Coffee" xml:space="preserve">
+<value>قهوة</value>
+</data>
+<data name="Business.Amenities.Icon.AirConditioning" xml:space="preserve">
+<value>تكييف هواء</value>
+</data>
+<data name="Business.Amenities.Icon.Wheelchair" xml:space="preserve">
+<value>مدخل لذوي الإعاقة</value>
+</data>
+<data name="Business.Amenities.Icon.PetFriendly" xml:space="preserve">
+<value>مناسب للحيوانات الأليفة</value>
+</data>
+<data name="Business.Amenities.Icon.Pool" xml:space="preserve">
+<value>مسبح</value>
+</data>
+<data name="Business.Amenities.Icon.Gym" xml:space="preserve">
+<value>نادٍ رياضي</value>
+</data>
+<data name="Business.Amenities.Icon.Spa" xml:space="preserve">
+<value>سبا</value>
+</data>
+<data name="Business.Amenities.Icon.Rooms" xml:space="preserve">
+<value>غرف</value>
+</data>
+<data name="Business.Amenities.Icon.Valet" xml:space="preserve">
+<value>خدمة صف السيارات</value>
+</data>
+<data name="Business.Amenities.Icon.LiveMusic" xml:space="preserve">
+<value>موسيقى حية</value>
+</data>
+<data name="Business.Amenities.Icon.Tv" xml:space="preserve">
+<value>تلفاز</value>
+</data>
+<data name="Business.Amenities.Icon.FamilyFriendly" xml:space="preserve">
+<value>مناسب للعائلات</value>
+</data>
+<data name="Business.Amenities.Icon.SmokingArea" xml:space="preserve">
+<value>منطقة تدخين</value>
+</data>
+<data name="Business.Amenities.Icon.CardPayment" xml:space="preserve">
+<value>الدفع بالبطاقة</value>
+</data>
+<data name="Business.Amenities.Icon.EvCharging" xml:space="preserve">
+<value>شحن السيارات الكهربائية</value>
+</data>
+<data name="Business.Amenities.Icon.Security" xml:space="preserve">
+<value>أمن</value>
+</data>
+<data name="Business.Amenities.Icon.Garden" xml:space="preserve">
+<value>حديقة</value>
+</data>
 </root>

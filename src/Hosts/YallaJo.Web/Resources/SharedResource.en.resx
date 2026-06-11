@@ -13549,4 +13549,82 @@
 <data name="Business.Services.Added" xml:space="preserve">
 <value>Service added.</value>
 </data>
+<data name="Business.Staff.SearchPlaceholder" xml:space="preserve">
+<value>Search by email…</value>
+</data>
+<data name="Business.Staff.NoResults" xml:space="preserve">
+<value>No matching users.</value>
+</data>
+<data name="Business.Register.PlaceSearchPlaceholder" xml:space="preserve">
+<value>Search places…</value>
+</data>
+<data name="Business.Register.PlaceSearchLabel" xml:space="preserve">
+<value>Search places</value>
+</data>
+<data name="Business.Register.PlaceNoResults" xml:space="preserve">
+<value>No matching places.</value>
+</data>
+<data name="Business.Amenities.IconNone" xml:space="preserve">
+<value>No icon</value>
+</data>
+<data name="Business.Amenities.Icon.Wifi" xml:space="preserve">
+<value>Wi-Fi</value>
+</data>
+<data name="Business.Amenities.Icon.Parking" xml:space="preserve">
+<value>Parking</value>
+</data>
+<data name="Business.Amenities.Icon.Restaurant" xml:space="preserve">
+<value>Restaurant</value>
+</data>
+<data name="Business.Amenities.Icon.Coffee" xml:space="preserve">
+<value>Coffee</value>
+</data>
+<data name="Business.Amenities.Icon.AirConditioning" xml:space="preserve">
+<value>Air conditioning</value>
+</data>
+<data name="Business.Amenities.Icon.Wheelchair" xml:space="preserve">
+<value>Wheelchair access</value>
+</data>
+<data name="Business.Amenities.Icon.PetFriendly" xml:space="preserve">
+<value>Pet friendly</value>
+</data>
+<data name="Business.Amenities.Icon.Pool" xml:space="preserve">
+<value>Swimming pool</value>
+</data>
+<data name="Business.Amenities.Icon.Gym" xml:space="preserve">
+<value>Gym</value>
+</data>
+<data name="Business.Amenities.Icon.Spa" xml:space="preserve">
+<value>Spa</value>
+</data>
+<data name="Business.Amenities.Icon.Rooms" xml:space="preserve">
+<value>Rooms</value>
+</data>
+<data name="Business.Amenities.Icon.Valet" xml:space="preserve">
+<value>Valet parking</value>
+</data>
+<data name="Business.Amenities.Icon.LiveMusic" xml:space="preserve">
+<value>Live music</value>
+</data>
+<data name="Business.Amenities.Icon.Tv" xml:space="preserve">
+<value>TV</value>
+</data>
+<data name="Business.Amenities.Icon.FamilyFriendly" xml:space="preserve">
+<value>Family friendly</value>
+</data>
+<data name="Business.Amenities.Icon.SmokingArea" xml:space="preserve">
+<value>Smoking area</value>
+</data>
+<data name="Business.Amenities.Icon.CardPayment" xml:space="preserve">
+<value>Card payment</value>
+</data>
+<data name="Business.Amenities.Icon.EvCharging" xml:space="preserve">
+<value>EV charging</value>
+</data>
+<data name="Business.Amenities.Icon.Security" xml:space="preserve">
+<value>Security</value>
+</data>
+<data name="Business.Amenities.Icon.Garden" xml:space="preserve">
+<value>Garden</value>
+</data>
 </root>
