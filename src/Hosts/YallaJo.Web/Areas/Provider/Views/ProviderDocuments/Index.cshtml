@@ -67,7 +67,7 @@
                     <div class="card-body">
                         @if (!Model.HasDocuments)
                         {
-                            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.Documents.EmptyTitle"].Value }, { "message", Localizer["Provider.Documents.EmptyMessage"].Value } })" />
+                            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.Documents.EmptyTitle"].Value, ["message"] = Localizer["Provider.Documents.EmptyMessage"].Value })" />
                         }
                         else
                         {

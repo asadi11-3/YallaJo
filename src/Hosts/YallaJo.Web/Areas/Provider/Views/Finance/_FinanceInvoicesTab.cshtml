@@ -22,7 +22,7 @@
 }
 @if (!Model.HasInvoices)
 {
-    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.Finance.NoInvoices"].Value } })" />
+    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["message"] = Localizer["Provider.Finance.NoInvoices"].Value })" />
 }
 else
 {

@@ -40,7 +40,7 @@
 
 @if (!Model.HasMethods)
 {
-    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.Finance.NoMethods"].Value } })" />
+    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["message"] = Localizer["Provider.Finance.NoMethods"].Value })" />
 }
 else
 {

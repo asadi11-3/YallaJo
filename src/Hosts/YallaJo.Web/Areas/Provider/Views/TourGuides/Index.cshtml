@@ -58,7 +58,7 @@
             <div class="card-body">
                 @if (!Model.HasGuides)
                 {
-                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.TourGuides.Empty"].Value }, { "ctaText", Localizer["Provider.TourGuides.Assign"].Value }, { "ctaUrl", "#assign-guide" }, { "ctaClass", "btn btn-sm btn-primary-soft" }, { "ctaPermission", WebPermission.TourGuide.Update } })" />
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["message"] = Localizer["Provider.TourGuides.Empty"].Value, ["ctaText"] = Localizer["Provider.TourGuides.Assign"].Value, ["ctaUrl"] = "#assign-guide", ["ctaClass"] = "btn btn-sm btn-primary-soft", ["ctaPermission"] = WebPermission.TourGuide.Update })" />
                 }
                 else
                 {

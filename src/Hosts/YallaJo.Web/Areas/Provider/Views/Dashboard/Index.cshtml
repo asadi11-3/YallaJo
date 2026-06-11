@@ -55,17 +55,17 @@
 
         <div class="row g-4">
             <div class="col-sm-6 col-xl-3">
-                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-map" }, { "color", "success" }, { "value", Count(Model.TotalListings) }, { "label", Localizer["Provider.Dashboard.TotalListings"].Value }, { "cardClass", "h-100" } })" />
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-map", ["color"] = "success", ["value"] = Count(Model.TotalListings), ["label"] = Localizer["Provider.Dashboard.TotalListings"].Value, ["cardClass"] = "h-100" })" />
             </div>
             <div class="col-sm-6 col-xl-3">
                 @* [Backend] B4 — prefer the richer provider summary when available (ERR3 soft-degrade to legacy value). *@
-                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-arrow-trend-up" }, { "color", "info" }, { "value", Money(Model.EarningsKpis?.NetEarnings ?? Model.NetEarnings, Model.EarningsKpis?.Currency ?? Model.EarningsCurrency) }, { "label", Localizer["Provider.Dashboard.NetEarnings"].Value }, { "cardClass", "h-100" } })" />
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-arrow-trend-up", ["color"] = "info", ["value"] = Money(Model.EarningsKpis?.NetEarnings ?? Model.NetEarnings, Model.EarningsKpis?.Currency ?? Model.EarningsCurrency), ["label"] = Localizer["Provider.Dashboard.NetEarnings"].Value, ["cardClass"] = "h-100" })" />
             </div>
             <div class="col-sm-6 col-xl-3">
-                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-bookmark" }, { "color", "warning" }, { "value", Count(Model.PaymentCount) }, { "label", Localizer["Provider.Dashboard.PaidBookings"].Value }, { "cardClass", "h-100" } })" />
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-bookmark", ["color"] = "warning", ["value"] = Count(Model.PaymentCount), ["label"] = Localizer["Provider.Dashboard.PaidBookings"].Value, ["cardClass"] = "h-100" })" />
             </div>
             <div class="col-sm-6 col-xl-3">
-                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-users" }, { "color", "primary" }, { "value", Count(Model.PendingJoinRequests) }, { "label", Localizer["Provider.Dashboard.PendingJoinRequests"].Value }, { "cardClass", "h-100" } })" />
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-users", ["color"] = "primary", ["value"] = Count(Model.PendingJoinRequests), ["label"] = Localizer["Provider.Dashboard.PendingJoinRequests"].Value, ["cardClass"] = "h-100" })" />
             </div>
         </div>
 
@@ -75,16 +75,16 @@
             var kpis = Model.EarningsKpis;
             <div class="row g-4">
                 <div class="col-sm-6 col-xl-3">
-                    <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-calendar-day" }, { "color", "primary" }, { "value", Money(kpis.ThisMonth, kpis.Currency) }, { "label", Localizer["Provider.Dashboard.ThisMonth"].Value }, { "cardClass", "h-100" } })" />
+                    <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-calendar-day", ["color"] = "primary", ["value"] = Money(kpis.ThisMonth, kpis.Currency), ["label"] = Localizer["Provider.Dashboard.ThisMonth"].Value, ["cardClass"] = "h-100" })" />
                 </div>
                 <div class="col-sm-6 col-xl-3">
-                    <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-hourglass-half" }, { "color", "warning" }, { "value", Money(kpis.PendingPayout, kpis.Currency) }, { "label", Localizer["Provider.Dashboard.PendingPayout"].Value }, { "cardClass", "h-100" } })" />
+                    <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-hourglass-half", ["color"] = "warning", ["value"] = Money(kpis.PendingPayout, kpis.Currency), ["label"] = Localizer["Provider.Dashboard.PendingPayout"].Value, ["cardClass"] = "h-100" })" />
                 </div>
                 <div class="col-sm-6 col-xl-3">
-                    <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-money-bill-wave" }, { "color", "success" }, { "value", Money(kpis.GrossTotal, kpis.Currency) }, { "label", Localizer["Provider.Dashboard.GrossTotal"].Value }, { "cardClass", "h-100" } })" />
+                    <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-money-bill-wave", ["color"] = "success", ["value"] = Money(kpis.GrossTotal, kpis.Currency), ["label"] = Localizer["Provider.Dashboard.GrossTotal"].Value, ["cardClass"] = "h-100" })" />
                 </div>
                 <div class="col-sm-6 col-xl-3">
-                    <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-percent" }, { "color", "secondary" }, { "value", Money(kpis.TotalCommission, kpis.Currency) }, { "label", Localizer["Provider.Dashboard.TotalCommission"].Value }, { "cardClass", "h-100" } })" />
+                    <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-percent", ["color"] = "secondary", ["value"] = Money(kpis.TotalCommission, kpis.Currency), ["label"] = Localizer["Provider.Dashboard.TotalCommission"].Value, ["cardClass"] = "h-100" })" />
                 </div>
             </div>
         }
@@ -192,7 +192,7 @@
         {
             <div class="card border">
                 <div class="card-body">
-                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.Dashboard.EmptyTitle"].Value }, { "message", Localizer["Provider.Dashboard.EmptyMsg"].Value }, { "ctaText", Localizer["Provider.Dashboard.AddListing"].Value }, { "ctaUrl", Url.Action("Create", "Tours", new { area = "Provider" }) } })" />
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.Dashboard.EmptyTitle"].Value, ["message"] = Localizer["Provider.Dashboard.EmptyMsg"].Value, ["ctaText"] = Localizer["Provider.Dashboard.AddListing"].Value, ["ctaUrl"] = Url.Action("Create", "Tours", new { area = "Provider" }) })" />
                 </div>
             </div>
         }

@@ -41,7 +41,7 @@
         {
             <div class="card border">
                 <div class="card-body">
-                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.TourApplications.EmptyTitle"].Value }, { "message", Localizer["Provider.TourApplications.EmptyMsg"].Value } })" />
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.TourApplications.EmptyTitle"].Value, ["message"] = Localizer["Provider.TourApplications.EmptyMsg"].Value })" />
                 </div>
             </div>
         }

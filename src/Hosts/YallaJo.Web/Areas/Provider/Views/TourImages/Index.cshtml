@@ -59,7 +59,7 @@
             <div class="card-body">
                 @if (!Model.HasImages)
                 {
-                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.TourImages.EmptyMsg"].Value } })" />
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["message"] = Localizer["Provider.TourImages.EmptyMsg"].Value })" />
                 }
                 else
                 {

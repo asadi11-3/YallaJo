@@ -44,7 +44,7 @@
             <div class="card-body">
                 @if (!Model.HasSchedules)
                 {
-                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.TourSchedules.EmptyTitle"].Value }, { "headingTag", "h3" }, { "message", Localizer["Provider.TourSchedules.EmptyMsg"].Value }, { "ctaText", Localizer["Provider.TourSchedules.AddFirst"].Value }, { "ctaUrl", Url.Action("Create", "TourSchedules", new { area = "Provider", id = Model.TourId }) }, { "ctaClass", "btn btn-sm btn-primary-soft" }, { "ctaPermission", WebPermission.TourSchedule.Create } })" />
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.TourSchedules.EmptyTitle"].Value, ["headingTag"] = "h3", ["message"] = Localizer["Provider.TourSchedules.EmptyMsg"].Value, ["ctaText"] = Localizer["Provider.TourSchedules.AddFirst"].Value, ["ctaUrl"] = Url.Action("Create", "TourSchedules", new { area = "Provider", id = Model.TourId }), ["ctaClass"] = "btn btn-sm btn-primary-soft", ["ctaPermission"] = WebPermission.TourSchedule.Create })" />
                 }
                 else
                 {

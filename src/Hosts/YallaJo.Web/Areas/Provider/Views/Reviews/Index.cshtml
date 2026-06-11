@@ -14,7 +14,7 @@
         @if (!Model.HasTours)
         {
             <div class="card card-body border">
-                <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.Reviews.NoListingsTitle"].Value }, { "message", Localizer["Provider.Reviews.NoListingsMsg"].Value }, { "ctaText", Localizer["Provider.Reviews.AddListing"].Value }, { "ctaUrl", Url.Action("Create", "Tours", new { area = "Provider" }) } })" />
+                <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.Reviews.NoListingsTitle"].Value, ["message"] = Localizer["Provider.Reviews.NoListingsMsg"].Value, ["ctaText"] = Localizer["Provider.Reviews.AddListing"].Value, ["ctaUrl"] = Url.Action("Create", "Tours", new { area = "Provider" }) })" />
             </div>
         }
         else

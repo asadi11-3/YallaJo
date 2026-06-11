@@ -13,13 +13,13 @@
         @* KPI summary (always visible, from the earnings read) *@
         <div class="row g-3">
             <div class="col-sm-4">
-                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-money-bill-wave" }, { "color", "success" }, { "value", Money(Model.Earnings.GrossTotal, Model.Earnings.Currency) }, { "label", Localizer["Provider.Finance.GrossTotal"].Value } })" />
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-money-bill-wave", ["color"] = "success", ["value"] = Money(Model.Earnings.GrossTotal, Model.Earnings.Currency), ["label"] = Localizer["Provider.Finance.GrossTotal"].Value })" />
             </div>
             <div class="col-sm-4">
-                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-wallet" }, { "color", "info" }, { "value", Money(Model.Earnings.NetEstimateTotal, Model.Earnings.Currency) }, { "label", Localizer["Provider.Finance.NetEstimate"].Value } })" />
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-wallet", ["color"] = "info", ["value"] = Money(Model.Earnings.NetEstimateTotal, Model.Earnings.Currency), ["label"] = Localizer["Provider.Finance.NetEstimate"].Value })" />
             </div>
             <div class="col-sm-4">
-                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { { "icon", "fa-solid fa-receipt" }, { "color", "warning" }, { "value", Count(Model.Earnings.PaymentCount) }, { "label", Localizer["Provider.Finance.PaidBookings"].Value } })" />
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-receipt", ["color"] = "warning", ["value"] = Count(Model.Earnings.PaymentCount), ["label"] = Localizer["Provider.Finance.PaidBookings"].Value })" />
             </div>
         </div>
 

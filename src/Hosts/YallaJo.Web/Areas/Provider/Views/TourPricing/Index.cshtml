@@ -52,7 +52,7 @@
             <div class="card-body">
                 @if (!Model.HasTiers)
                 {
-                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.TourPricing.EmptyTitle"].Value }, { "headingTag", "h3" }, { "message", Localizer["Provider.TourPricing.EmptyMsg"].Value }, { "ctaText", Localizer["Provider.TourPricing.AddFirst"].Value }, { "ctaUrl", Url.Action("Create", "TourPricing", new { area = "Provider", id = Model.TourId }) }, { "ctaClass", "btn btn-sm btn-primary-soft" }, { "ctaPermission", WebPermission.TourPricingTier.Create } })" />
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.TourPricing.EmptyTitle"].Value, ["headingTag"] = "h3", ["message"] = Localizer["Provider.TourPricing.EmptyMsg"].Value, ["ctaText"] = Localizer["Provider.TourPricing.AddFirst"].Value, ["ctaUrl"] = Url.Action("Create", "TourPricing", new { area = "Provider", id = Model.TourId }), ["ctaClass"] = "btn btn-sm btn-primary-soft", ["ctaPermission"] = WebPermission.TourPricingTier.Create })" />
                 }
                 else
                 {

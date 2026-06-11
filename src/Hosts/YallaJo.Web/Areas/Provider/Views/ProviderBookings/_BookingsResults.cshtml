@@ -18,7 +18,7 @@
 
 @if (!Model.HasItems)
 {
-    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "message", Localizer["Provider.ProviderBookings.EmptyMessage"].Value } })" />
+    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["message"] = Localizer["Provider.ProviderBookings.EmptyMessage"].Value })" />
 }
 else
 {

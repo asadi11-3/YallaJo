@@ -108,7 +108,7 @@
         {
             <div class="card border">
                 <div class="card-body">
-                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.TourAvailability.EmptyTitle"].Value }, { "message", Localizer["Provider.TourAvailability.EmptyMsg"].Value }, { "ctaText", Localizer["Provider.TourAvailability.AddSlot"].Value }, { "ctaUrl", Url.Action("Create", "TourAvailability", new { area = "Provider", id = Model.TourId }) }, { "ctaPermission", WebPermission.AvailabilitySlot.Create } })" />
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.TourAvailability.EmptyTitle"].Value, ["message"] = Localizer["Provider.TourAvailability.EmptyMsg"].Value, ["ctaText"] = Localizer["Provider.TourAvailability.AddSlot"].Value, ["ctaUrl"] = Url.Action("Create", "TourAvailability", new { area = "Provider", id = Model.TourId }), ["ctaPermission"] = WebPermission.AvailabilitySlot.Create })" />
                 </div>
             </div>
         }

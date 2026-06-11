@@ -31,7 +31,7 @@
         {
             <div class="card border">
                 <div class="card-body">
-                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.TourWaypoints.EmptyTitle"].Value }, { "message", Localizer["Provider.TourWaypoints.EmptyMsg"].Value }, { "ctaText", Localizer["Provider.TourWaypoints.AddFirst"].Value }, { "ctaUrl", Url.Action("Create", "TourWaypoints", new { area = "Provider", id = Model.TourId }) }, { "ctaClass", "btn btn-sm btn-primary" }, { "ctaPermission", WebPermission.TourWaypoint.Create } })" />
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.TourWaypoints.EmptyTitle"].Value, ["message"] = Localizer["Provider.TourWaypoints.EmptyMsg"].Value, ["ctaText"] = Localizer["Provider.TourWaypoints.AddFirst"].Value, ["ctaUrl"] = Url.Action("Create", "TourWaypoints", new { area = "Provider", id = Model.TourId }), ["ctaClass"] = "btn btn-sm btn-primary", ["ctaPermission"] = WebPermission.TourWaypoint.Create })" />
                 </div>
             </div>
         }

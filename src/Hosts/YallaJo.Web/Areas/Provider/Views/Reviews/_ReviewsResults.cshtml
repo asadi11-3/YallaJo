@@ -28,7 +28,7 @@
     @if (!Model.HasReviews)
     {
         <div class="card card-body border">
-            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.Reviews.NoReviewsTitle"].Value }, { "message", Localizer["Provider.Reviews.NoReviewsMsg"].Value } })" />
+            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.Reviews.NoReviewsTitle"].Value, ["message"] = Localizer["Provider.Reviews.NoReviewsMsg"].Value })" />
         </div>
     }
     else

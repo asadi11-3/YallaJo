@@ -50,7 +50,7 @@
         <div class="card-body">
             @if (!Model.HasJoinRequests)
             {
-                <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { { "title", Localizer["Provider.Bookings.NoJoinRequestsTitle"].Value }, { "message", Localizer["Provider.Bookings.NoJoinRequestsMsg"].Value } })" />
+                <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.Bookings.NoJoinRequestsTitle"].Value, ["message"] = Localizer["Provider.Bookings.NoJoinRequestsMsg"].Value })" />
             }
             else
             {
