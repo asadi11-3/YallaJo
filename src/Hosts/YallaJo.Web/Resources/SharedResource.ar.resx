@@ -15211,4 +15211,34 @@
 <data name="Accounts.Privacy.DeleteConfirmToken" xml:space="preserve">
 <value>حذف</value>
 </data>
+<data name="Public.Seo.HomeTitle" xml:space="preserve">
+<value>اكتشف أفضل الجولات في الأردن</value>
+</data>
+<data name="Public.Seo.HomeDescription" xml:space="preserve">
+<value>اكتشف واحجز جولات مختارة بعناية وتجارب بصحبة مرشدين وأنشطة تجارية محلية وأماكن لا تُنسى في جميع أنحاء الأردن مع YallaJo.</value>
+</data>
+<data name="Public.Seo.AgenciesTitle" xml:space="preserve">
+<value>وكالات السفر</value>
+</data>
+<data name="Public.Seo.AgenciesDescription" xml:space="preserve">
+<value>تصفح وكالات السفر الموثقة الشريكة مع YallaJo في جميع أنحاء الأردن.</value>
+</data>
+<data name="Public.Seo.BlogTitle" xml:space="preserve">
+<value>مدونة السفر</value>
+</data>
+<data name="Public.Seo.BlogDescription" xml:space="preserve">
+<value>قصص سفر ونصائح وأدلة من مجتمع المبدعين المحليين في YallaJo.</value>
+</data>
+<data name="Public.Seo.GuidesTitle" xml:space="preserve">
+<value>المرشدون السياحيون</value>
+</data>
+<data name="Public.Seo.GuidesDescription" xml:space="preserve">
+<value>تعرف على المرشدين السياحيين المحليين الموثقين لدى YallaJo في الأردن واحجز تجارب يقودها خبراء.</value>
+</data>
+<data name="Public.Seo.PackagesTitle" xml:space="preserve">
+<value>باقات الجولات</value>
+</data>
+<data name="Public.Seo.PackagesDescription" xml:space="preserve">
+<value>تصفح باقات جولات منسقة ووفر على تجارب مختارة بعناية في جميع أنحاء الأردن مع YallaJo.</value>
+</data>
 </root>

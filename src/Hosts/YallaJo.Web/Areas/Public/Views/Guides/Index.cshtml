@@ -7,8 +7,8 @@
     var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
     ViewData.SetSeo(new SeoModel
     {
-        Title = "Tour guides",
-        Description = "Meet YallaJo's verified local tour guides across Jordan and book experiences led by experts.",
+        Title = Localizer["Public.Seo.GuidesTitle"].Value,
+        Description = Localizer["Public.Seo.GuidesDescription"].Value,
         Canonical = $"{baseUrl}/guides",
         OgType = "website",
     });

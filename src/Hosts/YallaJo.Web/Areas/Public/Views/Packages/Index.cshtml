@@ -7,8 +7,8 @@
     var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
     ViewData.SetSeo(new SeoModel
     {
-        Title = "Tour packages",
-        Description = "Browse curated multi-tour packages and save on hand-picked experiences across Jordan with YallaJo.",
+        Title = Localizer["Public.Seo.PackagesTitle"].Value,
+        Description = Localizer["Public.Seo.PackagesDescription"].Value,
         Canonical = $"{baseUrl}/packages",
         OgType = "website"
     });

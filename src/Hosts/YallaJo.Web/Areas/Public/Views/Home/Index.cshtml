@@ -9,8 +9,8 @@
     var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
     ViewData.SetSeo(new SeoModel
     {
-        Title = "Discover the best tours in Jordan",
-        Description = "Discover and book hand-picked tours, guided experiences, local businesses and unforgettable places across Jordan with YallaJo.",
+        Title = Localizer["Public.Seo.HomeTitle"].Value,
+        Description = Localizer["Public.Seo.HomeDescription"].Value,
         Canonical = $"{baseUrl}/",
         OgImage = $"{baseUrl}/assets/images/bg/06.jpg",
         OgType = "website",
@@ -54,7 +54,7 @@
             @* Right column: stacked imagery *@
             <div class="col-lg-6 position-relative mt-7 mt-lg-0">
                 @* Decorative SVG behind right images *@
-                <figure class="position-absolute top-50 start-0 translate-middle-y ms-n5 ms-md-n7 d-none d-md-block z-index-n1">
+                <figure class="position-absolute top-50 start-0 translate-middle-y ms-n5 ms-md-n7 d-none d-md-block z-index-n1 yj-hero-decor">
                     <svg width="465.5px" height="384.4px" viewBox="0 0 465.5 384.4">
                         <path class="fill-mode" d="M58.6,326.5c-19.9-25.6-37-54.7-46.6-85.7C2.4,209.8-0.6,176-3.7,143.6c-2.3-23.5-2.7-48,4.8-70.5
                             C16.3,28,62.5-1.4,108.4-12.6c45.9-11.2,93.9-7.2,141.1-3.1c33.5,2.9,67.5,5.9,99.1,17.4c52,18.9,94.3,62,114.4,113.5

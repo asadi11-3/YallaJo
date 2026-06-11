@@ -7,8 +7,8 @@
     var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
     ViewData.SetSeo(new SeoModel
     {
-        Title = "Travel blog",
-        Description = "Travel stories, tips and guides from YallaJo's community of local creators.",
+        Title = Localizer["Public.Seo.BlogTitle"].Value,
+        Description = Localizer["Public.Seo.BlogDescription"].Value,
         Canonical = $"{baseUrl}/blog",
         OgType = "website",
     });

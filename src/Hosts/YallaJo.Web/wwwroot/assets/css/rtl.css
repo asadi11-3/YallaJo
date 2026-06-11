@@ -218,3 +218,17 @@
     display: inline-block;
     transform: scaleX(-1);
 }
+
+/* ------------------------------------------------------------------
+   9. Public home hero decoration (RTL audit Phase C, V2).
+      The site ships the LTR Bootstrap build, so .start-0/.ms-n*
+      resolve to physical left values. When the grid mirrors in RTL
+      the decorative hero SVG stays left-anchored and exits the
+      viewport's left edge, widening the horizontal scroll area.
+      Re-anchor it to the column's right edge instead.
+   ------------------------------------------------------------------ */
+[dir="rtl"] .yj-hero-decor {
+    left: auto;
+    right: 0;
+    margin-left: 0;
+}

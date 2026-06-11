@@ -15211,4 +15211,34 @@
   <data name="Accounts.Privacy.DeleteConfirmToken" xml:space="preserve">
     <value>DELETE</value>
   </data>
+  <data name="Public.Seo.HomeTitle" xml:space="preserve">
+    <value>Discover the best tours in Jordan</value>
+  </data>
+  <data name="Public.Seo.HomeDescription" xml:space="preserve">
+    <value>Discover and book hand-picked tours, guided experiences, local businesses and unforgettable places across Jordan with YallaJo.</value>
+  </data>
+  <data name="Public.Seo.AgenciesTitle" xml:space="preserve">
+    <value>Travel agencies</value>
+  </data>
+  <data name="Public.Seo.AgenciesDescription" xml:space="preserve">
+    <value>Browse verified travel agencies partnering with YallaJo across Jordan.</value>
+  </data>
+  <data name="Public.Seo.BlogTitle" xml:space="preserve">
+    <value>Travel blog</value>
+  </data>
+  <data name="Public.Seo.BlogDescription" xml:space="preserve">
+    <value>Travel stories, tips and guides from YallaJo's community of local creators.</value>
+  </data>
+  <data name="Public.Seo.GuidesTitle" xml:space="preserve">
+    <value>Tour guides</value>
+  </data>
+  <data name="Public.Seo.GuidesDescription" xml:space="preserve">
+    <value>Meet YallaJo's verified local tour guides across Jordan and book experiences led by experts.</value>
+  </data>
+  <data name="Public.Seo.PackagesTitle" xml:space="preserve">
+    <value>Tour packages</value>
+  </data>
+  <data name="Public.Seo.PackagesDescription" xml:space="preserve">
+    <value>Browse curated multi-tour packages and save on hand-picked experiences across Jordan with YallaJo.</value>
+  </data>
 </root>

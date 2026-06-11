@@ -7,8 +7,8 @@
     var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
     ViewData.SetSeo(new SeoModel
     {
-        Title = "Travel agencies",
-        Description = "Browse verified travel agencies partnering with YallaJo across Jordan.",
+        Title = Localizer["Public.Seo.AgenciesTitle"].Value,
+        Description = Localizer["Public.Seo.AgenciesDescription"].Value,
         Canonical = $"{baseUrl}/agency",
         OgType = "website",
     });
