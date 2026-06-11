@@ -84,7 +84,20 @@
             <div class="card-body">
                 @if (Model.TypeBreakdown.Count > 0)
                 {
-                    <div id="ChartTypes" role="img" aria-label="@Localizer["Admin.Stats.ChartAriaLabel"]"></div>
+                    @*
+                        Chart region four-states (§4.8): skeleton overlay reserves the final chart
+                        height (zero CLS — L1), opacity-only shimmer (X13) gated by reduced-motion
+                        (M3, site.css). admin-statistics.js removes it on render completion or shows
+                        an inline retryable error (ERR3) from the localized data-* copy (CON1).
+                        aria-live announces the settled chart politely (A11Y9).
+                    *@
+                    <div id="ChartTypes" role="img" aria-label="@Localizer["Admin.Stats.ChartAriaLabel"]"
+                         aria-live="polite" aria-busy="true" class="position-relative yj-chart-host-320"
+                         data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]">
+                        <div class="position-absolute top-0 start-0 w-100 h-100 placeholder-glow" data-yj-skeleton aria-hidden="true">
+                            <span class="placeholder w-100 h-100 rounded"></span>
+                        </div>
+                    </div>
                     @* SANITIZED (SEC3): both values come from System.Text.Json.JsonSerializer.Serialize
                        (see typeLabelsJson/typeCountsJson above). The default System.Text.Json encoder is
                        HTML-safe — it escapes <, >, &, ' and non-ASCII as \uXXXX, so a value containing

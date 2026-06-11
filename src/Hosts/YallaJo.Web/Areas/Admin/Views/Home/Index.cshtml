@@ -112,7 +112,20 @@
             <div class="card-body">
                 @if (Model.HasRevenueSeries)
                 {
-                    <div id="ChartRevenue" role="img" aria-label="@Localizer["Admin.RevenueTrend"]"></div>
+                    @*
+                        Chart region four-states (§4.8): the shimmer skeleton overlay reserves the
+                        final chart height (zero CLS — L1), is opacity-only (X13) and reduced-motion
+                        gated (M3, site.css). admin-dashboard.js removes it on render completion or
+                        swaps in an inline retryable error (ERR3) using the localized data-* copy
+                        below (CON1). aria-live announces the settled chart politely (A11Y9).
+                    *@
+                    <div id="ChartRevenue" role="img" aria-label="@Localizer["Admin.RevenueTrend"]"
+                         aria-live="polite" aria-busy="true" class="position-relative yj-chart-host-300"
+                         data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]">
+                        <div class="position-absolute top-0 start-0 w-100 h-100 placeholder-glow" data-yj-skeleton aria-hidden="true">
+                            <span class="placeholder w-100 h-100 rounded"></span>
+                        </div>
+                    </div>
                 }
                 else
                 {
@@ -130,7 +143,13 @@
             <div class="card-body">
                 @if (Model.TotalBookings > 0)
                 {
-                    <div id="ChartBookings" role="img" aria-label="@Localizer["Admin.BookingsBreakdown"]"></div>
+                    <div id="ChartBookings" role="img" aria-label="@Localizer["Admin.BookingsBreakdown"]"
+                         aria-live="polite" aria-busy="true" class="position-relative yj-chart-host-300"
+                         data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]">
+                        <div class="position-absolute top-0 start-0 w-100 h-100 placeholder-glow" data-yj-skeleton aria-hidden="true">
+                            <span class="placeholder w-100 h-100 rounded"></span>
+                        </div>
+                    </div>
                 }
                 else
                 {
@@ -151,7 +170,13 @@
             <div class="card-body">
                 @if (Model.TotalUsers > 0)
                 {
-                    <div id="ChartUsers" role="img" aria-label="@Localizer["Admin.Users"]"></div>
+                    <div id="ChartUsers" role="img" aria-label="@Localizer["Admin.Users"]"
+                         aria-live="polite" aria-busy="true" class="position-relative yj-chart-host-300"
+                         data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]">
+                        <div class="position-absolute top-0 start-0 w-100 h-100 placeholder-glow" data-yj-skeleton aria-hidden="true">
+                            <span class="placeholder w-100 h-100 rounded"></span>
+                        </div>
+                    </div>
                 }
                 else
                 {

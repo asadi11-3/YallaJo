@@ -266,3 +266,23 @@ details.card > summary { cursor: pointer; list-style-position: inside; }
     align-items: center;
     justify-content: center;
 }
+
+/* ---- Admin Phase 9 chart regions (contract §4.8 — L1/X13/M3) ---- */
+/* Reserve the final ApexCharts height on the host so the shimmer skeleton
+   swaps to the rendered chart with zero layout shift (L1). The Bootstrap
+   placeholder-glow shimmer animates opacity only (X13) and is disabled
+   entirely under prefers-reduced-motion (M3). */
+.yj-chart-host-300 {
+    min-height: 300px;
+}
+
+.yj-chart-host-320 {
+    min-height: 320px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .yj-chart-host-300 .placeholder,
+    .yj-chart-host-320 .placeholder {
+        animation: none;
+    }
+}
