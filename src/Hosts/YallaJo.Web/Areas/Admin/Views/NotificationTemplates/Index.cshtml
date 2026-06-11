@@ -75,13 +75,13 @@
                             <td><bdi class="font-data" dir="ltr">@Date(t.UpdatedAt ?? t.CreatedAt)</bdi></td>
                             <td class="text-end">
                                 <permission require="@WebPermission.NotificationTemplate.Update">
-                                    <a class="btn btn-sm btn-outline-secondary" asp-area="Admin" asp-controller="NotificationTemplates" asp-action="Edit" asp-route-id="@t.Id"
+                                    <a class="btn btn-sm btn-outline-secondary tap-target" asp-area="Admin" asp-controller="NotificationTemplates" asp-action="Edit" asp-route-id="@t.Id"
                                        aria-label="@Localizer["Admin.NotificationTemplates.Edit"]">
                                         <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i>
                                     </a>
                                 </permission>
                                 <permission require="@WebPermission.NotificationTemplate.Delete">
-                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                    <button type="button" class="btn btn-sm btn-outline-danger tap-target" data-bs-toggle="modal"
                                             data-bs-target="#deleteTemplate-@t.Id.ToString("N")" aria-label="@Localizer["Admin.NotificationTemplates.Delete"]">
                                         <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
                                     </button>

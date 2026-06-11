@@ -107,7 +107,7 @@ else
                             </td>
                             <td class="text-end">
                                 <permission require="@WebPermission.FaqItem.Update">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editFaq-@item.Id.ToString("N")" aria-label="@Localizer["Admin.SeoFaq.Edit"]">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary tap-target" data-bs-toggle="modal" data-bs-target="#editFaq-@item.Id.ToString("N")" aria-label="@Localizer["Admin.SeoFaq.Edit"]">
                                         <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i>
                                     </button>
                                 </permission>
@@ -116,7 +116,7 @@ else
                                           data-confirm="@Localizer["Admin.SeoFaq.DeleteConfirm"]" data-confirm-title="@Localizer["Admin.SeoFaq.DeleteTitle"]" data-confirm-action="@Localizer["Admin.SeoFaq.Delete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.Id" />
-                                        <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="@Localizer["Admin.SeoFaq.Delete"]"><i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i></button>
+                                        <button type="submit" class="btn btn-sm btn-danger-soft tap-target" aria-label="@Localizer["Admin.SeoFaq.Delete"]"><i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i></button>
                                     </form>
                                 </permission>
                             </td>

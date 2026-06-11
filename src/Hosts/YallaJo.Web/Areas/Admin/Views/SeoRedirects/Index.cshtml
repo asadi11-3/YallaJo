@@ -107,7 +107,7 @@ else
                             <td><bdi dir="ltr" class="font-data">@Date(r.CreatedAt)</bdi></td>
                             <td class="text-end">
                                 <permission require="@WebPermission.Redirect.Update">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editRedirect-@r.Id.ToString("N")" aria-label="@Localizer["Admin.SeoRedirects.Edit"]">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary tap-target" data-bs-toggle="modal" data-bs-target="#editRedirect-@r.Id.ToString("N")" aria-label="@Localizer["Admin.SeoRedirects.Edit"]">
                                         <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i>
                                     </button>
                                 </permission>
@@ -116,7 +116,7 @@ else
                                           data-confirm="@Localizer["Admin.SeoRedirects.DeleteConfirm"]" data-confirm-title="@Localizer["Admin.SeoRedirects.DeleteTitle"]" data-confirm-action="@Localizer["Admin.SeoRedirects.Delete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@r.Id" />
-                                        <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="@Localizer["Admin.SeoRedirects.Delete"]">
+                                        <button type="submit" class="btn btn-sm btn-danger-soft tap-target" aria-label="@Localizer["Admin.SeoRedirects.Delete"]">
                                             <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
                                         </button>
                                     </form>
