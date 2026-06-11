@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Recommendations
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model RecommendationsVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -61,10 +62,8 @@
     </div>
     @if (Model.Batches.Count == 0)
     {
-        <div class="card-body text-center py-5">
-            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-            <p class="mb-0 text-secondary">@Localizer["Admin.Recommendations.EmptyMessage"]</p>
-        </div>
+        <partial name="Partials/_EmptyState"
+                 model="@(new EmptyStateVm { Message = Localizer["Admin.Recommendations.EmptyMessage"].Value, ContainerClass = "card-body text-center py-5" })" />
     }
     else
     {
@@ -135,10 +134,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <form method="post" asp-action="CreateBoost" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createBoostTitle">
                 @Html.AntiForgeryToken()
-                <div class="modal-header">
-                    <h2 class="modal-title h5" id="createBoostTitle">@Localizer["Admin.Recommendations.CreateBoostTitle"]</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Recommendations.Close"]"></button>
-                </div>
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "createBoostTitle", Title = Localizer["Admin.Recommendations.CreateBoostTitle"].Value, CloseLabel = Localizer["Admin.Recommendations.Close"].Value })" />
                 <div class="modal-body" id="createBoostBody">
                     <p class="small text-secondary">@Localizer["Admin.Recommendations.OperatorHelp"]</p>
                     <div class="mb-3">
@@ -187,10 +184,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <form method="post" asp-action="CreatePin" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createPinTitle">
                 @Html.AntiForgeryToken()
-                <div class="modal-header">
-                    <h2 class="modal-title h5" id="createPinTitle">@Localizer["Admin.Recommendations.CreatePinTitle"]</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Recommendations.Close"]"></button>
-                </div>
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "createPinTitle", Title = Localizer["Admin.Recommendations.CreatePinTitle"].Value, CloseLabel = Localizer["Admin.Recommendations.Close"].Value })" />
                 <div class="modal-body" id="createPinBody">
                     <p class="small text-secondary">@Localizer["Admin.Recommendations.OperatorHelp"]</p>
                     <div class="mb-3">
@@ -244,10 +239,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <form method="post" asp-action="DeactivateBoost" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deactivateBoostTitle">
                 @Html.AntiForgeryToken()
-                <div class="modal-header">
-                    <h2 class="modal-title h5" id="deactivateBoostTitle">@Localizer["Admin.Recommendations.DeactivateBoostTitle"]</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Recommendations.Close"]"></button>
-                </div>
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "deactivateBoostTitle", Title = Localizer["Admin.Recommendations.DeactivateBoostTitle"].Value, CloseLabel = Localizer["Admin.Recommendations.Close"].Value })" />
                 <div class="modal-body" id="deactivateBoostBody">
                     <div class="mb-3">
                         <label class="form-label" for="deactivate-boost-id">@Localizer["Admin.Recommendations.BoostIdLabel"]</label>
@@ -270,10 +263,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <form method="post" asp-action="DeactivatePin" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deactivatePinTitle">
                 @Html.AntiForgeryToken()
-                <div class="modal-header">
-                    <h2 class="modal-title h5" id="deactivatePinTitle">@Localizer["Admin.Recommendations.DeactivatePinTitle"]</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Recommendations.Close"]"></button>
-                </div>
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "deactivatePinTitle", Title = Localizer["Admin.Recommendations.DeactivatePinTitle"].Value, CloseLabel = Localizer["Admin.Recommendations.Close"].Value })" />
                 <div class="modal-body" id="deactivatePinBody">
                     <div class="mb-3">
                         <label class="form-label" for="deactivate-pin-id">@Localizer["Admin.Recommendations.PinIdLabel"]</label>

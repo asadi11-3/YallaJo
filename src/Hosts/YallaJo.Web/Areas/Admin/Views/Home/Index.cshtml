@@ -1,5 +1,6 @@
 @model YallaJo.Web.Areas.Admin.Models.Home.DashboardVm
 @using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Admin.Dashboard"];
@@ -115,11 +116,8 @@
                 }
                 else
                 {
-                    <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" alt="" width="80" height="80" class="h-80px mb-3" aria-hidden="true" />
-                        <p class="mb-3 text-secondary">@Localizer["Admin.Empty.Revenue"]</p>
-                        <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Bookings" asp-action="Index">@Localizer["Admin.Empty.ViewBookings"]</a>
-                    </div>
+                    <partial name="Partials/_EmptyState"
+                             model="@(new EmptyStateVm { Message = Localizer["Admin.Empty.Revenue"].Value, CtaText = Localizer["Admin.Empty.ViewBookings"].Value, CtaUrl = Url.Action("Index", "Bookings", new { area = "Admin" }) })" />
                 }
             </div>
         </div>
@@ -136,11 +134,8 @@
                 }
                 else
                 {
-                    <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" alt="" width="80" height="80" class="h-80px mb-3" aria-hidden="true" />
-                        <p class="mb-3 text-secondary">@Localizer["Admin.Empty.Bookings"]</p>
-                        <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Bookings" asp-action="Index">@Localizer["Admin.Empty.ViewBookings"]</a>
-                    </div>
+                    <partial name="Partials/_EmptyState"
+                             model="@(new EmptyStateVm { Message = Localizer["Admin.Empty.Bookings"].Value, CtaText = Localizer["Admin.Empty.ViewBookings"].Value, CtaUrl = Url.Action("Index", "Bookings", new { area = "Admin" }) })" />
                 }
             </div>
         </div>
@@ -160,11 +155,8 @@
                 }
                 else
                 {
-                    <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" alt="" width="80" height="80" class="h-80px mb-3" aria-hidden="true" />
-                        <p class="mb-3 text-secondary">@Localizer["Admin.Empty.Users"]</p>
-                        <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Users" asp-action="Index">@Localizer["Admin.Empty.ViewUsers"]</a>
-                    </div>
+                    <partial name="Partials/_EmptyState"
+                             model="@(new EmptyStateVm { Message = Localizer["Admin.Empty.Users"].Value, CtaText = Localizer["Admin.Empty.ViewUsers"].Value, CtaUrl = Url.Action("Index", "Users", new { area = "Admin" }) })" />
                 }
             </div>
         </div>
@@ -196,10 +188,8 @@
                 }
                 else
                 {
-                    <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" alt="" width="80" height="80" class="h-80px mb-3" aria-hidden="true" />
-                        <p class="mb-0 text-secondary">@Localizer["Admin.Empty.Activity"]</p>
-                    </div>
+                    <partial name="Partials/_EmptyState"
+                             model="@(new EmptyStateVm { Message = Localizer["Admin.Empty.Activity"].Value })" />
                 }
             </div>
         </div>

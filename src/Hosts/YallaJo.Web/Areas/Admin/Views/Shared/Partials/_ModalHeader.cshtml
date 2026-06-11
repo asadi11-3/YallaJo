@@ -1,0 +1,10 @@
+@*
+    Shared modal header (MOD3) — h2 title + dismiss button with a pre-localized
+    accessible label. Danger variant for destructive flows.
+*@
+@model YallaJo.Web.Areas.Admin.Models.Shared.ModalHeaderVm
+<div class="modal-header@(Model.Danger ? " bg-danger text-white" : "")">
+    <h2 class="modal-title h5 mb-0" id="@Model.TitleId">@Model.Title</h2>
+    <button type="button" class="btn-close@(Model.Danger ? " btn-close-white" : "")"
+            data-bs-dismiss="modal" aria-label="@Model.CloseLabel"></button>
+</div>

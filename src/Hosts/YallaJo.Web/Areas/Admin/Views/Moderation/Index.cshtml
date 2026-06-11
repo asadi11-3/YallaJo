@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Moderation
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model ModerationVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -42,10 +43,8 @@
     </div>
     @if (!Model.HasLogs)
     {
-        <div class="card-body text-center py-5">
-            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-            <p class="mb-0 text-secondary">@Localizer["Admin.Moderation.EmptyMessage"]</p>
-        </div>
+        <partial name="Partials/_EmptyState"
+                 model="@(new EmptyStateVm { Message = Localizer["Admin.Moderation.EmptyMessage"].Value, ContainerClass = "card-body text-center py-5" })" />
     }
     else
     {
@@ -111,10 +110,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <form asp-action="Warn" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="warnModalTitle">
                 @Html.AntiForgeryToken()
-                <div class="modal-header">
-                    <h2 class="modal-title h5" id="warnModalTitle">@Localizer["Admin.Moderation.WarnTitle"]</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Moderation.Close"]"></button>
-                </div>
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "warnModalTitle", Title = Localizer["Admin.Moderation.WarnTitle"].Value, CloseLabel = Localizer["Admin.Moderation.Close"].Value })" />
                 <div class="modal-body" id="warnModalBody">
                     <p class="small text-secondary">@Localizer["Admin.Moderation.OperatorHelp"]</p>
                     <label class="form-label" for="warn-user-id">@Localizer["Admin.Moderation.UserIdLabel"]</label>
@@ -147,10 +144,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <form asp-action="Ban" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="banModalTitle">
                 @Html.AntiForgeryToken()
-                <div class="modal-header">
-                    <h2 class="modal-title h5" id="banModalTitle">@Localizer["Admin.Moderation.BanTitle"]</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Moderation.Close"]"></button>
-                </div>
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "banModalTitle", Title = Localizer["Admin.Moderation.BanTitle"].Value, CloseLabel = Localizer["Admin.Moderation.Close"].Value })" />
                 <div class="modal-body" id="banModalBody">
                     <p class="small text-secondary">@Localizer["Admin.Moderation.OperatorHelp"]</p>
                     <label class="form-label" for="ban-user-id">@Localizer["Admin.Moderation.UserIdLabel"]</label>

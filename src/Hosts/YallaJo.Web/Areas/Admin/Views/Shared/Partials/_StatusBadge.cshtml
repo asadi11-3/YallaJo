@@ -1,0 +1,14 @@
+@*
+    Shared status badge — the canonical admin badge per contract §4.2:
+    badge bg-{color} bg-opacity-10 text-{color} with icon + localized text,
+    never colour alone (A11Y5).
+*@
+@model YallaJo.Web.Areas.Admin.Models.Shared.StatusBadgeVm
+@if (string.IsNullOrEmpty(Model.AriaLabel))
+{
+    <span class="badge bg-@Model.Color bg-opacity-10 text-@Model.Color"><i class="@Model.Icon fa-fw" aria-hidden="true"></i> <span>@Model.Text</span></span>
+}
+else
+{
+    <span class="badge bg-@Model.Color bg-opacity-10 text-@Model.Color" aria-label="@Model.AriaLabel"><i class="@Model.Icon fa-fw" aria-hidden="true"></i> <span>@Model.Text</span></span>
+}

@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.SeoFaq
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model SeoFaqVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -61,10 +62,8 @@
 @if (!Model.HasItems)
 {
     <div class="card shadow">
-        <div class="card-body text-center py-5">
-            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-            <p class="mb-0 text-secondary">@Localizer["Admin.SeoFaq.EmptyMessage"]</p>
-        </div>
+        <partial name="Partials/_EmptyState"
+                 model="@(new EmptyStateVm { Message = Localizer["Admin.SeoFaq.EmptyMessage"].Value, ContainerClass = "card-body text-center py-5" })" />
     </div>
 }
 else
@@ -128,19 +127,18 @@ else
         </div>
         @if (Model.HasPrevious || Model.HasNext)
         {
-            <div class="card-footer border-top">
-                <nav aria-label="@Localizer["Admin.SeoFaq.PaginationLabel"]">
-                    <ul class="pagination justify-content-center mb-0">
-                        <li class="page-item @(Model.HasPrevious ? string.Empty : "disabled")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-activeOnly="@Model.ActiveOnlyFilter">@Localizer["Admin.SeoFaq.Previous"]</a>
-                        </li>
-                        <li class="page-item disabled"><span class="page-link">@Localizer["Admin.SeoFaq.PageLabel"] <bdi class="font-data">@Count(Model.Page)</bdi></span></li>
-                        <li class="page-item @(Model.HasNext ? string.Empty : "disabled")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-activeOnly="@Model.ActiveOnlyFilter">@Localizer["Admin.SeoFaq.Next"]</a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
+            <partial name="Partials/_PaginationFooter"
+                     model="@(new PaginationFooterVm
+                     {
+                         HasPrevious = Model.HasPrevious,
+                         HasNext = Model.HasNext,
+                         Page = Model.Page,
+                         PreviousUrl = Url.Action("Index", new { page = Model.Page - 1, entityType = Model.EntityTypeFilter, activeOnly = Model.ActiveOnlyFilter }),
+                         NextUrl = Url.Action("Index", new { page = Model.Page + 1, entityType = Model.EntityTypeFilter, activeOnly = Model.ActiveOnlyFilter }),
+                         PreviousText = Localizer["Admin.SeoFaq.Previous"].Value,
+                         NextText = Localizer["Admin.SeoFaq.Next"].Value,
+                         PageLabel = Localizer["Admin.SeoFaq.PageLabel"].Value
+                     })" />
         }
     </section>
 
@@ -151,10 +149,8 @@ else
                 <div class="modal-dialog modal-dialog-centered">
                     <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Update" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editFaqTitle-@item.Id.ToString("N")">
                         @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="editFaqTitle-@item.Id.ToString("N")">@Localizer["Admin.SeoFaq.EditTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.SeoFaq.Close"]"></button>
-                        </div>
+                        <partial name="Partials/_ModalHeader"
+                                 model="@(new ModalHeaderVm { TitleId = $"editFaqTitle-{item.Id.ToString("N")}", Title = Localizer["Admin.SeoFaq.EditTitle"].Value, CloseLabel = Localizer["Admin.SeoFaq.Close"].Value })" />
                         <div class="modal-body">
                             <input type="hidden" name="Id" value="@item.Id" />
                             <div class="mb-3">
@@ -182,10 +178,8 @@ else
         <div class="modal-dialog modal-dialog-centered">
             <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Create" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createFaqTitle">
                 @Html.AntiForgeryToken()
-                <div class="modal-header">
-                    <h2 class="modal-title h5" id="createFaqTitle">@Localizer["Admin.SeoFaq.Add"]</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.SeoFaq.Close"]"></button>
-                </div>
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "createFaqTitle", Title = Localizer["Admin.SeoFaq.Add"].Value, CloseLabel = Localizer["Admin.SeoFaq.Close"].Value })" />
                 <div class="modal-body">
                     <p class="small text-secondary">@Localizer["Admin.SeoFaq.OperatorHelp"]</p>
                     <div class="mb-3">

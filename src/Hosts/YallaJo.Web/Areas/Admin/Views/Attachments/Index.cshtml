@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Admin.Models.Attachments
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model YallaJo.Web.Areas.Admin.Models.Attachments.AttachmentListVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -31,11 +32,8 @@
 @if (!hasContext)
 {
     <div class="card shadow">
-        <div class="card-body text-center py-5">
-            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-            <h2 class="h5">@Localizer["Admin.Attachments.NoContextHeading"]</h2>
-            <p class="mb-0 text-secondary">@Localizer["Admin.Attachments.NoContextMessage"]</p>
-        </div>
+        <partial name="Partials/_EmptyState"
+                 model="@(new EmptyStateVm { Message = Localizer["Admin.Attachments.NoContextMessage"].Value, Heading = Localizer["Admin.Attachments.NoContextHeading"].Value, ContainerClass = "card-body text-center py-5" })" />
     </div>
 }
 else
@@ -94,10 +92,8 @@ else
         <div class="card-body">
             @if (Model.Attachments.Count == 0)
             {
-                <div class="text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                    <p class="mb-0 text-secondary">@Localizer["Admin.Attachments.EmptyMessage"]</p>
-                </div>
+                <partial name="Partials/_EmptyState"
+                         model="@(new EmptyStateVm { Message = Localizer["Admin.Attachments.EmptyMessage"].Value })" />
             }
             else
             {

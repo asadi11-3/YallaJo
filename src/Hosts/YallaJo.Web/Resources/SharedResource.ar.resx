@@ -14059,7 +14059,13 @@
 <data name="Admin.Users.Archive.ConfirmToken" xml:space="preserve">
 <value>أرشفة</value>
 </data>
-<data name="Admin.Users.Archive.ConfirmError" xml:space="preserve">
+  <data name="Admin.Users.Archive.ConfirmError" xml:space="preserve">
 <value>اكتب {0} لتأكيد الأرشفة.</value>
+</data>
+<data name="Admin.Shared.StatusActive" xml:space="preserve">
+<value>نشط</value>
+</data>
+<data name="Admin.Shared.StatusInactive" xml:space="preserve">
+<value>غير نشط</value>
 </data>
 </root>

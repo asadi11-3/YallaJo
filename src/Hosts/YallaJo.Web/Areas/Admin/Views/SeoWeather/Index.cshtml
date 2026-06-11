@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.SeoWeather
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model SeoWeatherVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -112,10 +113,8 @@
     }
     else
     {
-        <div class="card card-body shadow text-center py-5 mb-4">
-            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3 mx-auto" />
-            <p class="mb-0 text-secondary">@Localizer["Admin.SeoWeather.NoSnapshot"]</p>
-        </div>
+        <partial name="Partials/_EmptyState"
+                 model="@(new EmptyStateVm { Message = Localizer["Admin.SeoWeather.NoSnapshot"].Value, ContainerClass = "card card-body shadow text-center py-5 mb-4", ImageClass = "h-80px mb-3 mx-auto" })" />
     }
 
     <permission require="@WebPermission.Weather.Refresh">

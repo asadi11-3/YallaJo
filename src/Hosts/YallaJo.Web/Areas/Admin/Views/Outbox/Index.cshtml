@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Outbox
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model OutboxVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -54,14 +55,8 @@
     </div>
     @if (Model.DeadLetters.Count == 0)
     {
-        <div class="card-body text-center py-5">
-            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-            <p class="mb-3 text-secondary">@Localizer["Admin.Outbox.EmptyMessage"]</p>
-            @if (hasFilter)
-            {
-                <a class="btn btn-sm btn-primary-soft" asp-controller="Outbox" asp-action="Index">@Localizer["Admin.Outbox.ClearFilter"]</a>
-            }
-        </div>
+        <partial name="Partials/_EmptyState"
+                 model="@(new EmptyStateVm { Message = Localizer["Admin.Outbox.EmptyMessage"].Value, CtaText = hasFilter ? Localizer["Admin.Outbox.ClearFilter"].Value : null, CtaUrl = hasFilter ? Url.Action("Index", "Outbox") : null, ContainerClass = "card-body text-center py-5" })" />
     }
     else
     {

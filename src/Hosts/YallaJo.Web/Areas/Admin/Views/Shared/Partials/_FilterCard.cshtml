@@ -1,0 +1,64 @@
+@*
+    Shared filter card (D1, PE1) — standard GET filter form inside a card.
+    Plain form submit; works without JavaScript. Caller passes pre-localized
+    strings and a pre-resolved FormAction URL. Complex filters stay bespoke.
+*@
+@using YallaJo.Web.Areas.Admin.Models.Shared
+@model YallaJo.Web.Areas.Admin.Models.Shared.FilterCardVm
+<section class="card shadow mb-4" aria-labelledby="@Model.HeadingId">
+    <div class="card-header border-bottom">
+        <h2 id="@Model.HeadingId" class="card-header-title h5 mb-0">@Model.Heading</h2>
+    </div>
+    <div class="card-body">
+        <form method="get" action="@Model.FormAction" class="row g-2 align-items-end">
+            @foreach (var hidden in Model.HiddenFields)
+            {
+                <input type="hidden" name="@hidden.Name" value="@hidden.Value" />
+            }
+            @foreach (var field in Model.Fields)
+            {
+                var fieldId = $"filter-{field.Name}";
+                <div class="@field.ColumnClass">
+                    <label for="@fieldId" class="form-label">@field.Label</label>
+                    @switch (field.Kind)
+                    {
+                        case FilterFieldKind.Select:
+                            <select id="@fieldId" name="@field.Name" class="form-select">
+                                @foreach (var option in field.Options)
+                                {
+                                    if (option.Selected)
+                                    {
+                                        <option value="@option.Value" selected>@option.Text</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@option.Value">@option.Text</option>
+                                    }
+                                }
+                            </select>
+                            break;
+                        case FilterFieldKind.Search:
+                            <input id="@fieldId" name="@field.Name" type="search" class="form-control"
+                                   value="@field.Value" placeholder="@field.Placeholder" autocomplete="off" />
+                            break;
+                        case FilterFieldKind.Date:
+                            <input id="@fieldId" name="@field.Name" type="date" class="form-control font-data"
+                                   dir="ltr" value="@field.Value" />
+                            break;
+                        default:
+                            <input id="@fieldId" name="@field.Name" type="text" class="form-control"
+                                   value="@field.Value" placeholder="@field.Placeholder" />
+                            break;
+                    }
+                </div>
+            }
+            <div class="col-sm-6 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">@Model.SubmitText</button>
+                @if (!string.IsNullOrEmpty(Model.ResetUrl) && !string.IsNullOrEmpty(Model.ResetText))
+                {
+                    <a href="@Model.ResetUrl" class="btn btn-outline-secondary">@Model.ResetText</a>
+                }
+            </div>
+        </form>
+    </div>
+</section>

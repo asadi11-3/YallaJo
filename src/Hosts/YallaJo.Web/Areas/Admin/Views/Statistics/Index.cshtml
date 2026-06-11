@@ -1,6 +1,7 @@
 @model YallaJo.Web.Areas.Admin.Models.Statistics.StatisticsVm
 @using System.Globalization
 @using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Admin.Stats.Title"].Value;
@@ -99,10 +100,8 @@
                 }
                 else
                 {
-                    <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" alt="" width="80" height="80" aria-hidden="true" class="mb-3" />
-                        <p class="mb-3 text-secondary">@Localizer["Admin.Stats.EmptyChart"]</p>
-                    </div>
+                    <partial name="Partials/_EmptyState"
+                             model="@(new EmptyStateVm { Message = Localizer["Admin.Stats.EmptyChart"].Value, ImageClass = "mb-3" })" />
                 }
             </div>
         </div>
@@ -164,11 +163,8 @@
                 }
                 else
                 {
-                    <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" alt="" width="80" height="80" aria-hidden="true" class="mb-3" />
-                        <p class="mb-3 text-secondary">@Localizer["Admin.Stats.EmptyTable"]</p>
-                        <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Statistics" asp-action="Index">@Localizer["Admin.Stats.EmptyCta"]</a>
-                    </div>
+                    <partial name="Partials/_EmptyState"
+                             model="@(new EmptyStateVm { Message = Localizer["Admin.Stats.EmptyTable"].Value, CtaText = Localizer["Admin.Stats.EmptyCta"].Value, CtaUrl = Url.Action("Index", "Statistics", new { area = "Admin" }), ImageClass = "mb-3" })" />
                 }
             </div>
         </div>

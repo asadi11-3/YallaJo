@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.NotificationTemplates
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model NotificationTemplatesListVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -107,10 +108,8 @@
                       class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="rowVersion" value="@t.RowVersion" />
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="@titleId">@Localizer["Admin.NotificationTemplates.DeleteTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.NotificationTemplates.Close"]"></button>
-                    </div>
+                    <partial name="Partials/_ModalHeader"
+                             model="@(new ModalHeaderVm { TitleId = titleId, Title = Localizer["Admin.NotificationTemplates.DeleteTitle"].Value, CloseLabel = Localizer["Admin.NotificationTemplates.Close"].Value })" />
                     <div class="modal-body" id="@bodyId">
                         <p class="mb-0">@Localizer["Admin.NotificationTemplates.DeleteBody", t.Type, t.Channel]</p>
                     </div>

@@ -1,0 +1,36 @@
+@*
+    Shared admin pagination footer — driven solely by HasPrevious/HasNext (D1),
+    .tap-target ≥44px links (D2), page number LTR via <bdi> + .font-data (RTL3).
+    Callers render it only when Model.HasPrevious || Model.HasNext.
+*@
+@using System.Globalization
+@model YallaJo.Web.Areas.Admin.Models.Shared.PaginationFooterVm
+<div class="card-footer d-flex justify-content-between align-items-center">
+    @if (Model.HasPrevious)
+    {
+        <a href="@Model.PreviousUrl" class="btn btn-sm btn-outline-secondary tap-target" rel="prev">
+            <i class="fa-solid fa-arrow-left fa-fw" aria-hidden="true"></i>
+            <span>@Model.PreviousText</span>
+        </a>
+    }
+    else
+    {
+        <span></span>
+    }
+
+    <span class="text-secondary small">
+        @Model.PageLabel <bdi class="font-data" dir="ltr">@Model.Page.ToString("N0", CultureInfo.CurrentCulture)</bdi>
+    </span>
+
+    @if (Model.HasNext)
+    {
+        <a href="@Model.NextUrl" class="btn btn-sm btn-outline-secondary tap-target" rel="next">
+            <span>@Model.NextText</span>
+            <i class="fa-solid fa-arrow-right fa-fw" aria-hidden="true"></i>
+        </a>
+    }
+    else
+    {
+        <span></span>
+    }
+</div>

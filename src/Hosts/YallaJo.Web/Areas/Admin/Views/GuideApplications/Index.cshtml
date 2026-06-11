@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.GuideApplications
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model GuideApplicationsVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -91,19 +92,15 @@
     @if (!hasTour)
     {
         <div class="card-body">
-            <div class="text-center py-5">
-                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                <p class="mb-0 text-secondary">@Localizer["Admin.GuideApplications.ChooseTourMessage"]</p>
-            </div>
+            <partial name="Partials/_EmptyState"
+                     model="@(new EmptyStateVm { Message = Localizer["Admin.GuideApplications.ChooseTourMessage"].Value })" />
         </div>
     }
     else if (Model.Applications.Count == 0)
     {
         <div class="card-body">
-            <div class="text-center py-5">
-                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                <p class="mb-0 text-secondary">@Localizer["Admin.GuideApplications.EmptyMessage"]</p>
-            </div>
+            <partial name="Partials/_EmptyState"
+                     model="@(new EmptyStateVm { Message = Localizer["Admin.GuideApplications.EmptyMessage"].Value })" />
         </div>
     }
     else
@@ -210,10 +207,8 @@
                               asp-route-tourId="@row.TourId" asp-route-id="@row.ApplicationId"
                               class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
                             @Html.AntiForgeryToken()
-                            <div class="modal-header">
-                                <h2 class="modal-title h5" id="@titleId">@Localizer["Admin.GuideApplications.RejectTitle"]</h2>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.GuideApplications.Close"]"></button>
-                            </div>
+                            <partial name="Partials/_ModalHeader"
+                                     model="@(new ModalHeaderVm { TitleId = titleId, Title = Localizer["Admin.GuideApplications.RejectTitle"].Value, CloseLabel = Localizer["Admin.GuideApplications.Close"].Value })" />
                             <div class="modal-body" id="@bodyId">
                                 <label for="@reasonId" class="form-label">@Localizer["Admin.GuideApplications.ReasonLabel"]</label>
                                 <textarea id="@reasonId" name="reason" class="form-control" rows="3" maxlength="1000" required aria-describedby="@helpId"></textarea>
@@ -231,21 +226,18 @@
 
         @if (Model.HasPrevious || Model.HasNext)
         {
-            <div class="card-footer border-top d-flex justify-content-between align-items-center">
-                <span class="text-secondary small">@Localizer["Admin.GuideApplications.PageLabel"] <bdi class="font-data">@Count(Model.Page)</bdi></span>
-                <div class="btn-group">
-                    @if (Model.HasPrevious)
-                    {
-                        <a class="btn btn-outline-secondary btn-sm" asp-area="Admin" asp-controller="GuideApplications" asp-action="Index"
-                           asp-route-tourId="@Model.TourId" asp-route-status="@Model.StatusFilter" asp-route-page="@(Model.Page - 1)">@Localizer["Admin.GuideApplications.Previous"]</a>
-                    }
-                    @if (Model.HasNext)
-                    {
-                        <a class="btn btn-outline-secondary btn-sm" asp-area="Admin" asp-controller="GuideApplications" asp-action="Index"
-                           asp-route-tourId="@Model.TourId" asp-route-status="@Model.StatusFilter" asp-route-page="@(Model.Page + 1)">@Localizer["Admin.GuideApplications.Next"]</a>
-                    }
-                </div>
-            </div>
+            <partial name="Partials/_PaginationFooter"
+                     model="@(new PaginationFooterVm
+                     {
+                         HasPrevious = Model.HasPrevious,
+                         HasNext = Model.HasNext,
+                         Page = Model.Page,
+                         PreviousUrl = Url.Action("Index", "GuideApplications", new { area = "Admin", tourId = Model.TourId, status = Model.StatusFilter, page = Model.Page - 1 }),
+                         NextUrl = Url.Action("Index", "GuideApplications", new { area = "Admin", tourId = Model.TourId, status = Model.StatusFilter, page = Model.Page + 1 }),
+                         PreviousText = Localizer["Admin.GuideApplications.Previous"].Value,
+                         NextText = Localizer["Admin.GuideApplications.Next"].Value,
+                         PageLabel = Localizer["Admin.GuideApplications.PageLabel"].Value
+                     })" />
         }
     }
 </section>

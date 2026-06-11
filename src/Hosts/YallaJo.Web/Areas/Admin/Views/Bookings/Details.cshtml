@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Bookings
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model AdminBookingDetailsVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -271,10 +272,8 @@
                 <form method="post" asp-area="Admin" asp-controller="Bookings" asp-action="ResolveDispute" asp-route-id="@Model.Id"
                       class="modal-content" role="dialog" aria-modal="true" aria-labelledby="resolveDisputeTitle">
                     @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="resolveDisputeTitle">@Localizer["Admin.BookingDetails.ResolveModalTitle", Model.Reference]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.BookingDetails.Close"]"></button>
-                    </div>
+                    <partial name="Partials/_ModalHeader"
+                             model="@(new ModalHeaderVm { TitleId = "resolveDisputeTitle", Title = Localizer["Admin.BookingDetails.ResolveModalTitle", Model.Reference].Value, CloseLabel = Localizer["Admin.BookingDetails.Close"].Value })" />
                     <div class="modal-body" id="resolveDisputeBody">
                         <div class="mb-3">
                             <label class="form-label" for="resolutionNotes">@Localizer["Admin.BookingDetails.ResolutionNotesFieldLabel"]</label>

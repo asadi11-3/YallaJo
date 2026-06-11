@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Commissions
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model CommissionsVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -148,10 +149,8 @@
             <div class="modal-dialog modal-dialog-centered">
                 <form method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Update" asp-route-id="@rule.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editTitle-@nid">
                     @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="editTitle-@nid">@Localizer["Admin.Commissions.EditTitle", rule.Tier, rule.Currency]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Commissions.Close"]"></button>
-                    </div>
+                    <partial name="Partials/_ModalHeader"
+                             model="@(new ModalHeaderVm { TitleId = $"editTitle-{nid}", Title = Localizer["Admin.Commissions.EditTitle", rule.Tier, rule.Currency].Value, CloseLabel = Localizer["Admin.Commissions.Close"].Value })" />
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label" for="edit-min-@nid">@Localizer["Admin.Commissions.MinRevenueLabel"]</label>
@@ -184,10 +183,8 @@
             <div class="modal-dialog modal-dialog-centered">
                 <form method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Delete" asp-route-id="@rule.Id" class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle-@nid" aria-describedby="deleteBody-@nid">
                     @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="deleteTitle-@nid">@Localizer["Admin.Commissions.DeleteTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Commissions.Close"]"></button>
-                    </div>
+                    <partial name="Partials/_ModalHeader"
+                             model="@(new ModalHeaderVm { TitleId = $"deleteTitle-{nid}", Title = Localizer["Admin.Commissions.DeleteTitle"].Value, CloseLabel = Localizer["Admin.Commissions.Close"].Value })" />
                     <div class="modal-body" id="deleteBody-@nid">
                         <p>@Localizer["Admin.Commissions.DeleteConfirm", rule.Tier, rule.Currency]</p>
                         <div class="mb-3">
@@ -210,10 +207,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <form method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Create" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createTitle">
                 @Html.AntiForgeryToken()
-                <div class="modal-header">
-                    <h2 class="modal-title h5" id="createTitle">@Localizer["Admin.Commissions.CreateTitle"]</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Commissions.Close"]"></button>
-                </div>
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "createTitle", Title = Localizer["Admin.Commissions.CreateTitle"].Value, CloseLabel = Localizer["Admin.Commissions.Close"].Value })" />
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label" for="create-tier">@Localizer["Admin.Commissions.TierLabel"]</label>

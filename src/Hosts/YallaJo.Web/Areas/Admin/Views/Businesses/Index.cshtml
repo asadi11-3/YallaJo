@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Businesses
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model BusinessesVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -199,19 +200,18 @@
 
         @if (Model.HasPrevious || Model.HasNext)
         {
-            <nav class="card-footer border-top d-flex justify-content-between align-items-center" aria-label="@Localizer["Admin.Businesses.PaginationLabel"]">
-                <span class="small text-secondary">@Localizer["Admin.Businesses.PageLabel"] <bdi class="font-data">@Count(Model.PageNumber)</bdi></span>
-                <div class="d-flex gap-2">
-                    @if (Model.HasPrevious)
-                    {
-                        <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-placeId="@Model.PlaceId" asp-route-status="@Model.StatusFilter" asp-route-page="@(Model.PageNumber - 1)">@Localizer["Admin.Businesses.Previous"]</a>
-                    }
-                    @if (Model.HasNext)
-                    {
-                        <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-placeId="@Model.PlaceId" asp-route-status="@Model.StatusFilter" asp-route-page="@(Model.PageNumber + 1)">@Localizer["Admin.Businesses.Next"]</a>
-                    }
-                </div>
-            </nav>
+            <partial name="Partials/_PaginationFooter"
+                     model="@(new PaginationFooterVm
+                     {
+                         HasPrevious = Model.HasPrevious,
+                         HasNext = Model.HasNext,
+                         Page = Model.PageNumber,
+                         PreviousUrl = Url.Action("Index", new { placeId = Model.PlaceId, status = Model.StatusFilter, page = Model.PageNumber - 1 }),
+                         NextUrl = Url.Action("Index", new { placeId = Model.PlaceId, status = Model.StatusFilter, page = Model.PageNumber + 1 }),
+                         PreviousText = Localizer["Admin.Businesses.Previous"].Value,
+                         NextText = Localizer["Admin.Businesses.Next"].Value,
+                         PageLabel = Localizer["Admin.Businesses.PageLabel"].Value
+                     })" />
         }
     </section>
 
@@ -222,10 +222,8 @@
                 <div class="modal-dialog modal-dialog-centered">
                     <form method="post" asp-action="Reject" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="rejectTitle-@b.Id">
                         @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="rejectTitle-@b.Id">@Localizer["Admin.Businesses.RejectTitleFor", b.Name]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Businesses.Close"]"></button>
-                        </div>
+                        <partial name="Partials/_ModalHeader"
+                                 model="@(new ModalHeaderVm { TitleId = $"rejectTitle-{b.Id}", Title = Localizer["Admin.Businesses.RejectTitleFor", b.Name].Value, CloseLabel = Localizer["Admin.Businesses.Close"].Value })" />
                         <div class="modal-body" id="rejectBody-@b.Id">
                             <label class="form-label" for="reject-reason-@b.Id">@Localizer["Admin.Businesses.ReasonLabel"]</label>
                             <textarea class="form-control" id="reject-reason-@b.Id" name="reason" rows="3" maxlength="1000" required aria-describedby="reject-reason-help-@b.Id"></textarea>
@@ -244,10 +242,8 @@
                 <div class="modal-dialog modal-dialog-centered">
                     <form method="post" asp-action="RequestMoreDocs" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="docsTitle-@b.Id">
                         @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="docsTitle-@b.Id">@Localizer["Admin.Businesses.DocsTitleFor", b.Name]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Businesses.Close"]"></button>
-                        </div>
+                        <partial name="Partials/_ModalHeader"
+                                 model="@(new ModalHeaderVm { TitleId = $"docsTitle-{b.Id}", Title = Localizer["Admin.Businesses.DocsTitleFor", b.Name].Value, CloseLabel = Localizer["Admin.Businesses.Close"].Value })" />
                         <div class="modal-body" id="docsBody-@b.Id">
                             <label class="form-label" for="docs-reason-@b.Id">@Localizer["Admin.Businesses.NoteLabel"]</label>
                             <textarea class="form-control" id="docs-reason-@b.Id" name="reason" rows="3" maxlength="1000" required aria-describedby="docs-reason-help-@b.Id"></textarea>
@@ -266,10 +262,8 @@
                 <div class="modal-dialog modal-dialog-centered">
                     <form method="post" asp-action="Suspend" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="suspendTitle-@b.Id">
                         @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="suspendTitle-@b.Id">@Localizer["Admin.Businesses.SuspendTitleFor", b.Name]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Businesses.Close"]"></button>
-                        </div>
+                        <partial name="Partials/_ModalHeader"
+                                 model="@(new ModalHeaderVm { TitleId = $"suspendTitle-{b.Id}", Title = Localizer["Admin.Businesses.SuspendTitleFor", b.Name].Value, CloseLabel = Localizer["Admin.Businesses.Close"].Value })" />
                         <div class="modal-body" id="suspendBody-@b.Id">
                             <label class="form-label" for="suspend-reason-@b.Id">@Localizer["Admin.Businesses.ReasonLabel"]</label>
                             <textarea class="form-control" id="suspend-reason-@b.Id" name="reason" rows="3" maxlength="1000" required aria-describedby="suspend-reason-help-@b.Id"></textarea>
@@ -288,10 +282,8 @@
                 <div class="modal-dialog modal-dialog-centered">
                     <form method="post" asp-action="Delete" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle-@b.Id">
                         @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="deleteTitle-@b.Id">@Localizer["Admin.Businesses.DeleteTitleFor", b.Name]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Businesses.Close"]"></button>
-                        </div>
+                        <partial name="Partials/_ModalHeader"
+                                 model="@(new ModalHeaderVm { TitleId = $"deleteTitle-{b.Id}", Title = Localizer["Admin.Businesses.DeleteTitleFor", b.Name].Value, CloseLabel = Localizer["Admin.Businesses.Close"].Value })" />
                         <div class="modal-body" id="deleteBody-@b.Id">
                             <p class="mb-0">@Localizer["Admin.Businesses.DeleteBody"]</p>
                         </div>

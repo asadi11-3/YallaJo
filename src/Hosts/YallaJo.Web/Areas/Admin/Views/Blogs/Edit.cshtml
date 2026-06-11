@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Admin.Models.Blogs
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model EditBlogVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -366,10 +367,8 @@
                       class="modal-content" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="fromEdit" value="true" />
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="rejectModalTitle">@Localizer["Admin.Blogs.RejectTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Blogs.Close"]"></button>
-                    </div>
+                    <partial name="Partials/_ModalHeader"
+                             model="@(new ModalHeaderVm { TitleId = "rejectModalTitle", Title = Localizer["Admin.Blogs.RejectTitle"].Value, CloseLabel = Localizer["Admin.Blogs.Close"].Value })" />
                     <div class="modal-body" id="rejectModalBody">
                         <p class="mb-3">@Localizer["Admin.Blogs.RejectIntro", Model.Title]</p>
                         <label for="rejectReason" class="form-label">@Localizer["Admin.Blogs.ReasonLabel"]</label>
@@ -395,10 +394,8 @@
                 <form asp-area="Admin" asp-controller="Blogs" asp-action="Hide" asp-route-id="@Model.Id" method="post"
                       class="modal-content" role="dialog" aria-modal="true" aria-labelledby="hideModalTitle">
                     @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="hideModalTitle">@Localizer["Admin.Blogs.HideTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Blogs.Close"]"></button>
-                    </div>
+                    <partial name="Partials/_ModalHeader"
+                             model="@(new ModalHeaderVm { TitleId = "hideModalTitle", Title = Localizer["Admin.Blogs.HideTitle"].Value, CloseLabel = Localizer["Admin.Blogs.Close"].Value })" />
                     <div class="modal-body" id="hideModalBody">
                         <p class="mb-3">@Localizer["Admin.Blogs.HideIntro", Model.Title]</p>
                         <label for="hideReason" class="form-label">@Localizer["Admin.Blogs.ReasonLabel"]</label>
@@ -424,10 +421,8 @@
                 <form asp-area="Admin" asp-controller="Blogs" asp-action="Remove" asp-route-id="@Model.Id" method="post"
                       class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="removeModalTitle">
                     @Html.AntiForgeryToken()
-                    <div class="modal-header bg-danger text-white">
-                        <h2 class="modal-title h5" id="removeModalTitle">@Localizer["Admin.Blogs.RemoveTitle"]</h2>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Blogs.Close"]"></button>
-                    </div>
+                    <partial name="Partials/_ModalHeader"
+                             model="@(new ModalHeaderVm { TitleId = "removeModalTitle", Title = Localizer["Admin.Blogs.RemoveTitle"].Value, CloseLabel = Localizer["Admin.Blogs.Close"].Value, Danger = true })" />
                     <div class="modal-body" id="removeModalBody">
                         <div class="alert alert-danger">@Localizer["Admin.Blogs.RemoveBanner"]</div>
                         <p class="mb-3">@Localizer["Admin.Blogs.RemoveIntro", Model.Title]</p>

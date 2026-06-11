@@ -1,0 +1,18 @@
+@*
+    Shared admin empty state (contract §4.9, L6) — illustration + pre-localized
+    message + optional CTA. Composed, never a bare "no data" string.
+*@
+@model YallaJo.Web.Areas.Admin.Models.Shared.EmptyStateVm
+<div class="@Model.ContainerClass">
+    <img src="@Url.Content(Model.ImageSrc)" width="80" height="80"
+         aria-hidden="true" alt="" class="@Model.ImageClass" />
+    @if (!string.IsNullOrEmpty(Model.Heading))
+    {
+        <h2 class="h5">@Model.Heading</h2>
+    }
+    <p class="@(Model.HasCta ? "mb-3" : "mb-0") text-secondary">@Model.Message</p>
+    @if (Model.HasCta)
+    {
+        <a href="@Model.CtaUrl" class="btn btn-sm btn-primary-soft">@Model.CtaText</a>
+    }
+</div>

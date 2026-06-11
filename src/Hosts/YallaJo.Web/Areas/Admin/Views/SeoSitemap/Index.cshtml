@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.SeoSitemap
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model SeoSitemapVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -61,10 +62,8 @@
 
 @if (!Model.HasEntries)
 {
-    <div class="card card-body shadow text-center py-5">
-        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3 mx-auto" />
-        <p class="mb-0 text-secondary">@Localizer["Admin.SeoSitemap.EmptyMessage"]</p>
-    </div>
+    <partial name="Partials/_EmptyState"
+             model="@(new EmptyStateVm { Message = Localizer["Admin.SeoSitemap.EmptyMessage"].Value, ContainerClass = "card card-body shadow text-center py-5", ImageClass = "h-80px mb-3 mx-auto" })" />
 }
 else
 {
@@ -143,21 +142,18 @@ else
         </div>
         @if (Model.HasPrevious || Model.HasNext)
         {
-            <div class="card-footer border-top">
-                <nav aria-label="@Localizer["Admin.SeoSitemap.PaginationLabel"]">
-                    <ul class="pagination justify-content-center mb-0">
-                        <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
-                            <a class="page-link" asp-area="Admin" asp-controller="SeoSitemap" asp-action="Index"
-                               asp-route-page="@(Model.Page - 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-isActive="@Model.IsActiveFilter">@Localizer["Admin.SeoSitemap.Previous"]</a>
-                        </li>
-                        <li class="page-item disabled"><span class="page-link">@Localizer["Admin.SeoSitemap.PageLabel"] <bdi class="font-data">@Model.Page</bdi></span></li>
-                        <li class="page-item @(Model.HasNext ? "" : "disabled")">
-                            <a class="page-link" asp-area="Admin" asp-controller="SeoSitemap" asp-action="Index"
-                               asp-route-page="@(Model.Page + 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-isActive="@Model.IsActiveFilter">@Localizer["Admin.SeoSitemap.Next"]</a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
+            <partial name="Partials/_PaginationFooter"
+                     model="@(new PaginationFooterVm
+                     {
+                         HasPrevious = Model.HasPrevious,
+                         HasNext = Model.HasNext,
+                         Page = Model.Page,
+                         PreviousUrl = Url.Action("Index", "SeoSitemap", new { area = "Admin", page = Model.Page - 1, entityType = Model.EntityTypeFilter, isActive = Model.IsActiveFilter }),
+                         NextUrl = Url.Action("Index", "SeoSitemap", new { area = "Admin", page = Model.Page + 1, entityType = Model.EntityTypeFilter, isActive = Model.IsActiveFilter }),
+                         PreviousText = Localizer["Admin.SeoSitemap.Previous"].Value,
+                         NextText = Localizer["Admin.SeoSitemap.Next"].Value,
+                         PageLabel = Localizer["Admin.SeoSitemap.PageLabel"].Value
+                     })" />
         }
     </section>
 
@@ -171,10 +167,8 @@ else
                     <form asp-area="Admin" asp-controller="SeoSitemap" asp-action="Update" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="Id" value="@e.Id" />
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="@titleId">@Localizer["Admin.SeoSitemap.EditTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.SeoSitemap.Close"]"></button>
-                        </div>
+                        <partial name="Partials/_ModalHeader"
+                                 model="@(new ModalHeaderVm { TitleId = titleId, Title = Localizer["Admin.SeoSitemap.EditTitle"].Value, CloseLabel = Localizer["Admin.SeoSitemap.Close"].Value })" />
                         <div class="modal-body">
                             <p class="small text-secondary text-truncate" title="@e.Url"><bdi dir="ltr">@e.Url</bdi></p>
                             <div class="mb-3">

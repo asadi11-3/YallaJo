@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Admin.Models.Blogs
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model BlogListVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -212,21 +213,18 @@
 
     @if (Model.HasPreviousPage || Model.HasNextPage)
     {
-        <div class="card-footer border-top">
-            <nav aria-label="@Localizer["Admin.Blogs.PaginationLabel"]">
-                <ul class="pagination justify-content-center mb-0">
-                    <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                        <a class="page-link" href="@PageUrl(Model.PageNumber - 1)">@Localizer["Admin.Blogs.Previous"]</a>
-                    </li>
-                    <li class="page-item active">
-                        <span class="page-link">@Localizer["Admin.Blogs.PageLabel"] <bdi class="font-data">@Count(Model.PageNumber)</bdi></span>
-                    </li>
-                    <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                        <a class="page-link" href="@PageUrl(Model.PageNumber + 1)">@Localizer["Admin.Blogs.Next"]</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
+        <partial name="Partials/_PaginationFooter"
+                 model="@(new PaginationFooterVm
+                 {
+                     HasPrevious = Model.HasPreviousPage,
+                     HasNext = Model.HasNextPage,
+                     Page = Model.PageNumber,
+                     PreviousUrl = PageUrl(Model.PageNumber - 1),
+                     NextUrl = PageUrl(Model.PageNumber + 1),
+                     PreviousText = Localizer["Admin.Blogs.Previous"].Value,
+                     NextText = Localizer["Admin.Blogs.Next"].Value,
+                     PageLabel = Localizer["Admin.Blogs.PageLabel"].Value
+                 })" />
     }
 </section>
 
@@ -243,10 +241,8 @@
                           method="post" class="modal-content" role="dialog" aria-modal="true"
                           aria-labelledby="rejectTitle-@blog.Id.ToString("N")">
                         @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="rejectTitle-@blog.Id.ToString("N")">@Localizer["Admin.Blogs.RejectTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Blogs.Close"]"></button>
-                        </div>
+                        <partial name="Partials/_ModalHeader"
+                                 model="@(new ModalHeaderVm { TitleId = $"rejectTitle-{blog.Id.ToString("N")}", Title = Localizer["Admin.Blogs.RejectTitle"].Value, CloseLabel = Localizer["Admin.Blogs.Close"].Value })" />
                         <div class="modal-body" id="rejectBody-@blog.Id.ToString("N")">
                             <p class="mb-3">@Localizer["Admin.Blogs.RejectIntro", blog.Title]</p>
                             <label for="rejectReason-@blog.Id.ToString("N")" class="form-label">@Localizer["Admin.Blogs.ReasonLabel"]</label>

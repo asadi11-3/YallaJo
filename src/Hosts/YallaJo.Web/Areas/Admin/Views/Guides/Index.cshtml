@@ -1,6 +1,7 @@
 @using System.Globalization
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Guides
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @model GuidesVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
@@ -59,10 +60,8 @@
         }
         else
         {
-            <div class="text-center py-5">
-                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                <p class="mb-0 text-secondary">@Localizer["Admin.Guides.NoGuides"]</p>
-            </div>
+            <partial name="Partials/_EmptyState"
+                     model="@(new EmptyStateVm { Message = Localizer["Admin.Guides.NoGuides"].Value })" />
         }
     </div>
 </section>
@@ -74,18 +73,10 @@
             <h2 id="guide-detail-heading" class="card-header-title h5 mb-0">
                 @(string.IsNullOrWhiteSpace(detail.DisplayName) ? Localizer["Admin.Guides.UnnamedGuide"].Value : detail.DisplayName)
             </h2>
-            @if (detail.HasFirstAid)
-            {
-                <span class="badge bg-success bg-opacity-10 text-success">
-                    <i class="fa-solid fa-kit-medical fa-fw" aria-hidden="true"></i> @Localizer["Admin.Guides.FirstAidYes"]
-                </span>
-            }
-            else
-            {
-                <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                    <i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Guides.FirstAidNo"]
-                </span>
-            }
+            <partial name="Partials/_StatusBadge"
+                     model="@(detail.HasFirstAid
+                         ? new StatusBadgeVm { Color = "success", Icon = "fa-solid fa-kit-medical", Text = Localizer["Admin.Guides.FirstAidYes"].Value }
+                         : new StatusBadgeVm { Color = "secondary", Icon = "fa-solid fa-circle-minus", Text = Localizer["Admin.Guides.FirstAidNo"].Value })" />
         </div>
         <div class="card-body">
             <dl class="row mb-0">
@@ -190,10 +181,13 @@
                 <form method="post" asp-area="Admin" asp-controller="Guides" asp-action="Edit" asp-route-id="@detail.Id"
                       class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editGuideLabel">
                     @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5 mb-0" id="editGuideLabel">@Localizer["Admin.Guides.EditTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Guides.Close"]"></button>
-                    </div>
+                    <partial name="Partials/_ModalHeader"
+                             model="@(new ModalHeaderVm
+                             {
+                                 TitleId = "editGuideLabel",
+                                 Title = Localizer["Admin.Guides.EditTitle"].Value,
+                                 CloseLabel = Localizer["Admin.Guides.Close"].Value
+                             })" />
                     <div class="modal-body" id="editGuideBody">
                         <div class="mb-3">
                             <label class="form-label" for="edit-years">@Localizer["Admin.Guides.Experience"]</label>
@@ -224,65 +218,50 @@
         </div>
     </permission>
 
-    @* Suspend guide (§8.14 — reason required) *@
+    @* Suspend guide (§8.14 — reason required; shared _ActionModal) *@
     <permission require="@WebPermission.TourGuideProfile.Suspend">
-        <div class="modal fade" id="suspendModal" tabindex="-1" aria-labelledby="suspendLabel" aria-describedby="suspendBody"
-             aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <form method="post" asp-area="Admin" asp-controller="Guides" asp-action="Suspend" asp-route-id="@detail.Id"
-                      class="modal-content" role="dialog" aria-modal="true" aria-labelledby="suspendLabel">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5 mb-0" id="suspendLabel">@Localizer["Admin.Guides.SuspendTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Guides.Close"]"></button>
-                    </div>
-                    <div class="modal-body" id="suspendBody">
-                        <label for="suspend-reason" class="form-label">@Localizer["Admin.Guides.ReasonLabel"]</label>
-                        <textarea id="suspend-reason" name="reason" class="form-control" rows="3" maxlength="1000" required
-                                  aria-describedby="suspend-reason-help"></textarea>
-                        <small id="suspend-reason-help" class="form-text">@Localizer["Admin.Guides.ReasonHelp"]</small>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Guides.Cancel"]</button>
-                        <button type="submit" class="btn btn-danger">@Localizer["Admin.Guides.Suspend"]</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <partial name="Partials/_ActionModal"
+                 model="@(new ActionModalVm
+                 {
+                     Id = "suspendModal",
+                     Title = Localizer["Admin.Guides.SuspendTitle"].Value,
+                     CloseLabel = Localizer["Admin.Guides.Close"].Value,
+                     CancelText = Localizer["Admin.Guides.Cancel"].Value,
+                     SubmitText = Localizer["Admin.Guides.Suspend"].Value,
+                     StaticBackdrop = true,
+                     FormAction = Url.Action("Suspend", "Guides", new { area = "Admin", id = detail.Id })!,
+                     Reason = new ReasonFieldVm
+                     {
+                         Label = Localizer["Admin.Guides.ReasonLabel"].Value,
+                         Help = Localizer["Admin.Guides.ReasonHelp"].Value
+                     }
+                 })" />
     </permission>
 
-    @* Deactivate guide (§8.14 — destructive, MOD3 static backdrop, MOD4 alertdialog) *@
+    @* Deactivate guide (§8.14 — destructive, MOD3 static backdrop, MOD4 alertdialog; shared _ActionModal) *@
     <permission require="@WebPermission.TourGuideProfile.DeleteAny">
-        <div class="modal fade" id="deleteGuideModal" tabindex="-1" aria-labelledby="deleteGuideLabel" aria-describedby="deleteGuideBody"
-             aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <form method="post" asp-area="Admin" asp-controller="Guides" asp-action="Delete" asp-route-id="@detail.Id"
-                      class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="deleteGuideLabel">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header bg-danger text-white">
-                        <h2 class="modal-title h5 mb-0" id="deleteGuideLabel">@Localizer["Admin.Guides.DeactivateTitle"]</h2>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Guides.Close"]"></button>
-                    </div>
-                    <div class="modal-body" id="deleteGuideBody">
-                        <p class="mb-0">
-                            @Localizer["Admin.Guides.DeactivateBody", string.IsNullOrWhiteSpace(detail.DisplayName) ? Localizer["Admin.Guides.ThisGuide"].Value : detail.DisplayName]
-                        </p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Guides.Cancel"]</button>
-                        <button type="submit" class="btn btn-danger">@Localizer["Admin.Guides.Deactivate"]</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <partial name="Partials/_ActionModal"
+                 model="@(new ActionModalVm
+                 {
+                     Id = "deleteGuideModal",
+                     Title = Localizer["Admin.Guides.DeactivateTitle"].Value,
+                     CloseLabel = Localizer["Admin.Guides.Close"].Value,
+                     CancelText = Localizer["Admin.Guides.Cancel"].Value,
+                     SubmitText = Localizer["Admin.Guides.Deactivate"].Value,
+                     DangerHeader = true,
+                     StaticBackdrop = true,
+                     AlertDialog = true,
+                     FormAction = Url.Action("Delete", "Guides", new { area = "Admin", id = detail.Id })!,
+                     Message = Localizer["Admin.Guides.DeactivateBody", string.IsNullOrWhiteSpace(detail.DisplayName) ? Localizer["Admin.Guides.ThisGuide"].Value : detail.DisplayName].Value
+                 })" />
     </permission>
 }
 else if (Model.LookupId is not null)
 {
     <div class="card shadow">
-        <div class="card-body text-center py-5">
-            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-            <p class="mb-0 text-secondary">@Localizer["Admin.Guides.NotFound"]</p>
+        <div class="card-body">
+            <partial name="Partials/_EmptyState"
+                     model="@(new EmptyStateVm { Message = Localizer["Admin.Guides.NotFound"].Value })" />
         </div>
     </div>
 }

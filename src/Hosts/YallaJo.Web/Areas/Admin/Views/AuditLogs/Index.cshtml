@@ -1,5 +1,6 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model YallaJo.Web.Areas.Admin.Models.AuditLogs.AuditLogListVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -249,40 +250,17 @@
     @* ── Pagination (filters preserved across page changes; driven by HasPrevious/HasNext per D1) ── *@
     @if (Model.Logs.Count > 0 && (Model.HasPrevious || Model.HasNext))
     {
-        <div class="card-footer d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span class="small text-secondary">
-                @Localizer["Admin.Audit.PageLabel"] <bdi>@Count(Model.Page)</bdi>
-            </span>
-            <div class="d-flex gap-2">
-                @if (Model.HasPrevious)
-                {
-                    <a asp-action="Index"
-                       asp-route-page="@(Model.Page - 1)"
-                       asp-route-userId="@Model.FilterUserId"
-                       asp-route-actorUserId="@Model.FilterActorUserId"
-                       asp-route-action="@Model.FilterAction"
-                       asp-route-from="@(Model.FilterFrom?.ToString("o"))"
-                       asp-route-to="@(Model.FilterTo?.ToString("o"))"
-                       class="btn btn-sm btn-outline-secondary">
-                        <i class="fa-solid fa-arrow-left fa-fw me-1" aria-hidden="true"></i>
-                        @Localizer["Admin.Audit.Previous"]
-                    </a>
-                }
-                @if (Model.HasNext)
-                {
-                    <a asp-action="Index"
-                       asp-route-page="@(Model.Page + 1)"
-                       asp-route-userId="@Model.FilterUserId"
-                       asp-route-actorUserId="@Model.FilterActorUserId"
-                       asp-route-action="@Model.FilterAction"
-                       asp-route-from="@(Model.FilterFrom?.ToString("o"))"
-                       asp-route-to="@(Model.FilterTo?.ToString("o"))"
-                       class="btn btn-sm btn-outline-secondary">
-                        @Localizer["Admin.Audit.Next"]
-                        <i class="fa-solid fa-arrow-right fa-fw ms-1" aria-hidden="true"></i>
-                    </a>
-                }
-            </div>
-        </div>
+        <partial name="Partials/_PaginationFooter"
+                 model="@(new PaginationFooterVm
+                 {
+                     HasPrevious = Model.HasPrevious,
+                     HasNext = Model.HasNext,
+                     Page = Model.Page,
+                     PreviousUrl = Url.Action("Index", new { page = Model.Page - 1, userId = Model.FilterUserId, actorUserId = Model.FilterActorUserId, action = Model.FilterAction, from = Model.FilterFrom?.ToString("o"), to = Model.FilterTo?.ToString("o") }),
+                     NextUrl = Url.Action("Index", new { page = Model.Page + 1, userId = Model.FilterUserId, actorUserId = Model.FilterActorUserId, action = Model.FilterAction, from = Model.FilterFrom?.ToString("o"), to = Model.FilterTo?.ToString("o") }),
+                     PreviousText = Localizer["Admin.Audit.Previous"].Value,
+                     NextText = Localizer["Admin.Audit.Next"].Value,
+                     PageLabel = Localizer["Admin.Audit.PageLabel"].Value
+                 })" />
     }
 </div>

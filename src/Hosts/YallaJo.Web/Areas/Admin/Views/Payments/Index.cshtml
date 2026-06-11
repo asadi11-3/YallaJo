@@ -3,6 +3,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Payments
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @inject YallaJo.Web.Infrastructure.Identity.ICurrentUser CurrentUser
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -231,10 +232,8 @@
                                 <form method="post" asp-area="Admin" asp-controller="Payments" asp-action="Refund"
                                       asp-route-id="@p.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@labelId">
                                     @Html.AntiForgeryToken()
-                                    <div class="modal-header">
-                                        <h2 class="modal-title h5 mb-0" id="@labelId">@Localizer["Admin.Finance.RefundTitle"]</h2>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Finance.Close"]"></button>
-                                    </div>
+                                    <partial name="Partials/_ModalHeader"
+                                             model="@(new ModalHeaderVm { TitleId = labelId, Title = Localizer["Admin.Finance.RefundTitle"].Value, CloseLabel = Localizer["Admin.Finance.Close"].Value })" />
                                     <div class="modal-body" id="@descId">
                                         <p class="small text-secondary">
                                             @Localizer["Admin.Finance.RefundIntro", reference]<br />
@@ -284,14 +283,8 @@
         }
         else
         {
-            <div class="text-center py-5">
-                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                <p class="mb-3 text-secondary">@Localizer["Admin.Finance.EmptyMessage"]</p>
-                @if (hasFilters)
-                {
-                    <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Payments" asp-action="Index">@Localizer["Admin.Finance.ClearFilters"]</a>
-                }
-            </div>
+            <partial name="Partials/_EmptyState"
+                     model="@(new EmptyStateVm { Message = Localizer["Admin.Finance.EmptyMessage"].Value, CtaText = hasFilters ? Localizer["Admin.Finance.ClearFilters"].Value : null, CtaUrl = hasFilters ? Url.Action("Index", "Payments", new { area = "Admin" }) : null })" />
         }
     </div>
 </section>

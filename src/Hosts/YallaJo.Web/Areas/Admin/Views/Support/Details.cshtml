@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Support
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model SupportTicketDetailVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -201,10 +202,8 @@
                 <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Resolve" asp-route-id="@Model.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="resolveModalTitle">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="resolveModalTitle">@Localizer["Admin.SupportDetails.ResolveTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.SupportDetails.Close"]"></button>
-                    </div>
+                    <partial name="Partials/_ModalHeader"
+                             model="@(new ModalHeaderVm { TitleId = "resolveModalTitle", Title = Localizer["Admin.SupportDetails.ResolveTitle"].Value, CloseLabel = Localizer["Admin.SupportDetails.Close"].Value })" />
                     <div class="modal-body" id="resolveModalBody">
                         <label class="form-label" for="notes">@Localizer["Admin.SupportDetails.NotesLabel"]</label>
                         <textarea class="form-control" id="notes" name="notes" rows="3" maxlength="1000" aria-describedby="notes-help"></textarea>

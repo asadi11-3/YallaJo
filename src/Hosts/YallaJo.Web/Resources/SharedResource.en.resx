@@ -14062,4 +14062,10 @@
   <data name="Admin.Users.Archive.ConfirmError" xml:space="preserve">
     <value>Type {0} to confirm the archive.</value>
   </data>
+  <data name="Admin.Shared.StatusActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Admin.Shared.StatusInactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
 </root>

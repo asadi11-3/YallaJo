@@ -1,20 +1,22 @@
 @*
-    Phase 5D — single-source lifecycle status badge. Today it renders
-    a binary Active/Inactive pill driven by Model.IsActive; the
-    optional Model.LifecycleState parameter is accepted but ignored
-    until the backend UserDto exposes granular lifecycle states.
-    Every call site already passes the field, so the future upgrade
-    is a one-helper change.
+    Single-source lifecycle status badge. Delegates rendering to the shared
+    Partials/_StatusBadge (contract §4.2 canonical badge). Today it maps the
+    binary Model.IsActive; the optional Model.LifecycleState parameter is
+    accepted but ignored until the backend UserDto exposes granular lifecycle
+    states. Every call site already passes the field, so the future upgrade is
+    a one-file change.
 *@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Helpers
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model YallaJo.Web.Areas.Admin.Models.Users.LifecycleBadgeVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    var css   = LifecycleBadge.GetCssClass(Model.IsActive, Model.LifecycleState);
-    var label = LifecycleBadge.GetLabel(Model.IsActive, Model.LifecycleState);
-    var icon  = LifecycleBadge.GetIconClass(Model.IsActive, Model.LifecycleState);
-    var aria  = Model.IsActive ? Localizer["Admin.UserDetails.StatusActiveAria"].Value : Localizer["Admin.UserDetails.StatusInactiveAria"].Value;
+    // CON1 — visible text now localized (was the helper's hardcoded English label).
+    var color = Model.IsActive ? "success" : "secondary";
+    var icon = LifecycleBadge.GetIconClass(Model.IsActive, Model.LifecycleState);
+    var text = Model.IsActive ? Localizer["Admin.Shared.StatusActive"].Value : Localizer["Admin.Shared.StatusInactive"].Value;
+    var aria = Model.IsActive ? Localizer["Admin.UserDetails.StatusActiveAria"].Value : Localizer["Admin.UserDetails.StatusInactiveAria"].Value;
 }
-@* A11Y5 — status conveyed by colour + icon + text, not colour alone. *@
-<span class="badge @css" aria-label="@aria"><i class="@icon fa-fw" aria-hidden="true"></i> <span>@label</span></span>
+<partial name="Partials/_StatusBadge"
+         model="@(new StatusBadgeVm { Color = color, Icon = icon, Text = text, AriaLabel = aria })" />

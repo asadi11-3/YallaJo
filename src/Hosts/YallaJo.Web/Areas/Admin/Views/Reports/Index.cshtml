@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Reports
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model ReportsVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -27,10 +28,8 @@
 @if (Model.Reports.Count == 0)
 {
     <section class="card shadow">
-        <div class="card-body text-center py-5">
-            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-            <p class="mb-0 text-secondary">@Localizer["Admin.Reports.EmptyMessage"]</p>
-        </div>
+        <partial name="Partials/_EmptyState"
+                 model="@(new EmptyStateVm { Message = Localizer["Admin.Reports.EmptyMessage"].Value, ContainerClass = "card-body text-center py-5" })" />
     </section>
 }
 else
@@ -119,10 +118,8 @@ else
                 <div class="modal-dialog modal-dialog-centered">
                     <form asp-action="Resolve" asp-route-id="@r.Id" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
                         @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="@titleId">@Localizer["Admin.Reports.ResolveTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Reports.Close"]"></button>
-                        </div>
+                        <partial name="Partials/_ModalHeader"
+                                 model="@(new ModalHeaderVm { TitleId = titleId, Title = Localizer["Admin.Reports.ResolveTitle"].Value, CloseLabel = Localizer["Admin.Reports.Close"].Value })" />
                         <div class="modal-body" id="@bodyId">
                             <label class="form-label" for="@(modalId)-action">@Localizer["Admin.Reports.ActionLabel"]</label>
                             <select name="action" id="@(modalId)-action" class="form-select mb-3" required>

@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Trips
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model TripsVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -121,10 +122,8 @@
                                   class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@rejectTitleId">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="rowVersion" value="@detail.RowVersionBase64" />
-                                <div class="modal-header">
-                                    <h2 id="@rejectTitleId" class="modal-title h5">@Localizer["Admin.Trips.RejectTitle"]</h2>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Trips.Close"]"></button>
-                                </div>
+                                <partial name="Partials/_ModalHeader"
+                                         model="@(new ModalHeaderVm { TitleId = rejectTitleId, Title = Localizer["Admin.Trips.RejectTitle"].Value, CloseLabel = Localizer["Admin.Trips.Close"].Value })" />
                                 <div class="modal-body">
                                     <p id="@rejectDescId" class="text-secondary small">@Localizer["Admin.Trips.RejectBody", detail.Name]</p>
                                     <label for="rejectReason" class="form-label">@Localizer["Admin.Trips.ReasonLabel"]</label>
@@ -149,10 +148,8 @@
                                   class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@suspendTitleId">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="rowVersion" value="@detail.RowVersionBase64" />
-                                <div class="modal-header">
-                                    <h2 id="@suspendTitleId" class="modal-title h5">@Localizer["Admin.Trips.SuspendTitle"]</h2>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Trips.Close"]"></button>
-                                </div>
+                                <partial name="Partials/_ModalHeader"
+                                         model="@(new ModalHeaderVm { TitleId = suspendTitleId, Title = Localizer["Admin.Trips.SuspendTitle"].Value, CloseLabel = Localizer["Admin.Trips.Close"].Value })" />
                                 <div class="modal-body">
                                     <p id="@suspendDescId" class="text-secondary small">@Localizer["Admin.Trips.SuspendBody", detail.Name]</p>
                                     <label for="suspendReason" class="form-label">@Localizer["Admin.Trips.ReasonLabel"]</label>
@@ -180,10 +177,8 @@
     <div class="card-body">
         @if (Model.Tours.Count == 0)
         {
-            <div class="text-center py-5">
-                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                <p class="mb-0 text-secondary">@Localizer["Admin.Trips.EmptyMessage"]</p>
-            </div>
+            <partial name="Partials/_EmptyState"
+                     model="@(new EmptyStateVm { Message = Localizer["Admin.Trips.EmptyMessage"].Value })" />
         }
         else
         {
@@ -232,32 +227,17 @@
 
     @if (Model.HasPreviousPage || Model.HasNextPage)
     {
-        <div class="card-footer border-top">
-            <nav class="d-flex justify-content-between align-items-center" aria-label="@Localizer["Admin.Trips.PaginationLabel"]">
-                @if (Model.HasPreviousPage)
-                {
-                    <a asp-area="Admin" asp-controller="Trips" asp-action="Index" asp-route-page="@(Model.PageNumber - 1)"
-                       class="btn btn-sm btn-outline-secondary">
-                        <i class="fa-solid fa-chevron-left fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Trips.Previous"]
-                    </a>
-                }
-                else
-                {
-                    <span></span>
-                }
-                <span class="text-secondary small">@Localizer["Admin.Trips.PageLabel"] <bdi class="font-data" dir="ltr">@Count(Model.PageNumber)</bdi></span>
-                @if (Model.HasNextPage)
-                {
-                    <a asp-area="Admin" asp-controller="Trips" asp-action="Index" asp-route-page="@(Model.PageNumber + 1)"
-                       class="btn btn-sm btn-outline-secondary">
-                        @Localizer["Admin.Trips.Next"]<i class="fa-solid fa-chevron-right fa-fw ms-1" aria-hidden="true"></i>
-                    </a>
-                }
-                else
-                {
-                    <span></span>
-                }
-            </nav>
-        </div>
+        <partial name="Partials/_PaginationFooter"
+                 model="@(new PaginationFooterVm
+                 {
+                     HasPrevious = Model.HasPreviousPage,
+                     HasNext = Model.HasNextPage,
+                     Page = Model.PageNumber,
+                     PreviousUrl = Url.Action("Index", "Trips", new { area = "Admin", page = Model.PageNumber - 1 }),
+                     NextUrl = Url.Action("Index", "Trips", new { area = "Admin", page = Model.PageNumber + 1 }),
+                     PreviousText = Localizer["Admin.Trips.Previous"].Value,
+                     NextText = Localizer["Admin.Trips.Next"].Value,
+                     PageLabel = Localizer["Admin.Trips.PageLabel"].Value
+                 })" />
     }
 </section>

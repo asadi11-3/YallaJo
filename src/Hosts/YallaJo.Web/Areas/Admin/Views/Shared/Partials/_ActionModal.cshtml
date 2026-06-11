@@ -1,0 +1,49 @@
+@*
+    Shared action modal (MOD3, MOD5, PE1, SEC7) — the standard confirm/act modal
+    posting a simple form: optional message, optional reason textarea, optional
+    hidden fields. Antiforgery token included. Permission gating stays at the
+    call site; rich modals stay bespoke.
+*@
+@using YallaJo.Web.Areas.Admin.Models.Shared
+@model YallaJo.Web.Areas.Admin.Models.Shared.ActionModalVm
+@{
+    var labelId = $"{Model.Id}Label";
+    var bodyId = $"{Model.Id}Body";
+}
+<div class="modal fade" id="@Model.Id" tabindex="-1" aria-labelledby="@labelId" aria-describedby="@bodyId"
+     aria-hidden="true"@(Model.StaticBackdrop ? Html.Raw(" data-bs-backdrop=\"static\" data-bs-keyboard=\"false\"") : Html.Raw(string.Empty))>
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" action="@Model.FormAction" class="modal-content"
+              role="@(Model.AlertDialog ? "alertdialog" : "dialog")" aria-modal="true" aria-labelledby="@labelId">
+            @Html.AntiForgeryToken()
+            <partial name="Partials/_ModalHeader"
+                     model="@(new ModalHeaderVm { TitleId = labelId, Title = Model.Title, CloseLabel = Model.CloseLabel, Danger = Model.DangerHeader })" />
+            <div class="modal-body" id="@bodyId">
+                @if (!string.IsNullOrEmpty(Model.Message))
+                {
+                    <p class="@(Model.Reason is null ? "mb-0" : "mb-3")">@Model.Message</p>
+                }
+                @if (Model.Reason is { } reason)
+                {
+                    var reasonId = $"{Model.Id}-reason";
+                    <label for="@reasonId" class="form-label">@reason.Label</label>
+                    <textarea id="@reasonId" name="@reason.Name" class="form-control" rows="@reason.Rows"
+                              maxlength="@reason.MaxLength" required="@reason.Required"
+                              aria-describedby="@(string.IsNullOrEmpty(reason.Help) ? null : $"{reasonId}-help")"></textarea>
+                    @if (!string.IsNullOrEmpty(reason.Help))
+                    {
+                        <small id="@reasonId-help" class="form-text">@reason.Help</small>
+                    }
+                }
+                @foreach (var hidden in Model.HiddenFields)
+                {
+                    <input type="hidden" name="@hidden.Name" value="@hidden.Value" />
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Model.CancelText</button>
+                <button type="submit" class="btn @Model.SubmitClass">@Model.SubmitText</button>
+            </div>
+        </form>
+    </div>
+</div>

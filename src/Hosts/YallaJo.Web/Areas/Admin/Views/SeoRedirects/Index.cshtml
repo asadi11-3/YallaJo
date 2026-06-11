@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.SeoRedirects
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model RedirectsVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -61,10 +62,8 @@
 @if (!Model.HasRedirects)
 {
     <div class="card shadow">
-        <div class="card-body text-center py-5">
-            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-            <p class="mb-0 text-secondary">@Localizer["Admin.SeoRedirects.EmptyMessage"]</p>
-        </div>
+        <partial name="Partials/_EmptyState"
+                 model="@(new EmptyStateVm { Message = Localizer["Admin.SeoRedirects.EmptyMessage"].Value, ContainerClass = "card-body text-center py-5" })" />
     </div>
 }
 else
@@ -130,19 +129,18 @@ else
         </div>
         @if (Model.HasPrevious || Model.HasNext)
         {
-            <div class="card-footer border-top">
-                <nav aria-label="@Localizer["Admin.SeoRedirects.PaginationLabel"]">
-                    <ul class="pagination justify-content-center mb-0">
-                        <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-OldUrl="@Model.OldUrlFilter" asp-route-IsActive="@Model.IsActiveFilter">@Localizer["Admin.SeoRedirects.Previous"]</a>
-                        </li>
-                        <li class="page-item disabled"><span class="page-link">@Localizer["Admin.SeoRedirects.PageLabel"] <bdi class="font-data">@Model.Page.ToString("N0", culture)</bdi></span></li>
-                        <li class="page-item @(Model.HasNext ? "" : "disabled")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-OldUrl="@Model.OldUrlFilter" asp-route-IsActive="@Model.IsActiveFilter">@Localizer["Admin.SeoRedirects.Next"]</a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
+            <partial name="Partials/_PaginationFooter"
+                     model="@(new PaginationFooterVm
+                     {
+                         HasPrevious = Model.HasPrevious,
+                         HasNext = Model.HasNext,
+                         Page = Model.Page,
+                         PreviousUrl = Url.Action("Index", new { page = Model.Page - 1, OldUrl = Model.OldUrlFilter, IsActive = Model.IsActiveFilter }),
+                         NextUrl = Url.Action("Index", new { page = Model.Page + 1, OldUrl = Model.OldUrlFilter, IsActive = Model.IsActiveFilter }),
+                         PreviousText = Localizer["Admin.SeoRedirects.Previous"].Value,
+                         NextText = Localizer["Admin.SeoRedirects.Next"].Value,
+                         PageLabel = Localizer["Admin.SeoRedirects.PageLabel"].Value
+                     })" />
         }
     </section>
 
@@ -154,10 +152,8 @@ else
                     <form asp-action="Update" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editRedirectTitle-@r.Id.ToString("N")">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="Id" value="@r.Id" />
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="editRedirectTitle-@r.Id.ToString("N")">@Localizer["Admin.SeoRedirects.EditTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.SeoRedirects.Close"]"></button>
-                        </div>
+                        <partial name="Partials/_ModalHeader"
+                                 model="@(new ModalHeaderVm { TitleId = $"editRedirectTitle-{r.Id.ToString("N")}", Title = Localizer["Admin.SeoRedirects.EditTitle"].Value, CloseLabel = Localizer["Admin.SeoRedirects.Close"].Value })" />
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="er-old-@r.Id.ToString("N")" class="form-label">@Localizer["Admin.SeoRedirects.OldUrlLabel"]</label>
@@ -198,10 +194,8 @@ else
         <div class="modal-dialog modal-dialog-centered">
             <form asp-action="Create" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createRedirectTitle">
                 @Html.AntiForgeryToken()
-                <div class="modal-header">
-                    <h2 class="modal-title h5" id="createRedirectTitle">@Localizer["Admin.SeoRedirects.Add"]</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.SeoRedirects.Close"]"></button>
-                </div>
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "createRedirectTitle", Title = Localizer["Admin.SeoRedirects.Add"].Value, CloseLabel = Localizer["Admin.SeoRedirects.Close"].Value })" />
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="cr-old" class="form-label">@Localizer["Admin.SeoRedirects.OldUrlLabel"]</label>

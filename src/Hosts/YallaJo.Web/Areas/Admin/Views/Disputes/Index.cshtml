@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Disputes
 @using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @model DisputesVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -51,14 +52,8 @@
     @if (Model.Disputes.Count == 0)
     {
         <div class="card-body">
-            <div class="text-center py-5">
-                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                <p class="mb-3 text-secondary">@Localizer["Admin.Disputes.EmptyMessage"]</p>
-                @if (hasFilter)
-                {
-                    <a asp-area="Admin" asp-controller="Disputes" asp-action="Index" class="btn btn-sm btn-primary-soft">@Localizer["Admin.Disputes.ClearFilter"]</a>
-                }
-            </div>
+            <partial name="Partials/_EmptyState"
+                     model="@(new EmptyStateVm { Message = Localizer["Admin.Disputes.EmptyMessage"].Value, CtaText = hasFilter ? Localizer["Admin.Disputes.ClearFilter"].Value : null, CtaUrl = hasFilter ? Url.Action("Index", "Disputes", new { area = "Admin" }) : null })" />
         </div>
     }
     else
@@ -157,10 +152,8 @@
                 <div class="modal-dialog modal-dialog-centered">
                     <form method="post" asp-area="Admin" asp-controller="Disputes" asp-action="Resolve" asp-route-id="@d.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="resolveTitle-@nid">
                         @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="resolveTitle-@nid">@Localizer["Admin.Disputes.ResolveModalTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Disputes.Close"]"></button>
-                        </div>
+                        <partial name="Partials/_ModalHeader"
+                                 model="@(new ModalHeaderVm { TitleId = $"resolveTitle-{nid}", Title = Localizer["Admin.Disputes.ResolveModalTitle"].Value, CloseLabel = Localizer["Admin.Disputes.Close"].Value })" />
                         <div class="modal-body" id="resolveBody-@nid">
                             <p class="small text-secondary">@d.Reason</p>
                             <div class="mb-3">
@@ -195,10 +188,8 @@
                 <div class="modal-dialog modal-dialog-centered">
                     <form method="post" asp-area="Admin" asp-controller="Disputes" asp-action="Escalate" asp-route-id="@d.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="escalateTitle-@nid">
                         @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="escalateTitle-@nid">@Localizer["Admin.Disputes.EscalateModalTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Disputes.Close"]"></button>
-                        </div>
+                        <partial name="Partials/_ModalHeader"
+                                 model="@(new ModalHeaderVm { TitleId = $"escalateTitle-{nid}", Title = Localizer["Admin.Disputes.EscalateModalTitle"].Value, CloseLabel = Localizer["Admin.Disputes.Close"].Value })" />
                         <div class="modal-body" id="escalateBody-@nid">
                             <p class="small text-secondary">@d.Reason</p>
                             <label class="form-label" for="reason-@nid">@Localizer["Admin.Disputes.ReasonLabel"]</label>
