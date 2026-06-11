@@ -19,14 +19,27 @@ public sealed class ProvidersFacade
     public async Task<ApiResult<ProviderQueueVm>> GetQueueAsync(
         string? status, string? type, int page, int pageSize, CancellationToken ct = default)
     {
-        var result = await _api.GetQueueAsync(status, type, page, pageSize, ct);
+        // Queue list + status counts fetched in parallel (one render, two calls).
+        // Counts are best-effort decoration: a failure only hides the tab badges (ERR3).
+        var queueTask = _api.GetQueueAsync(status, type, page, pageSize, ct);
+        var countsTask = _api.GetStatusCountsAsync(ct);
+        await Task.WhenAll(queueTask, countsTask);
 
+        var result = queueTask.Result;
         if (result.IsUnauthorized) return ApiResult<ProviderQueueVm>.ForceSignOut();
         if (!result.IsSuccess || result.Data is null)
             return ApiResult<ProviderQueueVm>.Fail(
                 result.StatusCode, result.Error ?? "Could not load the provider queue.");
 
-        return ApiResult<ProviderQueueVm>.Ok(ProvidersMapper.ToQueueVm(result.Data, status, type));
+        var vm = ProvidersMapper.ToQueueVm(result.Data, status, type);
+
+        var counts = countsTask.Result;
+        if (counts.IsSuccess && counts.Data is not null)
+        {
+            vm.StatusCounts = ProvidersMapper.ToStatusCountsVm(counts.Data);
+        }
+
+        return ApiResult<ProviderQueueVm>.Ok(vm);
     }
 
     public async Task<ApiResult<ProviderDetailsVm>> GetDetailsAsync(Guid id, CancellationToken ct = default)

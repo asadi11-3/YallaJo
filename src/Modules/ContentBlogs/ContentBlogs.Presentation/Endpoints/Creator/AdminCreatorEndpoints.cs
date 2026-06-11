@@ -6,6 +6,7 @@ using ContentBlogs.Application.Commands.Creator.RejectApplication;
 using ContentBlogs.Application.Commands.Creator.RequestMoreInfo;
 using ContentBlogs.Application.Commands.Creator.SendInvitation;
 using ContentBlogs.Application.Commands.Creator.SuspendProfile;
+using ContentBlogs.Application.Queries.Creator.AdminApplicationStatusCounts;
 using ContentBlogs.Application.Queries.Creator.AdminGetApplication;
 using ContentBlogs.Application.Queries.Creator.AdminGetProfile;
 using ContentBlogs.Application.Queries.Creator.AdminListApplications;
@@ -48,6 +49,23 @@ internal static class AdminCreatorEndpoints
         .WithSummary("Admin — list creator applications with optional status filter")
         .Produces<PaginatedResult<CreatorApplicationSummaryDto>>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.AdminCreatorQueue, AppAction.Read));
+
+        // ── GET /api/v1/blogs/admin/creators/applications/status-counts ──
+        // Registered as a literal segment BEFORE /applications/{id:guid}; the guid
+        // constraint below never matches "status-counts" so there is no route collision.
+        group.MapGet("/applications/status-counts", async (
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new AdminCreatorApplicationStatusCountsQuery(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminCreatorApplicationStatusCounts")
+        .WithSummary("Admin — creator application queue counts grouped by status")
+        .Produces<CreatorApplicationStatusCountsDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.AdminCreatorQueue, AppAction.Read));

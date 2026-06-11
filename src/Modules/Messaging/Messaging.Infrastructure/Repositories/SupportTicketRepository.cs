@@ -48,6 +48,13 @@ internal sealed class SupportTicketRepository(MessagingDbContext context)
             .OrderBy(t => t.CreatedAt)
             .FirstOrDefaultAsync(ct);
 
+    public async Task<IReadOnlyDictionary<TicketStatus, int>> GetStatusCountsAsync(CancellationToken ct = default)
+        => await _context.SupportTickets
+            .GroupBy(t => t.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .AsNoTracking()
+            .ToDictionaryAsync(x => x.Status, x => x.Count, ct);
+
     public Task<IReadOnlyList<SupportTicket>> GetOverdueSlaTicketsAsync(
         DateTime threshold, int batchSize, CancellationToken ct = default)
         => _context.SupportTickets

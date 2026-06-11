@@ -41,4 +41,14 @@ public class CreatorApplicationRepository(ContentBlogsDbContext context)
         return context.CreatorApplications
             .CountAsync(a => a.ApplicantUserId == userId, cancellationToken);
     }
+
+    public async Task<IReadOnlyDictionary<CreatorApplicationStatus, int>> GetStatusCountsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await context.CreatorApplications
+            .GroupBy(a => a.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .AsNoTracking()
+            .ToDictionaryAsync(x => x.Status, x => x.Count, cancellationToken);
+    }
 }

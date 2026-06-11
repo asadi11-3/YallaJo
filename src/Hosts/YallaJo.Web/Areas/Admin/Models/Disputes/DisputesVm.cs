@@ -4,6 +4,21 @@ public sealed class DisputesVm
 {
     public IReadOnlyList<DisputeRowVm> Disputes { get; set; } = [];
     public string? StatusFilter { get; set; }
+
+    /// <summary>
+    /// Per-status queue counts for the counted tabs (§5.6). Null when the counts
+    /// call failed — the tabs then render without badges (best-effort, ERR3).
+    /// </summary>
+    public DisputeStatusCountsVm? StatusCounts { get; set; }
+}
+
+public sealed class DisputeStatusCountsVm
+{
+    public int Open { get; init; }
+    public int UnderReview { get; init; }
+    public int Resolved { get; init; }
+    public int Escalated { get; init; }
+    public int Closed { get; init; }
 }
 
 public sealed class DisputeRowVm

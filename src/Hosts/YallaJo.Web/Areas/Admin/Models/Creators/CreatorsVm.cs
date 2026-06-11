@@ -12,6 +12,18 @@ public sealed class CreatorsVm
     public string? StatusFilter { get; set; }
     public Guid? LookupId { get; set; }
     public CreatorApplicationDetailVm? Detail { get; set; }
+
+    /// <summary>Per-status queue counts for counted tabs (§5.6); null when the counts call failed (ERR3 — badges simply hide).</summary>
+    public CreatorApplicationStatusCountsVm? StatusCounts { get; set; }
+}
+
+public sealed class CreatorApplicationStatusCountsVm
+{
+    public int Draft { get; init; }
+    public int Pending { get; init; }
+    public int Approved { get; init; }
+    public int Rejected { get; init; }
+    public int MoreInfoNeeded { get; init; }
 }
 
 public sealed class CreatorApplicationRowVm

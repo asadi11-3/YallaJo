@@ -16,6 +16,28 @@
         "Other", "PayoutIssue", "CommissionDispute", "GuideScheduleIssue", "TourApprovalHelp", "DocumentVerification"
     };
     var hasFilters = !string.IsNullOrWhiteSpace(Model.StatusFilter) || !string.IsNullOrWhiteSpace(Model.CategoryFilter);
+
+    // Counted queue tabs (contract §5.6, L6): plain GET links keep PE1; counts are
+    // best-effort decoration — when the counts call fails the badges simply hide (ERR3).
+    var counts = Model.StatusCounts;
+    bool IsTabActive(string? value) => value is null
+        ? string.IsNullOrEmpty(Model.StatusFilter)
+        : string.Equals(Model.StatusFilter, value, StringComparison.OrdinalIgnoreCase);
+    string TabUrl(string? value) => Url.Action("Index", "Support", new { area = "Admin", status = value, category = Model.CategoryFilter })!;
+    var queueTabs = new QueueTabsVm
+    {
+        AriaLabel = Localizer["Admin.Shared.QueueTabsAria"].Value,
+        Tabs =
+        [
+            new QueueTabVm { Label = Localizer["Admin.Support.AllStatuses"].Value, Url = TabUrl(null), Active = IsTabActive(null) },
+            new QueueTabVm { Label = Localizer["Admin.Support.Status.Open"].Value, Url = TabUrl("Open"), Active = IsTabActive("Open"), Count = counts?.Open },
+            new QueueTabVm { Label = Localizer["Admin.Support.Status.Assigned"].Value, Url = TabUrl("Assigned"), Active = IsTabActive("Assigned"), Count = counts?.Assigned },
+            new QueueTabVm { Label = Localizer["Admin.Support.Status.InProgress"].Value, Url = TabUrl("InProgress"), Active = IsTabActive("InProgress"), Count = counts?.InProgress },
+            new QueueTabVm { Label = Localizer["Admin.Support.Status.AwaitingUser"].Value, Url = TabUrl("AwaitingUser"), Active = IsTabActive("AwaitingUser"), Count = counts?.AwaitingUser },
+            new QueueTabVm { Label = Localizer["Admin.Support.Status.Resolved"].Value, Url = TabUrl("Resolved"), Active = IsTabActive("Resolved"), Count = counts?.Resolved },
+            new QueueTabVm { Label = Localizer["Admin.Support.Status.Closed"].Value, Url = TabUrl("Closed"), Active = IsTabActive("Closed"), Count = counts?.Closed },
+        ],
+    };
 }
 
 <div class="d-sm-flex justify-content-between align-items-center mb-4">
@@ -67,6 +89,9 @@
 @if (Model.Tickets.Count == 0)
 {
     <section class="card shadow">
+        <div class="card-body border-bottom py-2">
+            <partial name="Partials/_QueueTabs" model="queueTabs" />
+        </div>
         <partial name="Partials/_EmptyState"
                  model="@(new EmptyStateVm { Message = Localizer["Admin.Support.EmptyMessage"].Value, CtaText = hasFilters ? Localizer["Admin.Support.ClearFilters"].Value : null, CtaUrl = hasFilters ? Url.Action("Index", "Support", new { area = "Admin" }) : null, ContainerClass = "card-body text-center py-5" })" />
     </section>
@@ -76,6 +101,9 @@ else
     <section class="card shadow" aria-labelledby="support-heading">
         <div class="card-header border-bottom">
             <h2 id="support-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Support.Directory"]</h2>
+        </div>
+        <div class="card-body border-bottom py-2">
+            <partial name="Partials/_QueueTabs" model="queueTabs" />
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">

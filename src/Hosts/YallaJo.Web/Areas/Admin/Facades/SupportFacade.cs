@@ -25,7 +25,13 @@ public sealed class SupportFacade
             pageSize = DefaultPageSize;
         }
 
-        var result = await _api.GetTicketsAsync(status, category, cursor, pageSize, ct);
+        // List and status counts fetched in parallel (API1); counts are best-effort
+        // decoration — a failure only hides the tab badges (ERR3).
+        var listTask = _api.GetTicketsAsync(status, category, cursor, pageSize, ct);
+        var countsTask = _api.GetStatusCountsAsync(ct);
+        await Task.WhenAll(listTask, countsTask);
+
+        var result = listTask.Result;
         if (result.IsUnauthorized)
         {
             return ApiResult<SupportListVm>.ForceSignOut();
@@ -38,7 +44,13 @@ public sealed class SupportFacade
         var emails = await ResolveUserEmailsAsync(
             result.Data.Items
                 .SelectMany(t => new[] { t.CreatedByUserId, t.AssignedToUserId ?? Guid.Empty }), ct);
-        return ApiResult<SupportListVm>.Ok(SupportMapper.ToListVm(result.Data, status, category, emails));
+        var vm = SupportMapper.ToListVm(result.Data, status, category, emails);
+        var counts = countsTask.Result;
+        if (counts is { IsSuccess: true, Data: not null })
+        {
+            vm.StatusCounts = SupportMapper.ToStatusCountsVm(counts.Data);
+        }
+        return ApiResult<SupportListVm>.Ok(vm);
     }
 
     public async Task<ApiResult<SupportTicketDetailVm>> GetDetailsAsync(Guid id, CancellationToken ct)

@@ -21,6 +21,8 @@ public static class MessagingCacheKeys
     public static string SupportTickets(Guid? userId, bool isAdmin, string? status, string? category, Guid? cursor, int pageSize)
         => $"msg:support-tickets:{(isAdmin ? "admin" : $"user:{userId}")}:status:{status ?? "all"}:category:{category ?? "all"}:cursor:{cursor?.ToString() ?? "first"}:size:{pageSize}";
 
+    public static string SupportTicketStatusCounts => "msg:support-tickets:admin:status-counts";
+
     public static string SupportTicket(Guid ticketId, Guid callerUserId, bool isAdmin)
         => $"msg:support-ticket:{ticketId}:caller:{callerUserId}:admin:{isAdmin}";
 

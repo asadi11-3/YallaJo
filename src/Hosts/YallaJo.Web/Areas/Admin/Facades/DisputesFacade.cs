@@ -10,7 +10,13 @@ public sealed class DisputesFacade(DisputesApiClient api)
 
     public async Task<ApiResult<DisputesVm>> GetIndexAsync(string? status, CancellationToken ct)
     {
-        var result = await _api.GetOpenAsync(ct);
+        // Fetch the list and the queue status counts in parallel (API1); the counts
+        // call is best-effort decoration — when it fails, tabs render without badges (ERR3).
+        var listTask = _api.GetOpenAsync(ct);
+        var countsTask = _api.GetStatusCountsAsync(ct);
+        await Task.WhenAll(listTask, countsTask);
+
+        var result = listTask.Result;
         if (result.IsUnauthorized)
         {
             return ApiResult<DisputesVm>.ForceSignOut();
@@ -21,7 +27,14 @@ public sealed class DisputesFacade(DisputesApiClient api)
             return ApiResult<DisputesVm>.Fail(result.StatusCode, result.Error ?? "Could not load open disputes.");
         }
 
-        return ApiResult<DisputesVm>.Ok(DisputesMapper.ToVm(result.Data, status));
+        var vm = DisputesMapper.ToVm(result.Data, status);
+        var counts = countsTask.Result;
+        if (counts is { IsSuccess: true, Data: not null })
+        {
+            vm.StatusCounts = DisputesMapper.ToStatusCountsVm(counts.Data);
+        }
+
+        return ApiResult<DisputesVm>.Ok(vm);
     }
 
     public Task<ApiResult> ReviewAsync(Guid id, CancellationToken ct) =>

@@ -34,6 +34,10 @@ public sealed class ProvidersApiClient
         return _api.GetAsync<ProviderQueueResponse>(url, ct);
     }
 
+    // GET /api/v1/admin/providers/status-counts
+    public Task<ApiResult<ProviderQueueStatusCountsResponse>> GetStatusCountsAsync(CancellationToken ct = default)
+        => _api.GetAsync<ProviderQueueStatusCountsResponse>($"{Base}/status-counts", ct);
+
     // GET /api/v1/admin/providers/{id}
     public Task<ApiResult<AdminProviderApplicationDetailsResponse>> GetByIdAsync(
         Guid id, CancellationToken ct = default)

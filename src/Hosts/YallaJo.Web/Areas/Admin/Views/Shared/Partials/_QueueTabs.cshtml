@@ -1,0 +1,42 @@
+@using System.Globalization
+@using YallaJo.Web.Areas.Admin.Models.Shared
+@model QueueTabsVm
+@{
+    // Shared counted queue tabs (contract §5.6). Counts render as <bdi dir="ltr">
+    // with .font-data so numerals stay readable in RTL (RTL3); a null count hides
+    // the badge (ERR3 degradation when the counts endpoint is unavailable).
+    var culture = CultureInfo.CurrentCulture;
+}
+<nav aria-label="@Model.AriaLabel">
+    <ul class="nav nav-pills gap-2 mb-0 flex-wrap">
+        @foreach (var tab in Model.Tabs)
+        {
+            <li class="nav-item">
+                @if (tab.Active)
+                {
+                    <a class="nav-link active d-inline-flex align-items-center gap-2" href="@tab.Url" aria-current="page">
+                        <span>@tab.Label</span>
+                        @if (tab.Count is { } activeCount)
+                        {
+                            <span class="badge text-bg-light">
+                                <bdi dir="ltr" class="font-data">@activeCount.ToString("N0", culture)</bdi>
+                            </span>
+                        }
+                    </a>
+                }
+                else
+                {
+                    <a class="nav-link d-inline-flex align-items-center gap-2" href="@tab.Url">
+                        <span>@tab.Label</span>
+                        @if (tab.Count is { } count)
+                        {
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                <bdi dir="ltr" class="font-data">@count.ToString("N0", culture)</bdi>
+                            </span>
+                        }
+                    </a>
+                }
+            </li>
+        }
+    </ul>
+</nav>

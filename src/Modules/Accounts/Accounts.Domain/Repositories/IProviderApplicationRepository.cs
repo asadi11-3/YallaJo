@@ -36,6 +36,13 @@ public interface IProviderApplicationRepository : IRepository<ProviderApplicatio
         ProviderType? typeFilter,
         CancellationToken ct = default);
 
+    /// <summary>
+    /// Returns the number of provider applications per status (single grouped query).
+    /// Used by the admin queue's counted status tabs.
+    /// </summary>
+    Task<IReadOnlyDictionary<ProviderApplicationStatus, int>> GetStatusCountsAsync(
+        CancellationToken ct = default);
+
     Task<IReadOnlyList<ProviderApplication>> GetApprovedWithExpiringDocumentsAsync(
         DateTime expiryThreshold,
         CancellationToken ct = default);

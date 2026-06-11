@@ -57,6 +57,15 @@ public static class CreatorsMapper
         return vm;
     }
 
+    public static CreatorApplicationStatusCountsVm ToStatusCountsVm(CreatorApplicationStatusCountsResponse r) => new()
+    {
+        Draft          = r.Draft,
+        Pending        = r.Pending,
+        Approved       = r.Approved,
+        Rejected       = r.Rejected,
+        MoreInfoNeeded = r.MoreInfoNeeded,
+    };
+
     public static string StatusColor(string status) => status switch
     {
         "Approved" => "success",

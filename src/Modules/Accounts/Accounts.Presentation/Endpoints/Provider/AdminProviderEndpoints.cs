@@ -5,6 +5,7 @@ using Accounts.Application.Commands.Admin.RequestMoreDocs;
 using Accounts.Application.Commands.Admin.SuspendProvider;
 using Accounts.Application.Queries.GetAdminProviderApplicationById;
 using Accounts.Application.Queries.GetAdminProviderQueue;
+using Accounts.Application.Queries.GetProviderQueueStatusCounts;
 using Accounts.Contracts.Authorization;
 using Accounts.Domain.Enums;
 using MediatR;
@@ -44,6 +45,22 @@ public static class AdminProviderEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithSummary("Get the provider application queue (admin)")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.AdminProviderQueue, AppAction.Read))
+        .RequireAuthorization();
+
+        // GET /api/v1/admin/providers/status-counts — per-status queue counts for counted tabs
+        // Registered as a literal segment BEFORE /{id:guid}; the guid constraint below
+        // never matches "status-counts" so there is no route collision.
+        group.MapGet("/status-counts", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetProviderQueueStatusCountsQuery(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetProviderQueueStatusCounts")
+        .Produces<ProviderQueueStatusCountsDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithSummary("Get provider application queue counts grouped by status (admin)")
         .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.AdminProviderQueue, AppAction.Read))
         .RequireAuthorization();
 

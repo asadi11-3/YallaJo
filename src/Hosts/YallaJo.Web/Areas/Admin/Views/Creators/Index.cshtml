@@ -14,6 +14,27 @@
     string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
 
     var statuses = new[] { "Draft", "Pending", "Approved", "Rejected", "MoreInfoNeeded" };
+
+    // Counted queue tabs (§5.6, L6). Plain GET links keep the no-JS path intact (PE1);
+    // counts are best-effort decoration — when the counts call fails badges hide (ERR3).
+    var counts = Model.StatusCounts;
+    bool IsTabActive(string? value) => value is null
+        ? string.IsNullOrEmpty(Model.StatusFilter)
+        : string.Equals(Model.StatusFilter, value, StringComparison.OrdinalIgnoreCase);
+    string TabUrl(string? value) => Url.Action("Index", "Creators", new { area = "Admin", status = value })!;
+    var queueTabs = new QueueTabsVm
+    {
+        AriaLabel = Localizer["Admin.Shared.QueueTabsAria"].Value,
+        Tabs =
+        [
+            new QueueTabVm { Label = Localizer["Admin.Creators.AllStatuses"].Value, Url = TabUrl(null), Active = IsTabActive(null) },
+            new QueueTabVm { Label = Localizer["Admin.Creators.Status.Draft"].Value, Url = TabUrl("Draft"), Active = IsTabActive("Draft"), Count = counts?.Draft },
+            new QueueTabVm { Label = Localizer["Admin.Creators.Status.Pending"].Value, Url = TabUrl("Pending"), Active = IsTabActive("Pending"), Count = counts?.Pending },
+            new QueueTabVm { Label = Localizer["Admin.Creators.Status.Approved"].Value, Url = TabUrl("Approved"), Active = IsTabActive("Approved"), Count = counts?.Approved },
+            new QueueTabVm { Label = Localizer["Admin.Creators.Status.Rejected"].Value, Url = TabUrl("Rejected"), Active = IsTabActive("Rejected"), Count = counts?.Rejected },
+            new QueueTabVm { Label = Localizer["Admin.Creators.Status.MoreInfoNeeded"].Value, Url = TabUrl("MoreInfoNeeded"), Active = IsTabActive("MoreInfoNeeded"), Count = counts?.MoreInfoNeeded },
+        ],
+    };
 }
 
 <div class="d-sm-flex justify-content-between align-items-center mb-4">
@@ -286,6 +307,9 @@
 <section class="card shadow" aria-labelledby="creators-directory-heading">
     <div class="card-header border-bottom">
         <h2 id="creators-directory-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Creators.Directory"]</h2>
+    </div>
+    <div class="card-body border-bottom py-2">
+        <partial name="Partials/_QueueTabs" model="queueTabs" />
     </div>
     @if (Model.Applications.Count == 0)
     {

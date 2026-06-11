@@ -6,6 +6,7 @@ using Messaging.Application.Commands.PostTicketMessage;
 using Messaging.Application.Commands.ResolveSupportTicket;
 using Messaging.Application.Queries.Dtos;
 using Messaging.Application.Queries.GetSupportTicketById;
+using Messaging.Application.Queries.GetSupportTicketStatusCounts;
 using Messaging.Application.Queries.GetSupportTickets;
 using Messaging.Contracts.Authorization;
 using Messaging.Domain.Enums;
@@ -136,6 +137,22 @@ internal static class SupportTicketEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Post a message to a support ticket.")
         .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Read))
+        .RequireAuthorization();
+
+        // GET /api/v1/support/admin/tickets/status-counts — per-status queue counts for counted tabs.
+        // Registered as a literal segment; the /admin/tickets/{id:guid}/* routes below only match GUIDs
+        // so there is no route collision.
+        group.MapGet("/admin/tickets/status-counts", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetSupportTicketStatusCountsQuery(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetSupportTicketStatusCounts")
+        .Produces<SupportTicketStatusCountsDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithSummary("Get support ticket queue counts grouped by status (staff).")
+        .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.AdminSupportQueue, AppAction.Read))
         .RequireAuthorization();
 
         group.MapPost("/admin/tickets/{id:guid}/assign", async (

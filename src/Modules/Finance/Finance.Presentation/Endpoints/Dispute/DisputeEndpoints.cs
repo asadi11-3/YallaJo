@@ -38,6 +38,22 @@ internal static class DisputeEndpoints
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.AdminFinanceDashboard, AppAction.Read))
         .RequireAuthorization();
 
+        // GET /api/v1/disputes/admin/status-counts — per-status queue counts for counted tabs.
+        // Registered as a literal segment; the /{id:guid} routes below only match GUIDs so there is no route collision.
+        group.MapGet("/admin/status-counts", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetDisputeStatusCountsQuery(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetDisputeStatusCounts")
+        .WithSummary("Admin: dispute queue counts grouped by status.")
+        .WithTags("Finance | Disputes")
+        .Produces<DisputeStatusCountsDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.AdminFinanceDashboard, AppAction.Read))
+        .RequireAuthorization();
+
         group.MapPost("/", async (OpenDisputeRequest request, ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
         {
             var result = await sender.Send(new OpenDisputeCommand(request.PaymentId, currentUser.UserId!.Value, request.Reason, request.Description), ct);

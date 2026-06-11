@@ -53,6 +53,8 @@ public static class ContentBlogsCacheKeys
     public static string CreatorApplication(Guid applicationId) =>
         $"cb:creator:application:{applicationId}";
 
+    public const string CreatorApplicationStatusCounts = "cb:creator:applications:status-counts";
+
     public static string CreatorFollowerList(Guid profileId, int page, int size) =>
         $"cb:creator:{profileId}:followers:{page}:{size}";
 

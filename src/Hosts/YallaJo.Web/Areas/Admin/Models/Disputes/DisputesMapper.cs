@@ -41,6 +41,15 @@ public static class DisputesMapper
         };
     }
 
+    public static DisputeStatusCountsVm ToStatusCountsVm(DisputeStatusCountsResponse r) => new()
+    {
+        Open        = r.Open,
+        UnderReview = r.UnderReview,
+        Resolved    = r.Resolved,
+        Escalated   = r.Escalated,
+        Closed      = r.Closed,
+    };
+
     public static string StatusColor(string status) => status switch
     {
         "Resolved" => "success",

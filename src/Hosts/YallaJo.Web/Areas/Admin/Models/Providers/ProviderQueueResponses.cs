@@ -12,6 +12,19 @@ public sealed class ProviderQueueResponse
     public int PageSize { get; init; }
 }
 
+/// <summary>
+/// Mirrors <c>ProviderQueueStatusCountsDto</c> from
+/// <c>GET /api/v1/admin/providers/status-counts</c> (Draft excluded server-side).
+/// </summary>
+public sealed class ProviderQueueStatusCountsResponse
+{
+    public int Pending { get; init; }
+    public int AwaitingDocuments { get; init; }
+    public int Approved { get; init; }
+    public int Suspended { get; init; }
+    public int Rejected { get; init; }
+}
+
 /// <summary>Mirrors <c>ProviderApplicationSummary</c>.</summary>
 public sealed class ProviderQueueItemResponse
 {

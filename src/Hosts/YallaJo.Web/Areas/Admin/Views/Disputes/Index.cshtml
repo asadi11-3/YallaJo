@@ -15,6 +15,29 @@
     var statuses = new[] { "Open", "UnderReview", "Resolved", "Escalated", "Closed" };
     var resolutions = new[] { "RefundFull", "RefundPartial", "NoRefund", "Compromise" };
     var hasFilter = !string.IsNullOrWhiteSpace(Model.StatusFilter);
+
+    // Counted queue tabs (§5.6, L6): plain GET links keep the no-JS path intact (PE1).
+    // Counts are best-effort — null hides the badges (ERR3). Note: the admin list
+    // endpoint returns unresolved disputes only, so Resolved/Closed tabs may show
+    // counts with sparse lists.
+    var counts = Model.StatusCounts;
+    bool IsTabActive(string? value) => value is null
+        ? string.IsNullOrEmpty(Model.StatusFilter)
+        : string.Equals(Model.StatusFilter, value, StringComparison.OrdinalIgnoreCase);
+    string TabUrl(string? value) => Url.Action("Index", "Disputes", new { area = "Admin", status = value })!;
+    var queueTabs = new QueueTabsVm
+    {
+        AriaLabel = Localizer["Admin.Shared.QueueTabsAria"].Value,
+        Tabs =
+        [
+            new QueueTabVm { Label = Localizer["Admin.Disputes.AllStatuses"].Value, Url = TabUrl(null), Active = IsTabActive(null) },
+            new QueueTabVm { Label = Localizer["Admin.Disputes.Status.Open"].Value, Url = TabUrl("Open"), Active = IsTabActive("Open"), Count = counts?.Open },
+            new QueueTabVm { Label = Localizer["Admin.Disputes.Status.UnderReview"].Value, Url = TabUrl("UnderReview"), Active = IsTabActive("UnderReview"), Count = counts?.UnderReview },
+            new QueueTabVm { Label = Localizer["Admin.Disputes.Status.Escalated"].Value, Url = TabUrl("Escalated"), Active = IsTabActive("Escalated"), Count = counts?.Escalated },
+            new QueueTabVm { Label = Localizer["Admin.Disputes.Status.Resolved"].Value, Url = TabUrl("Resolved"), Active = IsTabActive("Resolved"), Count = counts?.Resolved },
+            new QueueTabVm { Label = Localizer["Admin.Disputes.Status.Closed"].Value, Url = TabUrl("Closed"), Active = IsTabActive("Closed"), Count = counts?.Closed },
+        ],
+    };
 }
 
 <div class="d-sm-flex justify-content-between align-items-center mb-4">
@@ -47,6 +70,10 @@
 <section class="card shadow" aria-labelledby="disputes-heading">
     <div class="card-header border-bottom">
         <h2 id="disputes-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Disputes.Directory"]</h2>
+    </div>
+
+    <div class="card-body border-bottom py-2">
+        <partial name="Partials/_QueueTabs" model="queueTabs" />
     </div>
 
     @if (Model.Disputes.Count == 0)

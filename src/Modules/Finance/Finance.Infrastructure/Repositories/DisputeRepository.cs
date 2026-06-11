@@ -28,4 +28,11 @@ internal sealed class DisputeRepository(FinanceDbContext context)
             .Where(d => d.UserId == userId)
             .OrderByDescending(d => d.CreatedAt)
             .ToListAsync(ct);
+
+    public async Task<IReadOnlyDictionary<DisputeStatus, int>> GetStatusCountsAsync(CancellationToken ct = default)
+        => await _context.Disputes
+            .GroupBy(d => d.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .AsNoTracking()
+            .ToDictionaryAsync(x => x.Status, x => x.Count, ct);
 }

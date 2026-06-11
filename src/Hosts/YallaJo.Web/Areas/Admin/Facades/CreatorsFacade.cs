@@ -19,7 +19,14 @@ public sealed class CreatorsFacade
         string? status, Guid? id, int page, CancellationToken ct)
     {
         var pageSize = 20;
-        var list = await _api.GetApplicationsAsync(status, page, pageSize, ct);
+
+        // API1: list and queue status counts fetched in parallel; counts are best-effort
+        // decoration (ERR3) — when they fail the tabs simply render without badges.
+        var listTask = _api.GetApplicationsAsync(status, page, pageSize, ct);
+        var countsTask = _api.GetStatusCountsAsync(ct);
+        await Task.WhenAll(listTask, countsTask);
+
+        var list = listTask.Result;
         if (list.IsUnauthorized)
         {
             return ApiResult<CreatorsVm>.ForceSignOut();
@@ -54,7 +61,15 @@ public sealed class CreatorsFacade
 
         var applicantEmails = await ResolveApplicantEmailsAsync(applicantIds, ct);
 
-        return ApiResult<CreatorsVm>.Ok(CreatorsMapper.ToVm(list.Data, detail, status, applicantEmails));
+        var vm = CreatorsMapper.ToVm(list.Data, detail, status, applicantEmails);
+
+        var counts = countsTask.Result;
+        if (counts is { IsSuccess: true, Data: not null })
+        {
+            vm.StatusCounts = CreatorsMapper.ToStatusCountsVm(counts.Data);
+        }
+
+        return ApiResult<CreatorsVm>.Ok(vm);
     }
 
     private async Task<IReadOnlyDictionary<Guid, string>> ResolveApplicantEmailsAsync(

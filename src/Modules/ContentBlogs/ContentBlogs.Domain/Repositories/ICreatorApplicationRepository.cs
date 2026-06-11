@@ -29,4 +29,11 @@ public interface ICreatorApplicationRepository : IRepository<CreatorApplication,
     Task<int> CountByUserIdAsync(
         Guid userId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns per-status application counts in a single grouped query.
+    /// Used by the admin queue to render counted status tabs.
+    /// </summary>
+    Task<IReadOnlyDictionary<CreatorApplicationStatus, int>> GetStatusCountsAsync(
+        CancellationToken cancellationToken = default);
 }

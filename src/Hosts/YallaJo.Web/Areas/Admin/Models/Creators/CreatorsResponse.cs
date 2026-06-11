@@ -11,6 +11,16 @@ public sealed class CreatorApplicationPageResponse
     public bool HasNextPage { get; set; }
 }
 
+/// <summary>Mirrors the API's CreatorApplicationStatusCountsDto (GET /applications/status-counts).</summary>
+public sealed class CreatorApplicationStatusCountsResponse
+{
+    public int Draft { get; set; }
+    public int Pending { get; set; }
+    public int Approved { get; set; }
+    public int Rejected { get; set; }
+    public int MoreInfoNeeded { get; set; }
+}
+
 public sealed class CreatorApplicationSummaryResponse
 {
     public Guid Id { get; set; }

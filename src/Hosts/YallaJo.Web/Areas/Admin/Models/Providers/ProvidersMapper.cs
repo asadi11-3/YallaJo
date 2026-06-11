@@ -67,6 +67,16 @@ public static class ProvidersMapper
         DocumentTypeOptions = DocumentTypeOptions(),
     };
 
+    /// <summary>Maps the status-counts response onto the counted-tabs VM (§5.6).</summary>
+    public static ProviderQueueStatusCountsVm ToStatusCountsVm(ProviderQueueStatusCountsResponse r) => new()
+    {
+        Pending            = r.Pending,
+        AwaitingDocuments  = r.AwaitingDocuments,
+        Approved           = r.Approved,
+        Suspended          = r.Suspended,
+        Rejected           = r.Rejected,
+    };
+
     /// <summary>Empty VM used when the queue could not be loaded (still renders filters).</summary>
     public static ProviderQueueVm EmptyQueue(string? status, string? type, int page, int pageSize) => new()
     {

@@ -11,7 +11,33 @@
     var culture = CultureInfo.CurrentCulture;
     string Count(int n) => n.ToString("N0", culture);
     string Day(DateTime? d) => d?.ToString("yyyy-MM-dd", culture) ?? "—";
+
+    // Counted status tabs (§5.6/L6): plain GET links — PE1-safe, and listing.js
+    // intercepts them automatically (same pathname, inside the listing root).
+    // Counts are best-effort (ERR3): null StatusCounts just hides the badges.
+    var counts = Model.StatusCounts;
+    bool IsActive(string? value) => value is null
+        ? string.IsNullOrEmpty(Model.Status)
+        : string.Equals(Model.Status, value, StringComparison.OrdinalIgnoreCase);
+    string TabUrl(string? value) => Url.Action("Index", "Providers", new { area = "Admin", status = value, type = Model.Type })!;
+    var queueTabs = new QueueTabsVm
+    {
+        AriaLabel = Localizer["Admin.Shared.QueueTabsAria"].Value,
+        Tabs =
+        [
+            new QueueTabVm { Label = Localizer["Admin.Providers.AllStatuses"].Value, Url = TabUrl(null), Active = IsActive(null) },
+            new QueueTabVm { Label = Localizer["Admin.Providers.Status.Pending"].Value, Url = TabUrl("Pending"), Active = IsActive("Pending"), Count = counts?.Pending },
+            new QueueTabVm { Label = Localizer["Admin.Providers.Status.AwaitingDocs"].Value, Url = TabUrl("MoreDocsNeeded"), Active = IsActive("MoreDocsNeeded"), Count = counts?.AwaitingDocuments },
+            new QueueTabVm { Label = Localizer["Admin.Providers.Status.Approved"].Value, Url = TabUrl("Approved"), Active = IsActive("Approved"), Count = counts?.Approved },
+            new QueueTabVm { Label = Localizer["Admin.Providers.Status.Suspended"].Value, Url = TabUrl("Suspended"), Active = IsActive("Suspended"), Count = counts?.Suspended },
+            new QueueTabVm { Label = Localizer["Admin.Providers.Status.Rejected"].Value, Url = TabUrl("Rejected"), Active = IsActive("Rejected"), Count = counts?.Rejected },
+        ],
+    };
 }
+
+<div class="card-body border-bottom py-2">
+    <partial name="Partials/_QueueTabs" model="queueTabs" />
+</div>
 
 @if (ViewBag.Error is string vbe)
 {

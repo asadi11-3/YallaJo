@@ -6,6 +6,22 @@ public sealed class SupportListVm
     public Guid? NextCursor { get; set; }
     public string? StatusFilter { get; set; }
     public string? CategoryFilter { get; set; }
+
+    /// <summary>
+    /// Per-status queue counts for counted tabs (§5.6). Null when the counts
+    /// call failed — tabs render without badges (ERR3 best-effort decoration).
+    /// </summary>
+    public SupportTicketStatusCountsVm? StatusCounts { get; set; }
+}
+
+public sealed class SupportTicketStatusCountsVm
+{
+    public int Open { get; init; }
+    public int Assigned { get; init; }
+    public int InProgress { get; init; }
+    public int AwaitingUser { get; init; }
+    public int Resolved { get; init; }
+    public int Closed { get; init; }
 }
 
 public sealed class SupportTicketRowVm

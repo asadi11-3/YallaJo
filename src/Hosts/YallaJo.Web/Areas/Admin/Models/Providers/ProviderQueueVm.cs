@@ -23,6 +23,23 @@ public sealed class ProviderQueueVm
     public IReadOnlyList<ProviderFilterOptionVm> StatusOptions { get; init; } = [];
     public IReadOnlyList<ProviderFilterOptionVm> TypeOptions { get; init; } = [];
     public IReadOnlyList<ProviderFilterOptionVm> DocumentTypeOptions { get; init; } = [];
+
+    /// <summary>
+    /// Per-status queue counts for the counted tabs (§5.6). Null when the
+    /// counts endpoint failed — tabs then render without badges (ERR3).
+    /// Settable so the facade can decorate the mapped VM best-effort.
+    /// </summary>
+    public ProviderQueueStatusCountsVm? StatusCounts { get; set; }
+}
+
+/// <summary>Per-status provider queue counts (Draft excluded server-side).</summary>
+public sealed class ProviderQueueStatusCountsVm
+{
+    public int Pending { get; init; }
+    public int AwaitingDocuments { get; init; }
+    public int Approved { get; init; }
+    public int Suspended { get; init; }
+    public int Rejected { get; init; }
 }
 
 /// <summary>One row in the queue.</summary>

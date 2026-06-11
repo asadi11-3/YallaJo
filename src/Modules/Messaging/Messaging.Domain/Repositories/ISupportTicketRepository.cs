@@ -17,6 +17,12 @@ public interface ISupportTicketRepository : IRepository<SupportTicket, Guid>
 
     Task<SupportTicket?> GetUnassignedOldestAsync(CancellationToken ct = default);
 
+    /// <summary>
+    /// Returns per-status ticket counts in a single grouped query.
+    /// Powers the admin queue counted tabs.
+    /// </summary>
+    Task<IReadOnlyDictionary<TicketStatus, int>> GetStatusCountsAsync(CancellationToken ct = default);
+
     /// <summary>Returns open/in-progress tickets whose SLA deadline has passed.</summary>
     Task<IReadOnlyList<SupportTicket>> GetOverdueSlaTicketsAsync(DateTime threshold, int batchSize, CancellationToken ct = default);
 }

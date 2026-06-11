@@ -37,6 +37,10 @@ public sealed class SupportApiClient
         return _api.GetAsync<SupportTicketPageResponse>(url, ct);
     }
 
+    // GET /api/v1/support/admin/tickets/status-counts — counted queue tabs (§5.6)
+    public Task<ApiResult<SupportTicketStatusCountsResponse>> GetStatusCountsAsync(CancellationToken ct)
+        => _api.GetAsync<SupportTicketStatusCountsResponse>($"{Base}/admin/tickets/status-counts", ct);
+
     public Task<ApiResult<SupportTicketItemResponse>> GetTicketAsync(Guid id, CancellationToken ct)
         => _api.GetAsync<SupportTicketItemResponse>($"{Base}/tickets/{id:D}", ct);
 

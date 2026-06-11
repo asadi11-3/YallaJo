@@ -82,6 +82,14 @@ public sealed class ProviderApplicationRepository(AccountsDbContext context)
         return await query.CountAsync(ct);
     }
 
+    public async Task<IReadOnlyDictionary<ProviderApplicationStatus, int>> GetStatusCountsAsync(
+        CancellationToken ct = default)
+        => await context.ProviderApplications
+            .GroupBy(a => a.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .AsNoTracking()
+            .ToDictionaryAsync(x => x.Status, x => x.Count, ct);
+
     public async Task<IReadOnlyList<ProviderApplication>> GetApprovedWithExpiringDocumentsAsync(
         DateTime expiryThreshold,
         CancellationToken ct = default)

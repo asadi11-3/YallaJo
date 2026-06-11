@@ -21,6 +21,8 @@ public sealed record GetMyDisputesQuery(Guid UserId) : IRequest<Result<IReadOnly
 
 public sealed record GetOpenDisputesQuery : IRequest<Result<IReadOnlyList<DisputeDto>>>;
 
+public sealed record GetDisputeStatusCountsQuery : IRequest<Result<DisputeStatusCountsDto>>;
+
 public sealed class OpenDisputeCommandHandler(
     IPaymentRepository paymentRepository,
     IDisputeRepository disputeRepository,
@@ -185,6 +187,32 @@ public sealed class GetOpenDisputesQueryHandler(IDisputeRepository disputeReposi
         var disputes = await disputeRepository.GetOpenDisputesAsync(ct);
         logger.LogDebug("Read {Count} open disputes.", disputes.Count);
         return Result.Success<IReadOnlyList<DisputeDto>>(disputes.Select(DisputeMapper.ToDto).ToList());
+    }
+}
+
+public sealed class GetDisputeStatusCountsQueryHandler(IDisputeRepository disputeRepository, ILogger<GetDisputeStatusCountsQueryHandler> logger)
+    : IRequestHandler<GetDisputeStatusCountsQuery, Result<DisputeStatusCountsDto>>
+{
+    public async Task<Result<DisputeStatusCountsDto>> Handle(GetDisputeStatusCountsQuery request, CancellationToken ct)
+    {
+        try
+        {
+            var counts = await disputeRepository.GetStatusCountsAsync(ct).ConfigureAwait(false);
+            var dto = new DisputeStatusCountsDto(
+                Open: counts.GetValueOrDefault(DisputeStatus.Open),
+                UnderReview: counts.GetValueOrDefault(DisputeStatus.UnderReview),
+                Resolved: counts.GetValueOrDefault(DisputeStatus.Resolved),
+                Escalated: counts.GetValueOrDefault(DisputeStatus.Escalated),
+                Closed: counts.GetValueOrDefault(DisputeStatus.Closed));
+            logger.LogDebug("Read dispute status counts.");
+            return Result.Success(dto);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result.Failure<DisputeStatusCountsDto>(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
 }
 

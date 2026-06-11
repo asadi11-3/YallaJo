@@ -14068,4 +14068,22 @@
   <data name="Admin.Shared.StatusInactive" xml:space="preserve">
     <value>Inactive</value>
   </data>
+  <data name="Admin.Shared.QueueTabsAria" xml:space="preserve">
+    <value>Queue status filter</value>
+  </data>
+  <data name="Admin.Providers.Status.Pending" xml:space="preserve">
+    <value>Pending review</value>
+  </data>
+  <data name="Admin.Providers.Status.AwaitingDocs" xml:space="preserve">
+    <value>Awaiting documents</value>
+  </data>
+  <data name="Admin.Providers.Status.Approved" xml:space="preserve">
+    <value>Approved</value>
+  </data>
+  <data name="Admin.Providers.Status.Suspended" xml:space="preserve">
+    <value>Suspended</value>
+  </data>
+  <data name="Admin.Providers.Status.Rejected" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
 </root>

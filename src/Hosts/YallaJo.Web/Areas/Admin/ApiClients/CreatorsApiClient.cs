@@ -30,6 +30,10 @@ public sealed class CreatorsApiClient
         return _api.GetAsync<CreatorApplicationPageResponse>(url, ct);
     }
 
+    // GET /api/v1/blogs/admin/creators/applications/status-counts — counted queue tabs (§5.6)
+    public Task<ApiResult<CreatorApplicationStatusCountsResponse>> GetStatusCountsAsync(CancellationToken ct)
+        => _api.GetAsync<CreatorApplicationStatusCountsResponse>($"{Base}/applications/status-counts", ct);
+
     public Task<ApiResult<CreatorApplicationDetailResponse>> GetApplicationAsync(Guid id, CancellationToken ct)
         => _api.GetAsync<CreatorApplicationDetailResponse>($"{Base}/applications/{id:D}", ct);
 

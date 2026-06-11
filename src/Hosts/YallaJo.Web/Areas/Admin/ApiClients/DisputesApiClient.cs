@@ -12,6 +12,10 @@ public sealed class DisputesApiClient(IApiClient api)
     public Task<ApiResult<IReadOnlyList<DisputeResponse>>> GetOpenAsync(CancellationToken ct) =>
         _api.GetAsync<IReadOnlyList<DisputeResponse>>($"{Base}/admin/open", ct);
 
+    // GET /api/v1/disputes/admin/status-counts — counted queue tabs (§5.6).
+    public Task<ApiResult<DisputeStatusCountsResponse>> GetStatusCountsAsync(CancellationToken ct) =>
+        _api.GetAsync<DisputeStatusCountsResponse>($"{Base}/admin/status-counts", ct);
+
     public Task<ApiResult> ReviewAsync(Guid id, CancellationToken ct) =>
         _api.PostAsync($"{Base}/{id:D}/review", null, ct);
 

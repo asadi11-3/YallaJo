@@ -68,6 +68,16 @@ public static class SupportMapper
         };
     }
 
+    public static SupportTicketStatusCountsVm ToStatusCountsVm(SupportTicketStatusCountsResponse r) => new()
+    {
+        Open = r.Open,
+        Assigned = r.Assigned,
+        InProgress = r.InProgress,
+        AwaitingUser = r.AwaitingUser,
+        Resolved = r.Resolved,
+        Closed = r.Closed,
+    };
+
     public static string StatusColor(string status) => status switch
     {
         "Open" => "warning",
