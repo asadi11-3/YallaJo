@@ -9,13 +9,17 @@
 
     var api = window.YallaJo && window.YallaJo.api;
     var root = document.getElementById("notificationsList");
+    var markAll;
     if (!root || !api) {
         return;
     }
 
     // ---- Load more (append next page) ----
     root.addEventListener("click", function (e) {
-        var link = e.target.closest(".js-notifications-more");
+        var link;
+        var url;
+
+        link = e.target.closest(".js-notifications-more");
         if (!link || !root.contains(link)) {
             return;
         }
@@ -24,7 +28,7 @@
         }
         e.preventDefault();
 
-        var url = link.getAttribute("href");
+        url = link.getAttribute("href");
         if (!url || link.dataset.yjBusy === "1") {
             return;
         }
@@ -72,7 +76,7 @@
     });
 
     // ---- Mark all read (optimistic) ----
-    var markAll = document.querySelector(".js-notifications-markall");
+    markAll = document.querySelector(".js-notifications-markall");
     if (markAll) {
         markAll.addEventListener("submit", function (e) {
             var unread;
