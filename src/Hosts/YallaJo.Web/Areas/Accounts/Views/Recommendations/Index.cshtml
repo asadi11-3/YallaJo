@@ -2,7 +2,7 @@
 @using YallaJo.Web.Areas.Accounts.Models.Recommendations
 @using YallaJo.Web.Areas.Accounts.Shared
 @{
-    ViewData["Title"] = "For You";
+    ViewData["Title"] = Localizer["Accounts.Nav.ForYou"].Value;
     ViewData["AccountNav"] = "Recommendations";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
@@ -20,8 +20,8 @@
         var full = (int)Math.Round(rating, MidpointRounding.AwayFromZero);
         return string.Concat(Enumerable.Range(1, 5).Select(i =>
             i <= full
-                ? "<i class=\"bi bi-star-fill text-warning\"></i>"
-                : "<i class=\"bi bi-star text-warning\"></i>"));
+                ? "<i class=\"bi bi-star-fill text-warning\" aria-hidden=\"true\"></i>"
+                : "<i class=\"bi bi-star text-warning\" aria-hidden=\"true\"></i>"));
     }
 }
 
@@ -44,23 +44,23 @@
 
                 <div class="card border mb-4">
                     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                        <h4 class="card-header-title mb-0">Recommended for you</h4>
+                        <h4 class="card-header-title mb-0">@Localizer["Accounts.Recommendations.Title"]</h4>
                         @if (Model.IsPersonalized)
                         {
-                            <span class="badge bg-success bg-opacity-10 text-success">Personalized</span>
+                            <span class="badge bg-success bg-opacity-10 text-success">@Localizer["Accounts.Recommendations.Personalized"]</span>
                         }
                         else
                         {
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary">Popular picks</span>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">@Localizer["Accounts.Recommendations.PopularPicks"]</span>
                         }
                     </div>
                     <div class="card-body">
                         @if (!Model.HasRecommendations)
                         {
                             <div class="text-center py-5">
-                                <i class="bi bi-stars display-5 text-body-secondary d-block mb-2"></i>
-                                <h6 class="mb-1">No recommendations yet</h6>
-                                <p class="text-body-secondary mb-0">Browse and book a few experiences and we'll tailor suggestions for you.</p>
+                                <i class="bi bi-stars display-5 text-body-secondary d-block mb-2" aria-hidden="true"></i>
+                                <h6 class="mb-1">@Localizer["Accounts.Recommendations.EmptyTitle"]</h6>
+                                <p class="text-body-secondary mb-0">@Localizer["Accounts.Recommendations.EmptyMessage"]</p>
                             </div>
                         }
                         else
@@ -76,15 +76,15 @@
                                                 <div class="hstack gap-1">
                                                     @if (item.IsPinned)
                                                     {
-                                                        <span class="badge bg-warning bg-opacity-10 text-warning" title="Editor's Choice"><i class="bi bi-bookmark-star"></i></span>
+                                                        <span class="badge bg-warning bg-opacity-10 text-warning" title="@Localizer["Accounts.Recommendations.EditorsChoice"]"><i class="bi bi-bookmark-star" aria-hidden="true"></i><span class="visually-hidden">@Localizer["Accounts.Recommendations.EditorsChoice"]</span></span>
                                                     }
                                                     @if (item.IsBoosted)
                                                     {
-                                                        <span class="badge bg-info bg-opacity-10 text-info" title="Promoted">Promoted</span>
+                                                        <span class="badge bg-info bg-opacity-10 text-info">@Localizer["Accounts.Recommendations.Promoted"]</span>
                                                     }
                                                     @if (item.IsFeatured)
                                                     {
-                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary" title="Featured">Featured</span>
+                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">@Localizer["Accounts.Recommendations.Featured"]</span>
                                                     }
                                                 </div>
                                             </div>
@@ -102,7 +102,7 @@
 
                                             <div class="small text-body-secondary mb-2">
                                                 @Html.Raw(Stars(item.AverageRating))
-                                                <span class="ms-2">@item.BookingCount bookings</span>
+                                                <span class="ms-2">@Localizer["Accounts.Recommendations.BookingsCount", item.BookingCount]</span>
                                             </div>
 
                                             @if (!string.IsNullOrWhiteSpace(item.BadgeText))
@@ -121,13 +121,13 @@
                                             }
 
                                             <div class="mt-auto d-flex justify-content-between align-items-center">
-                                                <span class="fw-bold">@Money(item.BasePrice, item.Currency)</span>
+                                                <span class="fw-bold" dir="ltr">@Money(item.BasePrice, item.Currency)</span>
                                                 <form asp-area="Accounts" asp-controller="Recommendations" asp-action="NotInterested" method="post" class="m-0">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="kind" value="@((byte)item.Kind)" />
                                                     <input type="hidden" name="entityId" value="@item.Id" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Not interested">
-                                                        <i class="bi bi-x-lg"></i>
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="@Localizer["Accounts.Recommendations.NotInterested"]" aria-label="@Localizer["Accounts.Recommendations.NotInterested"]">
+                                                        <i class="bi bi-x-lg" aria-hidden="true"></i>
                                                     </button>
                                                 </form>
                                             </div>
@@ -141,7 +141,7 @@
 
                 <div class="card border">
                     <div class="card-header border-bottom">
-                        <h4 class="card-header-title mb-0">Personalization preferences</h4>
+                        <h4 class="card-header-title mb-0">@Localizer["Accounts.Recommendations.PreferencesTitle"]</h4>
                     </div>
                     <div class="card-body">
                         <form asp-area="Accounts" asp-controller="Recommendations" asp-action="UpdatePreferences" method="post" data-loading>
@@ -152,7 +152,7 @@
                                 <div class="col-md-6">
                                     <label asp-for="Preferences.BudgetTier" class="form-label"></label>
                                     <select asp-for="Preferences.BudgetTier" class="form-select">
-                                        <option value="">No preference</option>
+                                        <option value="">@Localizer["Accounts.Recommendations.NoPreference"]</option>
                                         @foreach (var option in PreferencesFormVm.BudgetOptions)
                                         {
                                             <option value="@option">@option</option>
@@ -162,7 +162,7 @@
                                 <div class="col-md-6">
                                     <label asp-for="Preferences.CurrentTripStage" class="form-label"></label>
                                     <select asp-for="Preferences.CurrentTripStage" class="form-select">
-                                        <option value="">Not set</option>
+                                        <option value="">@Localizer["Accounts.Recommendations.NotSet"]</option>
                                         @foreach (var stage in PreferencesFormVm.TripStageOptions)
                                         {
                                             <option value="@stage">@PreferencesFormVm.TripStageLabel(stage)</option>
@@ -178,7 +178,7 @@
                             </div>
 
                             <div class="mt-4">
-                                <button type="submit" class="btn btn-primary">Save preferences</button>
+                                <button type="submit" class="btn btn-primary">@Localizer["Accounts.Settings.SavePreferences"]</button>
                             </div>
                         </form>
                     </div>
@@ -191,8 +191,8 @@
                 {
                     <div class="card border mt-4">
                         <div class="card-header border-bottom">
-                            <h4 class="card-header-title mb-0">Tell us what you like</h4>
-                            <p class="small text-body mb-0">Pick a few you love or aren't keen on — we'll tune your feed.</p>
+                            <h4 class="card-header-title mb-0">@Localizer["Accounts.Recommendations.OnboardingTitle"]</h4>
+                            <p class="small text-body mb-0">@Localizer["Accounts.Recommendations.OnboardingHint"]</p>
                         </div>
                         <div class="card-body">
                             <form asp-area="Accounts" asp-controller="Recommendations" asp-action="Onboarding" method="post">
@@ -205,20 +205,20 @@
                                         var groupName = $"onb-{rec.Id}";
                                         <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
                                             <span class="text-body"><bdi>@rec.Name</bdi> <span class="badge bg-light text-body ms-1">@rec.KindLabel</span></span>
-                                            <span class="btn-group btn-group-sm" role="group" aria-label="@($"Preference for {rec.Name}")">
+                                            <span class="btn-group btn-group-sm" role="group" aria-label="@string.Format(Localizer["Accounts.Recommendations.PreferenceFor"].Value, rec.Name)">
                                                 <input type="radio" class="btn-check" name="@groupName" id="@($"{groupName}-up")" value="up" autocomplete="off" />
                                                 <label class="btn btn-outline-success" for="@($"{groupName}-up")"
-                                                       data-onb-token="@token" data-onb-list="Interested"><i class="bi bi-hand-thumbs-up"></i></label>
+                                                       data-onb-token="@token" data-onb-list="Interested"><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i></label>
                                                 <input type="radio" class="btn-check" name="@groupName" id="@($"{groupName}-down")" value="down" autocomplete="off" />
                                                 <label class="btn btn-outline-danger" for="@($"{groupName}-down")"
-                                                       data-onb-token="@token" data-onb-list="NotInterested"><i class="bi bi-hand-thumbs-down"></i></label>
+                                                       data-onb-token="@token" data-onb-list="NotInterested"><i class="bi bi-hand-thumbs-down" aria-hidden="true"></i></label>
                                             </span>
                                         </li>
                                     }
                                 </ul>
                                 @* Hidden inputs populated by the script below from the selected radios. *@
                                 <div id="onb-hidden-inputs"></div>
-                                <button type="submit" class="btn btn-primary">Personalise my feed</button>
+                                <button type="submit" class="btn btn-primary">@Localizer["Accounts.Recommendations.PersonaliseFeed"]</button>
                             </form>
                         </div>
                     </div>

@@ -13546,4 +13546,55 @@
 <data name="Accounts.Wishlist.BrowseTours" xml:space="preserve">
 <value>تصفح الجولات</value>
 </data>
+<data name="Accounts.Recommendations.Title" xml:space="preserve">
+<value>موصى به لك</value>
+</data>
+<data name="Accounts.Recommendations.Personalized" xml:space="preserve">
+<value>مخصص</value>
+</data>
+<data name="Accounts.Recommendations.PopularPicks" xml:space="preserve">
+<value>اختيارات شائعة</value>
+</data>
+<data name="Accounts.Recommendations.EmptyTitle" xml:space="preserve">
+<value>لا توجد توصيات بعد</value>
+</data>
+<data name="Accounts.Recommendations.EmptyMessage" xml:space="preserve">
+<value>تصفح واحجز بعض التجارب وسنخصص الاقتراحات لك.</value>
+</data>
+<data name="Accounts.Recommendations.EditorsChoice" xml:space="preserve">
+<value>اختيار المحرر</value>
+</data>
+<data name="Accounts.Recommendations.Promoted" xml:space="preserve">
+<value>مروّج</value>
+</data>
+<data name="Accounts.Recommendations.Featured" xml:space="preserve">
+<value>مميز</value>
+</data>
+<data name="Accounts.Recommendations.BookingsCount" xml:space="preserve">
+<value>{0} حجز</value>
+</data>
+<data name="Accounts.Recommendations.NotInterested" xml:space="preserve">
+<value>غير مهتم</value>
+</data>
+<data name="Accounts.Recommendations.PreferencesTitle" xml:space="preserve">
+<value>تفضيلات التخصيص</value>
+</data>
+<data name="Accounts.Recommendations.NoPreference" xml:space="preserve">
+<value>لا تفضيل</value>
+</data>
+<data name="Accounts.Recommendations.NotSet" xml:space="preserve">
+<value>غير محدد</value>
+</data>
+<data name="Accounts.Recommendations.OnboardingTitle" xml:space="preserve">
+<value>أخبرنا بما تحب</value>
+</data>
+<data name="Accounts.Recommendations.OnboardingHint" xml:space="preserve">
+<value>اختر بعض ما تحب أو ما لا ترغب فيه — وسنضبط موجزك.</value>
+</data>
+<data name="Accounts.Recommendations.PreferenceFor" xml:space="preserve">
+<value>التفضيل لـ {0}</value>
+</data>
+<data name="Accounts.Recommendations.PersonaliseFeed" xml:space="preserve">
+<value>خصص موجزي</value>
+</data>
 </root>

@@ -13546,4 +13546,55 @@
 <data name="Accounts.Wishlist.BrowseTours" xml:space="preserve">
 <value>Browse tours</value>
 </data>
+<data name="Accounts.Recommendations.Title" xml:space="preserve">
+<value>Recommended for you</value>
+</data>
+<data name="Accounts.Recommendations.Personalized" xml:space="preserve">
+<value>Personalized</value>
+</data>
+<data name="Accounts.Recommendations.PopularPicks" xml:space="preserve">
+<value>Popular picks</value>
+</data>
+<data name="Accounts.Recommendations.EmptyTitle" xml:space="preserve">
+<value>No recommendations yet</value>
+</data>
+<data name="Accounts.Recommendations.EmptyMessage" xml:space="preserve">
+<value>Browse and book a few experiences and we'll tailor suggestions for you.</value>
+</data>
+<data name="Accounts.Recommendations.EditorsChoice" xml:space="preserve">
+<value>Editor's Choice</value>
+</data>
+<data name="Accounts.Recommendations.Promoted" xml:space="preserve">
+<value>Promoted</value>
+</data>
+<data name="Accounts.Recommendations.Featured" xml:space="preserve">
+<value>Featured</value>
+</data>
+<data name="Accounts.Recommendations.BookingsCount" xml:space="preserve">
+<value>{0} bookings</value>
+</data>
+<data name="Accounts.Recommendations.NotInterested" xml:space="preserve">
+<value>Not interested</value>
+</data>
+<data name="Accounts.Recommendations.PreferencesTitle" xml:space="preserve">
+<value>Personalization preferences</value>
+</data>
+<data name="Accounts.Recommendations.NoPreference" xml:space="preserve">
+<value>No preference</value>
+</data>
+<data name="Accounts.Recommendations.NotSet" xml:space="preserve">
+<value>Not set</value>
+</data>
+<data name="Accounts.Recommendations.OnboardingTitle" xml:space="preserve">
+<value>Tell us what you like</value>
+</data>
+<data name="Accounts.Recommendations.OnboardingHint" xml:space="preserve">
+<value>Pick a few you love or aren't keen on — we'll tune your feed.</value>
+</data>
+<data name="Accounts.Recommendations.PreferenceFor" xml:space="preserve">
+<value>Preference for {0}</value>
+</data>
+<data name="Accounts.Recommendations.PersonaliseFeed" xml:space="preserve">
+<value>Personalise my feed</value>
+</data>
 </root>
