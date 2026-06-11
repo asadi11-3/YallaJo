@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.Settings;
 using YallaJo.Web.Areas.Accounts.Models.UpdatePhone;
@@ -8,6 +9,7 @@ using YallaJo.Web.Areas.Auth.Facades;
 using YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -21,6 +23,7 @@ public sealed class SettingsController : BaseController
     private readonly DevicesFacade _devices;
     private readonly LogoutAllFacade _logoutAll;
     private readonly ProfileFacade _profile;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
     public SettingsController(
         SettingsFacade settings,
@@ -28,7 +31,8 @@ public sealed class SettingsController : BaseController
         SessionsFacade sessions,
         DevicesFacade devices,
         LogoutAllFacade logoutAll,
-        ProfileFacade profile)
+        ProfileFacade profile,
+        IStringLocalizer<SharedResource> localizer)
     {
         _settings = settings;
         _phone = phone;
@@ -36,6 +40,7 @@ public sealed class SettingsController : BaseController
         _devices = devices;
         _logoutAll = logoutAll;
         _profile = profile;
+        _localizer = localizer;
     }
 
     // Supported external sign-in providers (canonical names + display labels). Rendered
@@ -126,7 +131,7 @@ public sealed class SettingsController : BaseController
 
         var result = await _settings.UpdateNotificationsAsync(enabledKeys, ct);
         if (GuardSignOut(result) is { } so) return so;
-        if (result.IsSuccess) SetSuccess("Notification preferences saved.");
+        if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.NotificationPrefsSaved"]);
         else SetError(result.Error);
         return RedirectToAction(nameof(Index), new { tab = "notifications" });
     }
@@ -142,7 +147,7 @@ public sealed class SettingsController : BaseController
         var result = await _settings.UpdateMarketingAsync(
             emailDigest, pushNotifications, reEngagementCampaigns, ct);
         if (GuardSignOut(result) is { } so) return so;
-        if (result.IsSuccess) SetSuccess("Marketing preferences saved.");
+        if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.MarketingPrefsSaved"]);
         else SetError(result.Error);
         return RedirectToAction(nameof(Index), new { tab = "notifications" });
     }
@@ -153,13 +158,13 @@ public sealed class SettingsController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please enter a valid phone number.");
+            SetError(_localizer["Accounts.Msg.InvalidPhone"]);
             return RedirectToAction(nameof(Index), new { tab = "security" });
         }
 
         var result = await _phone.HandleAsync(vm, ct);
         if (GuardSignOut(result) is { } so) return so;
-        if (result.IsSuccess) SetSuccess("Phone number updated.");
+        if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.PhoneUpdated"]);
         else SetError(result.Error);
         return RedirectToAction(nameof(Index), new { tab = "security" });
     }
@@ -170,7 +175,7 @@ public sealed class SettingsController : BaseController
     {
         var result = await _sessions.RevokeAsync(sessionId, ct);
         if (GuardSignOut(result) is { } so) return so;
-        if (result.IsSuccess) SetSuccess("Session signed out.");
+        if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.SessionSignedOut"]);
         else SetError(result.Error);
         return RedirectToAction(nameof(Index), new { tab = "security" });
     }
@@ -181,7 +186,7 @@ public sealed class SettingsController : BaseController
     {
         var result = await _devices.TrustAsync(deviceId, ct);
         if (GuardSignOut(result) is { } so) return so;
-        if (result.IsSuccess) SetSuccess("Device marked as trusted.");
+        if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.DeviceTrusted"]);
         else SetError(result.Error);
         return RedirectToAction(nameof(Index), new { tab = "security" });
     }
@@ -206,13 +211,13 @@ public sealed class SettingsController : BaseController
         if (string.IsNullOrWhiteSpace(deviceId) || string.IsNullOrWhiteSpace(token)
             || string.IsNullOrWhiteSpace(platform))
         {
-            SetError("Device id, platform and token are all required.");
+            SetError(_localizer["Accounts.Msg.DeviceFieldsRequired"]);
             return RedirectToAction(nameof(Index), new { tab = "devices" });
         }
 
         var result = await _devices.RegisterTokenAsync(deviceId, platform, token, ct);
         if (GuardSignOut(result) is { } so) return so;
-        if (result.IsSuccess) SetSuccess("Device registered for notifications.");
+        if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.DeviceRegistered"]);
         else SetError(result.Error);
         return RedirectToAction(nameof(Index), new { tab = "devices" });
     }
@@ -224,7 +229,7 @@ public sealed class SettingsController : BaseController
     {
         var result = await _devices.DeleteTokenAsync(id, ct);
         if (GuardSignOut(result) is { } so) return so;
-        if (result.IsSuccess) SetSuccess("Device removed.");
+        if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.DeviceRemoved"]);
         else SetError(result.Error);
         return RedirectToAction(nameof(Index), new { tab = "devices" });
     }

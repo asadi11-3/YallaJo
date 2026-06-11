@@ -13654,4 +13654,181 @@
 <data name="Accounts.Support.EndOfTickets" xml:space="preserve">
 <value>نهاية التذاكر</value>
 </data>
+<data name="Accounts.Msg.FormError" xml:space="preserve">
+<value>يرجى تصحيح الحقول المميزة والمحاولة مرة أخرى.</value>
+</data>
+<data name="Accounts.Msg.DisputeSubmitted" xml:space="preserve">
+<value>تم إرسال نزاعك. سيراجعه فريقنا قريبًا.</value>
+</data>
+<data name="Accounts.Msg.DisputeOpenFailed" xml:space="preserve">
+<value>تعذّر فتح النزاع.</value>
+</data>
+<data name="Accounts.Msg.AccReviewDeleted" xml:space="preserve">
+<value>تم حذف مراجعة إمكانية الوصول.</value>
+</data>
+<data name="Accounts.Msg.AccReviewDeleteFailed" xml:space="preserve">
+<value>تعذّر حذف مراجعة إمكانية الوصول.</value>
+</data>
+<data name="Accounts.Msg.BookingCancelled" xml:space="preserve">
+<value>تم إلغاء الحجز.</value>
+</data>
+<data name="Accounts.Msg.DisputeMinLength" xml:space="preserve">
+<value>يرجى وصف المشكلة بما لا يقل عن 10 أحرف.</value>
+</data>
+<data name="Accounts.Msg.PaymentReceived" xml:space="preserve">
+<value>تم استلام الدفع. جارٍ تأكيد حجزك — قد يستغرق هذا لحظات.</value>
+</data>
+<data name="Accounts.Msg.PaymentFailed" xml:space="preserve">
+<value>تعذّر معالجة الدفع.</value>
+</data>
+<data name="Accounts.Msg.PasswordFormError" xml:space="preserve">
+<value>يرجى إكمال نموذج كلمة المرور.</value>
+</data>
+<data name="Accounts.Msg.PasswordChanged" xml:space="preserve">
+<value>تم تغيير كلمة المرور بنجاح.</value>
+</data>
+<data name="Accounts.Msg.PasswordChangeFailed" xml:space="preserve">
+<value>تعذّر تغيير كلمة المرور.</value>
+</data>
+<data name="Accounts.Msg.AccountDeleted" xml:space="preserve">
+<value>تم حذف حسابك. يمكنك استعادته بتسجيل الدخول مرة أخرى.</value>
+</data>
+<data name="Accounts.Msg.AccountRestored" xml:space="preserve">
+<value>تمت استعادة حسابك.</value>
+</data>
+<data name="Accounts.Msg.InvoiceDownloadFailed" xml:space="preserve">
+<value>تعذّر تنزيل الفاتورة.</value>
+</data>
+<data name="Accounts.Msg.JoinRequestFormError" xml:space="preserve">
+<value>يرجى التحقق من مرجع الحجز والموعد وعدد المشاركين، ثم حاول مرة أخرى.</value>
+</data>
+<data name="Accounts.Msg.JoinRequestSent" xml:space="preserve">
+<value>تم إرسال طلبك للانضمام إلى المجموعة.</value>
+</data>
+<data name="Accounts.Msg.JoinRequestFailed" xml:space="preserve">
+<value>تعذّر إرسال طلب الانضمام.</value>
+</data>
+<data name="Accounts.Msg.NotificationDeleted" xml:space="preserve">
+<value>تم حذف الإشعار.</value>
+</data>
+<data name="Accounts.Msg.NotificationDeleteFailed" xml:space="preserve">
+<value>تعذّر حذف الإشعار.</value>
+</data>
+<data name="Accounts.Msg.ExportFailed" xml:space="preserve">
+<value>تعذّر تجهيز تصدير بياناتك.</value>
+</data>
+<data name="Accounts.Msg.TypeToConfirmDeletion" xml:space="preserve">
+<value>يرجى كتابة {0} لتأكيد حذف بيانات التوصيات.</value>
+</data>
+<data name="Accounts.Msg.DataDeletionScheduled" xml:space="preserve">
+<value>تمت جدولة حذف بيانات توصياتك. يمكنك الإلغاء خلال 30 يومًا.</value>
+</data>
+<data name="Accounts.Msg.DataDeletionFailed" xml:space="preserve">
+<value>تعذّر طلب حذف البيانات.</value>
+</data>
+<data name="Accounts.Msg.DataDeletionCancelled" xml:space="preserve">
+<value>تم إلغاء حذف بياناتك.</value>
+</data>
+<data name="Accounts.Msg.DataDeletionCancelFailed" xml:space="preserve">
+<value>تعذّر إلغاء الحذف.</value>
+</data>
+<data name="Accounts.Msg.ProfileUpdated" xml:space="preserve">
+<value>تم تحديث الملف الشخصي.</value>
+</data>
+<data name="Accounts.Msg.ChooseImage" xml:space="preserve">
+<value>يرجى اختيار ملف صورة.</value>
+</data>
+<data name="Accounts.Msg.AvatarUpdated" xml:space="preserve">
+<value>تم تحديث الصورة الرمزية.</value>
+</data>
+<data name="Accounts.Msg.AvatarUploadFailed" xml:space="preserve">
+<value>تعذّر رفع الصورة الرمزية.</value>
+</data>
+<data name="Accounts.Msg.ProfileDeleted" xml:space="preserve">
+<value>تم حذف ملفك الشخصي.</value>
+</data>
+<data name="Accounts.Msg.ProfileDeleteFailed" xml:space="preserve">
+<value>تعذّر حذف الملف الشخصي.</value>
+</data>
+<data name="Accounts.Msg.PreferencesSaved" xml:space="preserve">
+<value>تم حفظ تفضيلاتك.</value>
+</data>
+<data name="Accounts.Msg.PreferencesSaveFailed" xml:space="preserve">
+<value>تعذّر حفظ تفضيلاتك.</value>
+</data>
+<data name="Accounts.Msg.NotInterestedDone" xml:space="preserve">
+<value>لن نعرض ذلك مرة أخرى.</value>
+</data>
+<data name="Accounts.Msg.RecommendationUpdateFailed" xml:space="preserve">
+<value>تعذّر تحديث هذه التوصية.</value>
+</data>
+<data name="Accounts.Msg.OnboardingPickError" xml:space="preserve">
+<value>يرجى اختيار خيار واحد على الأقل (حتى 20) والمحاولة مرة أخرى.</value>
+</data>
+<data name="Accounts.Msg.OnboardingSaved" xml:space="preserve">
+<value>شكرًا! لقد خصصنا توصياتك.</value>
+</data>
+<data name="Accounts.Msg.OnboardingFailed" xml:space="preserve">
+<value>تعذّر حفظ إجاباتك.</value>
+</data>
+<data name="Accounts.Msg.ReviewUpdated" xml:space="preserve">
+<value>تم تحديث مراجعتك.</value>
+</data>
+<data name="Accounts.Msg.ReviewUpdateFailed" xml:space="preserve">
+<value>تعذّر حفظ تغييراتك.</value>
+</data>
+<data name="Accounts.Msg.ReviewDeleted" xml:space="preserve">
+<value>تم حذف مراجعتك.</value>
+</data>
+<data name="Accounts.Msg.ReviewDeleteFailed" xml:space="preserve">
+<value>تعذّر حذف المراجعة.</value>
+</data>
+<data name="Accounts.Msg.NotificationPrefsSaved" xml:space="preserve">
+<value>تم حفظ تفضيلات الإشعارات.</value>
+</data>
+<data name="Accounts.Msg.MarketingPrefsSaved" xml:space="preserve">
+<value>تم حفظ تفضيلات التسويق.</value>
+</data>
+<data name="Accounts.Msg.InvalidPhone" xml:space="preserve">
+<value>يرجى إدخال رقم هاتف صالح.</value>
+</data>
+<data name="Accounts.Msg.PhoneUpdated" xml:space="preserve">
+<value>تم تحديث رقم الهاتف.</value>
+</data>
+<data name="Accounts.Msg.SessionSignedOut" xml:space="preserve">
+<value>تم تسجيل الخروج من الجلسة.</value>
+</data>
+<data name="Accounts.Msg.DeviceTrusted" xml:space="preserve">
+<value>تم تعيين الجهاز كموثوق.</value>
+</data>
+<data name="Accounts.Msg.DeviceFieldsRequired" xml:space="preserve">
+<value>معرف الجهاز والمنصة والرمز كلها مطلوبة.</value>
+</data>
+<data name="Accounts.Msg.DeviceRegistered" xml:space="preserve">
+<value>تم تسجيل الجهاز للإشعارات.</value>
+</data>
+<data name="Accounts.Msg.DeviceRemoved" xml:space="preserve">
+<value>تمت إزالة الجهاز.</value>
+</data>
+<data name="Accounts.Msg.ReplyEmpty" xml:space="preserve">
+<value>يرجى كتابة رسالة قبل الإرسال.</value>
+</data>
+<data name="Accounts.Msg.ReplySent" xml:space="preserve">
+<value>تم إرسال ردك.</value>
+</data>
+<data name="Accounts.Msg.ReplyFailed" xml:space="preserve">
+<value>تعذّر إرسال ردك.</value>
+</data>
+<data name="Accounts.Msg.TicketClosed" xml:space="preserve">
+<value>تم إغلاق التذكرة.</value>
+</data>
+<data name="Accounts.Msg.TicketCloseFailed" xml:space="preserve">
+<value>تعذّر إغلاق التذكرة.</value>
+</data>
+<data name="Accounts.Msg.WishlistRemoved" xml:space="preserve">
+<value>تمت الإزالة من قائمة أمنياتك.</value>
+</data>
+<data name="Accounts.Msg.WishlistCleared" xml:space="preserve">
+<value>تم مسح قائمة أمنياتك.</value>
+</data>
 </root>

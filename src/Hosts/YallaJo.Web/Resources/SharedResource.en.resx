@@ -13654,4 +13654,181 @@
 <data name="Accounts.Support.EndOfTickets" xml:space="preserve">
 <value>End of tickets</value>
 </data>
+<data name="Accounts.Msg.FormError" xml:space="preserve">
+<value>Please correct the highlighted fields and try again.</value>
+</data>
+<data name="Accounts.Msg.DisputeSubmitted" xml:space="preserve">
+<value>Your dispute has been submitted. Our team will review it shortly.</value>
+</data>
+<data name="Accounts.Msg.DisputeOpenFailed" xml:space="preserve">
+<value>Could not open the dispute.</value>
+</data>
+<data name="Accounts.Msg.AccReviewDeleted" xml:space="preserve">
+<value>Your accessibility review has been deleted.</value>
+</data>
+<data name="Accounts.Msg.AccReviewDeleteFailed" xml:space="preserve">
+<value>Could not delete the accessibility review.</value>
+</data>
+<data name="Accounts.Msg.BookingCancelled" xml:space="preserve">
+<value>Booking cancelled.</value>
+</data>
+<data name="Accounts.Msg.DisputeMinLength" xml:space="preserve">
+<value>Please describe the issue in at least 10 characters.</value>
+</data>
+<data name="Accounts.Msg.PaymentReceived" xml:space="preserve">
+<value>Payment received. Your booking is being confirmed — this may take a few moments.</value>
+</data>
+<data name="Accounts.Msg.PaymentFailed" xml:space="preserve">
+<value>Could not process payment.</value>
+</data>
+<data name="Accounts.Msg.PasswordFormError" xml:space="preserve">
+<value>Please complete the password form.</value>
+</data>
+<data name="Accounts.Msg.PasswordChanged" xml:space="preserve">
+<value>Password changed successfully.</value>
+</data>
+<data name="Accounts.Msg.PasswordChangeFailed" xml:space="preserve">
+<value>Could not change password.</value>
+</data>
+<data name="Accounts.Msg.AccountDeleted" xml:space="preserve">
+<value>Your account has been deleted. You can restore it by signing in again.</value>
+</data>
+<data name="Accounts.Msg.AccountRestored" xml:space="preserve">
+<value>Your account has been restored.</value>
+</data>
+<data name="Accounts.Msg.InvoiceDownloadFailed" xml:space="preserve">
+<value>Could not download the invoice.</value>
+</data>
+<data name="Accounts.Msg.JoinRequestFormError" xml:space="preserve">
+<value>Please check the booking reference, slot, and participant count, then try again.</value>
+</data>
+<data name="Accounts.Msg.JoinRequestSent" xml:space="preserve">
+<value>Your request to join the group was sent.</value>
+</data>
+<data name="Accounts.Msg.JoinRequestFailed" xml:space="preserve">
+<value>Could not submit your join request.</value>
+</data>
+<data name="Accounts.Msg.NotificationDeleted" xml:space="preserve">
+<value>Notification deleted.</value>
+</data>
+<data name="Accounts.Msg.NotificationDeleteFailed" xml:space="preserve">
+<value>Could not delete the notification.</value>
+</data>
+<data name="Accounts.Msg.ExportFailed" xml:space="preserve">
+<value>Could not prepare your data export.</value>
+</data>
+<data name="Accounts.Msg.TypeToConfirmDeletion" xml:space="preserve">
+<value>Please type {0} to confirm deleting your recommendation data.</value>
+</data>
+<data name="Accounts.Msg.DataDeletionScheduled" xml:space="preserve">
+<value>Your recommendation data is scheduled for deletion. You can cancel within 30 days.</value>
+</data>
+<data name="Accounts.Msg.DataDeletionFailed" xml:space="preserve">
+<value>Could not request data deletion.</value>
+</data>
+<data name="Accounts.Msg.DataDeletionCancelled" xml:space="preserve">
+<value>Your data deletion has been cancelled.</value>
+</data>
+<data name="Accounts.Msg.DataDeletionCancelFailed" xml:space="preserve">
+<value>Could not cancel the deletion.</value>
+</data>
+<data name="Accounts.Msg.ProfileUpdated" xml:space="preserve">
+<value>Profile updated.</value>
+</data>
+<data name="Accounts.Msg.ChooseImage" xml:space="preserve">
+<value>Please choose an image file.</value>
+</data>
+<data name="Accounts.Msg.AvatarUpdated" xml:space="preserve">
+<value>Avatar updated.</value>
+</data>
+<data name="Accounts.Msg.AvatarUploadFailed" xml:space="preserve">
+<value>Could not upload avatar.</value>
+</data>
+<data name="Accounts.Msg.ProfileDeleted" xml:space="preserve">
+<value>Your profile has been deleted.</value>
+</data>
+<data name="Accounts.Msg.ProfileDeleteFailed" xml:space="preserve">
+<value>Could not delete profile.</value>
+</data>
+<data name="Accounts.Msg.PreferencesSaved" xml:space="preserve">
+<value>Your preferences have been saved.</value>
+</data>
+<data name="Accounts.Msg.PreferencesSaveFailed" xml:space="preserve">
+<value>Could not save your preferences.</value>
+</data>
+<data name="Accounts.Msg.NotInterestedDone" xml:space="preserve">
+<value>We won't show that again.</value>
+</data>
+<data name="Accounts.Msg.RecommendationUpdateFailed" xml:space="preserve">
+<value>Could not update this recommendation.</value>
+</data>
+<data name="Accounts.Msg.OnboardingPickError" xml:space="preserve">
+<value>Please pick at least one option (up to 20) and try again.</value>
+</data>
+<data name="Accounts.Msg.OnboardingSaved" xml:space="preserve">
+<value>Thanks! We've personalised your recommendations.</value>
+</data>
+<data name="Accounts.Msg.OnboardingFailed" xml:space="preserve">
+<value>Could not save your onboarding answers.</value>
+</data>
+<data name="Accounts.Msg.ReviewUpdated" xml:space="preserve">
+<value>Your review has been updated.</value>
+</data>
+<data name="Accounts.Msg.ReviewUpdateFailed" xml:space="preserve">
+<value>Could not save your changes.</value>
+</data>
+<data name="Accounts.Msg.ReviewDeleted" xml:space="preserve">
+<value>Your review has been deleted.</value>
+</data>
+<data name="Accounts.Msg.ReviewDeleteFailed" xml:space="preserve">
+<value>Could not delete the review.</value>
+</data>
+<data name="Accounts.Msg.NotificationPrefsSaved" xml:space="preserve">
+<value>Notification preferences saved.</value>
+</data>
+<data name="Accounts.Msg.MarketingPrefsSaved" xml:space="preserve">
+<value>Marketing preferences saved.</value>
+</data>
+<data name="Accounts.Msg.InvalidPhone" xml:space="preserve">
+<value>Please enter a valid phone number.</value>
+</data>
+<data name="Accounts.Msg.PhoneUpdated" xml:space="preserve">
+<value>Phone number updated.</value>
+</data>
+<data name="Accounts.Msg.SessionSignedOut" xml:space="preserve">
+<value>Session signed out.</value>
+</data>
+<data name="Accounts.Msg.DeviceTrusted" xml:space="preserve">
+<value>Device marked as trusted.</value>
+</data>
+<data name="Accounts.Msg.DeviceFieldsRequired" xml:space="preserve">
+<value>Device id, platform and token are all required.</value>
+</data>
+<data name="Accounts.Msg.DeviceRegistered" xml:space="preserve">
+<value>Device registered for notifications.</value>
+</data>
+<data name="Accounts.Msg.DeviceRemoved" xml:space="preserve">
+<value>Device removed.</value>
+</data>
+<data name="Accounts.Msg.ReplyEmpty" xml:space="preserve">
+<value>Please type a message before sending.</value>
+</data>
+<data name="Accounts.Msg.ReplySent" xml:space="preserve">
+<value>Your reply was sent.</value>
+</data>
+<data name="Accounts.Msg.ReplyFailed" xml:space="preserve">
+<value>Could not post your reply.</value>
+</data>
+<data name="Accounts.Msg.TicketClosed" xml:space="preserve">
+<value>Ticket closed.</value>
+</data>
+<data name="Accounts.Msg.TicketCloseFailed" xml:space="preserve">
+<value>Could not close the ticket.</value>
+</data>
+<data name="Accounts.Msg.WishlistRemoved" xml:space="preserve">
+<value>Removed from your wishlist.</value>
+</data>
+<data name="Accounts.Msg.WishlistCleared" xml:space="preserve">
+<value>Your wishlist has been cleared.</value>
+</data>
 </root>

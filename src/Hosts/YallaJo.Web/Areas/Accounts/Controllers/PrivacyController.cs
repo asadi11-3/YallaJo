@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -25,8 +27,13 @@ public sealed class PrivacyController : BaseController
     private const string ConfirmationWord = "DELETE";
 
     private readonly PrivacyFacade _privacy;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public PrivacyController(PrivacyFacade privacy) => _privacy = privacy;
+    public PrivacyController(PrivacyFacade privacy, IStringLocalizer<SharedResource> localizer)
+    {
+        _privacy = privacy;
+        _localizer = localizer;
+    }
 
     [HttpGet("accounts/privacy")]
     public IActionResult Index()
@@ -41,7 +48,7 @@ public sealed class PrivacyController : BaseController
 
         if (!result.IsSuccess || result.Data is null)
         {
-            SetError(result.Error ?? "Could not prepare your data export.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.ExportFailed"].Value);
             return BackToTab();
         }
 
@@ -57,7 +64,7 @@ public sealed class PrivacyController : BaseController
         // Destructive: require the explicit typed confirmation word before proceeding.
         if (!string.Equals(confirmation?.Trim(), ConfirmationWord, StringComparison.Ordinal))
         {
-            SetError($"Please type {ConfirmationWord} to confirm deleting your recommendation data.");
+            SetError(_localizer["Accounts.Msg.TypeToConfirmDeletion", ConfirmationWord]);
             return BackToTab();
         }
 
@@ -65,9 +72,9 @@ public sealed class PrivacyController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Your recommendation data is scheduled for deletion. You can cancel within 30 days.");
+            SetSuccess(_localizer["Accounts.Msg.DataDeletionScheduled"]);
         else
-            SetError(result.Error ?? "Could not request data deletion.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.DataDeletionFailed"].Value);
 
         return BackToTab();
     }
@@ -81,9 +88,9 @@ public sealed class PrivacyController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Your data deletion has been cancelled.");
+            SetSuccess(_localizer["Accounts.Msg.DataDeletionCancelled"]);
         else
-            SetError(result.Error ?? "Could not cancel the deletion.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.DataDeletionCancelFailed"].Value);
 
         return BackToTab();
     }

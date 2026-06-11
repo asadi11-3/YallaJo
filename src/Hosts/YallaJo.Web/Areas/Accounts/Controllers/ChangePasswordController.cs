@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Models.ChangePassword;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -17,7 +19,13 @@ namespace YallaJo.Web.Areas.Accounts.Controllers;
 public sealed class ChangePasswordController : BaseController
 {
     private readonly ChangePasswordFacade _facade;
-    public ChangePasswordController(ChangePasswordFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
+
+    public ChangePasswordController(ChangePasswordFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public IActionResult Index()
@@ -33,15 +41,15 @@ public sealed class ChangePasswordController : BaseController
                 .SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage)
                 .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
-            SetError(firstError ?? "Please complete the password form.");
+            SetError(firstError ?? _localizer["Accounts.Msg.PasswordFormError"].Value);
             return RedirectBack(returnUrl);
         }
 
         var result = await _facade.HandleAsync(vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        if (result.IsSuccess) SetSuccess("Password changed successfully.");
-        else SetError(result.Error ?? "Could not change password.");
+        if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.PasswordChanged"]);
+        else SetError(result.Error ?? _localizer["Accounts.Msg.PasswordChangeFailed"].Value);
         return RedirectBack(returnUrl);
     }
 

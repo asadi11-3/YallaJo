@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -15,8 +17,13 @@ namespace YallaJo.Web.Areas.Accounts.Controllers;
 public sealed class DeleteController : BaseController
 {
     private readonly DeleteFacade _delete;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public DeleteController(DeleteFacade delete) => _delete = delete;
+    public DeleteController(DeleteFacade delete, IStringLocalizer<SharedResource> localizer)
+    {
+        _delete = delete;
+        _localizer = localizer;
+    }
 
     [HttpGet("accounts/delete")]
     public IActionResult Index()
@@ -36,7 +43,7 @@ public sealed class DeleteController : BaseController
         }
 
         // Account soft-deleted and local cookie cleared; send the user to sign-in.
-        SetSuccess("Your account has been deleted. You can restore it by signing in again.");
+        SetSuccess(_localizer["Accounts.Msg.AccountDeleted"]);
         return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
     }
 
@@ -48,7 +55,7 @@ public sealed class DeleteController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Your account has been restored.");
+            SetSuccess(_localizer["Accounts.Msg.AccountRestored"]);
         else
             SetError(result.Error);
 
