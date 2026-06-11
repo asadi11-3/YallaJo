@@ -1,0 +1,78 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Business.Shared
+@using YallaJo.Web.Areas.Business.Models.Services
+@using YallaJo.Web.Infrastructure.Authorization
+@model ServicesVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    var culture = CultureInfo.CurrentUICulture;
+    string Money(decimal amount, string? currency) => amount.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(currency) ? "JOD" : currency);
+    string Count(int n) => n.ToString("N0", culture);
+}
+
+<div class="card shadow">
+    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Business.Services.CurrentHeading"]</h2>
+        <span class="badge bg-primary bg-opacity-10 text-primary"><bdi dir="ltr" class="font-data">@Count(Model.Services.Count)</bdi></span>
+    </div>
+    <div class="card-body">
+        @if (!Model.HasServices)
+        {
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-0 text-body-secondary">@Localizer["Business.Services.EmptyMsg"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <caption class="visually-hidden">@Localizer["Business.Services.CurrentHeading"]</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">@Localizer["Business.Services.ColService"]</th>
+                            <th scope="col" class="text-end">@Localizer["Business.Services.ColPrice"]</th>
+                            <th scope="col" class="text-end">@Localizer["Business.Services.ColDuration"]</th>
+                            <th scope="col" class="text-end">@Localizer["Business.Services.ColActions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.Services)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@s.Name</td>
+                                <td class="text-end"><bdi dir="ltr" class="font-data">@Money(s.Price, s.Currency)</bdi></td>
+                                <td class="text-end"><bdi dir="ltr">@Localizer["Business.Services.Minutes", Count(s.DurationMinutes)]</bdi></td>
+                                <td class="text-end">
+                                    <permission require="@WebPermission.ServiceItem.Update">
+                                        <a asp-area="Business" asp-controller="Services" asp-action="Edit" asp-route-id="@Model.BusinessId" asp-route-serviceId="@s.Id"
+                                           class="btn btn-sm btn-outline-secondary" data-service-edit aria-label="@Localizer["Business.Services.Edit", s.Name]">
+                                            <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                        </a>
+                                    </permission>
+                                    <permission require="@WebPermission.ServiceItem.SoftDelete">
+                                        @{
+                                            var removeVm = new DeleteConfirmFormVm
+                                            {
+                                                Controller = "Services",
+                                                RouteValues = new Dictionary<string, string>
+                                                {
+                                                    ["id"] = Model.BusinessId.ToString(),
+                                                    ["serviceId"] = s.Id.ToString()
+                                                },
+                                                ConfirmMessage = Localizer["Business.Services.RemoveBody", s.Name].Value,
+                                                ButtonLabel = Localizer["Business.Services.Remove", s.Name].Value
+                                            };
+                                        }
+                                        <partial name="_DeleteConfirmForm" model="removeVm" />
+                                    </permission>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

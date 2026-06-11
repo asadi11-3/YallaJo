@@ -11,6 +11,8 @@ namespace YallaJo.Web.Areas.Business.Controllers;
 [RequirePermission(WebPermission.Business.Read)]
 public sealed class StaffController : BusinessControllerBase
 {
+    private const string ListPartial = "_StaffList";
+
     private readonly BusinessStaffFacade _facade;
 
     public StaffController(BusinessStaffFacade facade) => _facade = facade;
@@ -41,8 +43,13 @@ public sealed class StaffController : BusinessControllerBase
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please provide a valid user ID and role.");
-            return RedirectToAction(nameof(Index), new { id });
+            if (WantsAjax())
+            {
+                return AjaxValidationProblem("Please provide a valid user ID and role.");
+            }
+
+            // No-JS validation failure: re-render the page with the submitted form so input is preserved (D-6, F1-F4).
+            return await ReloadIndexAsync(id, form, ct);
         }
 
         var result = await _facade.AddAsync(id, form, ct);
@@ -51,7 +58,24 @@ public sealed class StaffController : BusinessControllerBase
             return signOut;
         }
 
-        SetFlash(result, "Staff member added.", "Could not add the staff member.");
+        if (!result.IsSuccess)
+        {
+            if (WantsAjax())
+            {
+                return AjaxFailure(result, "Could not add the staff member.");
+            }
+
+            ApplyValidationErrors(result);
+            SetError(result.Error ?? "Could not add the staff member.");
+            return await ReloadIndexAsync(id, form, ct);
+        }
+
+        if (WantsAjax())
+        {
+            return await ListPartialAsync(id, "Staff member added.", ct);
+        }
+
+        SetSuccess("Staff member added.");
         return RedirectToAction(nameof(Index), new { id });
     }
 
@@ -66,7 +90,43 @@ public sealed class StaffController : BusinessControllerBase
             return signOut;
         }
 
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+            {
+                return AjaxFailure(result, "Could not remove the staff member.");
+            }
+
+            return await ListPartialAsync(id, "Staff member removed.", ct);
+        }
+
         SetFlash(result, "Staff member removed.", "Could not remove the staff member.");
         return RedirectToAction(nameof(Index), new { id });
+    }
+
+    /// <summary>Returns the refreshed list partial after a successful AJAX mutation; falls back to PRG when reload fails.</summary>
+    private async Task<IActionResult> ListPartialAsync(Guid id, string toast, CancellationToken ct)
+    {
+        var reload = await _facade.GetAsync(id, ct);
+        if (!reload.IsSuccess || reload.Data is null)
+        {
+            SetSuccess(toast);
+            return RedirectToAction(nameof(Index), new { id });
+        }
+
+        SetAjaxToast(toast);
+        return PartialView(ListPartial, reload.Data);
+    }
+
+    /// <summary>No-JS fallback: re-renders Index with the submitted form preserved (D-6).</summary>
+    private async Task<IActionResult> ReloadIndexAsync(Guid id, AddStaffFormVm form, CancellationToken ct)
+    {
+        SetSidebar("Staff", id);
+        var reload = await _facade.GetAsync(id, ct);
+        var vm = reload.IsSuccess && reload.Data is not null
+            ? reload.Data
+            : new StaffVm { BusinessId = id };
+        vm.Form = form;
+        return View(nameof(Index), vm);
     }
 }

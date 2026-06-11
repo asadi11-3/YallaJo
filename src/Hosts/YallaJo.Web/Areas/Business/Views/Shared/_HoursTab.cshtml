@@ -10,7 +10,7 @@
         return localized.ResourceNotFound ? "" : localized.Value;
     }
 }
-<form asp-area="Business" asp-controller="Hours" asp-action="Save" asp-route-id="@Model.BusinessId" method="post">
+<form asp-area="Business" asp-controller="Hours" asp-action="Save" asp-route-id="@Model.BusinessId" method="post" data-yj-component="business-hours" data-loading>
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
     <div class="card shadow">

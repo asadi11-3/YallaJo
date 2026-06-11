@@ -10,8 +10,6 @@
     ViewData["BusinessNav"] = "Staff";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
-    var culture = CultureInfo.CurrentUICulture;
-    string Count(int n) => n.ToString("N0", culture);
 }
 
 <section class="pt-0">
@@ -38,7 +36,7 @@
 
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                <div class="row g-4">
+                <div class="row g-4" data-yj-component="business-crud" data-crud-list="#staff-list">
                     <permission require="@WebPermission.BusinessStaff.Create">
                         <div class="col-lg-5">
                             <div class="card shadow h-100">
@@ -46,7 +44,8 @@
                                     <h2 class="card-header-title h5 mb-0">@Localizer["Business.Staff.AddHeading"]</h2>
                                 </div>
                                 <div class="card-body">
-                                    <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post">
+                                    <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post" data-loading
+                                          data-crud-success="@Localizer["Business.Staff.Added"]">
                                         @Html.AntiForgeryToken()
                                         <div class="mb-3">
                                             <label asp-for="Form.UserId" class="form-label">@Localizer["Business.Staff.UserId"]</label>
@@ -75,64 +74,8 @@
                     </permission>
 
                     <div class="col-lg-7">
-                        <div class="card shadow h-100">
-                            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                                <h2 class="card-header-title h5 mb-0">@Localizer["Business.Staff.CurrentHeading"]</h2>
-                                <span class="badge bg-primary bg-opacity-10 text-primary"><bdi class="font-data">@Count(Model.Staff.Count)</bdi></span>
-                            </div>
-                            <div class="card-body">
-                                @if (!Model.HasStaff)
-                                {
-                                    <div class="text-center py-5">
-                                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                        <p class="mb-0 text-body-secondary">@Localizer["Business.Staff.EmptyMsg"]</p>
-                                    </div>
-                                }
-                                else
-                                {
-                                    var ordinal = 0;
-                                    <div class="table-responsive">
-                                        <table class="table table-hover align-middle mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">@Localizer["Business.Staff.ColMember"]</th>
-                                                    <th scope="col">@Localizer["Business.Staff.ColRole"]</th>
-                                                    <th scope="col" class="text-end">@Localizer["Business.Staff.ColActions"]</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (var s in Model.Staff)
-                                                {
-                                                    ordinal++;
-                                                    var memberLabel = Localizer["Business.Staff.StaffLabel", Count(ordinal)].Value;
-                                                    <tr>
-                                                        <td class="fw-semibold">@memberLabel</td>
-                                                        <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@Localizer["Business.Staff.Role." + s.Role]</span></td>
-                                                        <td class="text-end">
-                                                            <permission require="@WebPermission.BusinessStaff.Delete">
-                                                                @{
-                                                                    var removeVm = new DeleteConfirmFormVm
-                                                                    {
-                                                                        Controller = "Staff",
-                                                                        RouteValues = new Dictionary<string, string>
-                                                                        {
-                                                                            ["id"] = Model.BusinessId.ToString(),
-                                                                            ["staffId"] = s.Id.ToString()
-                                                                        },
-                                                                        ConfirmMessage = Localizer["Business.Staff.RemoveBody", memberLabel].Value,
-                                                                        ButtonLabel = Localizer["Business.Staff.Remove"].Value
-                                                                    };
-                                                                }
-                                                                <partial name="_DeleteConfirmForm" model="removeVm" />
-                                                            </permission>
-                                                        </td>
-                                                    </tr>
-                                                }
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                }
-                            </div>
+                        <div id="staff-list">
+                            <partial name="_StaffList" model="Model" />
                         </div>
                     </div>
                 </div>
@@ -143,4 +86,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/business-crud.js" asp-append-version="true" defer></script>
 }

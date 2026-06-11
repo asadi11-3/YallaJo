@@ -11,6 +11,8 @@ namespace YallaJo.Web.Areas.Business.Controllers;
 [RequirePermission(WebPermission.Business.Read)]
 public sealed class ServicesController : BusinessControllerBase
 {
+    private const string ListPartial = "_ServicesList";
+
     private readonly BusinessServicesFacade _facade;
 
     public ServicesController(BusinessServicesFacade facade) => _facade = facade;
@@ -36,13 +38,36 @@ public sealed class ServicesController : BusinessControllerBase
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please provide a valid service name, price, and category.");
-            return RedirectToAction(nameof(Index), new { id });
+            if (WantsAjax())
+            {
+                return AjaxValidationProblem("Please provide a valid service name, price, and category.");
+            }
+
+            // No-JS validation failure: re-render the page with the submitted form so input is preserved (D-6, F1-F4).
+            return await ReloadIndexAsync(id, form, ct);
         }
 
         var result = await _facade.AddAsync(id, form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Service added.", "Could not add the service.");
+
+        if (!result.IsSuccess)
+        {
+            if (WantsAjax())
+            {
+                return AjaxFailure(result, "Could not add the service.");
+            }
+
+            ApplyValidationErrors(result);
+            SetError(result.Error ?? "Could not add the service.");
+            return await ReloadIndexAsync(id, form, ct);
+        }
+
+        if (WantsAjax())
+        {
+            return await ListPartialAsync(id, "Service added.", ct);
+        }
+
+        SetSuccess("Service added.");
         return RedirectToAction(nameof(Index), new { id });
     }
 
@@ -77,16 +102,33 @@ public sealed class ServicesController : BusinessControllerBase
         form.BusinessId = id;
 
         if (!ModelState.IsValid)
+        {
+            if (WantsAjax())
+            {
+                return AjaxValidationProblem("Please provide a valid service name, price, and category.");
+            }
+
             return await IndexWithEditAsync(id, form, ct);
+        }
 
         var result = await _facade.UpdateAsync(id, serviceId, form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (!result.IsSuccess)
         {
+            if (WantsAjax())
+            {
+                return AjaxFailure(result, "Could not update the service.");
+            }
+
             if (!ApplyValidationErrors(result))
                 SetError(result.Error);
             return await IndexWithEditAsync(id, form, ct);
+        }
+
+        if (WantsAjax())
+        {
+            return await ListPartialAsync(id, "Service updated.", ct);
         }
 
         SetSuccess("Service updated.");
@@ -100,8 +142,45 @@ public sealed class ServicesController : BusinessControllerBase
     {
         var result = await _facade.RemoveAsync(id, serviceId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+            {
+                return AjaxFailure(result, "Could not remove the service.");
+            }
+
+            return await ListPartialAsync(id, "Service removed.", ct);
+        }
+
         SetFlash(result, "Service removed.", "Could not remove the service.");
         return RedirectToAction(nameof(Index), new { id });
+    }
+
+    /// <summary>Returns the refreshed list partial after a successful AJAX mutation; falls back to PRG when reload fails.</summary>
+    private async Task<IActionResult> ListPartialAsync(Guid id, string toast, CancellationToken ct)
+    {
+        var reload = await _facade.GetAsync(id, ct);
+        if (!reload.IsSuccess || reload.Data is null)
+        {
+            SetSuccess(toast);
+            return RedirectToAction(nameof(Index), new { id });
+        }
+
+        SetAjaxToast(toast);
+        return PartialView(ListPartial, reload.Data);
+    }
+
+    /// <summary>No-JS fallback: re-renders Index with the submitted add form preserved (D-6).</summary>
+    private async Task<IActionResult> ReloadIndexAsync(Guid id, AddServiceFormVm form, CancellationToken ct)
+    {
+        SetSidebar("Services", id);
+        var reload = await _facade.GetAsync(id, ct);
+        var vm = reload.IsSuccess && reload.Data is not null
+            ? reload.Data
+            : new ServicesVm { BusinessId = id };
+        vm.Form = form;
+        return View(nameof(Index), vm);
     }
 
     /// <summary>

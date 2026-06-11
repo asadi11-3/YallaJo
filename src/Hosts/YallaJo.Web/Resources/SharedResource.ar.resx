@@ -13540,4 +13540,13 @@
 <data name="Business.ConfirmDelete.Cancel" xml:space="preserve">
 <value>إلغاء</value>
 </data>
+<data name="Business.Amenities.Added" xml:space="preserve">
+<value>تمت إضافة المرفق.</value>
+</data>
+<data name="Business.Staff.Added" xml:space="preserve">
+<value>تمت إضافة الموظف.</value>
+</data>
+<data name="Business.Services.Added" xml:space="preserve">
+<value>تمت إضافة الخدمة.</value>
+</data>
 </root>
