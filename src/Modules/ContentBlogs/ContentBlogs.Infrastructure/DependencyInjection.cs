@@ -78,6 +78,7 @@ public static class DependencyInjection
         // Owned & implemented here so consumers (ContentCore, etc.) depend only on
         // ContentBlogs.Contracts and never on the Blogs schema directly.
         services.AddScoped<IBlogOwnershipService, BlogOwnershipService>();
+        services.AddScoped<ICreatorOwnershipService, CreatorOwnershipService>();
 
         // Disclosure validation — stub until Accounts module provides a real implementation
         services.AddScoped<IProviderEntitiesReadClient, NullProviderEntitiesReadClient>();

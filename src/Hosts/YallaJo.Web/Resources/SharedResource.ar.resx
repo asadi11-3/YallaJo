@@ -13873,4 +13873,22 @@
 <data name="Creator.Editor.UnlinkTourNamed" xml:space="preserve">
 <value>إلغاء ربط {0}</value>
 </data>
+<data name="Creator.Profile.AvatarUploadLabel" xml:space="preserve">
+<value>تحميل صورة رمزية جديدة</value>
+</data>
+<data name="Creator.Profile.AvatarUploadHint" xml:space="preserve">
+<value>JPEG أو PNG أو GIF أو WebP. الحد الأقصى 10 ميجابايت.</value>
+</data>
+<data name="Creator.Profile.AvatarPreviewAlt" xml:space="preserve">
+<value>معاينة الصورة الرمزية</value>
+</data>
+<data name="Creator.Profile.AvatarInvalidType" xml:space="preserve">
+<value>اختر صورة بصيغة JPEG أو PNG أو GIF أو WebP.</value>
+</data>
+<data name="Creator.Profile.AvatarTooLarge" xml:space="preserve">
+<value>يجب أن يكون حجم الصورة 10 ميجابايت أو أقل.</value>
+</data>
+<data name="Creator.Profile.AvatarUrlFallback" xml:space="preserve">
+<value>استخدم رابط صورة بدلاً من ذلك</value>
+</data>
 </root>

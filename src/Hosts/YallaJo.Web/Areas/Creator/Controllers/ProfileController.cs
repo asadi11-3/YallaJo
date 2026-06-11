@@ -13,7 +13,9 @@ namespace YallaJo.Web.Areas.Creator.Controllers;
 /// <para>Permission gates: view = <c>Creator.Read</c>; update profile/avatar =
 /// <c>Creator.Update</c>; self-deactivate = <c>Creator.Delete</c>. Separate POST
 /// routes per action so each carries the correct gate.</para>
-/// <para>Avatar is URL-only (no Creator/Profile EntityType → no file upload).</para>
+/// <para>Avatar accepts a file upload (posted to the attachments subsystem as
+/// EntityType=Creator, then persisted via the avatar endpoint) with a URL-only
+/// fallback for no-JS clients. Both gate on <c>Creator.Update</c>.</para>
 /// </summary>
 [Area("Creator")]
 [Authorize]
@@ -85,6 +87,25 @@ public sealed class ProfileController : BaseController
         }
 
         var result = await _facade.UpdateAvatarAsync(form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Your avatar was updated.", "Could not update your avatar.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    // POST /creator/profile/avatar/upload  — Creator.Update (file upload)
+    [HttpPost("creator/profile/avatar/upload")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Creator.Update)]
+    public async Task<IActionResult> AvatarUpload(Guid profileId, IFormFile? avatarFile, CancellationToken ct = default)
+    {
+        if (avatarFile is null)
+        {
+            SetError("Please choose an image to upload.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _facade.UploadAvatarFileAsync(profileId, avatarFile, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Your avatar was updated.", "Could not update your avatar.");

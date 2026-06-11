@@ -7,5 +7,6 @@ public enum EntityType : byte
     Business = 2,
     Review = 3,
     Blog = 4,
-    TourGuide = 5
+    TourGuide = 5,
+    Creator = 6
 }

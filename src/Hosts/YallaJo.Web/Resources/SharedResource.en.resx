@@ -13870,7 +13870,25 @@
 <data name="Creator.Editor.UnlinkConfirmBody" xml:space="preserve">
 <value>Remove the link to "{0}"?</value>
 </data>
-<data name="Creator.Editor.UnlinkTourNamed" xml:space="preserve">
-<value>Unlink {0}</value>
-</data>
+  <data name="Creator.Editor.UnlinkTourNamed" xml:space="preserve">
+    <value>Unlink {0}</value>
+  </data>
+  <data name="Creator.Profile.AvatarUploadLabel" xml:space="preserve">
+    <value>Upload a new avatar</value>
+  </data>
+  <data name="Creator.Profile.AvatarUploadHint" xml:space="preserve">
+    <value>JPEG, PNG, GIF, or WebP. Maximum 10 MB.</value>
+  </data>
+  <data name="Creator.Profile.AvatarPreviewAlt" xml:space="preserve">
+    <value>Avatar preview</value>
+  </data>
+  <data name="Creator.Profile.AvatarInvalidType" xml:space="preserve">
+    <value>Choose a JPEG, PNG, GIF, or WebP image.</value>
+  </data>
+  <data name="Creator.Profile.AvatarTooLarge" xml:space="preserve">
+    <value>The image must be 10 MB or smaller.</value>
+  </data>
+  <data name="Creator.Profile.AvatarUrlFallback" xml:space="preserve">
+    <value>Use an image URL instead</value>
+  </data>
 </root>

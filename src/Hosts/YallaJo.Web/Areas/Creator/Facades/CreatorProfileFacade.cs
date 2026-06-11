@@ -5,11 +5,13 @@ using YallaJo.Web.Infrastructure.Api.Contracts;
 namespace YallaJo.Web.Areas.Creator.Facades;
 
 /// <summary>
-/// Orchestrates the creator profile page (CCD-3): view/update profile, avatar URL,
-/// and self-deactivation. Registered automatically by <c>AddFeatureServices()</c>
-/// (name ends in "Facade").
+/// Orchestrates the creator profile page (CCD-3): view/update profile, avatar (file
+/// upload or URL), and self-deactivation. Registered automatically by
+/// <c>AddFeatureServices()</c> (name ends in "Facade").
 /// <para>
-/// Avatar is URL-only (no Creator/Profile EntityType in ContentCore, so no file upload).
+/// Avatar file upload posts the image to the shared ContentCore attachments subsystem
+/// with <c>EntityType=Creator</c> (added in B1), then feeds the returned URL into the
+/// existing PUT /profile/mine/avatar. A URL-only fallback remains for no-JS clients.
 /// </para>
 /// </summary>
 public sealed class CreatorProfileFacade
@@ -48,6 +50,39 @@ public sealed class CreatorProfileFacade
         => Normalize(
             await _creator.UpdateAvatarAsync(CreatorProfileMapper.ToAvatarBody(form), ct).ConfigureAwait(false),
             "update your avatar");
+
+    /// <summary>
+    /// Uploads an avatar image to the ContentCore attachments subsystem (EntityType=Creator,
+    /// EntityId=profileId) and then sets it as the creator's avatar via PUT /profile/mine/avatar.
+    /// Client-side validates type and size; the API remains the authority (SEC4 magic-byte).
+    /// </summary>
+    public async Task<ApiResult> UploadAvatarFileAsync(Guid profileId, IFormFile file, CancellationToken ct = default)
+    {
+        if (file is null || file.Length == 0)
+            return ApiResult.Fail(400, "Please choose an image to upload.");
+
+        var contentType = file.ContentType?.ToLowerInvariant();
+        if (contentType is not ("image/jpeg" or "image/png" or "image/gif" or "image/webp"))
+            return ApiResult.Fail(422, "Choose a JPEG, PNG, GIF, or WebP image.");
+
+        if (file.Length > 10 * 1024 * 1024)
+            return ApiResult.Fail(422, "The image must be 10 MB or smaller.");
+
+        await using var stream = file.OpenReadStream();
+        var upload = await _creator
+            .UploadAvatarImageAsync(profileId, stream, file.FileName, contentType, ct)
+            .ConfigureAwait(false);
+
+        if (upload.RequireSignOut) return ApiResult.ForceSignOut();
+        if (upload.IsForbidden) return ApiResult.Fail(403, FriendlyError(403, "update your avatar"));
+        if (!upload.IsSuccess || upload.Data is null)
+            return ApiResult.Fail(upload.StatusCode, upload.Error ?? FriendlyError(upload.StatusCode, "update your avatar"));
+
+        // Persist the uploaded image URL as the avatar (reuses the existing avatar endpoint).
+        return Normalize(
+            await _creator.UpdateAvatarAsync(new UpdateCreatorAvatarRequestBody(upload.Data.Url), ct).ConfigureAwait(false),
+            "update your avatar");
+    }
 
     public async Task<ApiResult> SelfDeactivateAsync(CancellationToken ct = default)
         => Normalize(await _creator.SelfDeactivateAsync(ct).ConfigureAwait(false), "deactivate your creator profile");

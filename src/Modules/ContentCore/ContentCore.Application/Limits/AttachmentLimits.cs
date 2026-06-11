@@ -18,6 +18,7 @@ public static class AttachmentLimits
         [EntityType.Place]     = 30,
         [EntityType.Business]  = 20,
         [EntityType.TourGuide] = 10,
+        [EntityType.Creator]   = 3,
     };
 
     // ── Max file size per attachment type (bytes) ─────────────────────────────

@@ -17,6 +17,7 @@ public static class CreatorProfileMapper
 
         return new CreatorProfileVm
         {
+            ProfileId     = profile.Id,
             Status        = profile.Status,
             TrustTier     = profile.TrustTier,
             CurrentSlug   = profile.Slug,

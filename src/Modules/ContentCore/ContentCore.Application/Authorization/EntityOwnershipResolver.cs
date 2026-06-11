@@ -17,6 +17,7 @@ public sealed class EntityOwnershipResolver(
     IPlaceOwnershipService places,
     ITourOwnershipService tours,
     IBlogOwnershipService blogs,
+    ICreatorOwnershipService creators,
     IReviewOwnershipService reviews,
     ITourGuideOwnershipService tourGuides) : IEntityOwnershipResolver
 {
@@ -30,6 +31,7 @@ public sealed class EntityOwnershipResolver(
             EntityType.Business  => places.GetBusinessOwnershipAsync(entityId, ct),
             EntityType.Tour      => tours.GetTourOwnershipAsync(entityId, ct),
             EntityType.Blog      => blogs.GetBlogOwnershipAsync(entityId, ct),
+            EntityType.Creator   => creators.GetCreatorProfileOwnershipAsync(entityId, ct),
             EntityType.Review    => reviews.GetReviewOwnershipAsync(entityId, ct),
             EntityType.TourGuide => tourGuides.GetTourGuideOwnershipAsync(entityId, ct),
             _ => Task.FromResult(new EntityOwnershipResolution(

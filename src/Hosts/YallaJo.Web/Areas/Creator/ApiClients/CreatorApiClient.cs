@@ -1,4 +1,5 @@
 using YallaJo.Web.Areas.Creator.Models.Application;
+using YallaJo.Web.Areas.Creator.Models.Articles.Images;
 using YallaJo.Web.Areas.Creator.Models.Audience;
 using YallaJo.Web.Areas.Creator.Models.Dashboard;
 using YallaJo.Web.Areas.Creator.Models.Profile;
@@ -14,6 +15,9 @@ public sealed class CreatorApiClient
     private const string ApplicationsPath = "/api/v1/blogs/creators/applications";
     private const string RedeemInvitationPath = "/api/v1/blogs/creators/invitations/redeem";
     private const string ProfilesPath = "/api/v1/blogs/creators/profiles";
+    private const string AttachmentsPath = "/api/v1/content-core/attachments";
+    private const string CreatorEntityType = "Creator";
+    private const string ImageAttachmentType = "Image";
 
     private readonly IApiClient _api;
 
@@ -71,6 +75,26 @@ public sealed class CreatorApiClient
     public Task<ApiResult> UpdateAvatarAsync(
         UpdateCreatorAvatarRequestBody body, CancellationToken ct = default)
         => _api.PutAsync($"{ProfileMinePath}/avatar", body, ct);
+
+    /// <summary>
+    /// POST /api/v1/content-core/attachments — upload an avatar image for the creator
+    /// profile (EntityType=Creator, EntityId=profileId). The server enforces ownership
+    /// (EntityOwnershipResolver → ICreatorOwnershipService) and SEC4 magic-byte validation.
+    /// Returns the stored attachment whose <c>Url</c> is then persisted via PUT .../avatar.
+    /// Permission: Permission.Attachment.Create.
+    /// </summary>
+    public Task<ApiResult<UploadAttachmentResponse>> UploadAvatarImageAsync(
+        Guid profileId, Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
+        => _api.PostFileAsync<UploadAttachmentResponse>(
+            AttachmentsPath, fileStream, fileName, contentType,
+            formFields: new Dictionary<string, string>
+            {
+                ["EntityType"] = CreatorEntityType,
+                ["EntityId"] = profileId.ToString("D"),
+                ["AttachmentType"] = ImageAttachmentType,
+            },
+            formFieldName: "file",
+            ct: ct);
 
     /// <summary>
     /// DELETE /api/v1/blogs/creators/profile/mine — voluntary self-deactivation

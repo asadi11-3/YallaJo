@@ -10,6 +10,9 @@ namespace YallaJo.Web.Areas.Creator.Models.Profile;
 /// </summary>
 public sealed class CreatorProfileVm
 {
+    /// <summary>Creator profile id. Used as the attachment EntityId when uploading an avatar image.</summary>
+    public Guid ProfileId { get; set; }
+
     /// <summary>Raw backend status ("Active" | "Suspended" | "Deactivated"); null when no profile.</summary>
     public string? Status { get; set; }
 
