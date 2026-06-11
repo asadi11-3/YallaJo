@@ -12895,4 +12895,16 @@
 <data name="Accounts.Bookings.ClearFilter" xml:space="preserve">
 <value>Clear</value>
 </data>
+<data name="Accounts.Overview.Retry" xml:space="preserve">
+<value>Retry</value>
+</data>
+<data name="Accounts.Overview.BookingsFailed" xml:space="preserve">
+<value>Couldn't load your bookings.</value>
+</data>
+<data name="Accounts.Overview.FavoritesFailed" xml:space="preserve">
+<value>Couldn't load your favorites.</value>
+</data>
+<data name="Accounts.Overview.RecommendationsFailed" xml:space="preserve">
+<value>Couldn't load recommendations.</value>
+</data>
 </root>

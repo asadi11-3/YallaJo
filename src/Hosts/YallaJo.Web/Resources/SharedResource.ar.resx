@@ -12895,4 +12895,16 @@
 <data name="Accounts.Bookings.ClearFilter" xml:space="preserve">
 <value>مسح</value>
 </data>
+<data name="Accounts.Overview.Retry" xml:space="preserve">
+<value>إعادة المحاولة</value>
+</data>
+<data name="Accounts.Overview.BookingsFailed" xml:space="preserve">
+<value>تعذّر تحميل حجوزاتك.</value>
+</data>
+<data name="Accounts.Overview.FavoritesFailed" xml:space="preserve">
+<value>تعذّر تحميل مفضلاتك.</value>
+</data>
+<data name="Accounts.Overview.RecommendationsFailed" xml:space="preserve">
+<value>تعذّر تحميل التوصيات.</value>
+</data>
 </root>

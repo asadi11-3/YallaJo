@@ -86,43 +86,8 @@
                         <h2 class="card-header-title h5 mb-0">Upcoming trips</h2>
                         <a asp-area="Accounts" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">View bookings</a>
                     </div>
-                    <div class="card-body">
-                        @if (Model.BookingsFailed)
-                        {
-                            <div class="text-center py-4">
-                                <p class="text-muted mb-2">Couldn't load your bookings.</p>
-                                <a asp-area="Accounts" asp-controller="Overview" asp-action="Index" class="btn btn-sm btn-outline-primary">Retry</a>
-                            </div>
-                        }
-                        else if (Model.UpcomingBookings is { Count: > 0 })
-                        {
-                            <div class="vstack gap-3">
-                                @foreach (var b in Model.UpcomingBookings)
-                                {
-                                    <div class="d-flex flex-wrap justify-content-between align-items-center border rounded p-3 gap-2">
-                                        <div>
-                                            <h3 class="h6 mb-1">@b.TourName</h3>
-                                            <div class="small text-muted">
-                                                <span class="me-3"><i class="bi bi-calendar3 me-1"></i>@b.Date.ToString("d MMM yyyy")</span>
-                                                <span><i class="bi bi-people me-1"></i>@b.ParticipantCount guest(s)</span>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <partial name="_StatusBadge" model="@b.Status" />
-                                            <a class="btn btn-sm btn-primary-soft mb-0"
-                                               asp-area="Accounts" asp-controller="Bookings" asp-action="Detail" asp-route-id="@b.Id">Manage</a>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="text-center py-4">
-                                <p class="text-muted mb-2">No upcoming trips yet.</p>
-                                <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-primary">Explore tours</a>
-                            </div>
-                        }
+                    <div class="card-body" id="overviewBookings" data-yj-component="overview-section" data-reload-url="@Url.Action("Index", "Overview", new { area = "Accounts", section = "bookings" })" aria-live="polite">
+                        <partial name="_OverviewBookings" model="Model" />
                     </div>
                 </div>
 
@@ -134,44 +99,8 @@
                                 <h2 class="card-header-title h5 mb-0">Your favorites</h2>
                                 <a asp-area="Accounts" asp-controller="Wishlist" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">View all</a>
                             </div>
-                            <div class="card-body">
-                                @if (Model.FavoritesFailed)
-                                {
-                                    <div class="text-center py-4">
-                                        <p class="text-muted mb-2">Couldn't load your favorites.</p>
-                                        <a asp-area="Accounts" asp-controller="Overview" asp-action="Index" class="btn btn-sm btn-outline-primary">Retry</a>
-                                    </div>
-                                }
-                                else if (Model.Favorites is { Count: > 0 })
-                                {
-                                    <div class="vstack gap-3">
-                                        @foreach (var f in Model.Favorites)
-                                        {
-                                            <a href="@f.DetailUrl" class="d-flex align-items-center gap-3 text-reset text-decoration-none">
-                                                <div class="avatar avatar-md flex-shrink-0">
-                                                    @if (!string.IsNullOrEmpty(f.ImageUrl))
-                                                    {
-                                                        <img src="@f.ImageUrl" class="avatar-img rounded" alt="@f.Title" />
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="avatar-img rounded bg-light d-flex align-items-center justify-content-center">
-                                                            <i class="bi bi-image text-secondary"></i>
-                                                        </span>
-                                                    }
-                                                </div>
-                                                <div class="min-w-0">
-                                                    <h3 class="h6 mb-0 text-truncate">@f.Title</h3>
-                                                    <span class="small text-muted">@f.KindLabel</span>
-                                                </div>
-                                            </a>
-                                        }
-                                    </div>
-                                }
-                                else
-                                {
-                                    <p class="text-muted text-center py-4 mb-0">No favorites saved yet.</p>
-                                }
+                            <div class="card-body" id="overviewFavorites" data-yj-component="overview-section" data-reload-url="@Url.Action("Index", "Overview", new { area = "Accounts", section = "favorites" })" aria-live="polite">
+                                <partial name="_OverviewFavorites" model="Model" />
                             </div>
                         </div>
                     </div>
@@ -183,50 +112,8 @@
                                 <h2 class="card-header-title h5 mb-0">Picks for you</h2>
                                 <a asp-area="Accounts" asp-controller="Recommendations" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">Discover</a>
                             </div>
-                            <div class="card-body">
-                                @if (Model.RecommendationsFailed)
-                                {
-                                    <div class="text-center py-4">
-                                        <p class="text-muted mb-2">Couldn't load recommendations.</p>
-                                        <a asp-area="Accounts" asp-controller="Overview" asp-action="Index" class="btn btn-sm btn-outline-primary">Retry</a>
-                                    </div>
-                                }
-                                else if (Model.Recommendations is { Count: > 0 })
-                                {
-                                    <div class="vstack gap-3">
-                                        @foreach (var r in Model.Recommendations)
-                                        {
-                                            <div class="d-flex align-items-center gap-3">
-                                                <div class="min-w-0 flex-grow-1">
-                                                    <h3 class="h6 mb-0 text-truncate">
-                                                        @if (r.DetailUrl is not null)
-                                                        {
-                                                            <a href="@r.DetailUrl" class="text-reset text-primary-hover text-decoration-none">@r.Name</a>
-                                                        }
-                                                        else
-                                                        {
-                                                            @r.Name
-                                                        }
-                                                    </h3>
-                                                    <span class="small text-muted">@r.KindLabel</span>
-                                                </div>
-                                                @if (r.AverageRating > 0)
-                                                {
-                                                    <span class="badge bg-warning bg-opacity-10 text-warning flex-shrink-0">
-                                                        <i class="bi bi-star-fill me-1"></i>@r.AverageRating.ToString("0.0")
-                                                    </span>
-                                                }
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="text-center py-4">
-                                        <p class="text-muted mb-2">No recommendations yet.</p>
-                                        <a asp-area="Accounts" asp-controller="Recommendations" asp-action="Index" class="btn btn-sm btn-primary">Discover</a>
-                                    </div>
-                                }
+                            <div class="card-body" id="overviewPicks" data-yj-component="overview-section" data-reload-url="@Url.Action("Index", "Overview", new { area = "Accounts", section = "picks" })" aria-live="polite">
+                                <partial name="_OverviewPicks" model="Model" />
                             </div>
                         </div>
                     </div>
@@ -235,3 +122,7 @@
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/accounts-overview.js" asp-append-version="true"></script>
+}

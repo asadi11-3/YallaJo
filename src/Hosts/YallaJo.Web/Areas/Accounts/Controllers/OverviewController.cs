@@ -48,7 +48,7 @@ public sealed class OverviewController : BaseController
     }
 
     [HttpGet("accounts")]
-    public async Task<IActionResult> Index(CancellationToken ct)
+    public async Task<IActionResult> Index(string? section, CancellationToken ct)
     {
         ViewData["AccountNav"] = "Overview";
 
@@ -89,6 +89,20 @@ public sealed class OverviewController : BaseController
             favoritesResult.IsSuccess ? favoritesResult.Data : null,
             recsResult.IsSuccess ? recsResult.Data : null,
             bell.UnreadCount);
+
+        // Phase 5a (Accounts plan): per-section AJAX reload for ERR3 retryable rails.
+        // TODO(backend): GET /api/v1/accounts/profile/stats (GetProfileStatsQuery) would consolidate the
+        // KPI counts in one call; deferred (Api build times out via MCP). Counts derived in OverviewMapper.Build.
+        if (WantsAjax() && !string.IsNullOrEmpty(section))
+        {
+            return section.ToLowerInvariant() switch
+            {
+                "bookings" => PartialView("_OverviewBookings", vm),
+                "favorites" => PartialView("_OverviewFavorites", vm),
+                "picks" => PartialView("_OverviewPicks", vm),
+                _ => NotFound()
+            };
+        }
 
         return View(vm);
     }

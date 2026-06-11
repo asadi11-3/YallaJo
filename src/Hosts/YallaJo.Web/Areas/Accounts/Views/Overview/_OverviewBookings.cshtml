@@ -1,0 +1,38 @@
+@model YallaJo.Web.Areas.Accounts.Models.Overview.OverviewVm
+@* Phase 5a (Accounts plan): Overview "Upcoming trips" rail body — ERR3 retryable, AJAX-reloadable. *@
+@if (Model.BookingsFailed)
+{
+    <div class="text-center py-4">
+        <p class="text-muted mb-2">@Localizer["Accounts.Overview.BookingsFailed"]</p>
+        <a asp-area="Accounts" asp-controller="Overview" asp-action="Index" class="btn btn-sm btn-outline-primary js-overview-retry">@Localizer["Accounts.Overview.Retry"]</a>
+    </div>
+}
+else if (Model.UpcomingBookings is { Count: > 0 })
+{
+    <div class="vstack gap-3">
+        @foreach (var b in Model.UpcomingBookings)
+        {
+            <div class="d-flex flex-wrap justify-content-between align-items-center border rounded p-3 gap-2">
+                <div>
+                    <h3 class="h6 mb-1">@b.TourName</h3>
+                    <div class="small text-muted">
+                        <span class="me-3"><i class="bi bi-calendar3 me-1" aria-hidden="true"></i>@b.Date.ToString("d MMM yyyy")</span>
+                        <span><i class="bi bi-people me-1" aria-hidden="true"></i>@b.ParticipantCount guest(s)</span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <partial name="_StatusBadge" model="@b.Status" />
+                    <a class="btn btn-sm btn-primary-soft mb-0"
+                       asp-area="Accounts" asp-controller="Bookings" asp-action="Detail" asp-route-id="@b.Id">Manage</a>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-center py-4">
+        <p class="text-muted mb-2">No upcoming trips yet.</p>
+        <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-primary">Explore tours</a>
+    </div>
+}
