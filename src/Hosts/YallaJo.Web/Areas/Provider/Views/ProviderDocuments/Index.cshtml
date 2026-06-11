@@ -106,7 +106,7 @@
                                                 <a class="small" href="@d.DocumentUrl" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square me-1" aria-hidden="true"></i>@Localizer["Provider.Documents.ViewFile"]</a>
                                             }
                                             <permission require="@WebPermission.ProviderDocument.Update">
-                                                <a class="small text-primary" data-bs-toggle="collapse" href="#replace-@d.Id" role="button"><i class="fa-solid fa-rotate me-1" aria-hidden="true"></i>@Localizer["Provider.Documents.Replace"]</a>
+                                                <button type="button" class="btn btn-link btn-sm p-0 small text-primary" data-bs-toggle="collapse" data-bs-target="#replace-@d.Id" aria-expanded="false" aria-controls="replace-@d.Id"><i class="fa-solid fa-rotate me-1" aria-hidden="true"></i>@Localizer["Provider.Documents.Replace"]</button>
                                             </permission>
                                         </div>
                                         <permission require="@WebPermission.ProviderDocument.Update">

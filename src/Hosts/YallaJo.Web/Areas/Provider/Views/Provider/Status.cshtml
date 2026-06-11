@@ -142,7 +142,7 @@
                                                     @if (Model.CanUploadDocuments)
                                                     {
                                                         <permission require="@WebPermission.ProviderApplication.Update">
-                                                            <button type="button" class="btn btn-link btn-sm p-0 ms-2" data-bs-toggle="collapse" data-bs-target="#@replaceId">@Localizer["Provider.Onboarding.Replace"]</button>
+                                                            <button type="button" class="btn btn-link btn-sm p-0 ms-2" data-bs-toggle="collapse" data-bs-target="#@replaceId" aria-expanded="false" aria-controls="@replaceId">@Localizer["Provider.Onboarding.Replace"]</button>
                                                         </permission>
                                                     }
                                                 </span>

@@ -69,7 +69,7 @@
                                 <div class="small fw-semibold mb-1"><i class="fa-solid fa-reply fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.YourReply"]</div>
                                 <div class="small mb-2"><bdi>@r.ReplyContent</bdi></div>
                                 <div class="d-flex gap-3">
-                                    <a class="small text-primary" data-bs-toggle="collapse" href="#edit-reply-@r.Id" role="button"><i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Edit"]</a>
+                                    <button type="button" class="btn btn-link btn-sm p-0 small text-primary" data-bs-toggle="collapse" data-bs-target="#edit-reply-@r.Id" aria-expanded="false" aria-controls="edit-reply-@r.Id"><i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Edit"]</button>
                                     <form method="post" data-loading class="d-inline"
                                           asp-area="Provider" asp-controller="Reviews" asp-action="DeleteReply"
                                           asp-route-id="@r.Id" asp-route-replyId="@r.ReplyId" asp-route-tourId="@Model.SelectedTourId"
@@ -102,9 +102,9 @@
                         <div class="d-flex gap-3 mt-2">
                             @if (!r.HasReply)
                             {
-                                <a class="small text-primary" data-bs-toggle="collapse" href="#reply-@r.Id" role="button"><i class="fa-solid fa-reply fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Reply"]</a>
+                                <button type="button" class="btn btn-link btn-sm p-0 small text-primary" data-bs-toggle="collapse" data-bs-target="#reply-@r.Id" aria-expanded="false" aria-controls="reply-@r.Id"><i class="fa-solid fa-reply fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Reply"]</button>
                             }
-                            <a class="small text-danger" data-bs-toggle="collapse" href="#report-@r.Id" role="button"><i class="fa-solid fa-flag fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Report"]</a>
+                            <button type="button" class="btn btn-link btn-sm p-0 small text-danger" data-bs-toggle="collapse" data-bs-target="#report-@r.Id" aria-expanded="false" aria-controls="report-@r.Id"><i class="fa-solid fa-flag fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Report"]</button>
                         </div>
 
                         @if (!r.HasReply)
