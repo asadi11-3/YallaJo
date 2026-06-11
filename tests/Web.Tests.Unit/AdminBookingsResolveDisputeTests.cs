@@ -53,8 +53,15 @@ public sealed class AdminBookingsResolveDisputeTests
 
     private static AdminBookingsFacade CreateFacade(Func<HttpRequestMessage, HttpResponseMessage> route)
     {
-        var (api, _) = CreateApiClient(route);
-        return new AdminBookingsFacade(api);
+        // Both API clients must share the SAME ApiClient (and thus the same routing
+        // handler) so the facade's resolve (/dispute/resolve) and refund (/refund)
+        // calls are both intercepted by the test's RoutingHandler.
+        var handler = new RoutingHandler(route);
+        var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.test/") };
+        var shared = new ApiClient(http, NullLogger<ApiClient>.Instance);
+        return new AdminBookingsFacade(
+            new AdminBookingsApiClient(shared),
+            new PaymentsApiClient(shared));
     }
 
     private static readonly Guid BookingId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");

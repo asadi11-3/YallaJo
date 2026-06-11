@@ -1,0 +1,18 @@
+- generic [active] [ref=e1]:
+  - heading "An error occurred during the compilation of a resource required to process this request. Please review the following specific error details and modify your source code appropriately." [level=1] [ref=e2]
+  - generic [ref=e3]:
+    - generic [ref=e4]: C:\Users\admin1\source\repos\YallaJo\src\Hosts\YallaJo.Web\Areas\Public\Views\Home\Index.cshtml
+    - list [ref=e5]:
+      - listitem [ref=e6]:
+        - 'heading "''SeoModel.SeoModel()'' is obsolete: ''Constructors of types with required members are not supported in this version of your compiler.''" [level=3] [ref=e7]'
+        - button "+" [ref=e8] [cursor=pointer]
+        - list [ref=e10]:
+          - listitem [ref=e11]: ViewData.SetSeo(new SeoModel
+          - listitem [ref=e12]: "{"
+          - listitem [ref=e13]: Title = Localizer["Public.Seo.HomeTitle"].Value,
+          - listitem [ref=e14]: Description = Localizer["Public.Seo.HomeDescription"].Value,
+          - listitem [ref=e15]: "Canonical = $\"{baseUrl}/\","
+          - listitem [ref=e16]: "OgImage = $\"{baseUrl}/assets/images/bg/06.jpg\","
+          - listitem [ref=e17]: OgType = "website",
+          - listitem [ref=e18]: "});"
+  - button "Show compilation source" [ref=e20] [cursor=pointer]

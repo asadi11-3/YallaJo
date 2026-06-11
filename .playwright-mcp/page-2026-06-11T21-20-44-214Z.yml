@@ -1,0 +1,204 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e5]:
+        - link "YallaJo" [ref=e6] [cursor=pointer]:
+          - /url: /explore
+          - img "YallaJo" [ref=e7]
+        - button "Menu" [ref=e8] [cursor=pointer]:
+          - generic [ref=e13]: Menu
+        - text:  
+        - list [ref=e14]:
+          - listitem [ref=e15]:
+            - link "Search" [ref=e16] [cursor=pointer]:
+              - /url: /tours
+              - generic [ref=e17]: 
+          - listitem [ref=e18]:
+            - group "Language" [ref=e19]:
+              - button "EN" [ref=e20] [cursor=pointer]
+              - button "عربي" [ref=e21] [cursor=pointer]
+          - listitem [ref=e22]:
+            - link "Sign in" [ref=e23] [cursor=pointer]:
+              - /url: /auth/sign-in
+          - listitem [ref=e24]:
+            - link "Sign up" [ref=e25] [cursor=pointer]:
+              - /url: /auth/sign-up
+  - main [ref=e26]:
+    - generic [ref=e30]:
+      - heading "Explore Tours" [level=1] [ref=e31]
+      - paragraph [ref=e32]: Discover handpicked experiences and book your next adventure.
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - button "Filters" [ref=e37] [cursor=pointer]:
+          - generic [ref=e38]: 
+          - text: Filters
+        - generic [ref=e40]:
+          - generic [ref=e42]: 
+          - textbox "Filter tours on this page..." [ref=e43]
+        - combobox "Sort tours" [ref=e46]:
+          - option "Most popular" [selected]
+          - option "Newest"
+          - option "Top rated"
+          - 'option "Price: low to high"'
+          - 'option "Price: high to low"'
+      - list [ref=e49]:
+        - listitem [ref=e50]:
+          - button "All" [ref=e51] [cursor=pointer]
+        - listitem [ref=e52]:
+          - button "Adventure" [ref=e53] [cursor=pointer]
+        - listitem [ref=e54]:
+          - button "Historical" [ref=e55] [cursor=pointer]
+        - listitem [ref=e56]:
+          - button "Culinary" [ref=e57] [cursor=pointer]
+      - generic [ref=e58]:
+        - heading "Showing 1–4 of 4 results" [level=5] [ref=e60]
+        - generic [ref=e61]:
+          - generic [ref=e63]:
+            - generic [ref=e64]:
+              - img "Wadi Rum Jeep & Camp Overnight" [ref=e65]
+              - generic [ref=e67]: Featured
+              - generic [ref=e68]:
+                - button "Log in to save" [disabled]:
+                  - generic: 
+            - generic [ref=e69]:
+              - heading "Wadi Rum Jeep & Camp Overnight" [level=5] [ref=e70]:
+                - link "Wadi Rum Jeep & Camp Overnight" [ref=e71] [cursor=pointer]:
+                  - /url: /tours/wadi-rum-jeep-camp-overnight
+              - list [ref=e72]:
+                - listitem [ref=e73]:
+                  - generic [ref=e74]: 
+                  - text: 4.9 (572)
+                - listitem [ref=e75]: •1204 booked
+              - generic [ref=e76]:
+                - generic [ref=e77]: 90 JOD /per person
+                - link "View Details" [ref=e78] [cursor=pointer]:
+                  - /url: /tours/wadi-rum-jeep-camp-overnight
+          - generic [ref=e80]:
+            - generic [ref=e81]:
+              - img "Dead Sea Floating Experience" [ref=e82]
+              - generic [ref=e84]: Featured
+              - generic [ref=e85]:
+                - button "Log in to save" [disabled]:
+                  - generic: 
+            - generic [ref=e86]:
+              - heading "Dead Sea Floating Experience" [level=5] [ref=e87]:
+                - link "Dead Sea Floating Experience" [ref=e88] [cursor=pointer]:
+                  - /url: /tours/dead-sea-floating-experience
+              - list [ref=e89]:
+                - listitem [ref=e90]:
+                  - generic [ref=e91]: 
+                  - text: 4.8 (315)
+                - listitem [ref=e92]: •892 booked
+              - generic [ref=e93]:
+                - generic [ref=e94]: 55 JOD /per person
+                - link "View Details" [ref=e95] [cursor=pointer]:
+                  - /url: /tours/dead-sea-floating-experience
+          - generic [ref=e97]:
+            - generic [ref=e98]:
+              - img "Amman Old City Walking Tour" [ref=e99]
+              - generic [ref=e101]:
+                - button "Log in to save" [disabled]:
+                  - generic: 
+            - generic [ref=e102]:
+              - heading "Amman Old City Walking Tour" [level=5] [ref=e103]:
+                - link "Amman Old City Walking Tour" [ref=e104] [cursor=pointer]:
+                  - /url: /tours/amman-old-city-walking-tour
+              - list [ref=e105]:
+                - listitem [ref=e106]:
+                  - generic [ref=e107]: 
+                  - text: 4.6 (204)
+                - listitem [ref=e108]: •631 booked
+              - generic [ref=e109]:
+                - generic [ref=e110]: 35 JOD /per person
+                - link "View Details" [ref=e111] [cursor=pointer]:
+                  - /url: /tours/amman-old-city-walking-tour
+          - generic [ref=e113]:
+            - generic [ref=e114]:
+              - img "Petra Full Day Explorer" [ref=e115]
+              - generic [ref=e117]: Featured
+              - generic [ref=e118]:
+                - button "Log in to save" [disabled]:
+                  - generic: 
+            - generic [ref=e119]:
+              - heading "Petra Full Day Explorer" [level=5] [ref=e120]:
+                - link "Petra Full Day Explorer" [ref=e121] [cursor=pointer]:
+                  - /url: /tours/petra-full-day-explorer
+              - list [ref=e122]:
+                - listitem [ref=e123]:
+                  - generic [ref=e124]: 
+                  - text: 4.7 (128)
+                - listitem [ref=e125]: •412 booked
+              - generic [ref=e126]:
+                - generic [ref=e127]: 75 JOD /per person
+                - link "View Details" [ref=e128] [cursor=pointer]:
+                  - /url: /tours/petra-full-day-explorer
+    - option "Any" [selected]
+    - option "Easy"
+    - option "Moderate"
+    - option "Hard"
+    - option "Expert"
+    - option "Any" [selected]
+    - option "1h"
+    - option "2h"
+    - option "4h"
+    - option "8h"
+    - option "Any" [selected]
+    - option "2h"
+    - option "4h"
+    - option "8h"
+    - option "24h"
+    - option "Any" [selected]
+    - option "3+ stars"
+    - option "4+ stars"
+    - option "4.5+ stars"
+  - contentinfo [ref=e129]:
+    - generic [ref=e130]:
+      - generic [ref=e131]:
+        - generic [ref=e132]:
+          - link "YallaJo" [ref=e133] [cursor=pointer]:
+            - /url: /explore
+            - img "YallaJo" [ref=e134]
+          - paragraph [ref=e135]: Discover and book authentic tours and experiences across Jordan.
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - heading "Explore" [level=5] [ref=e139]
+            - list [ref=e140]:
+              - listitem [ref=e141]:
+                - link "Tours" [ref=e142] [cursor=pointer]:
+                  - /url: /tours
+              - listitem [ref=e143]:
+                - link "Destinations" [ref=e144] [cursor=pointer]:
+                  - /url: /places
+              - listitem [ref=e145]:
+                - link "Packages" [ref=e146] [cursor=pointer]:
+                  - /url: /packages
+              - listitem [ref=e147]:
+                - link "Guides" [ref=e148] [cursor=pointer]:
+                  - /url: /guides
+              - listitem [ref=e149]:
+                - link "Businesses" [ref=e150] [cursor=pointer]:
+                  - /url: /businesses
+          - generic [ref=e151]:
+            - heading "Company" [level=5] [ref=e152]
+            - list [ref=e153]:
+              - listitem [ref=e154]:
+                - link "Blog" [ref=e155] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=e156]:
+                - link "Agencies" [ref=e157] [cursor=pointer]:
+                  - /url: /agency
+              - listitem [ref=e158]:
+                - link "Contact us" [ref=e159] [cursor=pointer]:
+                  - /url: /contact
+          - generic [ref=e160]:
+            - heading "Support" [level=5] [ref=e161]
+            - list [ref=e162]:
+              - listitem [ref=e163]:
+                - link "Help center" [ref=e164] [cursor=pointer]:
+                  - /url: /help
+              - listitem [ref=e165]:
+                - link "FAQ" [ref=e166] [cursor=pointer]:
+                  - /url: /help
+      - separator [ref=e167]
+      - generic [ref=e169]: ©2026 YallaJo. All rights reserved.
+  - text:     

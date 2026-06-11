@@ -1,0 +1,227 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e5]:
+        - link "YallaJo" [ref=e6] [cursor=pointer]:
+          - /url: /explore
+          - img "YallaJo" [ref=e7]
+        - list [ref=e9]:
+          - listitem [ref=e10]:
+            - button "استكشف " [ref=e11] [cursor=pointer]
+          - listitem [ref=e12]:
+            - link "الوجهات" [ref=e13] [cursor=pointer]:
+              - /url: /places
+          - listitem [ref=e14]:
+            - link "القصص" [ref=e15] [cursor=pointer]:
+              - /url: /blog
+          - listitem [ref=e16]:
+            - button "المزيد " [ref=e17] [cursor=pointer]
+          - listitem [ref=e18]:
+            - link "أضف تجربتك" [ref=e19] [cursor=pointer]:
+              - /url: /auth/sign-up
+        - list [ref=e20]:
+          - listitem [ref=e21]:
+            - link "بحث" [ref=e22] [cursor=pointer]:
+              - /url: /tours
+              - generic [ref=e23]: 
+          - listitem [ref=e24]:
+            - group "اللغة" [ref=e25]:
+              - button "EN" [ref=e26] [cursor=pointer]
+              - button "عربي" [ref=e27] [cursor=pointer]
+          - listitem [ref=e28]:
+            - link "تسجيل الدخول" [ref=e29] [cursor=pointer]:
+              - /url: /auth/sign-in
+          - listitem [ref=e30]:
+            - link "إنشاء حساب" [ref=e31] [cursor=pointer]:
+              - /url: /auth/sign-up
+  - main [ref=e32]:
+    - generic [ref=e36]:
+      - navigation "breadcrumb" [ref=e37]:
+        - list [ref=e38]:
+          - listitem [ref=e39]:
+            - link "الجولات" [ref=e40] [cursor=pointer]:
+              - /url: /tours
+          - listitem [ref=e41]: • Wadi Rum Jeep & Camp Overnight
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - heading "Wadi Rum Jeep & Camp Overnight" [level=1] [ref=e44]
+          - list [ref=e45]:
+            - listitem [ref=e46]:
+              - generic [ref=e47]: 
+              - text: Place bbbbbbbb
+            - listitem [ref=e48]:
+              - text: •
+              - generic [ref=e49]: 
+              - text: 24h
+            - listitem [ref=e50]:
+              - text: •
+              - generic [ref=e51]: Easy
+            - listitem [ref=e52]:
+              - text: •
+              - generic [ref=e53]: 
+              - text: حتى 14 أشخاص
+            - listitem [ref=e54]:
+              - text: •
+              - generic [ref=e55]: 
+              - text: 0٫0 (0 مراجعة)
+        - generic [ref=e56]:
+          - button " Save" [disabled]:
+            - generic: 
+            - text: Save
+    - link "Wadi Rum Jeep & Camp Overnight" [ref=e61] [cursor=pointer]:
+      - /url: /assets/images/gallery/02.jpg
+      - img "Wadi Rum Jeep & Camp Overnight" [ref=e62]
+    - generic [ref=e66]:
+      - generic [ref=e67]:
+        - tablist [ref=e68]:
+          - tab "نظرة عامة" [selected] [ref=e69] [cursor=pointer]
+          - tab "Pricing &amp; Schedule" [ref=e70] [cursor=pointer]
+          - tab "المراجعات" [ref=e71] [cursor=pointer]
+        - generic [ref=e72]:
+          - tabpanel [ref=e73]:
+            - generic [ref=e74]:
+              - heading "نظرة عامة على الجولة" [level=4] [ref=e76]
+              - generic [ref=e77]:
+                - paragraph [ref=e78]: Jeep tour + Bedouin stargazing camp overnight in Wadi Rum.
+                - paragraph [ref=e79]: Explore the majestic Wadi Rum desert by jeep and spend the night under a sky full of stars at a Bedouin camp.
+                - heading "معلومات الجولة" [level=6] [ref=e80]
+                - list [ref=e81]:
+                  - listitem [ref=e82]:
+                    - generic [ref=e83]:
+                      - generic [ref=e84]: 
+                      - text: المدة
+                    - generic [ref=e85]: 24h
+                  - listitem [ref=e86]:
+                    - generic [ref=e87]:
+                      - generic [ref=e88]: 
+                      - text: الصعوبة
+                    - generic [ref=e89]: Easy
+                  - listitem [ref=e90]:
+                    - generic [ref=e91]:
+                      - generic [ref=e92]: 
+                      - text: حجم المجموعة
+                    - generic [ref=e93]: حتى 14 أشخاص
+                  - listitem [ref=e94]:
+                    - generic [ref=e95]:
+                      - generic [ref=e96]: 
+                      - text: الحد الأدنى للعمر
+                    - generic [ref=e97]: 8 سنة
+                  - listitem [ref=e98]:
+                    - generic [ref=e99]:
+                      - generic [ref=e100]: 
+                      - text: مناسبة للأطفال
+                    - generic [ref=e101]: "Yes"
+                  - listitem [ref=e102]:
+                    - generic [ref=e103]:
+                      - generic [ref=e104]: 
+                      - text: إلغاء مجاني
+                    - generic [ref=e105]: حتى 48 ساعة قبل الموعد
+          - text:  
+      - complementary [ref=e106]:
+        - generic [ref=e107]:
+          - generic [ref=e109]:
+            - generic [ref=e111]:
+              - heading "90 JOD" [level=3] [ref=e112]
+              - generic [ref=e113]: / person
+            - generic [ref=e114]:
+              - generic [ref=e115]: 
+              - text: 0٫0
+              - generic [ref=e116]: (0)
+            - generic [ref=e117]:
+              - link "احجز الآن" [ref=e118] [cursor=pointer]:
+                - /url: /tours/ffffffff-0000-0000-0000-000000000004/book
+              - button " Save to wishlist" [disabled]:
+                - generic: 
+                - text: Save to wishlist
+            - separator [ref=e119]
+            - paragraph [ref=e120]: Joining a friend's group booking?
+            - link " Sign in to request to join" [ref=e121] [cursor=pointer]:
+              - /url: /auth/sign-in?returnUrl=%2Ftours%2Fwadi-rum-jeep-camp-overnight
+              - generic [ref=e122]: 
+              - text: Sign in to request to join
+          - generic [ref=e124]:
+            - heading "هل تحتاج إلى مساعدة؟" [level=5] [ref=e125]
+            - list [ref=e126]:
+              - listitem [ref=e127]:
+                - generic [ref=e128]: 
+                - text: Our travel experts are here for you.
+              - listitem [ref=e129]:
+                - generic [ref=e130]: 
+                - text: Sat – Thu, 9:00 – 18:00
+    - generic [ref=e132]:
+      - generic [ref=e133]:
+        - heading "مراجعات إمكانية الوصول" [level=2] [ref=e134]:
+          - generic [ref=e135]: 
+          - text: مراجعات إمكانية الوصول
+        - generic [ref=e136]: 0 مراجعة
+      - paragraph [ref=e137]: لا توجد مراجعات إمكانية وصول بعد. شارك تجربتك لمساعدة الآخرين.
+      - link "سجّل الدخول لكتابة مراجعة إمكانية وصول" [ref=e139] [cursor=pointer]:
+        - /url: /auth/sign-in?returnUrl=%2Ftours%2Fwadi-rum-jeep-camp-overnight%3Fculture%3Dar
+        - generic [ref=e140]: 
+        - text: سجّل الدخول لكتابة مراجعة إمكانية وصول
+    - generic [ref=e142]:
+      - generic [ref=e143]:
+        - heading "المراجعات" [level=2] [ref=e144]
+        - generic [ref=e145]:
+          - generic [ref=e146]: 
+          - generic [ref=e147]: 
+          - generic [ref=e148]: 
+          - generic [ref=e149]: 
+          - generic [ref=e150]: 
+          - text: 0٫0 (0 مراجعة)
+      - paragraph [ref=e151]: لا توجد مراجعات بعد. كن أول من يشارك تجربته.
+      - link "سجّل الدخول لكتابة مراجعة" [ref=e153] [cursor=pointer]:
+        - /url: /auth/sign-in?returnUrl=%2Ftours%2Fwadi-rum-jeep-camp-overnight%3Fculture%3Dar
+        - generic [ref=e154]: 
+        - text: سجّل الدخول لكتابة مراجعة
+  - contentinfo [ref=e155]:
+    - generic [ref=e156]:
+      - generic [ref=e157]:
+        - generic [ref=e158]:
+          - link "YallaJo" [ref=e159] [cursor=pointer]:
+            - /url: /explore
+            - img "YallaJo" [ref=e160]
+          - paragraph [ref=e161]: اكتشف واحجز جولات وتجارب أصيلة في جميع أنحاء الأردن.
+        - generic [ref=e163]:
+          - generic [ref=e164]:
+            - heading "استكشف" [level=5] [ref=e165]
+            - list [ref=e166]:
+              - listitem [ref=e167]:
+                - link "الجولات" [ref=e168] [cursor=pointer]:
+                  - /url: /tours
+              - listitem [ref=e169]:
+                - link "الوجهات" [ref=e170] [cursor=pointer]:
+                  - /url: /places
+              - listitem [ref=e171]:
+                - link "الباقات" [ref=e172] [cursor=pointer]:
+                  - /url: /packages
+              - listitem [ref=e173]:
+                - link "المرشدون" [ref=e174] [cursor=pointer]:
+                  - /url: /guides
+              - listitem [ref=e175]:
+                - link "الأنشطة التجارية" [ref=e176] [cursor=pointer]:
+                  - /url: /businesses
+          - generic [ref=e177]:
+            - heading "الشركة" [level=5] [ref=e178]
+            - list [ref=e179]:
+              - listitem [ref=e180]:
+                - link "المدونة" [ref=e181] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=e182]:
+                - link "الوكالات" [ref=e183] [cursor=pointer]:
+                  - /url: /agency
+              - listitem [ref=e184]:
+                - link "اتصل بنا" [ref=e185] [cursor=pointer]:
+                  - /url: /contact
+          - generic [ref=e186]:
+            - heading "الدعم" [level=5] [ref=e187]
+            - list [ref=e188]:
+              - listitem [ref=e189]:
+                - link "مركز المساعدة" [ref=e190] [cursor=pointer]:
+                  - /url: /help
+              - listitem [ref=e191]:
+                - link "الأسئلة الشائعة" [ref=e192] [cursor=pointer]:
+                  - /url: /help
+      - separator [ref=e193]
+      - generic [ref=e195]: ©2026 YallaJo. جميع الحقوق محفوظة.
+  - text:     

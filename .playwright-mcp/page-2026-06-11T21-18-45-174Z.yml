@@ -1,0 +1,146 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e5]:
+        - link "YallaJo" [ref=e6] [cursor=pointer]:
+          - /url: /explore
+          - img "YallaJo" [ref=e7]
+        - button "القائمة" [ref=e8] [cursor=pointer]:
+          - generic [ref=e13]: القائمة
+        - text:  
+        - list [ref=e14]:
+          - listitem [ref=e15]:
+            - link "بحث" [ref=e16] [cursor=pointer]:
+              - /url: /tours
+              - generic [ref=e17]: 
+          - listitem [ref=e18]:
+            - group "اللغة" [ref=e19]:
+              - button "EN" [ref=e20] [cursor=pointer]
+              - button "عربي" [ref=e21] [cursor=pointer]
+          - listitem [ref=e22]:
+            - link "تسجيل الدخول" [ref=e23] [cursor=pointer]:
+              - /url: /auth/sign-in
+          - listitem [ref=e24]:
+            - link "إنشاء حساب" [ref=e25] [cursor=pointer]:
+              - /url: /auth/sign-up
+  - main [ref=e26]:
+    - generic [ref=e30]:
+      - heading "دعنا نتواصل" [level=1] [ref=e31]
+      - paragraph [ref=e32]: هل لديك سؤال عن جولة أو حجز أو حسابك؟ أرسل لنا رسالة وسيتواصل معك فريق الدعم.
+    - generic [ref=e35]:
+      - generic [ref=e37]:
+        - generic [ref=e39]: 
+        - heading "اتصل بنا" [level=5] [ref=e40]
+        - paragraph [ref=e41]: Mon to Fri, 9:00 - 18:00
+        - link "+1 234 567 890" [ref=e42] [cursor=pointer]:
+          - /url: tel:+1234567890
+      - generic [ref=e44]:
+        - generic [ref=e46]: 
+        - heading "راسلنا بالبريد الإلكتروني" [level=5] [ref=e47]
+        - paragraph [ref=e48]: We reply within 24 hours
+        - link "support@yallajo.com" [ref=e49] [cursor=pointer]:
+          - /url: mailto:support@yallajo.com
+      - generic [ref=e51]:
+        - generic [ref=e53]: 
+        - heading "وسائل التواصل الاجتماعي" [level=5] [ref=e54]
+        - paragraph [ref=e55]: تابعنا للحصول على التحديثات
+        - list [ref=e56]:
+          - listitem [ref=e57]:
+            - link "" [ref=e58] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e59]: 
+          - listitem [ref=e60]:
+            - link "" [ref=e61] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e62]: 
+          - listitem [ref=e63]:
+            - link [ref=e64] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e65]:
+            - link "" [ref=e66] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e67]: 
+    - generic [ref=e70]:
+      - img "تواصل" [ref=e72]
+      - generic [ref=e74]:
+        - heading "أرسل لنا رسالة" [level=3] [ref=e75]
+        - paragraph [ref=e76]: املأ النموذج أدناه وسنفتح تذكرة دعم لك.
+        - generic [ref=e77]:
+          - generic [ref=e78]:
+            - generic [ref=e79]: Your name
+            - textbox "Your name" [ref=e80]
+          - generic [ref=e81]:
+            - generic [ref=e82]: Email address
+            - textbox "Email address" [ref=e83]
+          - generic [ref=e84]:
+            - generic [ref=e85]: Topic
+            - combobox "Topic" [ref=e86]:
+              - option "اختر موضوعاً" [selected]
+              - option "مساعدة الحساب"
+              - option "مشكلة في الحجز"
+              - option "مشكلة في الدفع"
+              - option "الإبلاغ عن خلل"
+              - option "أخرى"
+          - generic [ref=e87]:
+            - generic [ref=e88]: Subject
+            - textbox "Subject" [ref=e89]
+          - generic [ref=e90]:
+            - generic [ref=e91]: Message
+            - textbox "Message" [ref=e92]
+          - generic [ref=e93]:
+            - button "إرسال الرسالة" [disabled]
+            - paragraph [ref=e94]:
+              - link "تسجيل الدخول" [ref=e95] [cursor=pointer]:
+                - /url: /auth/sign-in?returnUrl=%2Fcontact
+              - text: للتواصل مع فريق الدعم.
+  - contentinfo [ref=e96]:
+    - generic [ref=e97]:
+      - generic [ref=e98]:
+        - generic [ref=e99]:
+          - link "YallaJo" [ref=e100] [cursor=pointer]:
+            - /url: /explore
+            - img "YallaJo" [ref=e101]
+          - paragraph [ref=e102]: اكتشف واحجز جولات وتجارب أصيلة في جميع أنحاء الأردن.
+        - generic [ref=e104]:
+          - generic [ref=e105]:
+            - heading "استكشف" [level=5] [ref=e106]
+            - list [ref=e107]:
+              - listitem [ref=e108]:
+                - link "الجولات" [ref=e109] [cursor=pointer]:
+                  - /url: /tours
+              - listitem [ref=e110]:
+                - link "الوجهات" [ref=e111] [cursor=pointer]:
+                  - /url: /places
+              - listitem [ref=e112]:
+                - link "الباقات" [ref=e113] [cursor=pointer]:
+                  - /url: /packages
+              - listitem [ref=e114]:
+                - link "المرشدون" [ref=e115] [cursor=pointer]:
+                  - /url: /guides
+              - listitem [ref=e116]:
+                - link "الأنشطة التجارية" [ref=e117] [cursor=pointer]:
+                  - /url: /businesses
+          - generic [ref=e118]:
+            - heading "الشركة" [level=5] [ref=e119]
+            - list [ref=e120]:
+              - listitem [ref=e121]:
+                - link "المدونة" [ref=e122] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=e123]:
+                - link "الوكالات" [ref=e124] [cursor=pointer]:
+                  - /url: /agency
+              - listitem [ref=e125]:
+                - link "اتصل بنا" [ref=e126] [cursor=pointer]:
+                  - /url: /contact
+          - generic [ref=e127]:
+            - heading "الدعم" [level=5] [ref=e128]
+            - list [ref=e129]:
+              - listitem [ref=e130]:
+                - link "مركز المساعدة" [ref=e131] [cursor=pointer]:
+                  - /url: /help
+              - listitem [ref=e132]:
+                - link "الأسئلة الشائعة" [ref=e133] [cursor=pointer]:
+                  - /url: /help
+      - separator [ref=e134]
+      - generic [ref=e136]: ©2026 YallaJo. جميع الحقوق محفوظة.
+  - text:     

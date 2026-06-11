@@ -26,6 +26,7 @@ public sealed class EntityOwnershipResolverBlogTests
             Substitute.For<IPlaceOwnershipService>(),
             Substitute.For<ITourOwnershipService>(),
             blogs,
+            Substitute.For<ICreatorOwnershipService>(),
             Substitute.For<IReviewOwnershipService>(),
             Substitute.For<ITourGuideOwnershipService>());
         return (resolver, blogs);

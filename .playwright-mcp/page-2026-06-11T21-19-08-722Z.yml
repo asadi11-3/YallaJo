@@ -1,0 +1,40 @@
+- generic [active] [ref=e1]:
+  - main [ref=e3]:
+    - generic [ref=e9]:
+      - img [ref=e12]
+      - generic [ref=e15]:
+        - link "logo" [ref=e16] [cursor=pointer]:
+          - /url: /auth/sign-in
+          - img "logo" [ref=e17]
+        - heading "مرحباً بعودتك" [level=1] [ref=e18]
+        - paragraph [ref=e19]:
+          - text: جديد هنا؟
+          - link "إنشاء حساب" [ref=e20] [cursor=pointer]:
+            - /url: /auth/sign-up
+        - generic:
+          - list
+        - generic [ref=e21]:
+          - generic [ref=e22]:
+            - generic [ref=e23]: أدخل البريد الإلكتروني
+            - textbox "أدخل البريد الإلكتروني" [ref=e24]
+          - generic [ref=e25]:
+            - generic [ref=e26]: كلمة المرور
+            - textbox [ref=e27]
+            - generic [ref=e29] [cursor=pointer]: 
+          - link "نسيت كلمة المرور؟" [ref=e31] [cursor=pointer]:
+            - /url: /auth/forgot-password
+          - button "تسجيل الدخول" [ref=e33] [cursor=pointer]
+          - generic [ref=e34]:
+            - separator [ref=e35]
+            - paragraph [ref=e36]: أو سجّل الدخول عبر
+        - generic [ref=e37]:
+          - button "تسجيل الدخول عبر جوجل" [ref=e39] [cursor=pointer]:
+            - generic [ref=e40]: 
+            - text: تسجيل الدخول عبر جوجل
+          - button "تسجيل الدخول عبر فيسبوك" [ref=e42] [cursor=pointer]:
+            - generic [ref=e43]: 
+            - text: تسجيل الدخول عبر فيسبوك
+  - iframe [ref=e46]:
+    - generic [ref=f1e6]:
+      - text: protected by
+      - strong [ref=f1e7]: reCAPTCHA
