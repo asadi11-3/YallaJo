@@ -9,7 +9,7 @@ using YallaJo.Web.Infrastructure.Mvc;
 namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
-[Authorize(Policy = "Provider")]
+[Authorize]
 [RequirePermission(WebPermission.ProviderDocument.Read)]
 public sealed class ProviderDocumentsController : BaseController
 {

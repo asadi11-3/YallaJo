@@ -15,7 +15,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 /// the standalone Earnings/Invoices/PaymentMethods controllers still own the write actions the tabs post to.
 /// </summary>
 [Area("Provider")]
-[Authorize(Policy = "Provider")]
+[Authorize]
 public sealed class FinanceController : BaseController
 {
     private readonly EarningsFacade _earnings;

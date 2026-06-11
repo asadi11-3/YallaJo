@@ -9,7 +9,7 @@ using YallaJo.Web.Infrastructure.Mvc;
 namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
-[Authorize(Policy = "Provider")]
+[Authorize]
 public sealed class PackagesController : BaseController
 {
     private readonly PackagesFacade _facade;
