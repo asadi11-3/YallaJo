@@ -100,7 +100,7 @@
                                     @if (row.CanApprove)
                                     {
                                         <permission require="@WebPermission.AdminProviderQueue.Approve">
-                                            <form asp-area="Admin" asp-controller="Providers" asp-action="Approve"
+                                            <form data-loading asp-area="Admin" asp-controller="Providers" asp-action="Approve"
                                                   asp-route-id="@row.ApplicationId" method="post"
                                                   data-confirm="@Localizer["Admin.Providers.ApproveConfirm", row.BusinessName]"
                                                   data-confirm-title="@Localizer["Admin.Providers.ApproveTitle"]"

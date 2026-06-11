@@ -42,7 +42,7 @@
         <h2 id="template-form-heading" class="card-header-title h5 mb-0">@Localizer["Admin.NotificationTemplates.FormHeading"]</h2>
     </div>
     <div class="card-body">
-        <form method="post" asp-area="Admin" asp-controller="NotificationTemplates" asp-action="@formAction" asp-route-id="@(Model.IsNew ? null : Model.Id?.ToString())">
+        <form data-loading method="post" asp-area="Admin" asp-controller="NotificationTemplates" asp-action="@formAction" asp-route-id="@(Model.IsNew ? null : Model.Id?.ToString())">
             @Html.AntiForgeryToken()
 
             @if (Model.IsNew)

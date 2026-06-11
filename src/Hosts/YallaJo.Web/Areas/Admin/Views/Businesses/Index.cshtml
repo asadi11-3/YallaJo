@@ -161,7 +161,7 @@
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
                                     <permission require="@WebPermission.Business.Approve">
-                                        <form method="post" asp-action="Approve" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="d-inline"
+                                        <form data-loading method="post" asp-action="Approve" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="d-inline"
                                               data-confirm="@Localizer["Admin.Businesses.ApproveConfirm", b.Name]"
                                               data-confirm-title="@Localizer["Admin.Businesses.ApproveTitle"]"
                                               data-confirm-action="@Localizer["Admin.Businesses.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -179,7 +179,7 @@
                                         <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#suspendModal-@b.Id">@Localizer["Admin.Businesses.Suspend"]</button>
                                     </permission>
                                     <permission require="@WebPermission.Business.Reinstate">
-                                        <form method="post" asp-action="Reinstate" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="d-inline"
+                                        <form data-loading method="post" asp-action="Reinstate" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="d-inline"
                                               data-confirm="@Localizer["Admin.Businesses.ReinstateConfirm", b.Name]"
                                               data-confirm-title="@Localizer["Admin.Businesses.ReinstateTitle"]"
                                               data-confirm-action="@Localizer["Admin.Businesses.Reinstate"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -220,7 +220,7 @@
         <permission require="@WebPermission.Business.Reject">
             <div class="modal fade" id="rejectModal-@b.Id" tabindex="-1" aria-labelledby="rejectTitle-@b.Id" aria-describedby="rejectBody-@b.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form method="post" asp-action="Reject" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="rejectTitle-@b.Id">
+                    <form data-loading method="post" asp-action="Reject" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="rejectTitle-@b.Id">
                         @Html.AntiForgeryToken()
                         <partial name="Partials/_ModalHeader"
                                  model="@(new ModalHeaderVm { TitleId = $"rejectTitle-{b.Id}", Title = Localizer["Admin.Businesses.RejectTitleFor", b.Name].Value, CloseLabel = Localizer["Admin.Businesses.Close"].Value })" />
@@ -240,7 +240,7 @@
         <permission require="@WebPermission.Business.RequestDocs">
             <div class="modal fade" id="docsModal-@b.Id" tabindex="-1" aria-labelledby="docsTitle-@b.Id" aria-describedby="docsBody-@b.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form method="post" asp-action="RequestMoreDocs" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="docsTitle-@b.Id">
+                    <form data-loading method="post" asp-action="RequestMoreDocs" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="docsTitle-@b.Id">
                         @Html.AntiForgeryToken()
                         <partial name="Partials/_ModalHeader"
                                  model="@(new ModalHeaderVm { TitleId = $"docsTitle-{b.Id}", Title = Localizer["Admin.Businesses.DocsTitleFor", b.Name].Value, CloseLabel = Localizer["Admin.Businesses.Close"].Value })" />
@@ -260,7 +260,7 @@
         <permission require="@WebPermission.Business.Suspend">
             <div class="modal fade" id="suspendModal-@b.Id" tabindex="-1" aria-labelledby="suspendTitle-@b.Id" aria-describedby="suspendBody-@b.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form method="post" asp-action="Suspend" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="suspendTitle-@b.Id">
+                    <form data-loading method="post" asp-action="Suspend" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="suspendTitle-@b.Id">
                         @Html.AntiForgeryToken()
                         <partial name="Partials/_ModalHeader"
                                  model="@(new ModalHeaderVm { TitleId = $"suspendTitle-{b.Id}", Title = Localizer["Admin.Businesses.SuspendTitleFor", b.Name].Value, CloseLabel = Localizer["Admin.Businesses.Close"].Value })" />
@@ -280,7 +280,7 @@
         <permission require="@WebPermission.Business.Delete">
             <div class="modal fade" id="deleteModal-@b.Id" tabindex="-1" aria-labelledby="deleteTitle-@b.Id" aria-describedby="deleteBody-@b.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form method="post" asp-action="Delete" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle-@b.Id">
+                    <form data-loading method="post" asp-action="Delete" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle-@b.Id">
                         @Html.AntiForgeryToken()
                         <partial name="Partials/_ModalHeader"
                                  model="@(new ModalHeaderVm { TitleId = $"deleteTitle-{b.Id}", Title = Localizer["Admin.Businesses.DeleteTitleFor", b.Name].Value, CloseLabel = Localizer["Admin.Businesses.Close"].Value })" />

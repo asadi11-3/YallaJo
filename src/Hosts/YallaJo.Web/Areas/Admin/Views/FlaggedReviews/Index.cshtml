@@ -84,7 +84,7 @@
                             <td><bdi dir="ltr" class="font-data">@Date(r.CreatedAt)</bdi></td>
                             <td class="text-end">
                                 <permission require="@WebPermission.AdminModerationQueue.Approve">
-                                    <form asp-action="Approve" asp-route-id="@r.Id" method="post" class="d-inline"
+                                    <form data-loading asp-action="Approve" asp-route-id="@r.Id" method="post" class="d-inline"
                                           data-confirm="@Localizer["Admin.FlaggedReviews.ApproveConfirm"]"
                                           data-confirm-title="@Localizer["Admin.FlaggedReviews.ApproveTitle"]"
                                           data-confirm-action="@Localizer["Admin.FlaggedReviews.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -123,7 +123,7 @@
             var reasonId = modalId + "-reason";
             <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bodyId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form asp-action="Remove" asp-route-id="@r.Id" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
+                    <form data-loading asp-action="Remove" asp-route-id="@r.Id" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="rowVersion" value="@r.RowVersion" />
                         <partial name="Partials/_ModalHeader"

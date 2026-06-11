@@ -97,7 +97,7 @@
                                         </td>
                                         <td class="text-end">
                                             <permission require="@WebPermission.SeasonalityRule.Delete">
-                                                <form method="post" asp-area="Admin" asp-controller="Growth"
+                                                <form data-loading method="post" asp-area="Admin" asp-controller="Growth"
                                                       asp-action="DeactivateSeasonalityRule" asp-route-ruleId="@r.Id" class="d-inline"
                                                       data-confirm="@Localizer["Admin.Growth.DeactivateRuleConfirm"]"
                                                       data-confirm-title="@Localizer["Admin.Growth.DeactivateRuleTitle"]"
@@ -115,7 +115,7 @@
                 }
 
                 <permission require="@WebPermission.SeasonalityRule.Create">
-                    <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="CreateSeasonalityRule" class="border-top pt-3">
+                    <form data-loading method="post" asp-area="Admin" asp-controller="Growth" asp-action="CreateSeasonalityRule" class="border-top pt-3">
                         @Html.AntiForgeryToken()
                         <h3 class="h6">@Localizer["Admin.Growth.AddRuleHeading"]</h3>
                         <div class="mb-2">
@@ -192,7 +192,7 @@
                 }
 
                 <permission require="@WebPermission.HolidayCalendar.Create">
-                    <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="CreateHoliday" class="border-top pt-3">
+                    <form data-loading method="post" asp-area="Admin" asp-controller="Growth" asp-action="CreateHoliday" class="border-top pt-3">
                         @Html.AntiForgeryToken()
                         <h3 class="h6">@Localizer["Admin.Growth.AddHolidayHeading"]</h3>
                         <div class="mb-2">
@@ -228,7 +228,7 @@
                     <h2 id="experiments-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Growth.ExperimentsHeading"]</h2>
                 </div>
                 <div class="card-body">
-                    <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="CreateExperiment" class="mb-3">
+                    <form data-loading method="post" asp-area="Admin" asp-controller="Growth" asp-action="CreateExperiment" class="mb-3">
                         @Html.AntiForgeryToken()
                         <div class="mb-2">
                             <label class="form-label" for="e-name">@Localizer["Admin.Growth.ExperimentNameLabel"]</label>
@@ -262,14 +262,14 @@
                             <h3 class="h6">@Localizer["Admin.Growth.ManageByIdHeading"]</h3>
                             <p class="small text-secondary">@Localizer["Admin.Growth.OperatorHelp"]</p>
                             <div class="d-flex flex-wrap gap-2">
-                                <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="StartExperiment" class="d-flex gap-2">
+                                <form data-loading method="post" asp-area="Admin" asp-controller="Growth" asp-action="StartExperiment" class="d-flex gap-2">
                                     @Html.AntiForgeryToken()
                                     <label class="visually-hidden" for="e-start-id">@Localizer["Admin.Growth.ExperimentIdLabel"]</label>
                                     <input type="text" class="form-control form-control-sm font-data" id="e-start-id" name="experimentId" dir="ltr"
                                            placeholder="@Localizer["Admin.Growth.ExperimentIdLabel"]" required />
                                     <button type="submit" class="btn btn-sm btn-outline-success">@Localizer["Admin.Growth.Start"]</button>
                                 </form>
-                                <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="CompleteExperiment" class="d-flex gap-2"
+                                <form data-loading method="post" asp-area="Admin" asp-controller="Growth" asp-action="CompleteExperiment" class="d-flex gap-2"
                                       data-confirm="@Localizer["Admin.Growth.CompleteConfirm"]"
                                       data-confirm-title="@Localizer["Admin.Growth.CompleteTitle"]"
                                       data-confirm-action="@Localizer["Admin.Growth.Complete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -296,7 +296,7 @@
                 </div>
                 <div class="card-body">
                     <p class="small text-secondary">@Localizer["Admin.Growth.OperatorHelp"]</p>
-                    <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="SetPhotogenic" class="row g-2 align-items-end">
+                    <form data-loading method="post" asp-area="Admin" asp-controller="Growth" asp-action="SetPhotogenic" class="row g-2 align-items-end">
                         @Html.AntiForgeryToken()
                         <div class="col-sm-4">
                             <label class="form-label" for="p-kind">@Localizer["Admin.Growth.EntityKindLabel"]</label>

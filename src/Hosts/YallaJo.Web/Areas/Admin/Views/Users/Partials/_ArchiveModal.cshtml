@@ -13,7 +13,7 @@
 <div class="modal fade admin-action-modal" id="@modalId" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bannerId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form asp-area="Admin" asp-controller="Lifecycle" asp-action="Archive" asp-route-userId="@userId" method="post" id="archive-form">
+            <form data-loading asp-area="Admin" asp-controller="Lifecycle" asp-action="Archive" asp-route-userId="@userId" method="post" id="archive-form">
                 @Html.AntiForgeryToken()
                 <div class="modal-header bg-danger text-white">
                     <h2 class="modal-title h5" id="@titleId">

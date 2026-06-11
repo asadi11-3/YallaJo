@@ -147,7 +147,7 @@
                                     @if (Model.IsDeletedTab)
                                     {
                                         <permission require="@WebPermission.Blog.DeleteOwn">
-                                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Restore"
+                                            <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Restore"
                                                   asp-route-id="@blog.Id" method="post" class="d-inline"
                                                   data-confirm="@Localizer["Admin.Blogs.RestoreConfirm", blog.Title]"
                                                   data-confirm-title="@Localizer["Admin.Blogs.RestoreTitle"]"
@@ -164,7 +164,7 @@
                                     {
                                         <div class="d-flex justify-content-end align-items-start gap-2">
                                             <permission require="@WebPermission.Blog.Approve">
-                                                <form asp-area="Admin" asp-controller="Blogs" asp-action="Approve"
+                                                <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Approve"
                                                       asp-route-id="@blog.Id" method="post" class="d-inline"
                                                       data-confirm="@Localizer["Admin.Blogs.ApproveConfirm", blog.Title]"
                                                       data-confirm-title="@Localizer["Admin.Blogs.ApproveTitle"]"
@@ -192,7 +192,7 @@
                                             </a>
                                         </permission>
                                         <permission require="@WebPermission.Blog.DeleteOwn">
-                                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Delete"
+                                            <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Delete"
                                                   asp-route-id="@blog.Id" method="post" class="d-inline"
                                                   data-confirm="@Localizer["Admin.Blogs.DeleteConfirm", blog.Title]"
                                                   data-confirm-title="@Localizer["Admin.Blogs.DeleteTitle"]"
@@ -239,7 +239,7 @@
                  aria-labelledby="rejectTitle-@blog.Id.ToString("N")" aria-describedby="rejectBody-@blog.Id.ToString("N")"
                  aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form asp-area="Admin" asp-controller="Blogs" asp-action="Reject" asp-route-id="@blog.Id"
+                    <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Reject" asp-route-id="@blog.Id"
                           method="post" class="modal-content" role="dialog" aria-modal="true"
                           aria-labelledby="rejectTitle-@blog.Id.ToString("N")">
                         @Html.AntiForgeryToken()
@@ -273,7 +273,7 @@
          role="dialog" aria-modal="true" aria-labelledby="createBlogModalLabel"
          data-yj-component="modal-crud">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <form asp-area="Admin" asp-controller="Blogs" asp-action="Create" method="post" class="modal-content">
+            <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Create" method="post" class="modal-content">
                 @Html.AntiForgeryToken()
                 <partial name="Partials/_ModalHeader"
                          model="@(new ModalHeaderVm { TitleId = "createBlogModalLabel", Title = Localizer["Admin.Blogs.CreateHeading"].Value, CloseLabel = Localizer["Admin.Blogs.Cancel"].Value, CloseUrl = createOpen ? Url.Action("Index") : null })" />

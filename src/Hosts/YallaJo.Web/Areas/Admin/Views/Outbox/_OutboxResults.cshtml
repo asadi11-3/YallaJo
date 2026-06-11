@@ -58,7 +58,7 @@ else
                         </td>
                         <td class="text-end">
                             <permission require="@WebPermission.Outbox.Replay">
-                                <form method="post" asp-action="Replay" asp-route-module="@d.Module" asp-route-id="@d.Id"
+                                <form data-loading method="post" asp-action="Replay" asp-route-module="@d.Module" asp-route-id="@d.Id"
                                       class="d-inline"
                                       data-confirm="@Localizer["Admin.Outbox.ReplayConfirm"]"
                                       data-confirm-title="@Localizer["Admin.Outbox.ReplayTitle"]"

@@ -126,7 +126,7 @@
                 @if (Model.CanApprove)
                 {
                     <permission require="@WebPermission.Tour.Approve">
-                        <form asp-area="Admin" asp-controller="Tours" asp-action="Approve" asp-route-id="@Model.Id" method="post"
+                        <form data-loading asp-area="Admin" asp-controller="Tours" asp-action="Approve" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Tours.ApproveConfirm", Model.Name]"
                               data-confirm-title="@Localizer["Admin.Tours.ApproveTitle"]"
                               data-confirm-action="@Localizer["Admin.Tours.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -141,7 +141,7 @@
                 @if (Model.CanReject)
                 {
                     <permission require="@WebPermission.Tour.Reject">
-                        <form asp-area="Admin" asp-controller="Tours" asp-action="Reject" asp-route-id="@Model.Id" method="post"
+                        <form data-loading asp-area="Admin" asp-controller="Tours" asp-action="Reject" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Tours.RejectConfirm", Model.Name]"
                               data-confirm-title="@Localizer["Admin.Tours.RejectTitle"]"
                               data-confirm-action="@Localizer["Admin.Tours.Reject"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -159,7 +159,7 @@
                 @if (Model.CanSuspend)
                 {
                     <permission require="@WebPermission.Tour.Suspend">
-                        <form asp-area="Admin" asp-controller="Tours" asp-action="Suspend" asp-route-id="@Model.Id" method="post"
+                        <form data-loading asp-area="Admin" asp-controller="Tours" asp-action="Suspend" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Tours.SuspendConfirm", Model.Name]"
                               data-confirm-title="@Localizer["Admin.Tours.SuspendTitle"]"
                               data-confirm-action="@Localizer["Admin.Tours.Suspend"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -177,7 +177,7 @@
                 @if (Model.CanReinstate)
                 {
                     <permission require="@WebPermission.Tour.Reinstate">
-                        <form asp-area="Admin" asp-controller="Tours" asp-action="Reinstate" asp-route-id="@Model.Id" method="post"
+                        <form data-loading asp-area="Admin" asp-controller="Tours" asp-action="Reinstate" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Tours.ReinstateConfirm", Model.Name]"
                               data-confirm-title="@Localizer["Admin.Tours.ReinstateTitle"]"
                               data-confirm-action="@Localizer["Admin.Tours.Reinstate"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -196,14 +196,14 @@
                         <div class="border-top pt-3">
                             <label class="form-label small mb-2 d-block">@Localizer["Admin.Tours.HomepageCuration"]</label>
                             <div class="d-flex gap-2">
-                                <form asp-area="Admin" asp-controller="Tours" asp-action="Feature" asp-route-id="@Model.Id" method="post" class="flex-fill">
+                                <form data-loading asp-area="Admin" asp-controller="Tours" asp-action="Feature" asp-route-id="@Model.Id" method="post" class="flex-fill">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="isFeatured" value="true" />
                                     <button type="submit" class="btn btn-outline-primary w-100">
                                         <i class="fa-solid fa-star fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Tours.Feature"]
                                     </button>
                                 </form>
-                                <form asp-area="Admin" asp-controller="Tours" asp-action="Feature" asp-route-id="@Model.Id" method="post" class="flex-fill">
+                                <form data-loading asp-area="Admin" asp-controller="Tours" asp-action="Feature" asp-route-id="@Model.Id" method="post" class="flex-fill">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="isFeatured" value="false" />
                                     <button type="submit" class="btn btn-outline-secondary w-100">

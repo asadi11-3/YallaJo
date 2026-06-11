@@ -79,7 +79,7 @@
             {
                 <div class="d-flex flex-wrap gap-2 mt-3">
                     <permission require="@WebPermission.Tour.Approve">
-                        <form method="post" asp-area="Admin" asp-controller="Trips" asp-action="Approve" asp-route-id="@detail.Id"
+                        <form data-loading method="post" asp-area="Admin" asp-controller="Trips" asp-action="Approve" asp-route-id="@detail.Id"
                               data-confirm="@Localizer["Admin.Trips.ApproveConfirm", detail.Name]"
                               data-confirm-title="@Localizer["Admin.Trips.ApproveTitle"]"
                               data-confirm-action="@Localizer["Admin.Trips.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -91,7 +91,7 @@
                         </form>
                     </permission>
                     <permission require="@WebPermission.Tour.Reinstate">
-                        <form method="post" asp-area="Admin" asp-controller="Trips" asp-action="Reinstate" asp-route-id="@detail.Id"
+                        <form data-loading method="post" asp-area="Admin" asp-controller="Trips" asp-action="Reinstate" asp-route-id="@detail.Id"
                               data-confirm="@Localizer["Admin.Trips.ReinstateConfirm", detail.Name]"
                               data-confirm-title="@Localizer["Admin.Trips.ReinstateTitle"]"
                               data-confirm-action="@Localizer["Admin.Trips.Reinstate"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -118,7 +118,7 @@
                     <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="@rejectTitleId"
                          aria-describedby="@rejectDescId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                         <div class="modal-dialog modal-dialog-centered">
-                            <form method="post" asp-area="Admin" asp-controller="Trips" asp-action="Reject" asp-route-id="@detail.Id"
+                            <form data-loading method="post" asp-area="Admin" asp-controller="Trips" asp-action="Reject" asp-route-id="@detail.Id"
                                   class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@rejectTitleId">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="rowVersion" value="@detail.RowVersionBase64" />
@@ -144,7 +144,7 @@
                     <div class="modal fade" id="suspendModal" tabindex="-1" aria-labelledby="@suspendTitleId"
                          aria-describedby="@suspendDescId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                         <div class="modal-dialog modal-dialog-centered">
-                            <form method="post" asp-area="Admin" asp-controller="Trips" asp-action="Suspend" asp-route-id="@detail.Id"
+                            <form data-loading method="post" asp-area="Admin" asp-controller="Trips" asp-action="Suspend" asp-route-id="@detail.Id"
                                   class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@suspendTitleId">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="rowVersion" value="@detail.RowVersionBase64" />

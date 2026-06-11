@@ -132,7 +132,7 @@
                                 @if (d.CanReview)
                                 {
                                     <permission require="@WebPermission.AdminFinanceDashboard.Update">
-                                        <form method="post" asp-area="Admin" asp-controller="Disputes" asp-action="Review" asp-route-id="@d.Id" class="d-inline"
+                                        <form data-loading method="post" asp-area="Admin" asp-controller="Disputes" asp-action="Review" asp-route-id="@d.Id" class="d-inline"
                                               data-confirm="@Localizer["Admin.Disputes.ReviewConfirm"]"
                                               data-confirm-title="@Localizer["Admin.Disputes.ReviewTitle"]"
                                               data-confirm-action="@Localizer["Admin.Disputes.Review"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -177,7 +177,7 @@
         <permission require="@WebPermission.AdminFinanceDashboard.Approve">
             <div class="modal fade" id="resolveModal-@nid" tabindex="-1" aria-labelledby="resolveTitle-@nid" aria-describedby="resolveBody-@nid" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form method="post" asp-area="Admin" asp-controller="Disputes" asp-action="Resolve" asp-route-id="@d.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="resolveTitle-@nid">
+                    <form data-loading method="post" asp-area="Admin" asp-controller="Disputes" asp-action="Resolve" asp-route-id="@d.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="resolveTitle-@nid">
                         @Html.AntiForgeryToken()
                         <partial name="Partials/_ModalHeader"
                                  model="@(new ModalHeaderVm { TitleId = $"resolveTitle-{nid}", Title = Localizer["Admin.Disputes.ResolveModalTitle"].Value, CloseLabel = Localizer["Admin.Disputes.Close"].Value })" />
@@ -213,7 +213,7 @@
         <permission require="@WebPermission.AdminFinanceDashboard.Update">
             <div class="modal fade" id="escalateModal-@nid" tabindex="-1" aria-labelledby="escalateTitle-@nid" aria-describedby="escalateBody-@nid" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form method="post" asp-area="Admin" asp-controller="Disputes" asp-action="Escalate" asp-route-id="@d.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="escalateTitle-@nid">
+                    <form data-loading method="post" asp-area="Admin" asp-controller="Disputes" asp-action="Escalate" asp-route-id="@d.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="escalateTitle-@nid">
                         @Html.AntiForgeryToken()
                         <partial name="Partials/_ModalHeader"
                                  model="@(new ModalHeaderVm { TitleId = $"escalateTitle-{nid}", Title = Localizer["Admin.Disputes.EscalateModalTitle"].Value, CloseLabel = Localizer["Admin.Disputes.Close"].Value })" />

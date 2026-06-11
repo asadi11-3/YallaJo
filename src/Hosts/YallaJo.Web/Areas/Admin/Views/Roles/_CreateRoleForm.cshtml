@@ -3,7 +3,7 @@
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 
 @* A11Y4 — every input has an associated <label asp-for> + validation message role=alert. *@
-<form asp-area="Admin" asp-controller="Roles" asp-action="Create" method="post" class="row g-3 align-items-end">
+<form data-loading asp-area="Admin" asp-controller="Roles" asp-action="Create" method="post" class="row g-3 align-items-end">
     @Html.AntiForgeryToken()
     <div asp-validation-summary="All" class="text-danger small" role="alert"></div>
 

@@ -56,7 +56,7 @@ else
                 <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Attachments.UploadHeading"]</h2>
             </div>
             <div class="card-body">
-                <form asp-area="Admin" asp-controller="Attachments" asp-action="Upload" method="post" enctype="multipart/form-data">
+                <form data-loading asp-area="Admin" asp-controller="Attachments" asp-action="Upload" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="EntityType" value="@entityType" />
                     <input type="hidden" name="EntityId" value="@entityId" />
@@ -145,7 +145,7 @@ else
                                         @if (isImage)
                                         {
                                             <permission require="@WebPermission.EntityImage.Update">
-                                                <form asp-area="Admin" asp-controller="Attachments" asp-action="SetPrimary" asp-route-id="@a.Id" method="post" class="d-inline">
+                                                <form data-loading asp-area="Admin" asp-controller="Attachments" asp-action="SetPrimary" asp-route-id="@a.Id" method="post" class="d-inline">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="EntityType" value="@entityType" />
                                                     <input type="hidden" name="EntityId" value="@entityId" />
@@ -156,7 +156,7 @@ else
                                             </permission>
                                         }
                                         <permission require="@WebPermission.Attachment.Delete">
-                                            <form asp-area="Admin" asp-controller="Attachments" asp-action="Delete" asp-route-id="@a.Id" method="post" class="d-inline"
+                                            <form data-loading asp-area="Admin" asp-controller="Attachments" asp-action="Delete" asp-route-id="@a.Id" method="post" class="d-inline"
                                                   data-confirm="@Localizer["Admin.Attachments.DeleteConfirm"]"
                                                   data-confirm-title="@Localizer["Admin.Attachments.DeleteTitle"]"
                                                   data-confirm-action="@Localizer["Admin.Attachments.Delete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">

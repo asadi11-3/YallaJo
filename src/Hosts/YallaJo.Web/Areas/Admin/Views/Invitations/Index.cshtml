@@ -24,7 +24,7 @@
                     <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Invite.FormHeading"]</h2>
                 </div>
                 <div class="card-body">
-                    <form asp-area="Admin" asp-controller="Invitations" asp-action="Create" method="post" novalidate>
+                    <form data-loading asp-area="Admin" asp-controller="Invitations" asp-action="Create" method="post" novalidate>
                         @Html.AntiForgeryToken()
 
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
@@ -137,7 +137,7 @@
                     <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Resend.FormHeading"]</h2>
                 </div>
                 <div class="card-body">
-                    <form asp-area="Admin" asp-controller="Invitations" asp-action="ResendSubmit" method="post" novalidate>
+                    <form data-loading asp-area="Admin" asp-controller="Invitations" asp-action="ResendSubmit" method="post" novalidate>
                         @Html.AntiForgeryToken()
 
                         <div class="mb-3">

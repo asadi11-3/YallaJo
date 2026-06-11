@@ -95,7 +95,7 @@ else
                                     <a asp-area="Admin" asp-controller="Places" asp-action="Edit" asp-route-id="@p.Id"
                                        class="btn btn-sm btn-outline-secondary">@Localizer["Admin.Places.Edit"]</a>
 
-                                    <form asp-area="Admin" asp-controller="Places" asp-action="Feature"
+                                    <form data-loading asp-area="Admin" asp-controller="Places" asp-action="Feature"
                                           asp-route-id="@p.Id" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="featured" value="@(p.IsFeatured ? "false" : "true")" />
@@ -104,7 +104,7 @@ else
                                         </button>
                                     </form>
 
-                                    <form asp-area="Admin" asp-controller="Places" asp-action="Verify"
+                                    <form data-loading asp-area="Admin" asp-controller="Places" asp-action="Verify"
                                           asp-route-id="@p.Id" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="verified" value="@(p.IsVerified ? "false" : "true")" />
@@ -115,7 +115,7 @@ else
                                 </permission>
 
                                 <permission require="@WebPermission.Place.DeleteOwn">
-                                    <form asp-area="Admin" asp-controller="Places" asp-action="Delete"
+                                    <form data-loading asp-area="Admin" asp-controller="Places" asp-action="Delete"
                                           asp-route-id="@p.Id" method="post" class="d-inline"
                                           data-confirm="@Localizer["Admin.Places.DeleteConfirm", p.Name]"
                                           data-confirm-title="@Localizer["Admin.Places.DeleteTitle"]"

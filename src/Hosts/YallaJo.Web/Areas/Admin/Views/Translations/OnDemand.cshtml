@@ -23,7 +23,7 @@
         <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Translations.OnDemandHeading"]</h2>
     </div>
     <div class="card-body">
-        <form asp-area="Admin" asp-controller="Translations" asp-action="OnDemand" method="post" class="col-lg-8">
+        <form data-loading asp-area="Admin" asp-controller="Translations" asp-action="OnDemand" method="post" class="col-lg-8">
             @Html.AntiForgeryToken()
             <div asp-validation-summary="All" class="text-danger mb-3" role="alert"></div>
 

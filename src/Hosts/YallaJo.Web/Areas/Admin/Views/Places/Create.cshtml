@@ -17,7 +17,7 @@
     <div class="card-body">
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
-        <form asp-area="Admin" asp-controller="Places" asp-action="Create" method="post">
+        <form data-loading asp-area="Admin" asp-controller="Places" asp-action="Create" method="post">
             @Html.AntiForgeryToken()
 
             @* Strongly typed against the shared abstract PlaceFormVm. *@

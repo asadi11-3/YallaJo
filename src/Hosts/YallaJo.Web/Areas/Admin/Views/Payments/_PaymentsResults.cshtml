@@ -129,7 +129,7 @@
                     <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@labelId" aria-describedby="@descId"
                          aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                         <div class="modal-dialog modal-dialog-centered">
-                            <form method="post" asp-area="Admin" asp-controller="Payments" asp-action="Refund"
+                            <form data-loading method="post" asp-area="Admin" asp-controller="Payments" asp-action="Refund"
                                   asp-route-id="@p.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@labelId">
                                 @Html.AntiForgeryToken()
                                 <partial name="Partials/_ModalHeader"

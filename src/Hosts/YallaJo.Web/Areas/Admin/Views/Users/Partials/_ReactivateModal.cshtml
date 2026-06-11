@@ -11,7 +11,7 @@
 <div class="modal fade admin-action-modal" id="@modalId" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bannerId" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form asp-area="Admin" asp-controller="Lifecycle" asp-action="Reactivate" asp-route-userId="@userId" method="post">
+            <form data-loading asp-area="Admin" asp-controller="Lifecycle" asp-action="Reactivate" asp-route-userId="@userId" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-header bg-success-subtle">
                     <h2 class="modal-title h5" id="@titleId">

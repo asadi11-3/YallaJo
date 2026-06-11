@@ -199,7 +199,7 @@
                     </button>
                 </permission>
                 <permission require="@WebPermission.AdminCreatorQueue.Reinstate">
-                    <form method="post" asp-area="Admin" asp-controller="Creators" asp-action="Reinstate" asp-route-id="@detail.Id" class="d-inline"
+                    <form data-loading method="post" asp-area="Admin" asp-controller="Creators" asp-action="Reinstate" asp-route-id="@detail.Id" class="d-inline"
                           data-confirm="@Localizer["Admin.Creators.ReinstateConfirm"]"
                           data-confirm-title="@Localizer["Admin.Creators.ReinstateTitle"]"
                           data-confirm-action="@Localizer["Admin.Creators.ReinstateAction"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -216,7 +216,7 @@
     <permission require="@WebPermission.AdminCreatorQueue.Approve">
         <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalTitle" aria-describedby="approveModalBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form method="post" asp-area="Admin" asp-controller="Creators" asp-action="Approve" asp-route-id="@detail.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="approveModalTitle">
+                <form data-loading method="post" asp-area="Admin" asp-controller="Creators" asp-action="Approve" asp-route-id="@detail.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="approveModalTitle">
                     @Html.AntiForgeryToken()
                     <partial name="Partials/_ModalHeader"
                              model="@(new ModalHeaderVm { TitleId = "approveModalTitle", Title = Localizer["Admin.Creators.ApproveTitle"].Value, CloseLabel = Localizer["Admin.Creators.Close"].Value })" />
@@ -243,7 +243,7 @@
     <permission require="@WebPermission.AdminCreatorQueue.Reject">
         <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalTitle" aria-describedby="rejectModalBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form method="post" asp-area="Admin" asp-controller="Creators" asp-action="Reject" asp-route-id="@detail.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
+                <form data-loading method="post" asp-area="Admin" asp-controller="Creators" asp-action="Reject" asp-route-id="@detail.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
                     @Html.AntiForgeryToken()
                     <partial name="Partials/_ModalHeader"
                              model="@(new ModalHeaderVm { TitleId = "rejectModalTitle", Title = Localizer["Admin.Creators.RejectTitle"].Value, CloseLabel = Localizer["Admin.Creators.Close"].Value })" />
@@ -264,7 +264,7 @@
     <permission require="@WebPermission.AdminCreatorQueue.RequestMoreInfo">
         <div class="modal fade" id="moreInfoModal" tabindex="-1" aria-labelledby="moreInfoModalTitle" aria-describedby="moreInfoModalBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form method="post" asp-area="Admin" asp-controller="Creators" asp-action="RequestMoreInfo" asp-route-id="@detail.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="moreInfoModalTitle">
+                <form data-loading method="post" asp-area="Admin" asp-controller="Creators" asp-action="RequestMoreInfo" asp-route-id="@detail.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="moreInfoModalTitle">
                     @Html.AntiForgeryToken()
                     <partial name="Partials/_ModalHeader"
                              model="@(new ModalHeaderVm { TitleId = "moreInfoModalTitle", Title = Localizer["Admin.Creators.RequestInfoTitle"].Value, CloseLabel = Localizer["Admin.Creators.Close"].Value })" />
@@ -285,7 +285,7 @@
     <permission require="@WebPermission.AdminCreatorQueue.Suspend">
         <div class="modal fade" id="suspendModal" tabindex="-1" aria-labelledby="suspendModalTitle" aria-describedby="suspendModalBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form method="post" asp-area="Admin" asp-controller="Creators" asp-action="Suspend" asp-route-id="@detail.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="suspendModalTitle">
+                <form data-loading method="post" asp-area="Admin" asp-controller="Creators" asp-action="Suspend" asp-route-id="@detail.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="suspendModalTitle">
                     @Html.AntiForgeryToken()
                     <partial name="Partials/_ModalHeader"
                              model="@(new ModalHeaderVm { TitleId = "suspendModalTitle", Title = Localizer["Admin.Creators.SuspendTitle"].Value, CloseLabel = Localizer["Admin.Creators.Close"].Value })" />

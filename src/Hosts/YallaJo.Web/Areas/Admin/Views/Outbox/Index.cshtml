@@ -64,7 +64,7 @@
         </div>
         <div class="card-body">
             <p class="text-secondary">@Localizer["Admin.Outbox.BackfillHint"]</p>
-            <form method="post" asp-action="BackfillTourSnapshots" class="row g-2 align-items-end"
+            <form data-loading method="post" asp-action="BackfillTourSnapshots" class="row g-2 align-items-end"
                   data-confirm="@Localizer["Admin.Outbox.BackfillConfirm"]"
                   data-confirm-title="@Localizer["Admin.Outbox.BackfillTitle"]"
                   data-confirm-action="@Localizer["Admin.Outbox.BackfillSubmit"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">

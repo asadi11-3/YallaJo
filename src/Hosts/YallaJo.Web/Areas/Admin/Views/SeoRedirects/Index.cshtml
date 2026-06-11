@@ -112,7 +112,7 @@ else
                                     </button>
                                 </permission>
                                 <permission require="@WebPermission.Redirect.Delete">
-                                    <form asp-action="Delete" method="post" class="d-inline"
+                                    <form data-loading asp-action="Delete" method="post" class="d-inline"
                                           data-confirm="@Localizer["Admin.SeoRedirects.DeleteConfirm"]" data-confirm-title="@Localizer["Admin.SeoRedirects.DeleteTitle"]" data-confirm-action="@Localizer["Admin.SeoRedirects.Delete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@r.Id" />
@@ -149,7 +149,7 @@ else
         {
             <div class="modal fade" id="editRedirect-@r.Id.ToString("N")" tabindex="-1" aria-labelledby="editRedirectTitle-@r.Id.ToString("N")" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form asp-action="Update" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editRedirectTitle-@r.Id.ToString("N")">
+                    <form data-loading asp-action="Update" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editRedirectTitle-@r.Id.ToString("N")">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="Id" value="@r.Id" />
                         <partial name="Partials/_ModalHeader"
@@ -192,7 +192,7 @@ else
 <permission require="@WebPermission.Redirect.Create">
     <div class="modal fade" id="createRedirectModal" tabindex="-1" aria-labelledby="createRedirectTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
-            <form asp-action="Create" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createRedirectTitle">
+            <form data-loading asp-action="Create" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createRedirectTitle">
                 @Html.AntiForgeryToken()
                 <partial name="Partials/_ModalHeader"
                          model="@(new ModalHeaderVm { TitleId = "createRedirectTitle", Title = Localizer["Admin.SeoRedirects.Add"].Value, CloseLabel = Localizer["Admin.SeoRedirects.Close"].Value })" />

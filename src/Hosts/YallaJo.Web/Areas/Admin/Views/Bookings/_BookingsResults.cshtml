@@ -124,7 +124,7 @@
                  aria-labelledby="forceRefundTitle-@b.Id" aria-describedby="forceRefundBody-@b.Id" aria-hidden="true"
                  data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form method="post" asp-area="Admin" asp-controller="Bookings" asp-action="ForceRefund" asp-route-id="@b.Id"
+                    <form data-loading method="post" asp-area="Admin" asp-controller="Bookings" asp-action="ForceRefund" asp-route-id="@b.Id"
                           class="modal-content" role="dialog" aria-modal="true" aria-labelledby="forceRefundTitle-@b.Id">
                         @Html.AntiForgeryToken()
                         <partial name="Partials/_ModalHeader"

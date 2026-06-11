@@ -69,7 +69,7 @@
             @if (canAct)
             {
                 <div class="card-footer border-top">
-                    <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Reply" asp-route-id="@Model.Id">
+                    <form data-loading method="post" asp-area="Admin" asp-controller="Support" asp-action="Reply" asp-route-id="@Model.Id">
                         @Html.AntiForgeryToken()
                         <div class="mb-2">
                             <label class="form-label" for="body">@Localizer["Admin.SupportDetails.ReplyLabel"]</label>
@@ -148,7 +148,7 @@
                 </div>
                 <div class="card-body d-grid gap-3">
                     <permission require="@WebPermission.AdminSupportQueue.Assign">
-                        <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Assign" asp-route-id="@Model.Id">
+                        <form data-loading method="post" asp-area="Admin" asp-controller="Support" asp-action="Assign" asp-route-id="@Model.Id">
                             @Html.AntiForgeryToken()
                             <label class="form-label" for="adminUserId">@Localizer["Admin.SupportDetails.AssignLabel"]</label>
                             <div class="d-flex gap-2">
@@ -177,7 +177,7 @@
                         </button>
                     </permission>
                     <permission require="@WebPermission.SupportTicket.Close">
-                        <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Close" asp-route-id="@Model.Id"
+                        <form data-loading method="post" asp-area="Admin" asp-controller="Support" asp-action="Close" asp-route-id="@Model.Id"
                               data-confirm="@Localizer["Admin.SupportDetails.CloseConfirm"]"
                               data-confirm-title="@Localizer["Admin.SupportDetails.CloseTitle"]"
                               data-confirm-action="@Localizer["Admin.SupportDetails.CloseAction"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -199,7 +199,7 @@
     <permission require="@WebPermission.AdminSupportQueue.Resolve">
         <div class="modal fade" id="resolveModal" tabindex="-1" aria-labelledby="resolveModalTitle" aria-describedby="resolveModalBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Resolve" asp-route-id="@Model.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="resolveModalTitle">
+                <form data-loading method="post" asp-area="Admin" asp-controller="Support" asp-action="Resolve" asp-route-id="@Model.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="resolveModalTitle">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
                     <partial name="Partials/_ModalHeader"

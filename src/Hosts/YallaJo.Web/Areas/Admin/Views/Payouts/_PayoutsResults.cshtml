@@ -73,7 +73,7 @@ else
                             @if (p.CanApprove)
                             {
                                 <permission require="@WebPermission.Payout.Approve">
-                                    <form asp-action="Approve" asp-route-id="@p.Id" method="post" class="d-inline"
+                                    <form data-loading asp-action="Approve" asp-route-id="@p.Id" method="post" class="d-inline"
                                           data-confirm="@Localizer["Admin.Payouts.ApproveConfirm", Money(p.NetAmount, p.Currency)]"
                                           data-confirm-title="@Localizer["Admin.Payouts.ApproveTitle"]"
                                           data-confirm-action="@Localizer["Admin.Payouts.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">

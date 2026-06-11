@@ -60,7 +60,7 @@
                 <h2 id="edit-blog-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Blogs.EditHeading"]</h2>
             </div>
             <div class="card-body">
-                <form asp-area="Admin" asp-controller="Blogs" asp-action="Edit" asp-route-id="@Model.Id" method="post" class="row g-3">
+                <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Edit" asp-route-id="@Model.Id" method="post" class="row g-3">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Id" />
                     <input type="hidden" asp-for="RowVersion" />
@@ -140,7 +140,7 @@
                 @if (isPendingReview)
                 {
                     <permission require="@WebPermission.Blog.Approve">
-                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Approve" asp-route-id="@Model.Id" method="post"
+                        <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Approve" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Blogs.ApproveConfirm", Model.Title]"
                               data-confirm-title="@Localizer["Admin.Blogs.ApproveTitle"]"
                               data-confirm-action="@Localizer["Admin.Blogs.ApprovePublish"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -160,7 +160,7 @@
                 @if (isDraft)
                 {
                     <permission require="@WebPermission.Blog.Approve">
-                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Publish" asp-route-id="@Model.Id" method="post">
+                        <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Publish" asp-route-id="@Model.Id" method="post">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-success w-100">
                                 <i class="fa-solid fa-upload fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Publish"]
@@ -171,7 +171,7 @@
                 @if (isPublished)
                 {
                     <permission require="@WebPermission.Blog.Approve">
-                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Unpublish" asp-route-id="@Model.Id" method="post"
+                        <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Unpublish" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Blogs.UnpublishConfirm", Model.Title]"
                               data-confirm-title="@Localizer["Admin.Blogs.UnpublishTitle"]"
                               data-confirm-action="@Localizer["Admin.Blogs.Unpublish"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -180,7 +180,7 @@
                                 <i class="fa-solid fa-eye-slash fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Unpublish"]
                             </button>
                         </form>
-                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Archive" asp-route-id="@Model.Id" method="post"
+                        <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Archive" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Blogs.ArchiveConfirm", Model.Title]"
                               data-confirm-title="@Localizer["Admin.Blogs.ArchiveTitle"]"
                               data-confirm-action="@Localizer["Admin.Blogs.Archive"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -193,7 +193,7 @@
                     @if (!Model.IsFeatured)
                     {
                         <permission require="@WebPermission.Blog.Feature">
-                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Feature" asp-route-id="@Model.Id" method="post">
+                            <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Feature" asp-route-id="@Model.Id" method="post">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-outline-warning w-100">
                                     <i class="fa-solid fa-star fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Feature"]
@@ -204,7 +204,7 @@
                     else
                     {
                         <permission require="@WebPermission.Blog.Unfeature">
-                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Unfeature" asp-route-id="@Model.Id" method="post">
+                            <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Unfeature" asp-route-id="@Model.Id" method="post">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-outline-warning w-100">
                                     <i class="fa-solid fa-star-half-stroke fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Unfeature"]
@@ -221,7 +221,7 @@
                 @if (isHidden)
                 {
                     <permission require="@WebPermission.Blog.Approve">
-                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Unhide" asp-route-id="@Model.Id" method="post">
+                        <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Unhide" asp-route-id="@Model.Id" method="post">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-success w-100">
                                 <i class="fa-solid fa-eye fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Unhide"]
@@ -230,7 +230,7 @@
                     </permission>
                 }
                 <permission require="@WebPermission.Blog.DeleteOwn">
-                    <form asp-area="Admin" asp-controller="Blogs" asp-action="Delete" asp-route-id="@Model.Id" method="post"
+                    <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Delete" asp-route-id="@Model.Id" method="post"
                           data-confirm="@Localizer["Admin.Blogs.DeleteConfirm", Model.Title]"
                           data-confirm-title="@Localizer["Admin.Blogs.DeleteTitle"]"
                           data-confirm-action="@Localizer["Admin.Blogs.Delete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -318,7 +318,7 @@
                             <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                 <span class="fw-semibold">@tour.DisplayName</span>
                                 <permission require="@WebPermission.BlogTourLink.Delete">
-                                    <form asp-area="Admin" asp-controller="Blogs" asp-action="UnlinkTour"
+                                    <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="UnlinkTour"
                                           asp-route-id="@Model.Id" asp-route-tourId="@tour.TourId" method="post" class="d-inline"
                                           data-confirm="@Localizer["Admin.Blogs.UnlinkConfirm", tour.DisplayName]"
                                           data-confirm-title="@Localizer["Admin.Blogs.UnlinkTitle"]"
@@ -335,7 +335,7 @@
                 <permission require="@WebPermission.BlogTourLink.Create">
                     @if (Model.AvailableTours.Count > 0)
                     {
-                        <form asp-area="Admin" asp-controller="Blogs" asp-action="LinkTour" asp-route-id="@Model.Id" method="post" class="d-flex gap-1">
+                        <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="LinkTour" asp-route-id="@Model.Id" method="post" class="d-flex gap-1">
                             @Html.AntiForgeryToken()
                             <label for="link-tour-select" class="visually-hidden">@Localizer["Admin.Blogs.LinkTourLabel"]</label>
                             <select id="link-tour-select" name="tourId" class="form-select form-select-sm">
@@ -363,7 +363,7 @@
         <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalTitle" aria-describedby="rejectModalBody"
              aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-area="Admin" asp-controller="Blogs" asp-action="Reject" asp-route-id="@Model.Id" method="post"
+                <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Reject" asp-route-id="@Model.Id" method="post"
                       class="modal-content" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="fromEdit" value="true" />
@@ -391,7 +391,7 @@
         <div class="modal fade" id="hideModal" tabindex="-1" aria-labelledby="hideModalTitle" aria-describedby="hideModalBody"
              aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-area="Admin" asp-controller="Blogs" asp-action="Hide" asp-route-id="@Model.Id" method="post"
+                <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Hide" asp-route-id="@Model.Id" method="post"
                       class="modal-content" role="dialog" aria-modal="true" aria-labelledby="hideModalTitle">
                     @Html.AntiForgeryToken()
                     <partial name="Partials/_ModalHeader"
@@ -418,7 +418,7 @@
         <div class="modal fade" id="removeModal" tabindex="-1" aria-labelledby="removeModalTitle" aria-describedby="removeModalBody"
              aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form asp-area="Admin" asp-controller="Blogs" asp-action="Remove" asp-route-id="@Model.Id" method="post"
+                <form data-loading asp-area="Admin" asp-controller="Blogs" asp-action="Remove" asp-route-id="@Model.Id" method="post"
                       class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="removeModalTitle">
                     @Html.AntiForgeryToken()
                     <partial name="Partials/_ModalHeader"

@@ -77,7 +77,7 @@ else
                                             <td><bdi dir="ltr" class="font-data text-secondary">@t.Slug</bdi></td>
                                             <td class="text-end">
                                                 <permission require="@WebPermission.EntityTag.Delete">
-                                                    <form asp-area="Admin" asp-controller="EntityTags" asp-action="Remove" method="post" class="d-inline"
+                                                    <form data-loading asp-area="Admin" asp-controller="EntityTags" asp-action="Remove" method="post" class="d-inline"
                                                           data-confirm="@Localizer["Admin.EntityTags.RemoveConfirm", t.Name]"
                                                           data-confirm-title="@Localizer["Admin.EntityTags.RemoveTitle"]"
                                                           data-confirm-action="@Localizer["Admin.EntityTags.Remove"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -108,7 +108,7 @@ else
                         <h2 class="card-header-title h5 mb-0">@Localizer["Admin.EntityTags.AssignHeading"]</h2>
                     </div>
                     <div class="card-body">
-                        <form asp-area="Admin" asp-controller="EntityTags" asp-action="Assign" method="post">
+                        <form data-loading asp-area="Admin" asp-controller="EntityTags" asp-action="Assign" method="post">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="entityType" value="@entityType" />
                             <input type="hidden" name="entityId" value="@entityId" />

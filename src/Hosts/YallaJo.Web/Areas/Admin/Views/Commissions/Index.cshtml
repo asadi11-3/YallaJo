@@ -147,7 +147,7 @@
     <permission require="@WebPermission.CommissionRule.Update">
         <div class="modal fade" id="editModal-@nid" tabindex="-1" aria-labelledby="editTitle-@nid" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Update" asp-route-id="@rule.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editTitle-@nid">
+                <form data-loading method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Update" asp-route-id="@rule.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editTitle-@nid">
                     @Html.AntiForgeryToken()
                     <partial name="Partials/_ModalHeader"
                              model="@(new ModalHeaderVm { TitleId = $"editTitle-{nid}", Title = Localizer["Admin.Commissions.EditTitle", rule.Tier, rule.Currency].Value, CloseLabel = Localizer["Admin.Commissions.Close"].Value })" />
@@ -181,7 +181,7 @@
     <permission require="@WebPermission.CommissionRule.Delete">
         <div class="modal fade" id="deleteModal-@nid" tabindex="-1" aria-labelledby="deleteTitle-@nid" aria-describedby="deleteBody-@nid" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Delete" asp-route-id="@rule.Id" class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle-@nid" aria-describedby="deleteBody-@nid">
+                <form data-loading method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Delete" asp-route-id="@rule.Id" class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle-@nid" aria-describedby="deleteBody-@nid">
                     @Html.AntiForgeryToken()
                     <partial name="Partials/_ModalHeader"
                              model="@(new ModalHeaderVm { TitleId = $"deleteTitle-{nid}", Title = Localizer["Admin.Commissions.DeleteTitle"].Value, CloseLabel = Localizer["Admin.Commissions.Close"].Value })" />
@@ -205,7 +205,7 @@
 <permission require="@WebPermission.CommissionRule.Create">
     <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
-            <form method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Create" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createTitle">
+            <form data-loading method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Create" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createTitle">
                 @Html.AntiForgeryToken()
                 <partial name="Partials/_ModalHeader"
                          model="@(new ModalHeaderVm { TitleId = "createTitle", Title = Localizer["Admin.Commissions.CreateTitle"].Value, CloseLabel = Localizer["Admin.Commissions.Close"].Value })" />

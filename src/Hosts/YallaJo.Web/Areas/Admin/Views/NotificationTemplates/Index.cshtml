@@ -104,7 +104,7 @@
              aria-labelledby="@titleId" aria-describedby="@bodyId" aria-hidden="true"
              data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form method="post" asp-area="Admin" asp-controller="NotificationTemplates" asp-action="Delete" asp-route-id="@t.Id"
+                <form data-loading method="post" asp-area="Admin" asp-controller="NotificationTemplates" asp-action="Delete" asp-route-id="@t.Id"
                       class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="rowVersion" value="@t.RowVersion" />

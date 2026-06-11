@@ -47,7 +47,7 @@
 <permission require="@WebPermission.AdminModerationQueue.Warn">
     <div class="modal fade" id="warnModal" tabindex="-1" aria-labelledby="warnModalTitle" aria-describedby="warnModalBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
-            <form asp-action="Warn" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="warnModalTitle">
+            <form data-loading asp-action="Warn" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="warnModalTitle">
                 @Html.AntiForgeryToken()
                 <partial name="Partials/_ModalHeader"
                          model="@(new ModalHeaderVm { TitleId = "warnModalTitle", Title = Localizer["Admin.Moderation.WarnTitle"].Value, CloseLabel = Localizer["Admin.Moderation.Close"].Value })" />
@@ -90,7 +90,7 @@
 <permission require="@WebPermission.AdminModerationQueue.Ban">
     <div class="modal fade" id="banModal" tabindex="-1" aria-labelledby="banModalTitle" aria-describedby="banModalBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
-            <form asp-action="Ban" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="banModalTitle">
+            <form data-loading asp-action="Ban" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="banModalTitle">
                 @Html.AntiForgeryToken()
                 <partial name="Partials/_ModalHeader"
                          model="@(new ModalHeaderVm { TitleId = "banModalTitle", Title = Localizer["Admin.Moderation.BanTitle"].Value, CloseLabel = Localizer["Admin.Moderation.Close"].Value })" />
@@ -139,7 +139,7 @@
             <h2 id="unban-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Moderation.UnbanHeading"]</h2>
         </div>
         <div class="card-body">
-            <form asp-action="Unban" method="post" class="row g-2 align-items-end"
+            <form data-loading asp-action="Unban" method="post" class="row g-2 align-items-end"
                   data-confirm="@Localizer["Admin.Moderation.UnbanConfirm"]"
                   data-confirm-title="@Localizer["Admin.Moderation.UnbanHeading"]"
                   data-confirm-action="@Localizer["Admin.Moderation.Unban"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">

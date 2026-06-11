@@ -116,7 +116,7 @@ else
             var bodyId = modalId + "-body";
             <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bodyId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form asp-action="Resolve" asp-route-id="@r.Id" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
+                    <form data-loading asp-action="Resolve" asp-route-id="@r.Id" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
                         @Html.AntiForgeryToken()
                         <partial name="Partials/_ModalHeader"
                                  model="@(new ModalHeaderVm { TitleId = titleId, Title = Localizer["Admin.Reports.ResolveTitle"].Value, CloseLabel = Localizer["Admin.Reports.Close"].Value })" />

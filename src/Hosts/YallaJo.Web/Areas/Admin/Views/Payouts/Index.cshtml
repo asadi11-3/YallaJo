@@ -38,7 +38,7 @@
     <div class="modal fade" id="triggerModal" tabindex="-1" aria-labelledby="triggerModalTitle" aria-describedby="triggerModalBody"
          aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
-            <form asp-action="Trigger" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="triggerModalTitle">
+            <form data-loading asp-action="Trigger" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="triggerModalTitle">
                 @Html.AntiForgeryToken()
                 <partial name="Partials/_ModalHeader"
                          model="@(new ModalHeaderVm { TitleId = "triggerModalTitle", Title = Localizer["Admin.Payouts.RunBatchTitle"].Value, CloseLabel = Localizer["Admin.Payouts.Close"].Value })" />

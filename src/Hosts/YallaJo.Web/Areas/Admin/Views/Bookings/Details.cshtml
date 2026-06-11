@@ -269,7 +269,7 @@
              aria-labelledby="resolveDisputeTitle" aria-describedby="resolveDisputeBody" aria-hidden="true"
              data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
-                <form method="post" asp-area="Admin" asp-controller="Bookings" asp-action="ResolveDispute" asp-route-id="@Model.Id"
+                <form data-loading method="post" asp-area="Admin" asp-controller="Bookings" asp-action="ResolveDispute" asp-route-id="@Model.Id"
                       class="modal-content" role="dialog" aria-modal="true" aria-labelledby="resolveDisputeTitle">
                     @Html.AntiForgeryToken()
                     <partial name="Partials/_ModalHeader"

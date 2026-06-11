@@ -102,7 +102,7 @@
                                         <permission require="@WebPermission.Role.Update">
                                             @if (r.IsActive)
                                             {
-                                                <form asp-area="Admin" asp-controller="Roles"
+                                                <form data-loading asp-area="Admin" asp-controller="Roles"
                                                       asp-action="Deactivate" asp-route-roleId="@r.Id"
                                                       method="post" class="d-inline"
                                                       data-confirm="@Localizer["Admin.Roles.DeactivateConfirm", r.Name]"

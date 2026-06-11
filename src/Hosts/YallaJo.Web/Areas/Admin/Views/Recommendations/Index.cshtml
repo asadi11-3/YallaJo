@@ -107,7 +107,7 @@
                             <td><bdi class="font-data" dir="ltr">@Date(b.ComputedAt)</bdi></td>
                             <permission require="@WebPermission.Batch.Refresh">
                                 <td class="text-end">
-                                    <form method="post" asp-action="RefreshBatches" class="d-inline"
+                                    <form data-loading method="post" asp-action="RefreshBatches" class="d-inline"
                                           data-confirm="@Localizer["Admin.Recommendations.RefreshConfirm", b.SourceKind, b.Context]"
                                           data-confirm-title="@Localizer["Admin.Recommendations.RefreshTitle"]"
                                           data-confirm-action="@Localizer["Admin.Recommendations.Refresh"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -132,7 +132,7 @@
 <permission require="@WebPermission.BoostPackage.Create">
     <div class="modal fade" id="createBoostModal" tabindex="-1" aria-labelledby="createBoostTitle" aria-describedby="createBoostBody" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <form method="post" asp-action="CreateBoost" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createBoostTitle">
+            <form data-loading method="post" asp-action="CreateBoost" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createBoostTitle">
                 @Html.AntiForgeryToken()
                 <partial name="Partials/_ModalHeader"
                          model="@(new ModalHeaderVm { TitleId = "createBoostTitle", Title = Localizer["Admin.Recommendations.CreateBoostTitle"].Value, CloseLabel = Localizer["Admin.Recommendations.Close"].Value })" />
@@ -182,7 +182,7 @@
 <permission require="@WebPermission.EditorialPin.Create">
     <div class="modal fade" id="createPinModal" tabindex="-1" aria-labelledby="createPinTitle" aria-describedby="createPinBody" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <form method="post" asp-action="CreatePin" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createPinTitle">
+            <form data-loading method="post" asp-action="CreatePin" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createPinTitle">
                 @Html.AntiForgeryToken()
                 <partial name="Partials/_ModalHeader"
                          model="@(new ModalHeaderVm { TitleId = "createPinTitle", Title = Localizer["Admin.Recommendations.CreatePinTitle"].Value, CloseLabel = Localizer["Admin.Recommendations.Close"].Value })" />
@@ -237,7 +237,7 @@
     <div class="modal fade" id="deactivateBoostModal" tabindex="-1" aria-labelledby="deactivateBoostTitle" aria-describedby="deactivateBoostBody"
          aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
-            <form method="post" asp-action="DeactivateBoost" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deactivateBoostTitle">
+            <form data-loading method="post" asp-action="DeactivateBoost" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deactivateBoostTitle">
                 @Html.AntiForgeryToken()
                 <partial name="Partials/_ModalHeader"
                          model="@(new ModalHeaderVm { TitleId = "deactivateBoostTitle", Title = Localizer["Admin.Recommendations.DeactivateBoostTitle"].Value, CloseLabel = Localizer["Admin.Recommendations.Close"].Value })" />
@@ -261,7 +261,7 @@
     <div class="modal fade" id="deactivatePinModal" tabindex="-1" aria-labelledby="deactivatePinTitle" aria-describedby="deactivatePinBody"
          aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
-            <form method="post" asp-action="DeactivatePin" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deactivatePinTitle">
+            <form data-loading method="post" asp-action="DeactivatePin" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deactivatePinTitle">
                 @Html.AntiForgeryToken()
                 <partial name="Partials/_ModalHeader"
                          model="@(new ModalHeaderVm { TitleId = "deactivatePinTitle", Title = Localizer["Admin.Recommendations.DeactivatePinTitle"].Value, CloseLabel = Localizer["Admin.Recommendations.Close"].Value })" />

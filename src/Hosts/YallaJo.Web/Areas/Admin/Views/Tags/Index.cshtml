@@ -26,7 +26,7 @@
             <h2 id="create-tag-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Tags.CreateHeading"]</h2>
         </div>
         <div class="card-body">
-            <form asp-area="Admin" asp-controller="Tags" asp-action="Create" method="post">
+            <form data-loading asp-area="Admin" asp-controller="Tags" asp-action="Create" method="post">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
                 <div class="row g-3">
@@ -123,7 +123,7 @@
                                             </a>
                                         </permission>
                                         <permission require="@WebPermission.Tag.Delete">
-                                            <form asp-area="Admin" asp-controller="Tags" asp-action="Delete" asp-route-id="@t.Id"
+                                            <form data-loading asp-area="Admin" asp-controller="Tags" asp-action="Delete" asp-route-id="@t.Id"
                                                   method="post" class="d-inline"
                                                   data-confirm="@Localizer["Admin.Tags.DeleteConfirm", t.Name]"
                                                   data-confirm-title="@Localizer["Admin.Tags.DeleteTitle"]"
@@ -155,7 +155,7 @@
          role="dialog" aria-modal="true" aria-labelledby="editTagModalLabel"
          data-yj-component="modal-crud">
         <div class="modal-dialog modal-dialog-centered">
-            <form asp-area="Admin" asp-controller="Tags" asp-action="Edit"
+            <form data-loading asp-area="Admin" asp-controller="Tags" asp-action="Edit"
                   asp-route-id="@Model.Edit.Id" method="post" class="modal-content">
                 @Html.AntiForgeryToken()
                 <partial name="Partials/_ModalHeader"

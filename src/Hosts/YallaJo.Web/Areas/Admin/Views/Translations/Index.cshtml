@@ -137,7 +137,7 @@ else
                                                data-field-entity-id="@entityId">
                                                 <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Admin.Translations.Edit"]
                                             </a>
-                                            <form asp-area="Admin" asp-controller="Translations" asp-action="Approve" asp-route-id="@t.Id" method="post" class="d-inline"
+                                            <form data-loading asp-area="Admin" asp-controller="Translations" asp-action="Approve" asp-route-id="@t.Id" method="post" class="d-inline"
                                                   data-confirm="@Localizer["Admin.Translations.ApproveConfirm"]"
                                                   data-confirm-title="@Localizer["Admin.Translations.ApproveTitle"]"
                                                   data-confirm-action="@Localizer["Admin.Translations.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
@@ -167,7 +167,7 @@ else
              role="dialog" aria-modal="true" aria-labelledby="editTranslationModalLabel"
              data-yj-component="modal-crud">
             <div class="modal-dialog modal-dialog-centered modal-lg">
-                <form asp-area="Admin" asp-controller="Translations" asp-action="Edit"
+                <form data-loading asp-area="Admin" asp-controller="Translations" asp-action="Edit"
                       asp-route-id="@Model.Edit.Id" method="post" class="modal-content">
                     @Html.AntiForgeryToken()
                     <partial name="Partials/_ModalHeader"

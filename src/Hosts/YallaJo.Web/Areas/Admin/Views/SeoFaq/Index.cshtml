@@ -112,7 +112,7 @@ else
                                     </button>
                                 </permission>
                                 <permission require="@WebPermission.FaqItem.Delete">
-                                    <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Delete" method="post" class="d-inline"
+                                    <form data-loading asp-area="Admin" asp-controller="SeoFaq" asp-action="Delete" method="post" class="d-inline"
                                           data-confirm="@Localizer["Admin.SeoFaq.DeleteConfirm"]" data-confirm-title="@Localizer["Admin.SeoFaq.DeleteTitle"]" data-confirm-action="@Localizer["Admin.SeoFaq.Delete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.Id" />
@@ -147,7 +147,7 @@ else
         <permission require="@WebPermission.FaqItem.Update">
             <div class="modal fade" id="editFaq-@item.Id.ToString("N")" tabindex="-1" aria-labelledby="editFaqTitle-@item.Id.ToString("N")" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Update" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editFaqTitle-@item.Id.ToString("N")">
+                    <form data-loading asp-area="Admin" asp-controller="SeoFaq" asp-action="Update" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editFaqTitle-@item.Id.ToString("N")">
                         @Html.AntiForgeryToken()
                         <partial name="Partials/_ModalHeader"
                                  model="@(new ModalHeaderVm { TitleId = $"editFaqTitle-{item.Id.ToString("N")}", Title = Localizer["Admin.SeoFaq.EditTitle"].Value, CloseLabel = Localizer["Admin.SeoFaq.Close"].Value })" />
@@ -176,7 +176,7 @@ else
 <permission require="@WebPermission.FaqItem.Create">
     <div class="modal fade" id="createFaqModal" tabindex="-1" aria-labelledby="createFaqTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
-            <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Create" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createFaqTitle">
+            <form data-loading asp-area="Admin" asp-controller="SeoFaq" asp-action="Create" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createFaqTitle">
                 @Html.AntiForgeryToken()
                 <partial name="Partials/_ModalHeader"
                          model="@(new ModalHeaderVm { TitleId = "createFaqTitle", Title = Localizer["Admin.SeoFaq.Add"].Value, CloseLabel = Localizer["Admin.SeoFaq.Close"].Value })" />

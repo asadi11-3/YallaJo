@@ -147,7 +147,7 @@
 
                     @* Sidebar footer START *@
                     <div class="d-flex align-items-center justify-content-between text-primary-hover mt-auto p-3">
-                        <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="mb-0">
+                        <form data-loading asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="mb-0">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-link p-0 text-body" title="@Localizer["Admin.Nav.SignOut"]">
                                 <i class="bi bi-power fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Nav.SignOut"]
@@ -277,7 +277,7 @@
                                         <li><a class="dropdown-item" asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index"><i class="bi bi-shield-lock fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Layout.ChangePassword"]</a></li>
                                         <li><a class="dropdown-item" asp-area="Auth" asp-controller="Sessions" asp-action="Index"><i class="bi bi-laptop fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Layout.Sessions"]</a></li>
                                         <li>
-                                            <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="d-grid">
+                                            <form data-loading asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="d-grid">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="dropdown-item bg-danger-soft-hover text-danger"><i class="bi bi-power fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.SignOut"]</button>
                                             </form>
