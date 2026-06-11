@@ -7,9 +7,16 @@
  * All rules are direction-agnostic (RTL1).
  */
 
-/* One-time-code input: spaced monospace-style digits (TwoFactor, ResetPassword). */
+/* One-time-code input: spaced monospace-style digits (TwoFactor, ResetPassword).
+   direction/unicode-bidi belt-and-braces the markup's dir="ltr" so the code never
+   reorders inside an RTL page (RTL3); padding-inline-start re-centers the glyphs
+   against the trailing letter-spacing of the last digit (logical, RTL1). */
 .otp-input {
     letter-spacing: .5em;
+    direction: ltr;
+    unicode-bidi: isolate;
+    text-align: center;
+    padding-inline-start: .5em;
 }
 
 /* Slim password-strength meter track (SignUp, ResetPassword). The bar's width is

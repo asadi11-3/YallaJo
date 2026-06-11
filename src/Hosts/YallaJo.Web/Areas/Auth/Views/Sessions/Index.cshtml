@@ -22,6 +22,7 @@
                           data-confirm="@Localizer["Auth.Sessions.SignOutOthersConfirm"]"
                           data-confirm-title="@Localizer["Auth.Sessions.SignOutOthers"]"
                           data-confirm-action="@Localizer["Auth.Sessions.SignOutOthers"]"
+                          data-confirm-cancel="@Localizer["Auth.Confirm.Cancel"]"
                           data-success-msg="@Localizer["Auth.Sessions.OthersRevokedToast"]"
                           data-error-msg="@Localizer["Auth.Sessions.ActionFailed"]">
                         @Html.AntiForgeryToken()
@@ -35,7 +36,8 @@
                     <form asp-area="Auth" asp-controller="Auth" asp-action="LogoutAll" method="post"
                           data-confirm="@Localizer["Auth.Sessions.SignOutAllConfirm"]"
                           data-confirm-title="@Localizer["Auth.Sessions.SignOutAll"]"
-                          data-confirm-action="@Localizer["Auth.Sessions.SignOutAll"]">
+                          data-confirm-action="@Localizer["Auth.Sessions.SignOutAll"]"
+                          data-confirm-cancel="@Localizer["Auth.Confirm.Cancel"]">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-warning">
                             <i class="fa-solid fa-right-from-bracket fa-fw me-1" aria-hidden="true"></i>

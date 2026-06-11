@@ -83,6 +83,7 @@ else
                                           data-confirm="@Localizer["Auth.Sessions.UntrustConfirm"]"
                                           data-confirm-title="@Localizer["Auth.Sessions.Untrust"]"
                                           data-confirm-action="@Localizer["Auth.Sessions.Untrust"]"
+                                          data-confirm-cancel="@Localizer["Auth.Confirm.Cancel"]"
                                           data-success-msg="@Localizer["Auth.Devices.Untrusted"]"
                                           data-error-msg="@Localizer["Auth.Sessions.ActionFailed"]">
                                         @Html.AntiForgeryToken()
@@ -100,6 +101,7 @@ else
                                           data-confirm="@Localizer["Auth.Sessions.RevokeConfirm"]"
                                           data-confirm-title="@Localizer["Auth.Sessions.Revoke"]"
                                           data-confirm-action="@Localizer["Auth.Sessions.Revoke"]"
+                                          data-confirm-cancel="@Localizer["Auth.Confirm.Cancel"]"
                                           data-success-msg="@Localizer["Auth.Sessions.Revoked"]"
                                           data-error-msg="@Localizer["Auth.Sessions.ActionFailed"]">
                                         @Html.AntiForgeryToken()

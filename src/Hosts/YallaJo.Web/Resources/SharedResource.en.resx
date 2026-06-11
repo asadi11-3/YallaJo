@@ -13840,4 +13840,7 @@
 <data name="Auth.External.Completing" xml:space="preserve">
 <value>Completing sign-in…</value>
 </data>
+<data name="Auth.Confirm.Cancel" xml:space="preserve">
+<value>Cancel</value>
+</data>
 </root>
