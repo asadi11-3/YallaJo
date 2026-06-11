@@ -2,16 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Business.Facades;
 using YallaJo.Web.Areas.Business.Models.Services;
-using YallaJo.Web.Areas.Business.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Business.Controllers;
 
 [Area("Business")]
 [Authorize]
 [RequirePermission(WebPermission.Business.Read)]
-public sealed class ServicesController : BaseController
+public sealed class ServicesController : BusinessControllerBase
 {
     private readonly BusinessServicesFacade _facade;
 
@@ -20,7 +18,7 @@ public sealed class ServicesController : BaseController
     [HttpGet("business/businesses/{id:guid}/services")]
     public async Task<IActionResult> Index(Guid id, CancellationToken ct)
     {
-        SetSidebar(id);
+        SetSidebar("Services", id);
         var result = await _facade.GetAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
@@ -52,7 +50,7 @@ public sealed class ServicesController : BaseController
     [RequirePermission(WebPermission.ServiceItem.Update)]
     public async Task<IActionResult> Edit(Guid id, Guid serviceId, CancellationToken ct)
     {
-        SetSidebar(id);
+        SetSidebar("Services", id);
         var result = await _facade.GetEditAsync(id, serviceId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
@@ -60,7 +58,13 @@ public sealed class ServicesController : BaseController
             SetError(result.Error);
             return RedirectToAction(nameof(Index), new { id });
         }
-        return View(result.Data);
+
+        // AJAX: serve only the form partial for the edit offcanvas (PE1 enhancement).
+        if (WantsAjax())
+            return PartialView("_ServiceForm", result.Data);
+
+        // No-JS: render the full Services page with the inline edit panel.
+        return await IndexWithEditAsync(id, result.Data, ct);
     }
 
     [HttpPost("business/businesses/{id:guid}/services/{serviceId:guid}/edit")]
@@ -68,12 +72,12 @@ public sealed class ServicesController : BaseController
     [RequirePermission(WebPermission.ServiceItem.Update)]
     public async Task<IActionResult> Edit(Guid id, Guid serviceId, EditServiceFormVm form, CancellationToken ct)
     {
-        SetSidebar(id);
+        SetSidebar("Services", id);
         form.ServiceId = serviceId;
         form.BusinessId = id;
 
         if (!ModelState.IsValid)
-            return View(form);
+            return await IndexWithEditAsync(id, form, ct);
 
         var result = await _facade.UpdateAsync(id, serviceId, form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -82,7 +86,7 @@ public sealed class ServicesController : BaseController
         {
             if (!ApplyValidationErrors(result))
                 SetError(result.Error);
-            return View(form);
+            return await IndexWithEditAsync(id, form, ct);
         }
 
         SetSuccess("Service updated.");
@@ -100,13 +104,17 @@ public sealed class ServicesController : BaseController
         return RedirectToAction(nameof(Index), new { id });
     }
 
-    private void SetSidebar(Guid businessId)
+    /// <summary>
+    /// Renders Services/Index with the inline edit panel populated — the no-JS
+    /// surface that replaced the retired Services/Edit view.
+    /// </summary>
+    private async Task<IActionResult> IndexWithEditAsync(Guid id, EditServiceFormVm form, CancellationToken ct)
     {
-        ViewData["BusinessNav"] = "Services";
-        ViewBag.Sidebar = new BusinessSidebarVm
-        {
-            DisplayName = User.Identity?.Name ?? "Business",
-            BusinessId = businessId,
-        };
+        var listResult = await _facade.GetAsync(id, ct);
+        var vm = listResult is { IsSuccess: true, Data: not null }
+            ? listResult.Data
+            : new ServicesVm { BusinessId = id, BusinessName = form.BusinessName };
+        vm.EditForm = form;
+        return View(nameof(Index), vm);
     }
 }

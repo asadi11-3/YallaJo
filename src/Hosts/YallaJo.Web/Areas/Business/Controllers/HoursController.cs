@@ -2,17 +2,18 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Business.Facades;
 using YallaJo.Web.Areas.Business.Models.Hours;
-using YallaJo.Web.Areas.Business.Shared;
+using YallaJo.Web.Areas.Business.Models.Settings;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Business.Controllers;
 
 [Area("Business")]
 [Authorize]
 [RequirePermission(WebPermission.Business.Read)]
-public sealed class HoursController : BaseController
+public sealed class HoursController : BusinessControllerBase
 {
+    private const string SettingsView = "~/Areas/Business/Views/MyBusinesses/Settings.cshtml";
+
     private readonly BusinessHoursFacade _facade;
 
     public HoursController(BusinessHoursFacade facade) => _facade = facade;
@@ -20,7 +21,7 @@ public sealed class HoursController : BaseController
     [HttpGet("business/businesses/{id:guid}/hours")]
     public async Task<IActionResult> Index(Guid id, CancellationToken ct)
     {
-        SetSidebar(id);
+        SetSidebar("Hours", id);
         var result = await _facade.GetAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
@@ -28,7 +29,7 @@ public sealed class HoursController : BaseController
             SetError(result.Error);
             return RedirectToAction("Index", "MyBusinesses");
         }
-        return View(result.Data);
+        return View(SettingsView, ToSettingsVm(result.Data));
     }
 
     [HttpPost("business/businesses/{id:guid}/hours/save")]
@@ -36,7 +37,7 @@ public sealed class HoursController : BaseController
     [RequirePermission(WebPermission.BusinessHours.Update)]
     public async Task<IActionResult> Save(Guid id, HoursVm form, CancellationToken ct)
     {
-        SetSidebar(id);
+        SetSidebar("Hours", id);
 
         if (!ModelState.IsValid)
             return await ReloadAsync(id, form, ct);
@@ -60,16 +61,14 @@ public sealed class HoursController : BaseController
             ? result.Data
             : new HoursVm { BusinessId = id, Days = form.Days };
         vm.Days = form.Days;
-        return View(nameof(Index), vm);
+        return View(SettingsView, ToSettingsVm(vm));
     }
 
-    private void SetSidebar(Guid businessId)
+    private static BusinessSettingsVm ToSettingsVm(HoursVm hours) => new()
     {
-        ViewData["BusinessNav"] = "Hours";
-        ViewBag.Sidebar = new BusinessSidebarVm
-        {
-            DisplayName = User.Identity?.Name ?? "Business",
-            BusinessId = businessId,
-        };
-    }
+        BusinessId = hours.BusinessId,
+        BusinessName = hours.BusinessName,
+        ActiveTab = BusinessSettingsVm.TabHours,
+        Hours = hours,
+    };
 }

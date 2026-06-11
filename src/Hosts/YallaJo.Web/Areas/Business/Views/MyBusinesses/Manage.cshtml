@@ -15,27 +15,11 @@
     string Count(int n) => n.ToString("N0", culture);
     string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
 
-    var color = MyBusinessesMapper.StatusColor(Model.Status);
-    string StatusText(string s)
-    {
-        var v = Localizer["Business.Status." + s];
-        return v.ResourceNotFound ? s : v.Value;
-    }
     string TypeText(string t)
     {
         var v = Localizer["Business.Type." + t];
         return v.ResourceNotFound ? t : v.Value;
     }
-    string StatusIcon(string s) => s.ToLowerInvariant() switch
-    {
-        "approved" or "published" or "active" => "circle-check",
-        "pending" or "pendingreview" or "submitted" => "clock",
-        "rejected" => "circle-xmark",
-        "suspended" => "circle-pause",
-        "moredocsneeded" or "moreinfoneeded" => "circle-question",
-        "draft" => "pen-ruler",
-        _ => "circle-info",
-    };
 }
 
 <section class="pt-0">
@@ -54,9 +38,7 @@
                 </p>
             </div>
             <div class="d-flex flex-wrap gap-2 align-items-center">
-                <span class="badge bg-@color bg-opacity-10 text-@color">
-                    <i class="fa-solid fa-@StatusIcon(Model.Status) fa-fw" aria-hidden="true"></i> @StatusText(Model.Status)
-                </span>
+                <partial name="_BusinessStatusBadge" model="@Model.Status" />
                 @if (Model.IsVerified)
                 {
                     <span class="badge bg-primary bg-opacity-10 text-primary">

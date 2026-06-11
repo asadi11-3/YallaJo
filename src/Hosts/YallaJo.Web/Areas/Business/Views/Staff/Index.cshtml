@@ -14,11 +14,11 @@
     string Count(int n) => n.ToString("N0", culture);
 }
 
-<partial name="_BusinessSidebar" model="sidebar" />
-
 <section class="pt-0">
     <div class="container">
         <div class="row g-4">
+            <partial name="_BusinessSidebar" model="sidebar" />
+
             <div class="col-lg-8 col-xl-9">
                 @if (ViewBag.Error is string err && !string.IsNullOrEmpty(err))
                 {
@@ -110,11 +110,20 @@
                                                         <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@Localizer["Business.Staff.Role." + s.Role]</span></td>
                                                         <td class="text-end">
                                                             <permission require="@WebPermission.BusinessStaff.Delete">
-                                                                <button type="button" class="btn btn-sm btn-danger-soft"
-                                                                        data-bs-toggle="modal" data-bs-target="#remove-staff-@s.Id"
-                                                                        aria-label="@Localizer["Business.Staff.Remove"]">
-                                                                    <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
-                                                                </button>
+                                                                @{
+                                                                    var removeVm = new DeleteConfirmFormVm
+                                                                    {
+                                                                        Controller = "Staff",
+                                                                        RouteValues = new Dictionary<string, string>
+                                                                        {
+                                                                            ["id"] = Model.BusinessId.ToString(),
+                                                                            ["staffId"] = s.Id.ToString()
+                                                                        },
+                                                                        ConfirmMessage = Localizer["Business.Staff.RemoveBody", memberLabel].Value,
+                                                                        ButtonLabel = Localizer["Business.Staff.Remove"].Value
+                                                                    };
+                                                                }
+                                                                <partial name="_DeleteConfirmForm" model="removeVm" />
                                                             </permission>
                                                         </td>
                                                     </tr>
@@ -131,40 +140,6 @@
         </div>
     </div>
 </section>
-
-@if (Model.HasStaff)
-{
-    var modalOrdinal = 0;
-    <permission require="@WebPermission.BusinessStaff.Delete">
-        @foreach (var s in Model.Staff)
-        {
-            modalOrdinal++;
-            var memberLabel = Localizer["Business.Staff.StaffLabel", Count(modalOrdinal)].Value;
-            <div class="modal fade" id="remove-staff-@s.Id" tabindex="-1" aria-labelledby="remove-staff-title-@s.Id"
-                 aria-describedby="remove-staff-body-@s.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form class="modal-content" role="dialog" aria-modal="true" aria-labelledby="remove-staff-title-@s.Id"
-                          asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-staffId="@s.Id" method="post">
-                        @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="remove-staff-title-@s.Id">@Localizer["Business.Staff.RemoveTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Business.Staff.Close"]"></button>
-                        </div>
-                        <div class="modal-body" id="remove-staff-body-@s.Id">
-                            @Localizer["Business.Staff.RemoveBody", memberLabel]
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Business.Staff.Cancel"]</button>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fa-solid fa-trash fa-fw me-1" aria-hidden="true"></i>@Localizer["Business.Staff.RemoveConfirm"]
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        }
-    </permission>
-}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

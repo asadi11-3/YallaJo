@@ -2,16 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Business.Facades;
 using YallaJo.Web.Areas.Business.Models.Staff;
-using YallaJo.Web.Areas.Business.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Business.Controllers;
 
 [Area("Business")]
 [Authorize]
 [RequirePermission(WebPermission.Business.Read)]
-public sealed class StaffController : BaseController
+public sealed class StaffController : BusinessControllerBase
 {
     private readonly BusinessStaffFacade _facade;
 
@@ -20,7 +18,7 @@ public sealed class StaffController : BaseController
     [HttpGet("business/businesses/{id:guid}/staff")]
     public async Task<IActionResult> Index(Guid id, CancellationToken ct = default)
     {
-        SetSidebar(id);
+        SetSidebar("Staff", id);
         var result = await _facade.GetAsync(id, ct);
         if (GuardSignOut(result) is { } signOut)
         {
@@ -70,15 +68,5 @@ public sealed class StaffController : BaseController
 
         SetFlash(result, "Staff member removed.", "Could not remove the staff member.");
         return RedirectToAction(nameof(Index), new { id });
-    }
-
-    private void SetSidebar(Guid businessId)
-    {
-        ViewData["BusinessNav"] = "Staff";
-        ViewBag.Sidebar = new BusinessSidebarVm
-        {
-            DisplayName = User.Identity?.Name ?? "Business",
-            BusinessId = businessId,
-        };
     }
 }

@@ -1,0 +1,22 @@
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Business.Shared
+@model DeleteConfirmFormVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Shared destructive-action form. form-ux.js intercepts the submit and shows
+    the global confirm modal (F8/MOD3/MOD5); without JS the form submits
+    natively after the browser-native flow (PE1). One mechanism per page (D-7).
+*@
+<form method="post"
+      action="@Url.Action(Model.Action, Model.Controller, Model.RouteValues)"
+      class="d-inline"
+      data-confirm="@Model.ConfirmMessage"
+      data-confirm-title="@Localizer["Business.ConfirmDelete.Title"]"
+      data-confirm-action="@Localizer["Business.ConfirmDelete.Action"]"
+      data-confirm-cancel="@Localizer["Business.ConfirmDelete.Cancel"]">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="@Model.ButtonLabel">
+        <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
+        <span class="visually-hidden">@Model.ButtonLabel</span>
+    </button>
+</form>

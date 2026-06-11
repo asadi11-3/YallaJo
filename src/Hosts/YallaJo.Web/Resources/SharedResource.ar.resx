@@ -13513,4 +13513,31 @@
 <data name="Business.Type.Other" xml:space="preserve">
 <value>أخرى</value>
 </data>
+<data name="Business.Settings.Title" xml:space="preserve">
+<value>إعدادات النشاط التجاري</value>
+</data>
+<data name="Business.Settings.Heading" xml:space="preserve">
+<value>إعدادات النشاط التجاري</value>
+</data>
+<data name="Business.Settings.Breadcrumb" xml:space="preserve">
+<value>العودة إلى النشاط التجاري</value>
+</data>
+<data name="Business.Settings.TabHours" xml:space="preserve">
+<value>ساعات العمل</value>
+</data>
+<data name="Business.Settings.TabAccessibility" xml:space="preserve">
+<value>إمكانية الوصول</value>
+</data>
+<data name="Business.Settings.TabsAria" xml:space="preserve">
+<value>أقسام إعدادات النشاط التجاري</value>
+</data>
+<data name="Business.ConfirmDelete.Title" xml:space="preserve">
+<value>هل أنت متأكد؟</value>
+</data>
+<data name="Business.ConfirmDelete.Action" xml:space="preserve">
+<value>حذف</value>
+</data>
+<data name="Business.ConfirmDelete.Cancel" xml:space="preserve">
+<value>إلغاء</value>
+</data>
 </root>

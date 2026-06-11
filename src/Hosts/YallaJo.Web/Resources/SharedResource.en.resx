@@ -13513,4 +13513,31 @@
 <data name="Business.Type.Other" xml:space="preserve">
 <value>Other</value>
 </data>
+<data name="Business.Settings.Title" xml:space="preserve">
+<value>Business settings</value>
+</data>
+<data name="Business.Settings.Heading" xml:space="preserve">
+<value>Business settings</value>
+</data>
+<data name="Business.Settings.Breadcrumb" xml:space="preserve">
+<value>Back to business</value>
+</data>
+<data name="Business.Settings.TabHours" xml:space="preserve">
+<value>Opening hours</value>
+</data>
+<data name="Business.Settings.TabAccessibility" xml:space="preserve">
+<value>Accessibility</value>
+</data>
+<data name="Business.Settings.TabsAria" xml:space="preserve">
+<value>Business settings sections</value>
+</data>
+<data name="Business.ConfirmDelete.Title" xml:space="preserve">
+<value>Are you sure?</value>
+</data>
+<data name="Business.ConfirmDelete.Action" xml:space="preserve">
+<value>Delete</value>
+</data>
+<data name="Business.ConfirmDelete.Cancel" xml:space="preserve">
+<value>Cancel</value>
+</data>
 </root>

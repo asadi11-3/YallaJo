@@ -1,0 +1,73 @@
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Business.Models.Settings
+@using YallaJo.Web.Areas.Business.Shared
+@model BusinessSettingsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    ViewData["Title"] = Localizer["Business.Settings.Title"].Value;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
+    var hoursActive = Model.ActiveTab != BusinessSettingsVm.TabAccessibility;
+}
+
+<section class="pt-0">
+    <div class="container">
+        <div class="row g-4">
+            <partial name="_BusinessSidebar" model="sidebar" />
+            <div class="col-lg-8 col-xl-9 vstack gap-4">
+                @if (ViewBag.Error is string err && !string.IsNullOrEmpty(err))
+                {
+                    <div class="alert alert-danger" role="alert">@err</div>
+                }
+
+                <div>
+                    <nav class="mb-2" aria-label="@Localizer["Business.Settings.Breadcrumb"]">
+                        <a class="icon-link text-decoration-none"
+                           asp-area="Business" asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@Model.BusinessId">
+                            <i class="fa-solid fa-arrow-left fa-fw me-1" aria-hidden="true"></i>
+                            <bdi>@Model.BusinessName</bdi>
+                        </a>
+                    </nav>
+                    <h1 class="fs-4 mb-0">
+                        <i class="fa-solid fa-sliders me-2 text-primary" aria-hidden="true"></i>
+                        @Localizer["Business.Settings.Heading"]
+                    </h1>
+                </div>
+
+                @* Server-driven tabs: real links, no JS required (PE1). Each route
+                   renders this view with its own pane active. *@
+                <ul class="nav nav-tabs" role="navigation" aria-label="@Localizer["Business.Settings.Heading"]">
+                    <li class="nav-item">
+                        <a class="nav-link @(hoursActive ? "active" : "")"
+                           aria-current="@(hoursActive ? "page" : null)"
+                           asp-area="Business" asp-controller="Hours" asp-action="Index" asp-route-id="@Model.BusinessId">
+                            <i class="fa-solid fa-clock me-1" aria-hidden="true"></i>
+                            @Localizer["Business.Settings.TabHours"]
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(hoursActive ? "" : "active")"
+                           aria-current="@(hoursActive ? null : "page")"
+                           asp-area="Business" asp-controller="Accessibility" asp-action="Index" asp-route-id="@Model.BusinessId">
+                            <i class="fa-solid fa-universal-access me-1" aria-hidden="true"></i>
+                            @Localizer["Business.Settings.TabAccessibility"]
+                        </a>
+                    </li>
+                </ul>
+
+                @if (hoursActive)
+                {
+                    <partial name="_HoursTab" model="Model.Hours" />
+                }
+                else
+                {
+                    <partial name="_AccessibilityTab" model="Model.Accessibility" />
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

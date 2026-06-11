@@ -15,26 +15,11 @@
     string Rating(decimal r) => r.ToString("0.0", culture);
     string Count(int n) => n.ToString("N0", culture);
 
-    string StatusText(string s)
-    {
-        var v = Localizer["Business.Status." + s];
-        return v.ResourceNotFound ? s : v.Value;
-    }
     string TypeText(string t)
     {
         var v = Localizer["Business.Type." + t];
         return v.ResourceNotFound ? t : v.Value;
     }
-    string StatusIcon(string s) => s.ToLowerInvariant() switch
-    {
-        "approved" or "published" or "active" => "circle-check",
-        "pending" or "pendingreview" or "submitted" => "clock",
-        "rejected" => "circle-xmark",
-        "suspended" => "circle-pause",
-        "moredocsneeded" or "moreinfoneeded" => "circle-question",
-        "draft" => "pen-ruler",
-        _ => "circle-info",
-    };
 }
 
 <section class="pt-0">
@@ -93,7 +78,6 @@
                         <tbody>
                             @foreach (var b in Model.Businesses)
                             {
-                                var color = MyBusinessesMapper.StatusColor(b.Status);
                                 var location = string.Join(", ", new[] { b.City, b.Country }.Where(x => !string.IsNullOrWhiteSpace(x)));
                                 <tr>
                                     <td>
@@ -108,9 +92,7 @@
                                     </td>
                                     <td>@TypeText(b.BusinessType)</td>
                                     <td>
-                                        <span class="badge bg-@color bg-opacity-10 text-@color">
-                                            <i class="fa-solid fa-@StatusIcon(b.Status) fa-fw" aria-hidden="true"></i> @StatusText(b.Status)
-                                        </span>
+                                        <partial name="_BusinessStatusBadge" model="@b.Status" />
                                     </td>
                                     <td>
                                         @if (string.IsNullOrWhiteSpace(location))

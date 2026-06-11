@@ -2,17 +2,18 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Business.Facades;
 using YallaJo.Web.Areas.Business.Models.Accessibility;
-using YallaJo.Web.Areas.Business.Shared;
+using YallaJo.Web.Areas.Business.Models.Settings;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Business.Controllers;
 
 [Area("Business")]
 [Authorize]
 [RequirePermission(WebPermission.Business.Read)]
-public sealed class AccessibilityController : BaseController
+public sealed class AccessibilityController : BusinessControllerBase
 {
+    private const string SettingsView = "~/Areas/Business/Views/MyBusinesses/Settings.cshtml";
+
     private readonly BusinessAccessibilityFacade _facade;
 
     public AccessibilityController(BusinessAccessibilityFacade facade) => _facade = facade;
@@ -20,7 +21,7 @@ public sealed class AccessibilityController : BaseController
     [HttpGet("business/businesses/{id:guid}/accessibility")]
     public async Task<IActionResult> Index(Guid id, CancellationToken ct = default)
     {
-        SetSidebar(id);
+        SetSidebar("Accessibility", id);
         var result = await _facade.GetAsync(id, ct);
         if (GuardSignOut(result) is { } signOut)
         {
@@ -33,7 +34,7 @@ public sealed class AccessibilityController : BaseController
             return RedirectToAction("Index", "MyBusinesses");
         }
 
-        return View(result.Data);
+        return View(SettingsView, ToSettingsVm(result.Data));
     }
 
     [HttpPost("business/businesses/{id:guid}/accessibility/save")]
@@ -41,7 +42,7 @@ public sealed class AccessibilityController : BaseController
     [RequirePermission(WebPermission.AccessibilityFeature.Update)]
     public async Task<IActionResult> Save(Guid id, AccessibilityVm form, CancellationToken ct = default)
     {
-        SetSidebar(id);
+        SetSidebar("Accessibility", id);
 
         if (!ModelState.IsValid)
         {
@@ -73,16 +74,14 @@ public sealed class AccessibilityController : BaseController
         var result = await _facade.GetAsync(id, ct);
         var vm = result is { IsSuccess: true, Data: not null } ? result.Data : new AccessibilityVm { BusinessId = id };
         vm.Features = form.Features;
-        return View(nameof(Index), vm);
+        return View(SettingsView, ToSettingsVm(vm));
     }
 
-    private void SetSidebar(Guid businessId)
+    private static BusinessSettingsVm ToSettingsVm(AccessibilityVm accessibility) => new()
     {
-        ViewData["BusinessNav"] = "Accessibility";
-        ViewBag.Sidebar = new BusinessSidebarVm
-        {
-            DisplayName = User.Identity?.Name ?? "Business",
-            BusinessId = businessId
-        };
-    }
+        BusinessId = accessibility.BusinessId,
+        BusinessName = accessibility.BusinessName,
+        ActiveTab = BusinessSettingsVm.TabAccessibility,
+        Accessibility = accessibility,
+    };
 }

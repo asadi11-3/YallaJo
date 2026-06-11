@@ -10,11 +10,11 @@
     var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
 }
 
-<partial name="_BusinessSidebar" model="sidebar" />
-
 <section class="pt-0">
     <div class="container">
         <div class="row g-4">
+            <partial name="_BusinessSidebar" model="sidebar" />
+
             <div class="col-lg-8 col-xl-9">
                 @if (ViewBag.Error is string err)
                 {
@@ -110,10 +110,20 @@
                                                         <td class="text-end"><bdi dir="ltr" class="font-data">@item.SortOrder</bdi></td>
                                                         <td class="text-end">
                                                             <permission require="@WebPermission.BusinessAmenity.Delete">
-                                                                <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#remove-amenity-@item.Id">
-                                                                    <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
-                                                                    <span class="visually-hidden">@Localizer["Business.Amenities.Remove", item.Name]</span>
-                                                                </button>
+                                                                @{
+                                                                    var removeVm = new DeleteConfirmFormVm
+                                                                    {
+                                                                        Controller = "Amenities",
+                                                                        RouteValues = new Dictionary<string, string>
+                                                                        {
+                                                                            ["id"] = Model.BusinessId.ToString(),
+                                                                            ["amenityId"] = item.Id.ToString()
+                                                                        },
+                                                                        ConfirmMessage = Localizer["Business.Amenities.RemoveBody", item.Name].Value,
+                                                                        ButtonLabel = Localizer["Business.Amenities.Remove", item.Name].Value
+                                                                    };
+                                                                }
+                                                                <partial name="_DeleteConfirmForm" model="removeVm" />
                                                             </permission>
                                                         </td>
                                                     </tr>
@@ -130,33 +140,6 @@
         </div>
     </div>
 </section>
-
-@if (Model.HasAmenities)
-{
-    <permission require="@WebPermission.BusinessAmenity.Delete">
-        @foreach (var item in Model.Amenities)
-        {
-            <div class="modal fade" id="remove-amenity-@item.Id" tabindex="-1" aria-labelledby="remove-amenity-title-@item.Id" aria-describedby="remove-amenity-body-@item.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-amenityId="@item.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
-                        @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="remove-amenity-title-@item.Id">@Localizer["Business.Amenities.RemoveTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Business.Amenities.Close"]"></button>
-                        </div>
-                        <div class="modal-body" id="remove-amenity-body-@item.Id">
-                            @Localizer["Business.Amenities.RemoveBody", item.Name]
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Business.Amenities.Cancel"]</button>
-                            <button type="submit" class="btn btn-danger">@Localizer["Business.Amenities.RemoveConfirm"]</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        }
-    </permission>
-}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

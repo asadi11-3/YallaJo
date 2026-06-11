@@ -2,16 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Business.Facades;
 using YallaJo.Web.Areas.Business.Models.Amenities;
-using YallaJo.Web.Areas.Business.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Business.Controllers;
 
 [Area("Business")]
 [Authorize]
 [RequirePermission(WebPermission.Business.Read)]
-public sealed class AmenitiesController : BaseController
+public sealed class AmenitiesController : BusinessControllerBase
 {
     private readonly BusinessAmenitiesFacade _facade;
 
@@ -20,7 +18,7 @@ public sealed class AmenitiesController : BaseController
     [HttpGet("business/businesses/{id:guid}/amenities")]
     public async Task<IActionResult> Index(Guid id, CancellationToken ct)
     {
-        SetSidebar(id);
+        SetSidebar("Amenities", id);
         var result = await _facade.GetAsync(id, ct);
         if (GuardSignOut(result) is { } signOut)
         {
@@ -70,15 +68,5 @@ public sealed class AmenitiesController : BaseController
 
         SetFlash(result, "Amenity removed.", "Could not remove the amenity.");
         return RedirectToAction(nameof(Index), new { id });
-    }
-
-    private void SetSidebar(Guid businessId)
-    {
-        ViewData["BusinessNav"] = "Amenities";
-        ViewBag.Sidebar = new BusinessSidebarVm
-        {
-            DisplayName = User.Identity?.Name ?? "Business",
-            BusinessId = businessId,
-        };
     }
 }

@@ -1,0 +1,73 @@
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Business.Models.Services
+@model EditServiceFormVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Parameterized service edit form. Served as a partial into the edit
+    offcanvas (AJAX, WantsAjax) and rendered inline on Services/Index for the
+    no-JS path (PE1). Replaces the retired Services/Edit.cshtml view.
+*@
+<form asp-area="Business" asp-controller="Services" asp-action="Edit"
+      asp-route-id="@Model.BusinessId" asp-route-serviceId="@Model.ServiceId" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="ServiceId" />
+    <input type="hidden" asp-for="BusinessId" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+    <div class="row g-3">
+        <div class="col-md-8">
+            <label class="form-label" asp-for="Name">@Localizer["Business.Services.Name"]</label>
+            <input class="form-control" asp-for="Name" />
+            <span asp-validation-for="Name" class="text-danger small" role="alert"></span>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" asp-for="Category">@Localizer["Business.Services.Category"]</label>
+            <select class="form-select" asp-for="Category">
+                @foreach (var cat in Enum.GetValues<ServiceCategory>())
+                {
+                    <option value="@cat">@Localizer["Business.Services.Category." + cat]</option>
+                }
+            </select>
+            <span asp-validation-for="Category" class="text-danger small" role="alert"></span>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" asp-for="Price">@Localizer["Business.Services.Price"]</label>
+            <input class="form-control font-data" asp-for="Price" type="number" step="0.001" min="0" dir="ltr" inputmode="decimal" />
+            <span asp-validation-for="Price" class="text-danger small" role="alert"></span>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" asp-for="Currency">@Localizer["Business.Services.Currency"]</label>
+            <input class="form-control font-data text-uppercase" asp-for="Currency" maxlength="3" dir="ltr" />
+            <span asp-validation-for="Currency" class="text-danger small" role="alert"></span>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" asp-for="SortOrder">@Localizer["Business.Services.SortOrder"]</label>
+            <input class="form-control" asp-for="SortOrder" type="number" min="0" dir="ltr" inputmode="numeric" />
+            <span asp-validation-for="SortOrder" class="text-danger small" role="alert"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" asp-for="DurationMinutes">@Localizer["Business.Services.Duration"]</label>
+            <input class="form-control" asp-for="DurationMinutes" type="number" min="0" dir="ltr" />
+            <span asp-validation-for="DurationMinutes" class="text-danger small" role="alert"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" asp-for="MaxCapacity">@Localizer["Business.Services.MaxCapacity"]</label>
+            <input class="form-control" asp-for="MaxCapacity" type="number" min="0" dir="ltr" />
+            <span asp-validation-for="MaxCapacity" class="text-danger small" role="alert"></span>
+        </div>
+        <div class="col-12">
+            <label class="form-label" asp-for="Description">@Localizer["Business.Services.Description"]</label>
+            <textarea class="form-control" asp-for="Description" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger small" role="alert"></span>
+        </div>
+        <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>
+                @Localizer["Business.Services.SaveChanges"]
+            </button>
+            <a class="btn btn-outline-secondary"
+               asp-area="Business" asp-controller="Services" asp-action="Index" asp-route-id="@Model.BusinessId">
+                @Localizer["Business.Services.Cancel"]
+            </a>
+        </div>
+    </div>
+</form>

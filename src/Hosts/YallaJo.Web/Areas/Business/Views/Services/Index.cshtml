@@ -15,11 +15,11 @@
     string Count(int n) => n.ToString("N0", culture);
 }
 
-<partial name="_BusinessSidebar" model="sidebar" />
-
 <section class="pt-0">
     <div class="container">
         <div class="row g-4">
+            <partial name="_BusinessSidebar" model="sidebar" />
+
             <div class="col-lg-8 col-xl-9">
                 @if (ViewBag.Error is string err)
                 {
@@ -37,6 +37,18 @@
                 </div>
 
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                @if (Model.EditForm is not null)
+                {
+                    <div class="card shadow mb-4">
+                        <div class="card-header border-bottom">
+                            <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-pen-to-square me-2" aria-hidden="true"></i>@Localizer["Business.Services.EditHeading"]</h2>
+                        </div>
+                        <div class="card-body">
+                            <partial name="_ServiceForm" model="Model.EditForm" />
+                        </div>
+                    </div>
+                }
 
                 <div class="row g-4">
                     <permission require="@WebPermission.ServiceItem.Create">
@@ -143,14 +155,25 @@
                                                         <td class="text-end">
                                                             <permission require="@WebPermission.ServiceItem.Update">
                                                                 <a asp-action="Edit" asp-route-id="@Model.BusinessId" asp-route-serviceId="@s.Id"
-                                                                   class="btn btn-sm btn-outline-secondary" aria-label="@Localizer["Business.Services.Edit", s.Name]">
+                                                                   class="btn btn-sm btn-outline-secondary" data-service-edit aria-label="@Localizer["Business.Services.Edit", s.Name]">
                                                                     <i class="fa-solid fa-pen" aria-hidden="true"></i>
                                                                 </a>
                                                             </permission>
                                                             <permission require="@WebPermission.ServiceItem.SoftDelete">
-                                                                <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#remove-service-@s.Id" aria-label="@Localizer["Business.Services.Remove", s.Name]">
-                                                                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
-                                                                </button>
+                                                                @{
+                                                                    var removeVm = new DeleteConfirmFormVm
+                                                                    {
+                                                                        Controller = "Services",
+                                                                        RouteValues = new Dictionary<string, string>
+                                                                        {
+                                                                            ["id"] = Model.BusinessId.ToString(),
+                                                                            ["serviceId"] = s.Id.ToString()
+                                                                        },
+                                                                        ConfirmMessage = Localizer["Business.Services.RemoveBody", s.Name].Value,
+                                                                        ButtonLabel = Localizer["Business.Services.Remove", s.Name].Value
+                                                                    };
+                                                                }
+                                                                <partial name="_DeleteConfirmForm" model="removeVm" />
                                                             </permission>
                                                         </td>
                                                     </tr>
@@ -168,28 +191,17 @@
     </div>
 </section>
 
-<permission require="@WebPermission.ServiceItem.SoftDelete">
-    @foreach (var s in Model.Services)
-    {
-        <div class="modal fade" id="remove-service-@s.Id" tabindex="-1" aria-labelledby="remove-service-title-@s.Id" aria-describedby="remove-service-body-@s.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" role="dialog" aria-modal="true" asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-serviceId="@s.Id" method="post">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="remove-service-title-@s.Id">@Localizer["Business.Services.RemoveTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Business.Services.Close"]"></button>
-                    </div>
-                    <div class="modal-body" id="remove-service-body-@s.Id">@Localizer["Business.Services.RemoveBody", s.Name]</div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Business.Services.Cancel"]</button>
-                        <button type="submit" class="btn btn-danger">@Localizer["Business.Services.RemoveConfirm"]</button>
-                    </div>
-                </form>
-            </div>
+<permission require="@WebPermission.ServiceItem.Update">
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="service-edit-offcanvas" aria-labelledby="service-edit-offcanvas-title">
+        <div class="offcanvas-header border-bottom">
+            <h2 class="offcanvas-title h5" id="service-edit-offcanvas-title">@Localizer["Business.Services.EditHeading"]</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="@Localizer["Business.Services.Close"]"></button>
         </div>
-    }
+        <div class="offcanvas-body" id="service-edit-offcanvas-body" data-yj-component="business-services"></div>
+    </div>
 </permission>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/business-services.js" asp-append-version="true" defer></script>
 }
