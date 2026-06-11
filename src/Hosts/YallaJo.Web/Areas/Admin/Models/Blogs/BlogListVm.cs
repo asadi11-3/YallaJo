@@ -26,6 +26,15 @@ public sealed class BlogListVm
 
     public bool HasItems => Items.Count > 0;
     public bool IsDeletedTab => Tab == BlogAdminTab.Deleted;
+
+    /// <summary>
+    /// Modal-CRUD state (F8 §4.7): when true the "new draft" modal renders
+    /// server-side open so deep links and no-JS still work (PE1).
+    /// </summary>
+    public bool CreateOpen { get; set; }
+
+    /// <summary>Bound "new draft" form values (posted with the <c>Create.</c> prefix).</summary>
+    public CreateBlogVm Create { get; set; } = new();
 }
 
 /// <summary>A single row in the admin blog list. No image field (managed separately).</summary>

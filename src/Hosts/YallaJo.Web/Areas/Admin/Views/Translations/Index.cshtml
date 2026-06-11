@@ -127,7 +127,14 @@ else
                                                asp-route-translated="@t.TranslatedText"
                                                asp-route-entityType="@entityType"
                                                asp-route-entityId="@entityId"
-                                               class="btn btn-sm btn-outline-secondary">
+                                               class="btn btn-sm btn-outline-secondary"
+                                               data-yj-modal-target="#editTranslationModal"
+                                               data-action="@Url.Action("Edit", new { area = "Admin", id = t.Id })"
+                                               data-field-id="@t.Id"
+                                               data-field-translated-text="@t.TranslatedText"
+                                               data-field-original="@t.OriginalText"
+                                               data-field-entity-type="@entityType"
+                                               data-field-entity-id="@entityId">
                                                 <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Admin.Translations.Edit"]
                                             </a>
                                             <form asp-area="Admin" asp-controller="Translations" asp-action="Approve" asp-route-id="@t.Id" method="post" class="d-inline"
@@ -151,4 +158,59 @@ else
             }
         </div>
     </section>
+
+    <permission require="@WebPermission.TranslationCache.Update">
+        @{ var editOpen = Model.EditId is not null; }
+        @* Edit modal (F8 §4.7): JS opens it via admin-modal-crud.js; deep links / no-JS
+           render it server-side open (PE1) with anchor-based close controls. *@
+        <div class="modal fade@(editOpen ? " show d-block" : "")" id="editTranslationModal" tabindex="-1"
+             role="dialog" aria-modal="true" aria-labelledby="editTranslationModalLabel"
+             data-yj-component="modal-crud">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <form asp-area="Admin" asp-controller="Translations" asp-action="Edit"
+                      asp-route-id="@Model.Edit.Id" method="post" class="modal-content">
+                    @Html.AntiForgeryToken()
+                    <partial name="Partials/_ModalHeader"
+                             model="@(new ModalHeaderVm { TitleId = "editTranslationModalLabel", Title = Localizer["Admin.Translations.EditHeading"].Value, CloseLabel = Localizer["Admin.Translations.Cancel"].Value, CloseUrl = editOpen ? Url.Action("Index", new { entityType, entityId }) : null })" />
+                    <div class="modal-body">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                        <input type="hidden" asp-for="Edit.Id" data-yj-field="id" />
+                        <input type="hidden" name="entityType" value="@entityType" data-yj-field="entityType" />
+                        <input type="hidden" name="entityId" value="@entityId" data-yj-field="entityId" />
+                        <div class="mb-3">
+                            <label for="edit-original-text" class="form-label">@Localizer["Admin.Translations.OriginalLabel"]</label>
+                            <textarea id="edit-original-text" name="original" class="form-control" rows="3" readonly data-yj-field="original">@Model.EditOriginal</textarea>
+                        </div>
+                        <div class="mb-0">
+                            <label asp-for="Edit.TranslatedText" class="form-label">@Localizer["Admin.Translations.TranslatedLabel"]</label>
+                            <textarea asp-for="Edit.TranslatedText" class="form-control" rows="4" data-yj-field="translatedText"></textarea>
+                            <span asp-validation-for="Edit.TranslatedText" class="text-danger" role="alert"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        @if (editOpen)
+                        {
+                            <a href="@Url.Action("Index", new { entityType, entityId })" class="btn btn-outline-secondary">@Localizer["Admin.Translations.Cancel"]</a>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Translations.Cancel"]</button>
+                        }
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-floppy-disk fa-fw" aria-hidden="true"></i> @Localizer["Admin.Translations.Save"]
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @if (editOpen)
+        {
+            <div class="modal-backdrop fade show"></div>
+        }
+    </permission>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/admin-modal-crud.js" asp-append-version="true"></script>
 }

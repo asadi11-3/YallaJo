@@ -14,9 +14,6 @@
         <h1 class="h3 mb-1">@Localizer["Admin.Invite.Heading"]</h1>
         <p class="mb-0 text-secondary">@Localizer["Admin.Invite.Subtitle"]</p>
     </div>
-    <a asp-area="Admin" asp-controller="Invitations" asp-action="Resend" class="btn btn-outline-secondary btn-sm mt-3 mt-sm-0">
-        <i class="fa-solid fa-paper-plane fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Invite.ResendLink"]
-    </a>
 </div>
 
 <permission require="@WebPermission.User.Create">
@@ -131,6 +128,31 @@
                         <li class="list-group-item px-0 bg-transparent">@Localizer["Admin.Invite.Step2"]</li>
                         <li class="list-group-item px-0 bg-transparent">@Localizer["Admin.Invite.Step3"]</li>
                     </ol>
+                </div>
+            </div>
+
+            @* Resend invite card — replaces the retired standalone Resend view (PE1). *@
+            <div class="card shadow mt-4">
+                <div class="card-header border-bottom">
+                    <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Resend.FormHeading"]</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-area="Admin" asp-controller="Invitations" asp-action="ResendSubmit" method="post" novalidate>
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label for="resend-email" class="form-label">@Localizer["Admin.Resend.EmailLabel"]</label>
+                            <input asp-for="Resend.Email" id="resend-email" class="form-control" type="email"
+                                   autocomplete="email" dir="ltr" aria-describedby="resend-email-help"
+                                   placeholder="@Localizer["Admin.Resend.EmailPlaceholder"]" />
+                            <small id="resend-email-help" class="form-text text-secondary">@Localizer["Admin.Resend.EmailHelp"]</small>
+                            <span asp-validation-for="Resend.Email" class="text-danger d-block" role="alert"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-paper-plane fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Resend.Submit"]
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

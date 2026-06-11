@@ -15,4 +15,11 @@ public sealed class ModalHeaderVm
 
     /// <summary>Renders the destructive variant (<c>bg-danger text-white</c> + white close icon).</summary>
     public bool Danger { get; init; }
+
+    /// <summary>
+    /// When set, the close control renders as a plain anchor to this URL instead of a
+    /// <c>data-bs-dismiss</c> button — used by server-side-opened deep-link modals (PE1)
+    /// where no JS is available to dismiss the dialog.
+    /// </summary>
+    public string? CloseUrl { get; init; }
 }

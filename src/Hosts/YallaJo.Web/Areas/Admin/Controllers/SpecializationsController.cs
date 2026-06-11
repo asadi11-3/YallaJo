@@ -73,23 +73,29 @@ public sealed class SpecializationsController : BaseController
             SetError("Specialization not found.");
             return RedirectToAction(nameof(Index));
         }
-        return View(new UpdateSpecializationVm
+        // PE1: deep links render the Index with the edit modal server-side open.
+        return View(nameof(Index), new SpecializationListVm
         {
-            Id          = row.Id,
-            Name        = row.Name,
-            Description = row.Description,
-            Icon        = row.Icon,
-            IsActive    = row.IsActive,
+            Specializations = list.Data.Specializations,
+            EditId = id,
+            Edit = new UpdateSpecializationVm
+            {
+                Id          = row.Id,
+                Name        = row.Name,
+                Description = row.Description,
+                Icon        = row.Icon,
+                IsActive    = row.IsActive,
+            },
         });
     }
 
     [HttpPost("admin/specializations/{id:guid}/edit")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.Specialization.Update)]
-    public async Task<IActionResult> Edit(Guid id, UpdateSpecializationVm vm, CancellationToken ct)
+    public async Task<IActionResult> Edit(Guid id, [Bind(Prefix = "Edit")] UpdateSpecializationVm vm, CancellationToken ct)
     {
         vm.Id = id;
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid) return await ReloadIndexForEdit(vm, ct);
 
         var result = await _facade.UpdateAsync(vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -102,14 +108,27 @@ public sealed class SpecializationsController : BaseController
 
         if (result.ValidationErrors is not null)
         {
+            // UI-UX-F6: map API field errors to the Edit-prefixed modal inputs.
             foreach (var (field, messages) in result.ValidationErrors)
                 foreach (var m in messages)
-                    ModelState.AddModelError(field, m);
-            return View(vm);
+                    ModelState.AddModelError($"Edit.{field}", m);
+            return await ReloadIndexForEdit(vm, ct);
         }
 
         ModelState.AddModelError(string.Empty, result.Error ?? "Could not update specialization.");
-        return View(vm);
+        return await ReloadIndexForEdit(vm, ct);
+    }
+
+    private async Task<IActionResult> ReloadIndexForEdit(UpdateSpecializationVm edit, CancellationToken ct)
+    {
+        var list = await _facade.GetAsync(activeOnly: false, ct);
+        var vm = new SpecializationListVm
+        {
+            Specializations = list.IsSuccess && list.Data is not null ? list.Data.Specializations : [],
+            EditId = edit.Id,
+            Edit = edit,
+        };
+        return View(nameof(Index), vm);
     }
 
     private async Task<IActionResult> ReloadIndex(CreateSpecializationVm create, CancellationToken ct)

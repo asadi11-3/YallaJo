@@ -33,4 +33,10 @@ public sealed class InviteUserVm
     public List<Guid> SelectedRoleIds { get; set; } = [];
 
     public IReadOnlyList<InvitableRoleOptionVm> AvailableRoles { get; set; } = [];
+
+    /// <summary>
+    /// Resend form hosted on the Index page (posted with the "Resend." prefix).
+    /// The standalone Resend view was retired in the admin view-reduction pass.
+    /// </summary>
+    public ResendInviteVm Resend { get; set; } = new();
 }

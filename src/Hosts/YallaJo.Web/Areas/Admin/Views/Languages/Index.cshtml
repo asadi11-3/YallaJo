@@ -1,4 +1,5 @@
 @using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.Languages.LanguageListVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
@@ -120,7 +121,11 @@
                                 </td>
                                 <td class="text-end">
                                     <permission require="@WebPermission.Language.Update">
-                                        <a asp-area="Admin" asp-controller="Languages" asp-action="Edit" asp-route-id="@l.Id" class="btn btn-sm btn-outline-secondary">
+                                        <a asp-area="Admin" asp-controller="Languages" asp-action="Edit" asp-route-id="@l.Id" class="btn btn-sm btn-outline-secondary"
+                                           data-yj-modal-target="#editLanguageModal"
+                                           data-action="@Url.Action("Edit", new { area = "Admin", id = l.Id })"
+                                           data-field-id="@l.Id" data-field-name="@l.Name" data-field-native-name="@l.NativeName"
+                                           data-field-is-rtl="@l.IsRtl" data-field-is-active="@l.IsActive">
                                             <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Admin.Languages.Edit"]
                                         </a>
                                     </permission>
@@ -134,6 +139,64 @@
     </div>
 </section>
 
+<permission require="@WebPermission.Language.Update">
+    @{ var editOpen = Model.EditId is not null; }
+    @* Edit modal (F8 §4.7): JS opens it via admin-modal-crud.js; deep links / no-JS
+       render it server-side open (PE1) with anchor-based close controls. *@
+    <div class="modal fade@(editOpen ? " show d-block" : "")" id="editLanguageModal" tabindex="-1"
+         role="dialog" aria-modal="true" aria-labelledby="editLanguageModalLabel"
+         data-yj-component="modal-crud">
+        <div class="modal-dialog modal-dialog-centered">
+            <form asp-area="Admin" asp-controller="Languages" asp-action="Edit"
+                  asp-route-id="@Model.Edit.Id" method="post" class="modal-content">
+                @Html.AntiForgeryToken()
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "editLanguageModalLabel", Title = Localizer["Admin.Languages.EditHeading"].Value, CloseLabel = Localizer["Admin.Languages.Cancel"].Value, CloseUrl = editOpen ? Url.Action("Index") : null })" />
+                <div class="modal-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                    <input type="hidden" asp-for="Edit.Id" data-yj-field="id" />
+                    <div class="mb-3">
+                        <label asp-for="Edit.Name" class="form-label">@Localizer["Admin.Languages.NameLabel"]</label>
+                        <input asp-for="Edit.Name" class="form-control" data-yj-field="name" />
+                        <span asp-validation-for="Edit.Name" class="text-danger" role="alert"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Edit.NativeName" class="form-label">@Localizer["Admin.Languages.NativeNameLabel"]</label>
+                        <input asp-for="Edit.NativeName" class="form-control" data-yj-field="nativeName" />
+                        <span asp-validation-for="Edit.NativeName" class="text-danger" role="alert"></span>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input asp-for="Edit.IsRtl" class="form-check-input" data-yj-field="isRtl" />
+                        <label asp-for="Edit.IsRtl" class="form-check-label">@Localizer["Admin.Languages.RtlLabel"]</label>
+                    </div>
+                    <div class="form-check mb-0">
+                        <input asp-for="Edit.IsActive" class="form-check-input" data-yj-field="isActive" />
+                        <label asp-for="Edit.IsActive" class="form-check-label">@Localizer["Admin.Languages.ActiveLabel"]</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @if (editOpen)
+                    {
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">@Localizer["Admin.Languages.Cancel"]</a>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Languages.Cancel"]</button>
+                    }
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk fa-fw" aria-hidden="true"></i> @Localizer["Admin.Languages.Save"]
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @if (editOpen)
+    {
+        <div class="modal-backdrop fade show"></div>
+    }
+</permission>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/admin-modal-crud.js" asp-append-version="true"></script>
 }

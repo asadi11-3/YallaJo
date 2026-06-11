@@ -36,7 +36,8 @@
         <p class="mb-0 text-secondary">@Localizer["Admin.Blogs.Subtitle"]</p>
     </div>
     <permission require="@WebPermission.Blog.Create">
-        <a asp-area="Admin" asp-controller="Blogs" asp-action="Create" class="btn btn-primary">
+        <a asp-area="Admin" asp-controller="Blogs" asp-action="Create" class="btn btn-primary"
+           data-yj-modal-target="#createBlogModal" data-action="@Url.Action("Create")">
             <i class="fa-solid fa-plus fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.New"]
         </a>
     </permission>
@@ -87,7 +88,8 @@
                 <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
                 <p class="mb-3 text-secondary">@Localizer["Admin.Blogs.EmptyMessage"]</p>
                 <permission require="@WebPermission.Blog.Create">
-                    <a asp-area="Admin" asp-controller="Blogs" asp-action="Create" class="btn btn-sm btn-primary-soft">
+                    <a asp-area="Admin" asp-controller="Blogs" asp-action="Create" class="btn btn-sm btn-primary-soft"
+                       data-yj-modal-target="#createBlogModal" data-action="@Url.Action("Create")">
                         <i class="fa-solid fa-plus fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.New"]
                     </a>
                 </permission>
@@ -259,4 +261,65 @@
             </div>
         </permission>
     }
+}
+
+<permission require="@WebPermission.Blog.Create">
+    @{ var createOpen = Model.CreateOpen; }
+    @* New-draft modal (F8 §4.7): JS opens it via admin-modal-crud.js; deep links /
+       no-JS render it server-side open (PE1) with anchor-based close controls.
+       Carries Title, language and content because the API requires real content at
+       create time; all other fields are edited on the Edit page after creation. *@
+    <div class="modal fade@(createOpen ? " show d-block" : "")" id="createBlogModal" tabindex="-1"
+         role="dialog" aria-modal="true" aria-labelledby="createBlogModalLabel"
+         data-yj-component="modal-crud">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <form asp-area="Admin" asp-controller="Blogs" asp-action="Create" method="post" class="modal-content">
+                @Html.AntiForgeryToken()
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "createBlogModalLabel", Title = Localizer["Admin.Blogs.CreateHeading"].Value, CloseLabel = Localizer["Admin.Blogs.Cancel"].Value, CloseUrl = createOpen ? Url.Action("Index") : null })" />
+                <div class="modal-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                    <div class="mb-3">
+                        <label asp-for="Create.Title" class="form-label">@Localizer["Admin.Blogs.TitleLabel"]</label>
+                        <input asp-for="Create.Title" class="form-control" aria-describedby="create-blog-title-help" />
+                        <small id="create-blog-title-help" class="form-text">@Localizer["Admin.Blogs.TitleHelp"]</small>
+                        <span asp-validation-for="Create.Title" class="text-danger" role="alert"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Create.SourceLanguageCode" class="form-label">@Localizer["Admin.Blogs.LanguageLabel"]</label>
+                        <input asp-for="Create.SourceLanguageCode" class="form-control" dir="ltr" aria-describedby="create-blog-lang-help" />
+                        <small id="create-blog-lang-help" class="form-text">@Localizer["Admin.Blogs.LanguageHelp"]</small>
+                        <span asp-validation-for="Create.SourceLanguageCode" class="text-danger" role="alert"></span>
+                    </div>
+                    <div class="mb-0">
+                        <label asp-for="Create.Content" class="form-label">@Localizer["Admin.Blogs.ContentLabel"]</label>
+                        <textarea asp-for="Create.Content" class="form-control" rows="8"></textarea>
+                        <span asp-validation-for="Create.Content" class="text-danger" role="alert"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @if (createOpen)
+                    {
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">@Localizer["Admin.Blogs.Cancel"]</a>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Blogs.Cancel"]</button>
+                    }
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Blogs.CreateSubmit"]
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @if (createOpen)
+    {
+        <div class="modal-backdrop fade show"></div>
+    }
+</permission>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/admin-modal-crud.js" asp-append-version="true"></script>
 }

@@ -71,21 +71,24 @@ public sealed class CategoriesController : BaseController
             SetError(result.Error ?? "Category not found.");
             return RedirectToAction(nameof(Index));
         }
-        return View(result.Data);
+
+        // PE1: deep links render the Index with the edit modal server-side open.
+        var list = await _facade.GetCategoriesAsync(includeInactive: true, ct);
+        return View(nameof(Index), new CategoryListVm
+        {
+            Categories = list.IsSuccess && list.Data is not null ? list.Data.Categories : [],
+            EditId = id,
+            Edit = result.Data,
+        });
     }
 
     [HttpPost("admin/categories/{id:guid}/edit")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.Category.Update)]
-    public async Task<IActionResult> Edit(Guid id, UpdateCategoryVm vm, CancellationToken ct)
+    public async Task<IActionResult> Edit(Guid id, [Bind(Prefix = "Edit")] UpdateCategoryVm vm, CancellationToken ct)
     {
         vm.Id = id;
-        if (!ModelState.IsValid)
-        {
-            // F10: repopulate the parent-name dropdown options before re-rendering.
-            vm.ParentOptions = await _facade.LoadParentOptionsAsync(id, ct);
-            return View(vm);
-        }
+        if (!ModelState.IsValid) return await ReloadIndexForEdit(vm, ct);
 
         var result = await _facade.UpdateAsync(vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -96,14 +99,18 @@ public sealed class CategoriesController : BaseController
             return RedirectToAction(nameof(Index));
         }
 
-        // Re-render the same edit view with field-level errors (UI-UX-F6) — repopulate
-        // the parent-name dropdown first so it survives the round-trip.
-        vm.ParentOptions = await _facade.LoadParentOptionsAsync(id, ct);
+        // The edit form lives in a modal on the Index view and binds under the
+        // "Edit." prefix, so API field errors must be prefixed to match (UI-UX-F6).
+        if (result.ValidationErrors is not null)
+        {
+            foreach (var (field, messages) in result.ValidationErrors)
+                foreach (var m in messages)
+                    ModelState.AddModelError($"Edit.{field}", m);
+            return await ReloadIndexForEdit(vm, ct);
+        }
 
-        if (!ApplyValidationErrors(result))
-            ModelState.AddModelError(string.Empty, result.Error ?? "Could not update category.");
-
-        return View(vm);
+        ModelState.AddModelError(string.Empty, result.Error ?? "Could not update category.");
+        return await ReloadIndexForEdit(vm, ct);
     }
 
     [HttpPost("admin/categories/{id:guid}/deactivate")]
@@ -161,6 +168,21 @@ public sealed class CategoriesController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
         SetFlash(result, "Categories reordered.", "Failed.");
         return RedirectToAction(nameof(Index));
+    }
+
+    // F8 §4.7: re-render the Index with the edit modal open and field errors bound.
+    private async Task<IActionResult> ReloadIndexForEdit(UpdateCategoryVm edit, CancellationToken ct)
+    {
+        // F10: repopulate the parent-name dropdown options before re-rendering.
+        edit.ParentOptions = await _facade.LoadParentOptionsAsync(edit.Id, ct);
+        var list = await _facade.GetCategoriesAsync(includeInactive: true, ct);
+        var vm = new CategoryListVm
+        {
+            Categories = list.IsSuccess && list.Data is not null ? list.Data.Categories : [],
+            EditId = edit.Id,
+            Edit = edit,
+        };
+        return View(nameof(Index), vm);
     }
 
     private async Task<IActionResult> ReloadIndex(CreateCategoryVm create, CancellationToken ct)

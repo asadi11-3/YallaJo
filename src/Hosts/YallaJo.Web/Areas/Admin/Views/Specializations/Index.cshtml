@@ -1,4 +1,5 @@
 @using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.Specializations.SpecializationListVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
@@ -123,7 +124,14 @@
                                 </td>
                                 <td class="text-end">
                                     <permission require="@WebPermission.Specialization.Update">
-                                        <a asp-area="Admin" asp-controller="Specializations" asp-action="Edit" asp-route-id="@s.Id" class="btn btn-sm btn-outline-secondary">
+                                        <a asp-area="Admin" asp-controller="Specializations" asp-action="Edit" asp-route-id="@s.Id" class="btn btn-sm btn-outline-secondary"
+                                           data-yj-modal-target="#editSpecializationModal"
+                                           data-action="@Url.Action("Edit", new { area = "Admin", id = s.Id })"
+                                           data-field-id="@s.Id"
+                                           data-field-name="@s.Name"
+                                           data-field-description="@s.Description"
+                                           data-field-icon="@s.Icon"
+                                           data-field-is-active="@s.IsActive">
                                             <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Admin.Specializations.Edit"]
                                         </a>
                                     </permission>
@@ -137,6 +145,66 @@
     </div>
 </section>
 
+<permission require="@WebPermission.Specialization.Update">
+    @{ var editOpen = Model.EditId is not null; }
+    @* Edit modal (F8 §4.7): JS opens it via admin-modal-crud.js; deep links / no-JS
+       render it server-side open (PE1) with anchor-based close controls. *@
+    <div class="modal fade@(editOpen ? " show d-block" : "")" id="editSpecializationModal" tabindex="-1"
+         role="dialog" aria-modal="true" aria-labelledby="editSpecializationModalLabel"
+         data-yj-component="modal-crud">
+        <div class="modal-dialog modal-dialog-centered">
+            <form asp-area="Admin" asp-controller="Specializations" asp-action="Edit"
+                  asp-route-id="@Model.Edit.Id" method="post" class="modal-content">
+                @Html.AntiForgeryToken()
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "editSpecializationModalLabel", Title = Localizer["Admin.Specializations.EditHeading"].Value, CloseLabel = Localizer["Admin.Specializations.Cancel"].Value, CloseUrl = editOpen ? Url.Action("Index") : null })" />
+                <div class="modal-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                    <input type="hidden" asp-for="Edit.Id" data-yj-field="id" />
+                    <div class="mb-3">
+                        <label asp-for="Edit.Name" class="form-label">@Localizer["Admin.Specializations.NameLabel"]</label>
+                        <input asp-for="Edit.Name" class="form-control" data-yj-field="name" />
+                        <span asp-validation-for="Edit.Name" class="text-danger" role="alert"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Edit.Description" class="form-label">@Localizer["Admin.Specializations.DescriptionLabel"]</label>
+                        <input asp-for="Edit.Description" class="form-control" data-yj-field="description" />
+                        <span asp-validation-for="Edit.Description" class="text-danger" role="alert"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Edit.Icon" class="form-label">@Localizer["Admin.Specializations.IconLabel"]</label>
+                        <input asp-for="Edit.Icon" class="form-control" dir="ltr" aria-describedby="edit-icon-help" data-yj-field="icon" />
+                        <small id="edit-icon-help" class="form-text">@Localizer["Admin.Specializations.IconHelp"]</small>
+                        <span asp-validation-for="Edit.Icon" class="text-danger" role="alert"></span>
+                    </div>
+                    <div class="form-check mb-0">
+                        <input asp-for="Edit.IsActive" class="form-check-input" data-yj-field="isActive" />
+                        <label asp-for="Edit.IsActive" class="form-check-label">@Localizer["Admin.Specializations.ActiveLabel"]</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @if (editOpen)
+                    {
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">@Localizer["Admin.Specializations.Cancel"]</a>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Specializations.Cancel"]</button>
+                    }
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk fa-fw" aria-hidden="true"></i> @Localizer["Admin.Specializations.Save"]
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @if (editOpen)
+    {
+        <div class="modal-backdrop fade show"></div>
+    }
+</permission>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/admin-modal-crud.js" asp-append-version="true"></script>
 }

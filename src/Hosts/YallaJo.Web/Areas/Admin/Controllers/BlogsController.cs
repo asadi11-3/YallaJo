@@ -45,19 +45,16 @@ public sealed class BlogsController : BaseController
     [HttpGet("admin/blogs/create")]
     [RequirePermission(WebPermission.Blog.Create)]
     public async Task<IActionResult> Create(CancellationToken ct)
-        => View(await _facade.GetForCreateAsync(ct));
+        // PE1: deep links render the Index with the "new draft" modal server-side open.
+        => await ReloadIndexForCreate(new CreateBlogVm(), ct);
 
     // ── POST /admin/blogs/create ────────────────────────────────────────────────────
     [HttpPost("admin/blogs/create")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.Blog.Create)]
-    public async Task<IActionResult> Create(CreateBlogVm vm, CancellationToken ct)
+    public async Task<IActionResult> Create([Bind(Prefix = "Create")] CreateBlogVm vm, CancellationToken ct)
     {
-        if (!ModelState.IsValid)
-        {
-            vm.PlaceOptions = await _facade.LoadPlaceOptionsAsync(ct);
-            return View(vm);
-        }
+        if (!ModelState.IsValid) return await ReloadIndexForCreate(vm, ct);
 
         var result = await _facade.CreateAsync(vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -68,11 +65,32 @@ public sealed class BlogsController : BaseController
             return RedirectToAction(nameof(Edit), new { id = result.Data.BlogId });
         }
 
-        vm.PlaceOptions = await _facade.LoadPlaceOptionsAsync(ct);
-        if (ApplyValidationErrors(result)) return View(vm);
+        // UI-UX-F6: surface API validation errors on the modal's Create.-prefixed fields.
+        if (result.ValidationErrors is not null)
+        {
+            foreach (var (field, messages) in result.ValidationErrors)
+                foreach (var m in messages)
+                    ModelState.AddModelError($"Create.{field}", m);
+            return await ReloadIndexForCreate(vm, ct);
+        }
 
         ModelState.AddModelError(string.Empty, result.Error ?? "Could not create the blog.");
-        return View(vm);
+        return await ReloadIndexForCreate(vm, ct);
+    }
+
+    /// <summary>
+    /// Re-renders the Index with the "new draft" modal open (F8 §4.7), preserving
+    /// the user's typed values so validation failures never lose work.
+    /// </summary>
+    private async Task<IActionResult> ReloadIndexForCreate(CreateBlogVm create, CancellationToken ct)
+    {
+        var list = await _facade.GetListAsync(BlogAdminTab.Published, 1, DefaultPageSize, null, null, ct);
+        var vm = list.IsSuccess && list.Data is not null ? list.Data : new BlogListVm();
+        if (!list.IsSuccess) ViewBag.Error = list.Error;
+
+        vm.CreateOpen = true;
+        vm.Create = create;
+        return View(nameof(Index), vm);
     }
 
     // ── GET /admin/blogs/{id}/edit ──────────────────────────────────────────────────

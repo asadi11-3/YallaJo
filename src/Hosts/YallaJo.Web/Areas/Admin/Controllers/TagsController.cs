@@ -73,16 +73,23 @@ public sealed class TagsController : BaseController
             SetError("Tag not found.");
             return RedirectToAction(nameof(Index));
         }
-        return View(new UpdateTagVm { Id = row.Id, Name = row.Name, Slug = row.Slug });
+
+        // PE1: deep links render the Index with the edit modal server-side open.
+        return View(nameof(Index), new TagListVm
+        {
+            Tags = list.Data.Tags,
+            EditId = id,
+            Edit = new UpdateTagVm { Id = row.Id, Name = row.Name, Slug = row.Slug },
+        });
     }
 
     [HttpPost("admin/tags/{id:guid}/edit")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.Tag.Update)]
-    public async Task<IActionResult> Edit(Guid id, UpdateTagVm vm, CancellationToken ct)
+    public async Task<IActionResult> Edit(Guid id, [Bind(Prefix = "Edit")] UpdateTagVm vm, CancellationToken ct)
     {
         vm.Id = id;
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid) return await ReloadIndexForEdit(vm, ct);
 
         var result = await _facade.UpdateAsync(vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -97,12 +104,12 @@ public sealed class TagsController : BaseController
         {
             foreach (var (field, messages) in result.ValidationErrors)
                 foreach (var m in messages)
-                    ModelState.AddModelError(field, m);
-            return View(vm);
+                    ModelState.AddModelError($"Edit.{field}", m);
+            return await ReloadIndexForEdit(vm, ct);
         }
 
         ModelState.AddModelError(string.Empty, result.Error ?? "Could not update tag.");
-        return View(vm);
+        return await ReloadIndexForEdit(vm, ct);
     }
 
     [HttpPost("admin/tags/{id:guid}/delete")]
@@ -123,6 +130,18 @@ public sealed class TagsController : BaseController
         var vm = list.IsSuccess && list.Data is not null
             ? new TagListVm { Tags = list.Data.Tags, Create = create }
             : new TagListVm { Create = create };
+        return View(nameof(Index), vm);
+    }
+
+    private async Task<IActionResult> ReloadIndexForEdit(UpdateTagVm edit, CancellationToken ct)
+    {
+        var list = await _facade.GetTagsAsync(activeOnly: false, ct);
+        var vm = new TagListVm
+        {
+            Tags = list.IsSuccess && list.Data is not null ? list.Data.Tags : [],
+            EditId = edit.Id,
+            Edit = edit,
+        };
         return View(nameof(Index), vm);
     }
 }

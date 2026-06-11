@@ -30,9 +30,11 @@ public sealed class InvitationsController : BaseController
         return View(vm);
     }
 
+    // PE1: the standalone Resend view was retired; the resend form lives on Index.
+    // Old deep links permanently redirect so bookmarks keep working.
     [HttpGet]
     public IActionResult Resend() =>
-        View(new ResendInviteVm());
+        RedirectToActionPermanent(nameof(Index));
 
     [HttpPost("admin/invitations/create")]
     [ValidateAntiForgeryToken]
@@ -68,10 +70,10 @@ public sealed class InvitationsController : BaseController
     [HttpPost("admin/invitations/resend")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.User.Create)]
-    public async Task<IActionResult> ResendSubmit(ResendInviteVm vm, CancellationToken ct)
+    public async Task<IActionResult> ResendSubmit([Bind(Prefix = "Resend")] ResendInviteVm vm, CancellationToken ct)
     {
         if (!ModelState.IsValid)
-            return View(nameof(Resend), vm);
+            return await IndexWithResend(vm, ct);
 
         var result = await _facade.ResendAsync(vm, ct);
 
@@ -80,13 +82,34 @@ public sealed class InvitationsController : BaseController
         if (result.IsSuccess)
         {
             SetSuccess("If an invited account exists for that email, a new invite has been sent.");
-            return RedirectToAction(nameof(Resend));
+            return RedirectToAction(nameof(Index));
         }
 
-        if (!ApplyValidationErrors(result))
+        // UI-UX-F6: surface API validation errors against the prefixed resend fields.
+        if (result.ValidationErrors is not null)
+        {
+            foreach (var (field, messages) in result.ValidationErrors)
+                foreach (var m in messages)
+                    ModelState.AddModelError($"Resend.{field}", m);
+        }
+        else
+        {
             ModelState.AddModelError(string.Empty, result.Error ?? "Could not resend invite.");
+        }
 
-        return View(nameof(Resend), vm);
+        return await IndexWithResend(vm, ct);
+    }
+
+    // PE1: resend failures re-render the Index page (which hosts the resend card).
+    private async Task<IActionResult> IndexWithResend(ResendInviteVm resend, CancellationToken ct)
+    {
+        var vm = new InviteUserVm { Resend = resend };
+        var loaded = await PopulateRoleOptionsAsync(vm, ct);
+
+        if (!loaded.IsSuccess)
+            SetError(loaded.Error ?? "Could not load role options.");
+
+        return View(nameof(Index), vm);
     }
 
     private async Task<ApiResult> PopulateRoleOptionsAsync(InviteUserVm vm, CancellationToken ct)

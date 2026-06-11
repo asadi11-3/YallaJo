@@ -88,30 +88,26 @@ public sealed class TranslationsController : BaseController
 
     [HttpGet("admin/translations/{id:guid}/edit")]
     [RequirePermission(WebPermission.TranslationCache.Update)]
-    public IActionResult Edit(
+    public async Task<IActionResult> Edit(
         Guid id, string original, string translated,
-        EntityTypeOption entityType, Guid entityId)
+        EntityTypeOption entityType, Guid entityId, CancellationToken ct)
     {
-        ViewBag.EntityType = entityType;
-        ViewBag.EntityId   = entityId;
-        ViewBag.Original   = original;
-        return View(new UpdateTranslationVm { Id = id, TranslatedText = translated });
+        // PE1: deep links render the Index with the edit modal server-side open.
+        return await IndexWithEditModal(
+            new UpdateTranslationVm { Id = id, TranslatedText = translated },
+            entityType, entityId, original, ct);
     }
 
     [HttpPost("admin/translations/{id:guid}/edit")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.TranslationCache.Update)]
     public async Task<IActionResult> Edit(
-        Guid id, UpdateTranslationVm vm,
-        EntityTypeOption entityType, Guid entityId, CancellationToken ct)
+        Guid id, [Bind(Prefix = "Edit")] UpdateTranslationVm vm,
+        EntityTypeOption entityType, Guid entityId, string? original, CancellationToken ct)
     {
         vm.Id = id;
         if (!ModelState.IsValid)
-        {
-            ViewBag.EntityType = entityType;
-            ViewBag.EntityId   = entityId;
-            return View(vm);
-        }
+            return await IndexWithEditModal(vm, entityType, entityId, original, ct);
 
         var result = await _facade.UpdateAsync(vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -122,14 +118,36 @@ public sealed class TranslationsController : BaseController
             return RedirectToAction(nameof(Index), new { entityType, entityId });
         }
 
-        // Re-render the same edit view with field-level errors (UI-UX-F6); restore the
-        // entity context the view needs.
-        if (!ApplyValidationErrors(result))
-            ModelState.AddModelError(string.Empty, result.Error ?? "Could not update translation.");
+        if (result.ValidationErrors is not null)
+        {
+            // UI-UX-F6: map API field errors to the Edit-prefixed modal inputs.
+            foreach (var (field, messages) in result.ValidationErrors)
+                foreach (var m in messages)
+                    ModelState.AddModelError($"Edit.{field}", m);
+            return await IndexWithEditModal(vm, entityType, entityId, original, ct);
+        }
 
-        ViewBag.EntityType = entityType;
-        ViewBag.EntityId   = entityId;
-        return View(vm);
+        ModelState.AddModelError(string.Empty, result.Error ?? "Could not update translation.");
+        return await IndexWithEditModal(vm, entityType, entityId, original, ct);
+    }
+
+    // Renders the Index with the entity context loaded and the edit modal open (F8 §4.7).
+    private async Task<IActionResult> IndexWithEditModal(
+        UpdateTranslationVm edit, EntityTypeOption entityType, Guid entityId,
+        string? original, CancellationToken ct)
+    {
+        var filter = new TranslationFilterVm { EntityType = entityType, EntityId = entityId };
+        var list = await _facade.GetForEntityAsync(filter, ct);
+        var vm = new TranslationListVm
+        {
+            Filter = filter,
+            HasFilter = true,
+            Translations = list.IsSuccess && list.Data is not null ? list.Data.Translations : [],
+            EditId = edit.Id,
+            Edit = edit,
+            EditOriginal = original ?? string.Empty,
+        };
+        return View(nameof(Index), vm);
     }
 
     [HttpPost("admin/translations/{id:guid}/approve")]

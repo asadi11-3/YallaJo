@@ -1,4 +1,5 @@
 @using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Admin.Models.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.Tags.TagListVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
@@ -114,7 +115,10 @@
                                     <div class="btn-group">
                                         <permission require="@WebPermission.Tag.Update">
                                             <a asp-area="Admin" asp-controller="Tags" asp-action="Edit" asp-route-id="@t.Id"
-                                               class="btn btn-sm btn-outline-secondary">
+                                               class="btn btn-sm btn-outline-secondary"
+                                               data-yj-modal-target="#editTagModal"
+                                               data-action="@Url.Action("Edit", new { area = "Admin", id = t.Id })"
+                                               data-field-id="@t.Id" data-field-name="@t.Name" data-field-slug="@t.Slug">
                                                 <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Admin.Tags.Manage"]
                                             </a>
                                         </permission>
@@ -141,6 +145,59 @@
     </div>
 </section>
 
+<permission require="@WebPermission.Tag.Update">
+    @{
+        var editOpen = Model.EditId is not null;
+    }
+    @* Edit modal (F8 §4.7): JS opens it via admin-modal-crud.js; deep links / no-JS
+       render it server-side open (PE1) with anchor-based close controls. *@
+    <div class="modal fade@(editOpen ? " show d-block" : "")" id="editTagModal" tabindex="-1"
+         role="dialog" aria-modal="true" aria-labelledby="editTagModalLabel"
+         data-yj-component="modal-crud">
+        <div class="modal-dialog modal-dialog-centered">
+            <form asp-area="Admin" asp-controller="Tags" asp-action="Edit"
+                  asp-route-id="@Model.Edit.Id" method="post" class="modal-content">
+                @Html.AntiForgeryToken()
+                <partial name="Partials/_ModalHeader"
+                         model="@(new ModalHeaderVm { TitleId = "editTagModalLabel", Title = Localizer["Admin.Tags.EditHeading"].Value, CloseLabel = Localizer["Admin.Tags.Cancel"].Value, CloseUrl = editOpen ? Url.Action("Index") : null })" />
+                <div class="modal-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                    <input type="hidden" asp-for="Edit.Id" data-yj-field="id" />
+                    <div class="mb-3">
+                        <label asp-for="Edit.Name" class="form-label">@Localizer["Admin.Tags.NameLabel"]</label>
+                        <input asp-for="Edit.Name" class="form-control" data-yj-field="name" />
+                        <span asp-validation-for="Edit.Name" class="text-danger" role="alert"></span>
+                    </div>
+                    <div class="mb-0">
+                        <label asp-for="Edit.Slug" class="form-label">@Localizer["Admin.Tags.SlugLabel"]</label>
+                        <input asp-for="Edit.Slug" class="form-control" dir="ltr" aria-describedby="edit-tag-slug-help" data-yj-field="slug" />
+                        <small id="edit-tag-slug-help" class="form-text">@Localizer["Admin.Tags.SlugHelp"]</small>
+                        <span asp-validation-for="Edit.Slug" class="text-danger" role="alert"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @if (editOpen)
+                    {
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">@Localizer["Admin.Tags.Cancel"]</a>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Tags.Cancel"]</button>
+                    }
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk fa-fw" aria-hidden="true"></i> @Localizer["Admin.Tags.Save"]
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @if (editOpen)
+    {
+        <div class="modal-backdrop fade show"></div>
+    }
+</permission>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/admin-modal-crud.js" asp-append-version="true"></script>
 }

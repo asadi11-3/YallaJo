@@ -75,23 +75,29 @@ public sealed class LanguagesController : BaseController
             return RedirectToAction(nameof(Index));
         }
 
-        return View(new UpdateLanguageVm
+        // PE1: deep links render the Index with the edit modal server-side open.
+        return View(nameof(Index), new LanguageListVm
         {
-            Id         = row.Id,
-            Name       = row.Name,
-            NativeName = row.NativeName,
-            IsRtl      = row.IsRtl,
-            IsActive   = row.IsActive,
+            Languages = list.Data.Languages,
+            EditId = id,
+            Edit = new UpdateLanguageVm
+            {
+                Id         = row.Id,
+                Name       = row.Name,
+                NativeName = row.NativeName,
+                IsRtl      = row.IsRtl,
+                IsActive   = row.IsActive,
+            },
         });
     }
 
     [HttpPost("admin/languages/{id:guid}/edit")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.Language.Update)]
-    public async Task<IActionResult> Edit(Guid id, UpdateLanguageVm vm, CancellationToken ct)
+    public async Task<IActionResult> Edit(Guid id, [Bind(Prefix = "Edit")] UpdateLanguageVm vm, CancellationToken ct)
     {
         vm.Id = id;
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid) return await ReloadIndexForEdit(vm, ct);
 
         var result = await _facade.UpdateAsync(vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -102,16 +108,31 @@ public sealed class LanguagesController : BaseController
             return RedirectToAction(nameof(Index));
         }
 
+        // The edit form lives in a modal on the Index view and binds under the
+        // "Edit." prefix, so API field errors must be prefixed to match (UI-UX-F6).
         if (result.ValidationErrors is not null)
         {
             foreach (var (field, messages) in result.ValidationErrors)
                 foreach (var m in messages)
-                    ModelState.AddModelError(field, m);
-            return View(vm);
+                    ModelState.AddModelError($"Edit.{field}", m);
+            return await ReloadIndexForEdit(vm, ct);
         }
 
         ModelState.AddModelError(string.Empty, result.Error ?? "Could not update language.");
-        return View(vm);
+        return await ReloadIndexForEdit(vm, ct);
+    }
+
+    // F8 §4.7: re-render the Index with the edit modal open and field errors bound.
+    private async Task<IActionResult> ReloadIndexForEdit(UpdateLanguageVm edit, CancellationToken ct)
+    {
+        var list = await _facade.GetLanguagesAsync(activeOnly: false, ct);
+        var vm = new LanguageListVm
+        {
+            Languages = list.IsSuccess && list.Data is not null ? list.Data.Languages : [],
+            EditId = edit.Id,
+            Edit = edit,
+        };
+        return View(nameof(Index), vm);
     }
 
 
