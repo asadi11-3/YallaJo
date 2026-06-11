@@ -12907,4 +12907,16 @@
 <data name="Accounts.Overview.RecommendationsFailed" xml:space="preserve">
 <value>تعذّر تحميل التوصيات.</value>
 </data>
+<data name="Accounts.Booking.CancelConfirm" xml:space="preserve">
+<value>إلغاء هذا الحجز؟ سيتم معالجة أي استرداد مستحق تلقائيًا. لا يمكن التراجع.</value>
+</data>
+<data name="Accounts.Booking.CancelTitle" xml:space="preserve">
+<value>إلغاء الحجز؟</value>
+</data>
+<data name="Accounts.Booking.CancelProceed" xml:space="preserve">
+<value>نعم، ألغِ الحجز</value>
+</data>
+<data name="Accounts.Booking.KeepBooking" xml:space="preserve">
+<value>الاحتفاظ بالحجز</value>
+</data>
 </root>

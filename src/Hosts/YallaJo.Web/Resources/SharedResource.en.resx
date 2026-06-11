@@ -12907,4 +12907,16 @@
 <data name="Accounts.Overview.RecommendationsFailed" xml:space="preserve">
 <value>Couldn't load recommendations.</value>
 </data>
+<data name="Accounts.Booking.CancelConfirm" xml:space="preserve">
+<value>Cancel this booking? Any eligible refund is processed automatically. This can't be undone.</value>
+</data>
+<data name="Accounts.Booking.CancelTitle" xml:space="preserve">
+<value>Cancel booking?</value>
+</data>
+<data name="Accounts.Booking.CancelProceed" xml:space="preserve">
+<value>Yes, cancel booking</value>
+</data>
+<data name="Accounts.Booking.KeepBooking" xml:space="preserve">
+<value>Keep booking</value>
+</data>
 </root>

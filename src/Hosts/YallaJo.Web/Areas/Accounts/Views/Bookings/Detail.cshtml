@@ -38,7 +38,7 @@
                             <img src="@Model.ImageUrl" class="img-fluid rounded mb-3 w-100 object-fit-cover img-max-h240" alt="@Model.TourName" />
                         }
                         <div class="row g-3 mb-2">
-                            <div class="col-sm-6"><span class="text-muted small d-block">Reference</span><strong>@Model.Reference</strong></div>
+                            <div class="col-sm-6"><span class="text-muted small d-block">Reference</span><span class="d-inline-flex align-items-center gap-1"><strong id="bookingReference" dir="ltr">@Model.Reference</strong><button type="button" class="btn btn-sm btn-link p-0 js-copy-ref" data-copied-text="@Localizer["Public.Copied"]" title="@Localizer["Public.CopyReference"]" aria-label="@Localizer["Public.CopyReference"]"><i class="bi bi-clipboard" aria-hidden="true"></i></button></span></div>
                             <div class="col-sm-6"><span class="text-muted small d-block">Booked on</span><strong>@Model.CreatedAt.ToString("d MMM yyyy")</strong></div>
                             <div class="col-sm-6"><span class="text-muted small d-block">Guests</span><strong>@Model.ParticipantCount</strong></div>
                             <div class="col-sm-6"><span class="text-muted small d-block">Instant booking</span><strong>@(Model.IsInstantBooking ? "Yes" : "No")</strong></div>
@@ -97,7 +97,7 @@
                         <div class="card-header border-bottom"><h5 class="card-header-title mb-0 text-danger">Cancel booking</h5></div>
                         <div class="card-body">
                             <p class="small text-muted">Cancelling may be subject to the tour's cancellation policy. Any eligible refund is processed automatically.</p>
-                            <form asp-area="Accounts" asp-controller="Bookings" asp-action="Cancel" asp-route-id="@Model.Id" method="post">
+                            <form asp-area="Accounts" asp-controller="Bookings" asp-action="Cancel" asp-route-id="@Model.Id" method="post" data-loading data-confirm="@Localizer["Accounts.Booking.CancelConfirm"]" data-confirm-title="@Localizer["Accounts.Booking.CancelTitle"]" data-confirm-action="@Localizer["Accounts.Booking.CancelProceed"]" data-confirm-cancel="@Localizer["Accounts.Booking.KeepBooking"]">
                                 @Html.AntiForgeryToken()
                                 <div class="mb-3">
                                     <label class="form-label" for="reason">Reason (optional)</label>
@@ -201,3 +201,8 @@
         </div>
     </div>
 </section>
+
+@* Phase 5c (Accounts plan): reuse the public copy-ref helper (#bookingReference + .js-copy-ref); its payment countdown no-ops when [data-expires-at] is absent. *@
+@section Scripts {
+    <script src="~/assets/js/booking-confirmation.js" asp-append-version="true"></script>
+}
