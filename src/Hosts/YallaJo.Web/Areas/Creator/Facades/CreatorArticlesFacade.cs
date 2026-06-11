@@ -35,8 +35,13 @@ public sealed class CreatorArticlesFacade
         int page, string? statusFilter, CancellationToken ct = default)
     {
         var normalized = CreatorArticlesMapper.NormalizeStatusFilter(statusFilter);
-        var result = await _articles.ListMyArticlesAsync(
-            Math.Max(1, page), DefaultPageSize, normalized, ct).ConfigureAwait(false);
+
+        // The page list and the per-status counts are independent reads — fan out (API1).
+        var listTask = _articles.ListMyArticlesAsync(Math.Max(1, page), DefaultPageSize, normalized, ct);
+        var countsTask = GetStatusCountsAsync(ct);
+        await Task.WhenAll(listTask, countsTask).ConfigureAwait(false);
+
+        var result = await listTask.ConfigureAwait(false);
 
         if (result.RequireSignOut) return ApiResult<MyArticlesVm>.ForceSignOut();
         if (result.IsForbidden)
@@ -44,7 +49,40 @@ public sealed class CreatorArticlesFacade
         if (!result.IsSuccess || result.Data is null)
             return ApiResult<MyArticlesVm>.Fail(result.StatusCode, result.Error ?? "Could not load your articles.");
 
-        return ApiResult<MyArticlesVm>.Ok(CreatorArticlesMapper.ToListVm(result.Data, normalized));
+        var (counts, total) = await countsTask.ConfigureAwait(false);
+        return ApiResult<MyArticlesVm>.Ok(
+            CreatorArticlesMapper.ToListVm(result.Data, normalized, counts, total));
+    }
+
+    /// <summary>
+    /// Best-effort per-status counts for the filter tabs. Returns (null, null) on any
+    /// failure so the list still renders (tabs simply omit the count badges — ERR3).
+    /// </summary>
+    private async Task<(IReadOnlyDictionary<string, int>? Counts, int? Total)> GetStatusCountsAsync(
+        CancellationToken ct)
+    {
+        try
+        {
+            var result = await _articles.GetMyStatusCountsAsync(ct).ConfigureAwait(false);
+            if (result is not { IsSuccess: true, Data: { } c })
+                return (null, null);
+
+            // Only the active (non-deleted) buckets back the tabs; "Rejected" has no
+            // dedicated count in the aggregate and simply renders without a badge.
+            var map = new Dictionary<string, int>(StringComparer.Ordinal)
+            {
+                ["Draft"]         = c.Draft,
+                ["PendingReview"] = c.PendingReview,
+                ["Published"]     = c.Published,
+                ["Archived"]      = c.Archived,
+            };
+            var total = c.Draft + c.PendingReview + c.Published + c.Archived;
+            return (map, total);
+        }
+        catch
+        {
+            return (null, null);
+        }
     }
 
     // ── Create ────────────────────────────────────────────────────────────────

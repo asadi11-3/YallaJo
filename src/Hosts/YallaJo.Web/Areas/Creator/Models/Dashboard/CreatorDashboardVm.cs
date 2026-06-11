@@ -61,6 +61,14 @@ public sealed class CreatorDashboardVm
     // ── Recent-articles snapshot (Approved state only) ────────────────────────
     public IReadOnlyList<CreatorDashboardArticleVm> RecentArticles { get; init; } = [];
 
+    // ── Needs-attention counts (Approved state only) ──────────────────────────
+    /// <summary>
+    /// Owner-scoped article counts that drive the "needs attention" strip. Null when
+    /// the aggregate could not be loaded (the strip then renders nothing — graceful
+    /// degradation, ERR3).
+    /// </summary>
+    public CreatorNeedsAttentionVm? NeedsAttention { get; init; }
+
     // ── Convenience flags for the view ────────────────────────────────────────
     public bool IsApproved => State == CreatorDashboardState.Approved;
 
@@ -77,4 +85,19 @@ public sealed class CreatorDashboardArticleVm
     public string? Status { get; init; }
     public DateTime? PublishedAt { get; init; }
     public int ViewCount { get; init; }
+}
+
+/// <summary>
+/// Actionable, owner-scoped article counts surfaced above the vanity metrics so the
+/// dashboard leads with work-to-do (drafts to finish, items in review, restorable
+/// deletes). Each item links into the Articles list filtered by status.
+/// </summary>
+public sealed class CreatorNeedsAttentionVm
+{
+    public int Drafts { get; init; }
+    public int PendingReview { get; init; }
+    public int Deleted { get; init; }
+
+    /// <summary>True when at least one bucket has items worth surfacing.</summary>
+    public bool HasAny => Drafts > 0 || PendingReview > 0 || Deleted > 0;
 }

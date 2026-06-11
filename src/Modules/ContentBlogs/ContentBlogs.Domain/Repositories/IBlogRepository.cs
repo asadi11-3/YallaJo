@@ -85,4 +85,18 @@ public interface IBlogRepository : IRepository<Blog, Guid>
         int page,
         int pageSize,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns the number of the author's blogs grouped by <see cref="BlogStatus"/>,
+    /// counting only non-deleted rows. Soft-deleted rows are excluded here and counted
+    /// separately by <see cref="CountDeletedByAuthorIdAsync"/>.
+    /// </summary>
+    Task<IReadOnlyDictionary<BlogStatus, int>> GetStatusCountsByAuthorIdAsync(
+        Guid authorId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Returns the number of the author's soft-deleted (restorable) blogs.</summary>
+    Task<int> CountDeletedByAuthorIdAsync(
+        Guid authorId,
+        CancellationToken cancellationToken = default);
 }

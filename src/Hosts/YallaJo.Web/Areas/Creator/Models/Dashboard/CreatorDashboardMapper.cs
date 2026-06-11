@@ -9,17 +9,19 @@ public static class CreatorDashboardMapper
     public static CreatorDashboardVm ToVm(
         CreatorProfileMineResponse? profile,
         CreatorApplicationMineResponse? application,
-        IReadOnlyList<CreatorDashboardArticleVm>? recentArticles = null)
+        IReadOnlyList<CreatorDashboardArticleVm>? recentArticles = null,
+        CreatorNeedsAttentionVm? needsAttention = null)
     {
         if (profile is not null)
-            return FromProfile(profile, recentArticles ?? []);
+            return FromProfile(profile, recentArticles ?? [], needsAttention);
 
         return FromApplication(application);
     }
 
     private static CreatorDashboardVm FromProfile(
         CreatorProfileMineResponse profile,
-        IReadOnlyList<CreatorDashboardArticleVm> recentArticles)
+        IReadOnlyList<CreatorDashboardArticleVm> recentArticles,
+        CreatorNeedsAttentionVm? needsAttention)
     {
         var state = ParseProfileStatus(profile.Status);
 
@@ -38,6 +40,7 @@ public static class CreatorDashboardMapper
             TotalCommentCount  = approved ? profile.TotalCommentCount : 0,
             FollowerCount      = approved ? profile.FollowerCount : 0,
             RecentArticles     = approved ? recentArticles : [],
+            NeedsAttention     = approved ? needsAttention : null,
         };
     }
 

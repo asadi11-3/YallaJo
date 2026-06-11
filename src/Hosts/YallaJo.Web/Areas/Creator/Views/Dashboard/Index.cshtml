@@ -64,6 +64,47 @@
                     </div>
                 </div>
 
+                @if (Model.NeedsAttention is { HasAny: true } attention)
+                {
+                    <div class="card border-warning-subtle">
+                        <div class="card-body">
+                            <h2 class="h6 text-body-secondary mb-3">
+                                <i class="fa-solid fa-circle-exclamation me-2 text-warning" aria-hidden="true"></i>
+                                @Localizer["Creator.Dashboard.NeedsAttention"]
+                            </h2>
+                            <div class="d-flex flex-wrap gap-2">
+                                @if (attention.Drafts > 0)
+                                {
+                                    <a class="btn btn-sm btn-warning-soft d-inline-flex align-items-center gap-2"
+                                       asp-area="Creator" asp-controller="Articles" asp-action="Index" asp-route-status="Draft">
+                                        <i class="fa-solid fa-pen-to-square fa-fw" aria-hidden="true"></i>
+                                        <span>@Localizer["Creator.Dashboard.Attention.Drafts"]</span>
+                                        <span class="badge text-bg-warning font-data"><bdi dir="ltr">@Count(attention.Drafts)</bdi></span>
+                                    </a>
+                                }
+                                @if (attention.PendingReview > 0)
+                                {
+                                    <a class="btn btn-sm btn-info-soft d-inline-flex align-items-center gap-2"
+                                       asp-area="Creator" asp-controller="Articles" asp-action="Index" asp-route-status="PendingReview">
+                                        <i class="fa-solid fa-hourglass-half fa-fw" aria-hidden="true"></i>
+                                        <span>@Localizer["Creator.Dashboard.Attention.PendingReview"]</span>
+                                        <span class="badge text-bg-info font-data"><bdi dir="ltr">@Count(attention.PendingReview)</bdi></span>
+                                    </a>
+                                }
+                                @if (attention.Deleted > 0)
+                                {
+                                    <a class="btn btn-sm btn-secondary-soft d-inline-flex align-items-center gap-2"
+                                       asp-area="Creator" asp-controller="Articles" asp-action="Index">
+                                        <i class="fa-solid fa-trash-can-arrow-up fa-fw" aria-hidden="true"></i>
+                                        <span>@Localizer["Creator.Dashboard.Attention.Deleted"]</span>
+                                        <span class="badge text-bg-secondary font-data"><bdi dir="ltr">@Count(attention.Deleted)</bdi></span>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
                 <div class="row g-4">
                     <div class="col-sm-6 col-xl-3">
                         <partial name="_StatCard" model="@(new YallaJo.Web.Areas.Creator.Shared.StatCardVm(Count(Model.ArticleCount), Localizer["Creator.Dashboard.Articles"].Value, "fa-book-open", "success"))" />

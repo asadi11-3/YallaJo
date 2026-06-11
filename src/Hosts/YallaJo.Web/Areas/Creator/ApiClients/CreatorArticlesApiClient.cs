@@ -1,5 +1,6 @@
 using YallaJo.Web.Features.Blogs.Models;
 using YallaJo.Web.Areas.Creator.Models.Articles;
+using YallaJo.Web.Areas.Creator.Models.Dashboard;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
 
@@ -100,4 +101,12 @@ public sealed class CreatorArticlesApiClient
     /// </summary>
     public Task<ApiResult<TourSuggestResponse>> GetTourAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<TourSuggestResponse>($"/api/v1/tours/{id}", ct);
+
+    /// <summary>
+    /// GET /api/v1/blogs/my-blogs/status-counts (Blog.ReadOwn) — owner-scoped aggregate
+    /// counts of own articles by lifecycle bucket. One small call powers the dashboard
+    /// needs-attention strip and the Articles status tabs (API7: no per-status looping).
+    /// </summary>
+    public Task<ApiResult<MyBlogStatusCountsResponse>> GetMyStatusCountsAsync(CancellationToken ct = default)
+        => _api.GetAsync<MyBlogStatusCountsResponse>("/api/v1/blogs/my-blogs/status-counts", ct);
 }

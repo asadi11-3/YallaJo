@@ -13891,4 +13891,16 @@
 <data name="Creator.Profile.AvatarUrlFallback" xml:space="preserve">
 <value>استخدم رابط صورة بدلاً من ذلك</value>
 </data>
+<data name="Creator.Dashboard.NeedsAttention" xml:space="preserve">
+<value>يحتاج إلى انتباهك</value>
+</data>
+<data name="Creator.Dashboard.Attention.Drafts" xml:space="preserve">
+<value>مسودات بانتظار الإكمال</value>
+</data>
+<data name="Creator.Dashboard.Attention.PendingReview" xml:space="preserve">
+<value>قيد المراجعة</value>
+</data>
+<data name="Creator.Dashboard.Attention.Deleted" xml:space="preserve">
+<value>محذوفة مؤخرًا</value>
+</data>
 </root>

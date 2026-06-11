@@ -13891,4 +13891,16 @@
   <data name="Creator.Profile.AvatarUrlFallback" xml:space="preserve">
     <value>Use an image URL instead</value>
   </data>
+  <data name="Creator.Dashboard.NeedsAttention" xml:space="preserve">
+    <value>Needs your attention</value>
+  </data>
+  <data name="Creator.Dashboard.Attention.Drafts" xml:space="preserve">
+    <value>Drafts to finish</value>
+  </data>
+  <data name="Creator.Dashboard.Attention.PendingReview" xml:space="preserve">
+    <value>In review</value>
+  </data>
+  <data name="Creator.Dashboard.Attention.Deleted" xml:space="preserve">
+    <value>Recently deleted</value>
+  </data>
 </root>

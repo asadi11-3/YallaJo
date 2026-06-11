@@ -268,6 +268,33 @@ public class BlogRepository(ContentBlogsDbContext context)
         return new PaginatedResult<Blog>(items, total, page, pageSize);
     }
 
+    public async Task<IReadOnlyDictionary<BlogStatus, int>> GetStatusCountsByAuthorIdAsync(
+        Guid authorId,
+        CancellationToken cancellationToken = default)
+    {
+        // Single grouped aggregate over the author's active (non-deleted) blogs.
+        var grouped = await context.Set<Blog>()
+            .AsNoTracking()
+            .Where(b => b.AuthorId == authorId && !b.IsDeleted)
+            .GroupBy(b => b.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return grouped.ToDictionary(x => x.Status, x => x.Count);
+    }
+
+    public Task<int> CountDeletedByAuthorIdAsync(
+        Guid authorId,
+        CancellationToken cancellationToken = default)
+    {
+        // Soft-deleted rows are hidden by the global query filter, so bypass it here.
+        return context.Blogs
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .CountAsync(b => b.AuthorId == authorId && b.IsDeleted, cancellationToken);
+    }
+
     private static string NormalizeSlug(string slug) =>
         (slug ?? string.Empty).Trim().ToLowerInvariant();
 }

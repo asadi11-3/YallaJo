@@ -15,6 +15,24 @@ public sealed class MyArticlesVm
     /// <summary>Selectable status options for the filter dropdown (BlogStatus names).</summary>
     public IReadOnlyList<string> StatusOptions { get; init; } = [];
 
+    /// <summary>
+    /// Per-status article counts keyed by BlogStatus name (e.g. "Draft", "Published"),
+    /// used to render counted filter tabs. Null when the aggregate could not be loaded —
+    /// the tabs then render without count badges (graceful degradation, ERR3).
+    /// </summary>
+    public IReadOnlyDictionary<string, int>? StatusCounts { get; init; }
+
+    /// <summary>Total articles across all (non-deleted) statuses, for the "All" tab badge.</summary>
+    public int? TotalCount { get; init; }
+
+    /// <summary>Returns the count badge for a status tab, or null when counts are unavailable.</summary>
+    public int? CountFor(string? status)
+    {
+        if (StatusCounts is null) return null;
+        if (string.IsNullOrEmpty(status)) return TotalCount;
+        return StatusCounts.TryGetValue(status, out var n) ? n : 0;
+    }
+
     public ArticlePagerVm Pager { get; init; } = new();
 
     // ── Post-delete Undo (immediate restore only) ─────────────────────────────

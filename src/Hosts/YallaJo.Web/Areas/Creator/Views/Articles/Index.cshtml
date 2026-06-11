@@ -21,30 +21,41 @@
             </permission>
         </div>
 
-        @* Status filter — labelled select + Apply button (A6/J3: no inline onchange).
-           data-yj-listing: intercepted by listing.js for AJAX refinement; plain GET without JS (S1/PE1). *@
-        <form method="get" asp-area="Creator" asp-controller="Articles" asp-action="Index" class="row g-2 align-items-end" data-yj-listing>
-            <div class="col-sm-4 col-md-3">
-                <label class="form-label" for="statusFilter">@Localizer["Creator.Articles.StatusLabel"]</label>
-                <select id="statusFilter" name="status" class="form-select">
-                    <option value="">@Localizer["Creator.Articles.AllStatuses"]</option>
-                    @foreach (var opt in Model.StatusOptions)
+        @* Status filter — counted tabs. Plain GET links (asp-route-status) so they work
+           without JS (S1/PE1); listing.js intercepts same-pathname clicks for AJAX
+           refinement. Count badges come from the status-counts aggregate (B3); when
+           counts are unavailable the pills simply render without a badge (ERR3). *@
+        @{
+            var allActive = string.IsNullOrEmpty(Model.StatusFilter);
+
+            string PillClass(bool active) =>
+                "btn btn-sm " + (active ? "btn-primary" : "btn-secondary-soft") +
+                " d-inline-flex align-items-center gap-2";
+        }
+        <nav class="d-flex flex-wrap gap-2" aria-label="@Localizer["Creator.Articles.StatusLabel"]">
+            <a asp-area="Creator" asp-controller="Articles" asp-action="Index"
+               class="@PillClass(allActive)" aria-current="@(allActive ? "page" : null)">
+                <span>@Localizer["Creator.Articles.AllStatuses"]</span>
+                @{ var allCount = Model.CountFor(null); }
+                @if (allCount is not null)
+                {
+                    <span class="badge text-bg-light font-data"><bdi dir="ltr">@allCount.Value.ToString("N0")</bdi></span>
+                }
+            </a>
+            @foreach (var opt in Model.StatusOptions)
+            {
+                var active = string.Equals(opt, Model.StatusFilter, StringComparison.OrdinalIgnoreCase);
+                var count = Model.CountFor(opt);
+                <a asp-area="Creator" asp-controller="Articles" asp-action="Index" asp-route-status="@opt"
+                   class="@PillClass(active)" aria-current="@(active ? "page" : null)">
+                    <span>@StatusLabel(opt)</span>
+                    @if (count is not null)
                     {
-                        if (string.Equals(opt, Model.StatusFilter, StringComparison.OrdinalIgnoreCase))
-                        {
-                            <option value="@opt" selected>@StatusLabel(opt)</option>
-                        }
-                        else
-                        {
-                            <option value="@opt">@StatusLabel(opt)</option>
-                        }
+                        <span class="badge text-bg-light font-data"><bdi dir="ltr">@count.Value.ToString("N0")</bdi></span>
                     }
-                </select>
-            </div>
-            <div class="col-sm-auto">
-                <button type="submit" class="btn btn-secondary-soft">@Localizer["Creator.Articles.Apply"]</button>
-            </div>
-        </form>
+                </a>
+            }
+        </nav>
 
         @* S1/L1/A11Y9: AJAX-refined results region; server renders the same fragment without JS (PE1). *@
         <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"

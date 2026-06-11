@@ -29,7 +29,10 @@ public static class CreatorArticlesMapper
     }
 
     public static MyArticlesVm ToListVm(
-        PaginatedResponse<BlogSummaryResponse> page, string? statusFilter)
+        PaginatedResponse<BlogSummaryResponse> page,
+        string? statusFilter,
+        IReadOnlyDictionary<string, int>? statusCounts = null,
+        int? totalCount = null)
     {
         var rows = page.Items
             .Select(b => new MyArticleRowVm
@@ -50,6 +53,8 @@ public static class CreatorArticlesMapper
             Articles      = rows,
             StatusFilter  = statusFilter,
             StatusOptions = StatusFilterOptions,
+            StatusCounts  = statusCounts,
+            TotalCount    = totalCount,
             Pager = new ArticlePagerVm
             {
                 PageNumber      = page.PageNumber,

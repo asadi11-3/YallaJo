@@ -11,11 +11,16 @@ public sealed class CreatorDashboardFacade
 
     private readonly CreatorApiClient _creator;
     private readonly BlogsApiClient _blogs;
+    private readonly CreatorArticlesApiClient _articles;
 
-    public CreatorDashboardFacade(CreatorApiClient creator, BlogsApiClient blogs)
+    public CreatorDashboardFacade(
+        CreatorApiClient creator,
+        BlogsApiClient blogs,
+        CreatorArticlesApiClient articles)
     {
         _creator = creator;
         _blogs = blogs;
+        _articles = articles;
     }
 
     public async Task<ApiResult<CreatorDashboardVm>> GetDashboardAsync(CancellationToken ct = default)
@@ -45,14 +50,45 @@ public sealed class CreatorDashboardFacade
                 applicationResult.StatusCode, applicationResult.Error ?? "Could not load your creator application.");
 
         IReadOnlyList<CreatorDashboardArticleVm> recentArticles = [];
+        CreatorNeedsAttentionVm? needsAttention = null;
         var isActiveProfile = profile is not null
             && string.Equals(profile.Status, "Active", StringComparison.Ordinal);
 
         if (isActiveProfile)
-            recentArticles = await GetRecentArticlesAsync(ct).ConfigureAwait(false);
+        {
+            // Recent articles and status counts are independent reads — fan out (API1).
+            var recentTask = GetRecentArticlesAsync(ct);
+            var countsTask = GetNeedsAttentionAsync(ct);
+            await Task.WhenAll(recentTask, countsTask).ConfigureAwait(false);
+            recentArticles = await recentTask.ConfigureAwait(false);
+            needsAttention = await countsTask.ConfigureAwait(false);
+        }
 
-        var vm = CreatorDashboardMapper.ToVm(profile, application, recentArticles);
+        var vm = CreatorDashboardMapper.ToVm(profile, application, recentArticles, needsAttention);
         return ApiResult<CreatorDashboardVm>.Ok(vm);
+    }
+
+    private async Task<CreatorNeedsAttentionVm?> GetNeedsAttentionAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _articles.GetMyStatusCountsAsync(ct).ConfigureAwait(false);
+            if (result is not { IsSuccess: true, Data: { } counts })
+                return null;
+
+            return new CreatorNeedsAttentionVm
+            {
+                Drafts        = counts.Draft,
+                PendingReview = counts.PendingReview,
+                Deleted       = counts.Deleted,
+            };
+        }
+        catch
+        {
+            // Needs-attention is a non-critical enhancement — never break the dashboard
+            // when the aggregate read fails (ERR3 graceful degradation).
+            return null;
+        }
     }
 
     private async Task<IReadOnlyList<CreatorDashboardArticleVm>> GetRecentArticlesAsync(CancellationToken ct)

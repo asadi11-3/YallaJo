@@ -28,6 +28,7 @@ using ContentBlogs.Application.Queries.Blog.GetBlogById;
 using ContentBlogs.Application.Queries.Blog.GetBlogBySlug;
 using ContentBlogs.Application.Queries.Blog.GetDeletedBlogsAdmin;
 using ContentBlogs.Application.Queries.Blog.GetMyBlogs;
+using ContentBlogs.Application.Queries.Blog.GetMyBlogStatusCounts;
 using ContentBlogs.Application.Queries.Blog.ListBlogs;
 using ContentBlogs.Domain.Entities;
 using ContentBlogs.Domain.Enums;
@@ -521,6 +522,23 @@ internal static class BlogEndpoints
         .WithSummary("Creator — list my own blogs with optional status filter")
         .Produces<PaginatedResult<BlogSummaryDto>>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.ReadOwn));
+
+        // ── Creator: GET /my-blogs/status-counts ──────────────────────────
+        // Registered next to /my-blogs (a literal segment); the /{id:guid}
+        // route above only matches GUIDs so there is no route collision.
+        group.MapGet("/my-blogs/status-counts", async (
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetMyBlogStatusCountsQuery(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetMyBlogStatusCounts")
+        .WithSummary("Creator — aggregate counts of my own blogs by lifecycle bucket")
+        .Produces<MyBlogStatusCountsDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.ReadOwn));
