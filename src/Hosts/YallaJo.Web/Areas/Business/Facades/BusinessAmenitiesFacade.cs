@@ -24,7 +24,12 @@ public sealed class BusinessAmenitiesFacade
 
     public async Task<ApiResult<AmenitiesVm>> GetAsync(Guid businessId, CancellationToken ct = default)
     {
-        var business = await _businesses.GetByIdAsync(businessId, ct);
+        // API1/D-16: fetch the business detail and the amenities concurrently.
+        var businessTask = _businesses.GetByIdAsync(businessId, ct);
+        var amenitiesTask = _api.GetAmenitiesAsync(businessId, ct: ct);
+        await Task.WhenAll(businessTask, amenitiesTask);
+
+        var business = await businessTask;
         if (business.IsUnauthorized)
         {
             return ApiResult<AmenitiesVm>.ForceSignOut();
@@ -35,7 +40,7 @@ public sealed class BusinessAmenitiesFacade
             return ApiResult<AmenitiesVm>.Fail(business.StatusCode, business.Error ?? _l["Business.Error.LoadBusiness"].Value);
         }
 
-        var amenities = await _api.GetAmenitiesAsync(businessId, ct: ct);
+        var amenities = await amenitiesTask;
         if (amenities.IsUnauthorized)
         {
             return ApiResult<AmenitiesVm>.ForceSignOut();

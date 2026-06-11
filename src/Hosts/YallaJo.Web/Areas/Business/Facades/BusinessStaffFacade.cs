@@ -24,7 +24,12 @@ public sealed class BusinessStaffFacade
 
     public async Task<ApiResult<StaffVm>> GetAsync(Guid businessId, CancellationToken ct = default)
     {
-        var detail = await _businesses.GetByIdAsync(businessId, ct);
+        // API1/D-16: fetch the business detail and the staff list concurrently.
+        var detailTask = _businesses.GetByIdAsync(businessId, ct);
+        var staffTask = _api.GetStaffAsync(businessId, ct);
+        await Task.WhenAll(detailTask, staffTask);
+
+        var detail = await detailTask;
         if (detail.IsUnauthorized)
         {
             return ApiResult<StaffVm>.ForceSignOut();
@@ -35,7 +40,7 @@ public sealed class BusinessStaffFacade
             return ApiResult<StaffVm>.Fail(detail.StatusCode, detail.Error ?? _l["Business.Error.LoadBusiness"].Value);
         }
 
-        var staff = await _api.GetStaffAsync(businessId, ct);
+        var staff = await staffTask;
         if (staff.IsUnauthorized)
         {
             return ApiResult<StaffVm>.ForceSignOut();

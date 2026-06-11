@@ -19,10 +19,10 @@ public sealed class MyBusinessesController : BaseController
 
     [HttpGet("business")]
     [HttpGet("business/businesses")]
-    public async Task<IActionResult> Index(CancellationToken ct = default)
+    public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
         SetSidebar("MyBusinesses", null);
-        var result = await _facade.GetIndexAsync(ct);
+        var result = await _facade.GetIndexAsync(page, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
         {
@@ -122,6 +122,22 @@ public sealed class MyBusinessesController : BaseController
             return Json(Array.Empty<object>());
 
         return Json(result.Data.Select(p => new { id = p.Id, name = p.Name, city = p.City }));
+    }
+
+    /// <summary>
+    /// Lazy fragment for the Place-contextual weather widget (A7/D-17). The Manage
+    /// page renders an empty slot that fetches this over AJAX so weather never blocks
+    /// first paint; a &lt;noscript&gt; SSR fallback keeps the no-JS path (PE1).
+    /// </summary>
+    [HttpGet("business/businesses/{id:guid}/weather")]
+    public async Task<IActionResult> Weather(Guid id, CancellationToken ct = default)
+    {
+        var result = await _facade.GetManageAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess || result.Data is null)
+            return new EmptyResult();
+
+        return ViewComponent("WeatherWidget", new { placeId = result.Data.Form.PlaceId });
     }
 
     [HttpPost("business/businesses/{id:guid}/resubmit")]

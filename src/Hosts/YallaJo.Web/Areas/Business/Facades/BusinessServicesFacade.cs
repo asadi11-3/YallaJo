@@ -24,13 +24,18 @@ public sealed class BusinessServicesFacade
 
     public async Task<ApiResult<ServicesVm>> GetAsync(Guid businessId, CancellationToken ct = default)
     {
-        var business = await _businesses.GetByIdAsync(businessId, ct);
+        // API1/D-16: fetch the business detail and the services concurrently.
+        var businessTask = _businesses.GetByIdAsync(businessId, ct);
+        var servicesTask = _api.GetServicesAsync(businessId, ct: ct);
+        await Task.WhenAll(businessTask, servicesTask);
+
+        var business = await businessTask;
         if (business.IsUnauthorized)
             return ApiResult<ServicesVm>.ForceSignOut();
         if (business is not { IsSuccess: true, Data: not null })
             return ApiResult<ServicesVm>.Fail(business.StatusCode, business.Error ?? _l["Business.Error.LoadBusiness"].Value);
 
-        var services = await _api.GetServicesAsync(businessId, ct: ct);
+        var services = await servicesTask;
         if (services.IsUnauthorized)
             return ApiResult<ServicesVm>.ForceSignOut();
         if (services is not { IsSuccess: true, Data: not null })
@@ -64,13 +69,18 @@ public sealed class BusinessServicesFacade
 
     public async Task<ApiResult<EditServiceFormVm>> GetEditAsync(Guid businessId, Guid serviceId, CancellationToken ct = default)
     {
-        var business = await _businesses.GetByIdAsync(businessId, ct);
+        // API1/D-16: fetch the business detail and the service detail concurrently.
+        var businessTask = _businesses.GetByIdAsync(businessId, ct);
+        var svcTask = _api.GetByIdAsync(serviceId, ct);
+        await Task.WhenAll(businessTask, svcTask);
+
+        var business = await businessTask;
         if (business.IsUnauthorized)
             return ApiResult<EditServiceFormVm>.ForceSignOut();
         if (business is not { IsSuccess: true, Data: not null })
             return ApiResult<EditServiceFormVm>.Fail(business.StatusCode, business.Error ?? _l["Business.Error.LoadBusiness"].Value);
 
-        var svc = await _api.GetByIdAsync(serviceId, ct);
+        var svc = await svcTask;
         if (svc.IsUnauthorized)
             return ApiResult<EditServiceFormVm>.ForceSignOut();
         if (svc is not { IsSuccess: true, Data: not null })

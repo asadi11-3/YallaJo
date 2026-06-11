@@ -24,7 +24,12 @@ public sealed class BusinessAccessibilityFacade
 
     public async Task<ApiResult<AccessibilityVm>> GetAsync(Guid businessId, CancellationToken ct = default)
     {
-        var business = await _businesses.GetByIdAsync(businessId, ct);
+        // API1/D-16: fetch the business detail and the accessibility features concurrently.
+        var businessTask = _businesses.GetByIdAsync(businessId, ct);
+        var featuresTask = _api.GetAsync(businessId, ct);
+        await Task.WhenAll(businessTask, featuresTask);
+
+        var business = await businessTask;
         if (business.IsUnauthorized)
         {
             return ApiResult<AccessibilityVm>.ForceSignOut();
@@ -35,7 +40,7 @@ public sealed class BusinessAccessibilityFacade
             return ApiResult<AccessibilityVm>.Fail(business.StatusCode, business.Error ?? _l["Business.Error.LoadBusiness"].Value);
         }
 
-        var features = await _api.GetAsync(businessId, ct);
+        var features = await featuresTask;
         if (features.IsUnauthorized)
         {
             return ApiResult<AccessibilityVm>.ForceSignOut();

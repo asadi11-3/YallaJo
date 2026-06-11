@@ -20,15 +20,27 @@ public sealed class MyBusinessesFacade
         _l = localizer;
     }
 
-    public async Task<ApiResult<MyBusinessesVm>> GetIndexAsync(CancellationToken ct = default)
+    // D-15/R4: page through the owner's businesses. The API returns a plain list
+    // with no total count, so HasNext is inferred from a full page.
+    private const int IndexPageSize = 20;
+
+    public async Task<ApiResult<MyBusinessesVm>> GetIndexAsync(int page = 1, CancellationToken ct = default)
     {
-        var result = await _api.GetMineAsync(1, 100, ct);
+        if (page < 1)
+            page = 1;
+
+        var result = await _api.GetMineAsync(page, IndexPageSize, ct);
         if (result.IsUnauthorized)
             return ApiResult<MyBusinessesVm>.ForceSignOut();
         if (result is not { IsSuccess: true, Data: not null })
             return ApiResult<MyBusinessesVm>.Fail(result.StatusCode, result.Error ?? _l["Business.Error.LoadBusinesses"].Value);
 
-        return ApiResult<MyBusinessesVm>.Ok(MyBusinessesMapper.ToVm(result.Data));
+        var vm = MyBusinessesMapper.ToVm(result.Data);
+        vm.PageNumber = page;
+        vm.PageSize = IndexPageSize;
+        vm.HasPrev = page > 1;
+        vm.HasNext = result.Data.Count == IndexPageSize;
+        return ApiResult<MyBusinessesVm>.Ok(vm);
     }
 
     /// <summary>

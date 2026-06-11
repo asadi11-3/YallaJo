@@ -13777,4 +13777,13 @@
 <data name="Business.Weather.Wind" xml:space="preserve">
 <value>wind</value>
 </data>
+<data name="Business.Pagination.Previous" xml:space="preserve">
+<value>Previous</value>
+</data>
+<data name="Business.Pagination.Next" xml:space="preserve">
+<value>Next</value>
+</data>
+<data name="Business.Pagination.Page" xml:space="preserve">
+<value>Page {0}</value>
+</data>
 </root>

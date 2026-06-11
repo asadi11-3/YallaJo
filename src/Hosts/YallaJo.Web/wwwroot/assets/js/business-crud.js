@@ -152,6 +152,24 @@
     }
 
     /* ---------------------------------------------------------------- *
+     *  Weather: lazy-load the Place-contextual widget (A7/D-17)        *
+     * ---------------------------------------------------------------- */
+
+    async function loadWeather(el) {
+        if (el.dataset.yjInit === "1") { return; } // idempotent (JS4)
+        el.dataset.yjInit = "1";
+        var client = api();
+        var url = el.dataset.url;
+        if (!client || !url) { return; } // no-op; <noscript> SSR covers no-JS (PE1)
+        try {
+            var markup = await client.loadPartial(url);
+            el.innerHTML = markup;
+        } catch (_) {
+            // Weather is non-critical — leave the slot empty on failure.
+        }
+    }
+
+    /* ---------------------------------------------------------------- *
      *  Wiring                                                          *
      * ---------------------------------------------------------------- */
 
@@ -162,6 +180,8 @@
         document.querySelectorAll('form[data-yj-component="business-hours"]').forEach(initHoursForm);
 
         if (!api()) { return; } // graceful no-op: native submits keep working (PE1)
+
+        document.querySelectorAll('[data-yj-component="weather-widget"][data-url]').forEach(loadWeather);
 
         // Bubble phase so form-ux's capture-phase confirm/data-loading logic runs first.
         document.addEventListener("submit", function (event) {

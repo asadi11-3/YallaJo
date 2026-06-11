@@ -119,6 +119,34 @@
                     </table>
                 </div>
             </section>
+
+            @* D-15/D1: simple prev/next pager. Chevrons are directional (flipped in RTL via rtl.css); start/end utilities keep it reading-direction aware (RTL1/RTL2). *@
+            @if (Model.HasPrev || Model.HasNext)
+            {
+                <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="@Localizer["Business.MyBusinesses.Directory"]">
+                    @if (Model.HasPrev)
+                    {
+                        <a class="btn btn-sm btn-outline-secondary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index" asp-route-page="@(Model.PageNumber - 1)">
+                            <i class="fa-solid fa-chevron-left me-1" aria-hidden="true"></i>@Localizer["Business.Pagination.Previous"]
+                        </a>
+                    }
+                    else
+                    {
+                        <span></span>
+                    }
+                    <span class="text-body-secondary small"><bdi dir="ltr">@Localizer["Business.Pagination.Page", Model.PageNumber]</bdi></span>
+                    @if (Model.HasNext)
+                    {
+                        <a class="btn btn-sm btn-outline-secondary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index" asp-route-page="@(Model.PageNumber + 1)">
+                            @Localizer["Business.Pagination.Next"]<i class="fa-solid fa-chevron-right ms-1" aria-hidden="true"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <span></span>
+                    }
+                </nav>
+            }
         }
             </div>
         </div>

@@ -50,8 +50,11 @@
 
         @if (ViewBag.Error is string err) { <div class="alert alert-danger" role="alert">@err</div> }
 
-        @* Place-contextual weather widget (renders only when data is available). *@
-        @await Component.InvokeAsync("WeatherWidget", new { placeId = Model.Form.PlaceId })
+        @* Place-contextual weather widget. A7/D-17: lazy-loaded over AJAX so it never blocks first paint; the <noscript> fallback keeps the no-JS path (PE1). *@
+        <div data-yj-component="weather-widget" data-url="@Url.Action("Weather", new { id = Model.Id })"></div>
+        <noscript>
+            @await Component.InvokeAsync("WeatherWidget", new { placeId = Model.Form.PlaceId })
+        </noscript>
 
         @if (Model.CanResubmit)
         {
@@ -246,4 +249,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/business-crud.js" asp-append-version="true" defer></script>
 }

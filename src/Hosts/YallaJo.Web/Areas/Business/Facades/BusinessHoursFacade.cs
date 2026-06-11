@@ -24,13 +24,18 @@ public sealed class BusinessHoursFacade
 
     public async Task<ApiResult<HoursVm>> GetAsync(Guid businessId, CancellationToken ct = default)
     {
-        var detail = await _businesses.GetByIdAsync(businessId, ct);
+        // API1/D-16: fetch the business detail and the opening hours concurrently.
+        var detailTask = _businesses.GetByIdAsync(businessId, ct);
+        var hoursTask = _api.GetHoursAsync(businessId, ct);
+        await Task.WhenAll(detailTask, hoursTask);
+
+        var detail = await detailTask;
         if (detail.IsUnauthorized)
             return ApiResult<HoursVm>.ForceSignOut();
         if (detail is not { IsSuccess: true, Data: not null })
             return ApiResult<HoursVm>.Fail(detail.StatusCode, detail.Error ?? _l["Business.Error.LoadBusiness"].Value);
 
-        var hours = await _api.GetHoursAsync(businessId, ct);
+        var hours = await hoursTask;
         if (hours.IsUnauthorized)
             return ApiResult<HoursVm>.ForceSignOut();
         if (hours is not { IsSuccess: true, Data: not null })
