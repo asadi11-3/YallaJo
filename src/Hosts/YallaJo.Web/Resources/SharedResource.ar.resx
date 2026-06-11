@@ -13009,4 +13009,100 @@
 <data name="Accounts.Bookings.ManageBooking" xml:space="preserve">
 <value>إدارة الحجز</value>
 </data>
+<data name="Accounts.Common.Yes" xml:space="preserve">
+<value>نعم</value>
+</data>
+<data name="Accounts.Common.No" xml:space="preserve">
+<value>لا</value>
+</data>
+<data name="Accounts.Booking.BackToBookings" xml:space="preserve">
+<value>العودة إلى الحجوزات</value>
+</data>
+<data name="Accounts.Booking.Reference" xml:space="preserve">
+<value>المرجع</value>
+</data>
+<data name="Accounts.Booking.BookedOn" xml:space="preserve">
+<value>تاريخ الحجز</value>
+</data>
+<data name="Accounts.Booking.Guests" xml:space="preserve">
+<value>الضيوف</value>
+</data>
+<data name="Accounts.Booking.InstantBooking" xml:space="preserve">
+<value>حجز فوري</value>
+</data>
+<data name="Accounts.Booking.SpecialRequests" xml:space="preserve">
+<value>طلبات خاصة</value>
+</data>
+<data name="Accounts.Booking.PriceSummary" xml:space="preserve">
+<value>ملخص السعر</value>
+</data>
+<data name="Accounts.Booking.CompletePayment" xml:space="preserve">
+<value>إتمام الدفع</value>
+</data>
+<data name="Accounts.Booking.AwaitingPaymentMsg" xml:space="preserve">
+<value>حجزك بانتظار الدفع. ادفع الآن لتأكيده.</value>
+</data>
+<data name="Accounts.Booking.CancelHeading" xml:space="preserve">
+<value>إلغاء الحجز</value>
+</data>
+<data name="Accounts.Booking.CancelPolicyMsg" xml:space="preserve">
+<value>قد يخضع الإلغاء لسياسة إلغاء الجولة. تتم معالجة أي استرداد مستحق تلقائيًا.</value>
+</data>
+<data name="Accounts.Booking.ReasonOptional" xml:space="preserve">
+<value>السبب (اختياري)</value>
+</data>
+<data name="Accounts.Booking.CancelThisBooking" xml:space="preserve">
+<value>إلغاء هذا الحجز</value>
+</data>
+<data name="Accounts.Booking.BookingCancelled" xml:space="preserve">
+<value>تم إلغاء الحجز</value>
+</data>
+<data name="Accounts.Booking.CancelledOn" xml:space="preserve">
+<value>أُلغي في {0}</value>
+</data>
+<data name="Accounts.Booking.ReasonLabel" xml:space="preserve">
+<value>السبب:</value>
+</data>
+<data name="Accounts.Booking.RefundLabel" xml:space="preserve">
+<value>الاسترداد:</value>
+</data>
+<data name="Accounts.Booking.DisputeCardTitle" xml:space="preserve">
+<value>الإبلاغ عن مشكلة في هذه الجولة</value>
+</data>
+<data name="Accounts.Booking.DisputeCardMsg" xml:space="preserve">
+<value>إذا حدث خطأ ما في جولتك المكتملة، يمكنك فتح نزاع خلال 48 ساعة من الاكتمال. سيراجعه فريقنا.</value>
+</data>
+<data name="Accounts.Booking.ReportIssue" xml:space="preserve">
+<value>الإبلاغ عن مشكلة</value>
+</data>
+<data name="Accounts.Booking.DisputeModalMsg" xml:space="preserve">
+<value>أخبرنا بما حدث. سيفتح هذا نزاعًا رسميًا سيحقق فيه فريقنا.</value>
+</data>
+<data name="Accounts.Booking.WhatHappened" xml:space="preserve">
+<value>ماذا حدث؟</value>
+</data>
+<data name="Accounts.Booking.DisputePlaceholder" xml:space="preserve">
+<value>صف المشكلة بما لا يقل عن 10 أحرف…</value>
+</data>
+<data name="Accounts.Booking.SubmitDispute" xml:space="preserve">
+<value>إرسال النزاع</value>
+</data>
+<data name="Accounts.Booking.DisputeUnderReview" xml:space="preserve">
+<value>النزاع قيد المراجعة</value>
+</data>
+<data name="Accounts.Booking.OpenedOn" xml:space="preserve">
+<value>فُتح في {0}</value>
+</data>
+<data name="Accounts.Booking.YourReport" xml:space="preserve">
+<value>بلاغك:</value>
+</data>
+<data name="Accounts.Booking.DisputeResolved" xml:space="preserve">
+<value>تم حل النزاع</value>
+</data>
+<data name="Accounts.Booking.ResolvedOn" xml:space="preserve">
+<value>حُل في {0}</value>
+</data>
+<data name="Accounts.Booking.ResolutionLabel" xml:space="preserve">
+<value>الحل:</value>
+</data>
 </root>

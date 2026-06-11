@@ -13009,4 +13009,100 @@
 <data name="Accounts.Bookings.ManageBooking" xml:space="preserve">
 <value>Manage booking</value>
 </data>
+<data name="Accounts.Common.Yes" xml:space="preserve">
+<value>Yes</value>
+</data>
+<data name="Accounts.Common.No" xml:space="preserve">
+<value>No</value>
+</data>
+<data name="Accounts.Booking.BackToBookings" xml:space="preserve">
+<value>Back to bookings</value>
+</data>
+<data name="Accounts.Booking.Reference" xml:space="preserve">
+<value>Reference</value>
+</data>
+<data name="Accounts.Booking.BookedOn" xml:space="preserve">
+<value>Booked on</value>
+</data>
+<data name="Accounts.Booking.Guests" xml:space="preserve">
+<value>Guests</value>
+</data>
+<data name="Accounts.Booking.InstantBooking" xml:space="preserve">
+<value>Instant booking</value>
+</data>
+<data name="Accounts.Booking.SpecialRequests" xml:space="preserve">
+<value>Special requests</value>
+</data>
+<data name="Accounts.Booking.PriceSummary" xml:space="preserve">
+<value>Price summary</value>
+</data>
+<data name="Accounts.Booking.CompletePayment" xml:space="preserve">
+<value>Complete payment</value>
+</data>
+<data name="Accounts.Booking.AwaitingPaymentMsg" xml:space="preserve">
+<value>Your booking is awaiting payment. Pay now to confirm it.</value>
+</data>
+<data name="Accounts.Booking.CancelHeading" xml:space="preserve">
+<value>Cancel booking</value>
+</data>
+<data name="Accounts.Booking.CancelPolicyMsg" xml:space="preserve">
+<value>Cancelling may be subject to the tour's cancellation policy. Any eligible refund is processed automatically.</value>
+</data>
+<data name="Accounts.Booking.ReasonOptional" xml:space="preserve">
+<value>Reason (optional)</value>
+</data>
+<data name="Accounts.Booking.CancelThisBooking" xml:space="preserve">
+<value>Cancel this booking</value>
+</data>
+<data name="Accounts.Booking.BookingCancelled" xml:space="preserve">
+<value>Booking cancelled</value>
+</data>
+<data name="Accounts.Booking.CancelledOn" xml:space="preserve">
+<value>Cancelled on {0}</value>
+</data>
+<data name="Accounts.Booking.ReasonLabel" xml:space="preserve">
+<value>Reason:</value>
+</data>
+<data name="Accounts.Booking.RefundLabel" xml:space="preserve">
+<value>Refund:</value>
+</data>
+<data name="Accounts.Booking.DisputeCardTitle" xml:space="preserve">
+<value>Report an issue with this tour</value>
+</data>
+<data name="Accounts.Booking.DisputeCardMsg" xml:space="preserve">
+<value>If something went wrong with your completed tour, you can open a dispute within 48 hours of completion. Our team will review it.</value>
+</data>
+<data name="Accounts.Booking.ReportIssue" xml:space="preserve">
+<value>Report an issue</value>
+</data>
+<data name="Accounts.Booking.DisputeModalMsg" xml:space="preserve">
+<value>Tell us what went wrong. This opens a formal dispute that our team will investigate.</value>
+</data>
+<data name="Accounts.Booking.WhatHappened" xml:space="preserve">
+<value>What happened?</value>
+</data>
+<data name="Accounts.Booking.DisputePlaceholder" xml:space="preserve">
+<value>Describe the issue in at least 10 characters…</value>
+</data>
+<data name="Accounts.Booking.SubmitDispute" xml:space="preserve">
+<value>Submit dispute</value>
+</data>
+<data name="Accounts.Booking.DisputeUnderReview" xml:space="preserve">
+<value>Dispute under review</value>
+</data>
+<data name="Accounts.Booking.OpenedOn" xml:space="preserve">
+<value>Opened on {0}</value>
+</data>
+<data name="Accounts.Booking.YourReport" xml:space="preserve">
+<value>Your report:</value>
+</data>
+<data name="Accounts.Booking.DisputeResolved" xml:space="preserve">
+<value>Dispute resolved</value>
+</data>
+<data name="Accounts.Booking.ResolvedOn" xml:space="preserve">
+<value>Resolved on {0}</value>
+</data>
+<data name="Accounts.Booking.ResolutionLabel" xml:space="preserve">
+<value>Resolution:</value>
+</data>
 </root>

@@ -2,11 +2,10 @@
 @using YallaJo.Web.Areas.Accounts.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @{
-    ViewData["Title"] = "Manage Booking";
+    ViewData["Title"] = Localizer["Accounts.Bookings.ManageBooking"].Value;
     ViewData["AccountNav"] = "Bookings";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
-
 }
 
 <section class="pt-3">
@@ -19,11 +18,11 @@
 
                 <div class="mb-3 d-flex flex-wrap gap-2">
                     <a class="btn btn-sm btn-light mb-0" asp-area="Accounts" asp-controller="Bookings" asp-action="Index">
-                        <i class="bi bi-arrow-left me-1"></i>Back to bookings
+                        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>@Localizer["Accounts.Booking.BackToBookings"]
                     </a>
                     @* Phase 3 (Accounts plan): invoices live on the Billing hub now. *@
                     <a class="btn btn-sm btn-light mb-0" asp-area="Accounts" asp-controller="Payments" asp-action="Index" asp-route-tab="invoices">
-                        <i class="bi bi-receipt me-1"></i>Invoices
+                        <i class="bi bi-receipt me-1" aria-hidden="true"></i>@Localizer["Accounts.Billing.Tab.Invoices"]
                     </a>
                 </div>
 
@@ -35,18 +34,18 @@
                     <div class="card-body">
                         @if (!string.IsNullOrEmpty(Model.ImageUrl))
                         {
-                            <img src="@Model.ImageUrl" class="img-fluid rounded mb-3 w-100 object-fit-cover img-max-h240" alt="@Model.TourName" />
+                            <img src="@Model.ImageUrl" class="img-fluid rounded mb-3 w-100 object-fit-cover img-max-h240" alt="@Model.TourName" loading="lazy" />
                         }
                         <div class="row g-3 mb-2">
-                            <div class="col-sm-6"><span class="text-muted small d-block">Reference</span><span class="d-inline-flex align-items-center gap-1"><strong id="bookingReference" dir="ltr">@Model.Reference</strong><button type="button" class="btn btn-sm btn-link p-0 js-copy-ref" data-copied-text="@Localizer["Public.Copied"]" title="@Localizer["Public.CopyReference"]" aria-label="@Localizer["Public.CopyReference"]"><i class="bi bi-clipboard" aria-hidden="true"></i></button></span></div>
-                            <div class="col-sm-6"><span class="text-muted small d-block">Booked on</span><strong>@Model.CreatedAt.ToString("d MMM yyyy")</strong></div>
-                            <div class="col-sm-6"><span class="text-muted small d-block">Guests</span><strong>@Model.ParticipantCount</strong></div>
-                            <div class="col-sm-6"><span class="text-muted small d-block">Instant booking</span><strong>@(Model.IsInstantBooking ? "Yes" : "No")</strong></div>
+                            <div class="col-sm-6"><span class="text-muted small d-block">@Localizer["Accounts.Booking.Reference"]</span><span class="d-inline-flex align-items-center gap-1"><strong id="bookingReference" dir="ltr">@Model.Reference</strong><button type="button" class="btn btn-sm btn-link p-0 js-copy-ref" data-copied-text="@Localizer["Public.Copied"]" title="@Localizer["Public.CopyReference"]" aria-label="@Localizer["Public.CopyReference"]"><i class="bi bi-clipboard" aria-hidden="true"></i></button></span></div>
+                            <div class="col-sm-6"><span class="text-muted small d-block">@Localizer["Accounts.Booking.BookedOn"]</span><strong>@Model.CreatedAt.ToString("d MMM yyyy")</strong></div>
+                            <div class="col-sm-6"><span class="text-muted small d-block">@Localizer["Accounts.Booking.Guests"]</span><strong>@Model.ParticipantCount</strong></div>
+                            <div class="col-sm-6"><span class="text-muted small d-block">@Localizer["Accounts.Booking.InstantBooking"]</span><strong>@(Model.IsInstantBooking ? Localizer["Accounts.Common.Yes"] : Localizer["Accounts.Common.No"])</strong></div>
                         </div>
                         @if (!string.IsNullOrWhiteSpace(Model.SpecialRequests))
                         {
                             <div class="mt-2">
-                                <span class="text-muted small d-block">Special requests</span>
+                                <span class="text-muted small d-block">@Localizer["Accounts.Booking.SpecialRequests"]</span>
                                 <p class="mb-0">@Model.SpecialRequests</p>
                             </div>
                         }
@@ -54,38 +53,39 @@
                 </div>
 
                 <div class="card border mb-4">
-                    <div class="card-header border-bottom"><h5 class="card-header-title mb-0">Price summary</h5></div>
+                    <div class="card-header border-bottom"><h5 class="card-header-title mb-0">@Localizer["Accounts.Booking.PriceSummary"]</h5></div>
                     <div class="card-body">
                         @foreach (var li in Model.LineItems)
                         {
                             <div class="d-flex justify-content-between mb-2">
                                 <span>@li.TierType &times; @li.Count</span>
-                                <span>@((li.UnitPrice * li.Count).ToString("0.00")) @Model.Currency</span>
+                                <span dir="ltr">@((li.UnitPrice * li.Count).ToString("0.00")) @Model.Currency</span>
                             </div>
                         }
                         <hr />
-                        <div class="d-flex justify-content-between mb-1"><span>Subtotal</span><span>@Model.Subtotal.ToString("0.00") @Model.Currency</span></div>
+                        <div class="d-flex justify-content-between mb-1"><span>@Localizer["Public.Subtotal"]</span><span dir="ltr">@Model.Subtotal.ToString("0.00") @Model.Currency</span></div>
                         @if (Model.DiscountAmount > 0)
                         {
-                            <div class="d-flex justify-content-between mb-1 text-success"><span>Discount</span><span>-@Model.DiscountAmount.ToString("0.00") @Model.Currency</span></div>
+                            <div class="d-flex justify-content-between mb-1 text-success"><span>@Localizer["Public.Discount"]</span><span dir="ltr">-@Model.DiscountAmount.ToString("0.00") @Model.Currency</span></div>
                         }
                         @if (Model.LoyaltyAmount > 0)
                         {
-                            <div class="d-flex justify-content-between mb-1 text-success"><span>Loyalty</span><span>-@Model.LoyaltyAmount.ToString("0.00") @Model.Currency</span></div>
+                            <div class="d-flex justify-content-between mb-1 text-success"><span>@Localizer["Public.Loyalty"]</span><span dir="ltr">-@Model.LoyaltyAmount.ToString("0.00") @Model.Currency</span></div>
                         }
-                        <div class="d-flex justify-content-between fw-bold border-top pt-2"><span>Total</span><span>@Model.TotalAmount.ToString("0.00") @Model.Currency</span></div>
+                        <div class="d-flex justify-content-between fw-bold border-top pt-2"><span>@Localizer["Public.Total"]</span><span dir="ltr">@Model.TotalAmount.ToString("0.00") @Model.Currency</span></div>
                     </div>
                 </div>
 
                 @if (string.Equals(Model.Status, "AwaitingPayment", StringComparison.OrdinalIgnoreCase))
                 {
                     <div class="card border border-primary mb-3">
-                        <div class="card-header border-bottom"><h5 class="card-header-title mb-0 text-primary">Complete payment</h5></div>
+                        <div class="card-header border-bottom"><h5 class="card-header-title mb-0 text-primary">@Localizer["Accounts.Booking.CompletePayment"]</h5></div>
                         <div class="card-body">
-                            <p class="small text-muted">Your booking is awaiting payment. Pay now to confirm it.</p>
-                            <form asp-area="Accounts" asp-controller="Bookings" asp-action="Pay" asp-route-id="@Model.Id" method="post">
+                            @* TODO(backend): BookingDetailVm exposes no payment-expiry timestamp; add e.g. PaymentExpiresAt to render a CAL4 countdown here. *@
+                            <p class="small text-muted">@Localizer["Accounts.Booking.AwaitingPaymentMsg"]</p>
+                            <form asp-area="Accounts" asp-controller="Bookings" asp-action="Pay" asp-route-id="@Model.Id" method="post" data-loading>
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-primary mb-0">Pay now</button>
+                                <button type="submit" class="btn btn-primary mb-0">@Localizer["Public.PayNow"]</button>
                             </form>
                         </div>
                     </div>
@@ -94,16 +94,17 @@
                 @if (Model.IsCancellable)
                 {
                     <div class="card border border-danger">
-                        <div class="card-header border-bottom"><h5 class="card-header-title mb-0 text-danger">Cancel booking</h5></div>
+                        <div class="card-header border-bottom"><h5 class="card-header-title mb-0 text-danger">@Localizer["Accounts.Booking.CancelHeading"]</h5></div>
                         <div class="card-body">
-                            <p class="small text-muted">Cancelling may be subject to the tour's cancellation policy. Any eligible refund is processed automatically.</p>
+                            @* TODO(backend): no pre-cancel refund-preview/quote on the VM; expose an estimated refund to show before confirming (F8). *@
+                            <p class="small text-muted">@Localizer["Accounts.Booking.CancelPolicyMsg"]</p>
                             <form asp-area="Accounts" asp-controller="Bookings" asp-action="Cancel" asp-route-id="@Model.Id" method="post" data-loading data-confirm="@Localizer["Accounts.Booking.CancelConfirm"]" data-confirm-title="@Localizer["Accounts.Booking.CancelTitle"]" data-confirm-action="@Localizer["Accounts.Booking.CancelProceed"]" data-confirm-cancel="@Localizer["Accounts.Booking.KeepBooking"]">
                                 @Html.AntiForgeryToken()
                                 <div class="mb-3">
-                                    <label class="form-label" for="reason">Reason (optional)</label>
+                                    <label class="form-label" for="reason">@Localizer["Accounts.Booking.ReasonOptional"]</label>
                                     <textarea class="form-control" id="reason" name="reason" rows="2" maxlength="500"></textarea>
                                 </div>
-                                <button type="submit" class="btn btn-danger mb-0">Cancel this booking</button>
+                                <button type="submit" class="btn btn-danger mb-0">@Localizer["Accounts.Booking.CancelThisBooking"]</button>
                             </form>
                         </div>
                     </div>
@@ -112,15 +113,15 @@
                 {
                     <div class="card border">
                         <div class="card-body">
-                            <h6 class="text-danger mb-1">Booking cancelled</h6>
-                            <p class="small text-muted mb-1">Cancelled on @Model.CancelledAt.Value.ToString("d MMM yyyy")</p>
+                            <h6 class="text-danger mb-1">@Localizer["Accounts.Booking.BookingCancelled"]</h6>
+                            <p class="small text-muted mb-1">@Localizer["Accounts.Booking.CancelledOn", Model.CancelledAt.Value.ToString("d MMM yyyy")]</p>
                             @if (!string.IsNullOrWhiteSpace(Model.CancellationReason))
                             {
-                                <p class="small mb-1">Reason: @Model.CancellationReason</p>
+                                <p class="small mb-1">@Localizer["Accounts.Booking.ReasonLabel"] @Model.CancellationReason</p>
                             }
                             @if (Model.RefundAmount is > 0)
                             {
-                                <p class="small text-success mb-0">Refund: @Model.RefundAmount.Value.ToString("0.00") @Model.Currency</p>
+                                <p class="small text-success mb-0">@Localizer["Accounts.Booking.RefundLabel"] <span dir="ltr">@Model.RefundAmount.Value.ToString("0.00") @Model.Currency</span></p>
                             }
                         </div>
                     </div>
@@ -131,34 +132,34 @@
                 {
                     <permission require="@WebPermission.BookingDispute.Create">
                         <div class="card border border-warning mt-3">
-                            <div class="card-header border-bottom"><h5 class="card-header-title mb-0 text-warning">Report an issue with this tour</h5></div>
+                            <div class="card-header border-bottom"><h5 class="card-header-title mb-0 text-warning">@Localizer["Accounts.Booking.DisputeCardTitle"]</h5></div>
                             <div class="card-body">
-                                <p class="small text-muted">If something went wrong with your completed tour, you can open a dispute within 48 hours of completion. Our team will review it.</p>
+                                <p class="small text-muted">@Localizer["Accounts.Booking.DisputeCardMsg"]</p>
                                 <button type="button" class="btn btn-warning mb-0" data-bs-toggle="modal" data-bs-target="#disputeModal">
-                                    <i class="bi bi-exclamation-triangle me-1"></i>Report an issue
+                                    <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>@Localizer["Accounts.Booking.ReportIssue"]
                                 </button>
                             </div>
                         </div>
 
                         <div class="modal fade" id="disputeModal" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog">
-                                <form asp-area="Accounts" asp-controller="Bookings" asp-action="OpenDispute" asp-route-id="@Model.Id" method="post" class="modal-content">
+                                <form asp-area="Accounts" asp-controller="Bookings" asp-action="OpenDispute" asp-route-id="@Model.Id" method="post" class="modal-content" data-loading>
                                     @Html.AntiForgeryToken()
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Report an issue</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <h5 class="modal-title">@Localizer["Accounts.Booking.ReportIssue"]</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Accounts.Confirm.Close"]"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <p class="small text-muted">Tell us what went wrong. This opens a formal dispute that our team will investigate.</p>
+                                        <p class="small text-muted">@Localizer["Accounts.Booking.DisputeModalMsg"]</p>
                                         <div class="mb-2">
-                                            <label class="form-label" for="dispute-reason">What happened?</label>
+                                            <label class="form-label" for="dispute-reason">@Localizer["Accounts.Booking.WhatHappened"]</label>
                                             <textarea class="form-control" id="dispute-reason" name="reason" rows="4" minlength="10" maxlength="2000" required
-                                                      placeholder="Describe the issue in at least 10 characters…"></textarea>
+                                                      placeholder="@Localizer["Accounts.Booking.DisputePlaceholder"]"></textarea>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-warning">Submit dispute</button>
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Public.Confirm.Cancel"]</button>
+                                        <button type="submit" class="btn btn-warning">@Localizer["Accounts.Booking.SubmitDispute"]</button>
                                     </div>
                                 </form>
                             </div>
@@ -169,14 +170,14 @@
                 {
                     <div class="card border border-warning mt-3">
                         <div class="card-body">
-                            <h6 class="text-warning mb-1">Dispute under review</h6>
+                            <h6 class="text-warning mb-1">@Localizer["Accounts.Booking.DisputeUnderReview"]</h6>
                             @if (Model.DisputedAt is not null)
                             {
-                                <p class="small text-muted mb-1">Opened on @Model.DisputedAt.Value.ToString("d MMM yyyy")</p>
+                                <p class="small text-muted mb-1">@Localizer["Accounts.Booking.OpenedOn", Model.DisputedAt.Value.ToString("d MMM yyyy")]</p>
                             }
                             @if (!string.IsNullOrWhiteSpace(Model.DisputeReason))
                             {
-                                <p class="small mb-0">Your report: @Model.DisputeReason</p>
+                                <p class="small mb-0">@Localizer["Accounts.Booking.YourReport"] @Model.DisputeReason</p>
                             }
                         </div>
                     </div>
@@ -185,14 +186,14 @@
                 {
                     <div class="card border mt-3">
                         <div class="card-body">
-                            <h6 class="text-primary mb-1">Dispute resolved</h6>
+                            <h6 class="text-primary mb-1">@Localizer["Accounts.Booking.DisputeResolved"]</h6>
                             @if (Model.ResolvedAt is not null)
                             {
-                                <p class="small text-muted mb-1">Resolved on @Model.ResolvedAt.Value.ToString("d MMM yyyy")</p>
+                                <p class="small text-muted mb-1">@Localizer["Accounts.Booking.ResolvedOn", Model.ResolvedAt.Value.ToString("d MMM yyyy")]</p>
                             }
                             @if (!string.IsNullOrWhiteSpace(Model.ResolutionNotes))
                             {
-                                <p class="small mb-0">Resolution: @Model.ResolutionNotes</p>
+                                <p class="small mb-0">@Localizer["Accounts.Booking.ResolutionLabel"] @Model.ResolutionNotes</p>
                             }
                         </div>
                     </div>
