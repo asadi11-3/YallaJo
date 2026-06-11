@@ -148,7 +148,7 @@
                                                   asp-route-id="@blog.Id" method="post" class="d-inline"
                                                   data-confirm="@Localizer["Admin.Blogs.RestoreConfirm", blog.Title]"
                                                   data-confirm-title="@Localizer["Admin.Blogs.RestoreTitle"]"
-                                                  data-confirm-action="@Localizer["Admin.Blogs.Restore"]">
+                                                  data-confirm-action="@Localizer["Admin.Blogs.Restore"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="rowVersion" value="@blog.RowVersion" />
                                                 <button type="submit" class="btn btn-sm btn-outline-success">
@@ -165,7 +165,7 @@
                                                       asp-route-id="@blog.Id" method="post" class="d-inline"
                                                       data-confirm="@Localizer["Admin.Blogs.ApproveConfirm", blog.Title]"
                                                       data-confirm-title="@Localizer["Admin.Blogs.ApproveTitle"]"
-                                                      data-confirm-action="@Localizer["Admin.Blogs.Approve"]">
+                                                      data-confirm-action="@Localizer["Admin.Blogs.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                                     @Html.AntiForgeryToken()
                                                     <button type="submit" class="btn btn-sm btn-outline-success">
                                                         <i class="fa-solid fa-check fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Approve"]
@@ -193,7 +193,7 @@
                                                   asp-route-id="@blog.Id" method="post" class="d-inline"
                                                   data-confirm="@Localizer["Admin.Blogs.DeleteConfirm", blog.Title]"
                                                   data-confirm-title="@Localizer["Admin.Blogs.DeleteTitle"]"
-                                                  data-confirm-action="@Localizer["Admin.Blogs.Delete"]">
+                                                  data-confirm-action="@Localizer["Admin.Blogs.Delete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                                     <i class="fa-solid fa-trash fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Delete"]

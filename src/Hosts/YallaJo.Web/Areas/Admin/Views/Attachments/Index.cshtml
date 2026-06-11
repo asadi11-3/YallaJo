@@ -163,7 +163,7 @@ else
                                             <form asp-area="Admin" asp-controller="Attachments" asp-action="Delete" asp-route-id="@a.Id" method="post" class="d-inline"
                                                   data-confirm="@Localizer["Admin.Attachments.DeleteConfirm"]"
                                                   data-confirm-title="@Localizer["Admin.Attachments.DeleteTitle"]"
-                                                  data-confirm-action="@Localizer["Admin.Attachments.Delete"]">
+                                                  data-confirm-action="@Localizer["Admin.Attachments.Delete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="entityType" value="@entityType" />
                                                 <input type="hidden" name="entityId" value="@entityId" />

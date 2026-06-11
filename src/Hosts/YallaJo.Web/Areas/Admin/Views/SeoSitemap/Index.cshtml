@@ -22,7 +22,7 @@
         <form asp-area="Admin" asp-controller="SeoSitemap" asp-action="Regenerate" method="post"
               data-confirm="@Localizer["Admin.SeoSitemap.RegenerateConfirm"].Value"
               data-confirm-title="@Localizer["Admin.SeoSitemap.RegenerateTitle"].Value"
-              data-confirm-action="@Localizer["Admin.SeoSitemap.Regenerate"].Value">
+              data-confirm-action="@Localizer["Admin.SeoSitemap.Regenerate"].Value" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
             @Html.AntiForgeryToken()
             <button type="submit" class="btn btn-primary-soft">
                 <i class="fa-solid fa-arrows-rotate fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.SeoSitemap.Regenerate"]
@@ -127,7 +127,7 @@ else
                                     <form asp-area="Admin" asp-controller="SeoSitemap" asp-action="Delete" method="post" class="d-inline"
                                           data-confirm="@Localizer["Admin.SeoSitemap.DeleteConfirm"].Value"
                                           data-confirm-title="@Localizer["Admin.SeoSitemap.DeleteTitle"].Value"
-                                          data-confirm-action="@Localizer["Admin.SeoSitemap.Delete"].Value">
+                                          data-confirm-action="@Localizer["Admin.SeoSitemap.Delete"].Value" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@e.Id" />
                                         <button type="submit" class="btn btn-sm btn-danger-soft">

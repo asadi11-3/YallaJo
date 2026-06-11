@@ -165,7 +165,7 @@
                               asp-route-id="@Model.ApplicationId" asp-route-fromDetails="true" method="post"
                               data-confirm="@Localizer["Admin.Providers.ApproveConfirm", Model.BusinessName]"
                               data-confirm-title="@Localizer["Admin.Providers.ApproveTitle"]"
-                              data-confirm-action="@Localizer["Admin.Providers.Approve"]">
+                              data-confirm-action="@Localizer["Admin.Providers.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-success w-100">
                                 <i class="fa-solid fa-circle-check fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Providers.Approve"]
@@ -236,7 +236,7 @@
                               asp-route-id="@Model.ApplicationId" asp-route-fromDetails="true" method="post"
                               data-confirm="@Localizer["Admin.ProviderDetails.ReinstateConfirm", Model.BusinessName]"
                               data-confirm-title="@Localizer["Admin.ProviderDetails.ReinstateTitle"]"
-                              data-confirm-action="@Localizer["Admin.ProviderDetails.Reinstate"]">
+                              data-confirm-action="@Localizer["Admin.ProviderDetails.Reinstate"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-outline-success w-100">
                                 <i class="fa-solid fa-rotate-right fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.ProviderDetails.Reinstate"]

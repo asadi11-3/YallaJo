@@ -315,10 +315,6 @@
     @* Bootstrap JS bundle (served locally; fingerprinted + immutable-cached via .WithStaticAssets()). *@
     <script src="~/assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-    @* F8 — shared destructive-confirm modal (rendered once; opened by any form[data-confirm]).
-       Placed after the Bootstrap bundle so the `bootstrap` global is available to its script. *@
-    <partial name="Partials/_ConfirmModal" />
-
     @* Vendor plugins *@
     <script src="~/assets/vendor/overlay-scrollbar/js/overlayscrollbars.min.js"></script>
     <script src="~/assets/vendor/apexcharts/js/apexcharts.min.js"></script>
@@ -326,6 +322,13 @@
 
     @* Theme functions *@
     <script src="~/assets/js/functions.js"></script>
+
+    @* Shared AJAX client + site-wide form UX: window.YallaJo.api (antiforgery header per SEC7,
+       WantsAjax marker), toasts (NF1), data-loading (L2/F7) and the shared form[data-confirm]
+       modal (F8/MOD3/MOD5). Same pair the public shell loads; antiforgery token is rendered
+       above by this layout. Rules UI-JS JS5/JS1. *@
+    <script src="~/assets/js/api-client.js" asp-append-version="true"></script>
+    <script src="~/assets/js/form-ux.js" asp-append-version="true"></script>
 
     @* Per-view extra scripts *@
     @await RenderSectionAsync("Scripts", required: false)

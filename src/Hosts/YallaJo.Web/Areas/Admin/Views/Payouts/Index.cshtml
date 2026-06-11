@@ -91,7 +91,7 @@
                                         <form asp-action="Approve" asp-route-id="@p.Id" method="post" class="d-inline"
                                               data-confirm="@Localizer["Admin.Payouts.ApproveConfirm", Money(p.NetAmount, p.Currency)]"
                                               data-confirm-title="@Localizer["Admin.Payouts.ApproveTitle"]"
-                                              data-confirm-action="@Localizer["Admin.Payouts.Approve"]">
+                                              data-confirm-action="@Localizer["Admin.Payouts.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-sm btn-success">
                                                 <i class="fa-solid fa-check fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Payouts.Approve"]

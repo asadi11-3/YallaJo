@@ -84,7 +84,7 @@ else
                                                     <form asp-area="Admin" asp-controller="EntityTags" asp-action="Remove" method="post" class="d-inline"
                                                           data-confirm="@Localizer["Admin.EntityTags.RemoveConfirm", t.Name]"
                                                           data-confirm-title="@Localizer["Admin.EntityTags.RemoveTitle"]"
-                                                          data-confirm-action="@Localizer["Admin.EntityTags.Remove"]">
+                                                          data-confirm-action="@Localizer["Admin.EntityTags.Remove"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="entityType" value="@entityType" />
                                                         <input type="hidden" name="entityId" value="@entityId" />

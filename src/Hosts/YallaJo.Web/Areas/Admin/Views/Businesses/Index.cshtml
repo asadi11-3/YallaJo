@@ -163,7 +163,7 @@
                                         <form method="post" asp-action="Approve" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="d-inline"
                                               data-confirm="@Localizer["Admin.Businesses.ApproveConfirm", b.Name]"
                                               data-confirm-title="@Localizer["Admin.Businesses.ApproveTitle"]"
-                                              data-confirm-action="@Localizer["Admin.Businesses.Approve"]">
+                                              data-confirm-action="@Localizer["Admin.Businesses.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-sm btn-outline-success">@Localizer["Admin.Businesses.Approve"]</button>
                                         </form>
@@ -181,7 +181,7 @@
                                         <form method="post" asp-action="Reinstate" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="d-inline"
                                               data-confirm="@Localizer["Admin.Businesses.ReinstateConfirm", b.Name]"
                                               data-confirm-title="@Localizer["Admin.Businesses.ReinstateTitle"]"
-                                              data-confirm-action="@Localizer["Admin.Businesses.Reinstate"]">
+                                              data-confirm-action="@Localizer["Admin.Businesses.Reinstate"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-sm btn-outline-secondary">@Localizer["Admin.Businesses.Reinstate"]</button>
                                         </form>

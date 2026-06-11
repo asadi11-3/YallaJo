@@ -111,7 +111,7 @@
                                     <form method="post" asp-action="RefreshBatches" class="d-inline"
                                           data-confirm="@Localizer["Admin.Recommendations.RefreshConfirm", b.SourceKind, b.Context]"
                                           data-confirm-title="@Localizer["Admin.Recommendations.RefreshTitle"]"
-                                          data-confirm-action="@Localizer["Admin.Recommendations.Refresh"]">
+                                          data-confirm-action="@Localizer["Admin.Recommendations.Refresh"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="SourceKind" value="@b.SourceKind" />
                                         <input type="hidden" name="SourceId" value="@b.SourceId" />

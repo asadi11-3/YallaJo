@@ -154,7 +154,7 @@
                                                       method="post" class="d-inline"
                                                       data-confirm="@Localizer["Admin.Categories.DeactivateConfirm", c.Name]"
                                                       data-confirm-title="@Localizer["Admin.Categories.DeactivateTitle"]"
-                                                      data-confirm-action="@Localizer["Admin.Categories.Deactivate"]">
+                                                      data-confirm-action="@Localizer["Admin.Categories.Deactivate"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                                     @Html.AntiForgeryToken()
                                                     <button type="submit" class="btn btn-sm btn-outline-warning">
                                                         <i class="fa-solid fa-circle-pause fa-fw" aria-hidden="true"></i> @Localizer["Admin.Categories.Deactivate"]
@@ -177,7 +177,7 @@
                                                   method="post" class="d-inline"
                                                   data-confirm="@Localizer["Admin.Categories.DeleteConfirm", c.Name]"
                                                   data-confirm-title="@Localizer["Admin.Categories.DeleteTitle"]"
-                                                  data-confirm-action="@Localizer["Admin.Categories.Delete"]">
+                                                  data-confirm-action="@Localizer["Admin.Categories.Delete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                                     <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i> @Localizer["Admin.Categories.Delete"]

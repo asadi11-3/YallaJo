@@ -99,7 +99,7 @@
                     <form asp-area="Admin" asp-controller="SeoWeather" asp-action="Purge" method="post" class="mt-3"
                           data-confirm="@Localizer["Admin.SeoWeather.PurgeConfirm"].Value"
                           data-confirm-title="@Localizer["Admin.SeoWeather.PurgeTitle"].Value"
-                          data-confirm-action="@Localizer["Admin.SeoWeather.Purge"].Value">
+                          data-confirm-action="@Localizer["Admin.SeoWeather.Purge"].Value" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="placeId" value="@Model.PlaceId" />
                         <button type="submit" class="btn btn-sm btn-danger-soft">
@@ -157,7 +157,7 @@
             <form asp-area="Admin" asp-controller="SeoWeather" asp-action="ResetBudget" method="post" class="row g-3 align-items-end"
                   data-confirm="@Localizer["Admin.SeoWeather.ResetBudgetConfirm"].Value"
                   data-confirm-title="@Localizer["Admin.SeoWeather.ResetBudgetTitle"].Value"
-                  data-confirm-action="@Localizer["Admin.SeoWeather.ResetBudget"].Value">
+                  data-confirm-action="@Localizer["Admin.SeoWeather.ResetBudget"].Value" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                 @Html.AntiForgeryToken()
                 <div class="col-md-4">
                     <label class="form-label" for="weather-budget-date">@Localizer["Admin.SeoWeather.BudgetDateLabel"]</label>

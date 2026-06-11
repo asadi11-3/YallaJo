@@ -101,7 +101,7 @@
                                                       asp-action="DeactivateSeasonalityRule" asp-route-ruleId="@r.Id" class="d-inline"
                                                       data-confirm="@Localizer["Admin.Growth.DeactivateRuleConfirm"]"
                                                       data-confirm-title="@Localizer["Admin.Growth.DeactivateRuleTitle"]"
-                                                      data-confirm-action="@Localizer["Admin.Growth.Deactivate"]">
+                                                      data-confirm-action="@Localizer["Admin.Growth.Deactivate"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                                     @Html.AntiForgeryToken()
                                                     <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Admin.Growth.Deactivate"]</button>
                                                 </form>
@@ -264,7 +264,7 @@
                                 <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="CompleteExperiment" class="d-flex gap-2"
                                       data-confirm="@Localizer["Admin.Growth.CompleteConfirm"]"
                                       data-confirm-title="@Localizer["Admin.Growth.CompleteTitle"]"
-                                      data-confirm-action="@Localizer["Admin.Growth.Complete"]">
+                                      data-confirm-action="@Localizer["Admin.Growth.Complete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                     @Html.AntiForgeryToken()
                                     <label class="visually-hidden" for="e-complete-id">@Localizer["Admin.Growth.ExperimentIdLabel"]</label>
                                     <input type="text" class="form-control form-control-sm font-data" id="e-complete-id" name="experimentId" dir="ltr"

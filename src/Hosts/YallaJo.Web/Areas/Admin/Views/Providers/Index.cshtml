@@ -130,7 +130,7 @@
                                                       asp-route-id="@row.ApplicationId" method="post"
                                                       data-confirm="@Localizer["Admin.Providers.ApproveConfirm", row.BusinessName]"
                                                       data-confirm-title="@Localizer["Admin.Providers.ApproveTitle"]"
-                                                      data-confirm-action="@Localizer["Admin.Providers.Approve"]">
+                                                      data-confirm-action="@Localizer["Admin.Providers.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                                     @Html.AntiForgeryToken()
                                                     <button type="submit" class="btn btn-sm btn-outline-success">@Localizer["Admin.Providers.Approve"]</button>
                                                 </form>

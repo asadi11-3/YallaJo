@@ -176,7 +176,7 @@
                                               asp-route-tourId="@row.TourId" asp-route-id="@row.ApplicationId" class="d-inline"
                                               data-confirm="@Localizer["Admin.GuideApplications.ApproveConfirm", row.TourTitle ?? string.Empty]"
                                               data-confirm-title="@Localizer["Admin.GuideApplications.ApproveTitle"]"
-                                              data-confirm-action="@Localizer["Admin.GuideApplications.ApproveAction"]">
+                                              data-confirm-action="@Localizer["Admin.GuideApplications.ApproveAction"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-sm btn-success">
                                                 <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.GuideApplications.Approve"]

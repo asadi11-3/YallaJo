@@ -81,7 +81,7 @@
                         <form method="post" asp-area="Admin" asp-controller="Trips" asp-action="Approve" asp-route-id="@detail.Id"
                               data-confirm="@Localizer["Admin.Trips.ApproveConfirm", detail.Name]"
                               data-confirm-title="@Localizer["Admin.Trips.ApproveTitle"]"
-                              data-confirm-action="@Localizer["Admin.Trips.Approve"]">
+                              data-confirm-action="@Localizer["Admin.Trips.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rowVersion" value="@detail.RowVersionBase64" />
                             <button type="submit" class="btn btn-success">
@@ -93,7 +93,7 @@
                         <form method="post" asp-area="Admin" asp-controller="Trips" asp-action="Reinstate" asp-route-id="@detail.Id"
                               data-confirm="@Localizer["Admin.Trips.ReinstateConfirm", detail.Name]"
                               data-confirm-title="@Localizer["Admin.Trips.ReinstateTitle"]"
-                              data-confirm-action="@Localizer["Admin.Trips.Reinstate"]">
+                              data-confirm-action="@Localizer["Admin.Trips.Reinstate"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rowVersion" value="@detail.RowVersionBase64" />
                             <button type="submit" class="btn btn-info">

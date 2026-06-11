@@ -165,7 +165,7 @@
                     <form method="post" asp-area="Admin" asp-controller="Guides" asp-action="Reinstate" asp-route-id="@detail.Id"
                           data-confirm="@Localizer["Admin.Guides.ReinstateConfirm"]"
                           data-confirm-title="@Localizer["Admin.Guides.ReinstateTitle"]"
-                          data-confirm-action="@Localizer["Admin.Guides.Reinstate"]">
+                          data-confirm-action="@Localizer["Admin.Guides.Reinstate"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-outline-success">
                             <i class="fa-solid fa-circle-play fa-fw" aria-hidden="true"></i>

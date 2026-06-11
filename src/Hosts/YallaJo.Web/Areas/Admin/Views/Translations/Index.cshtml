@@ -134,7 +134,7 @@ else
                                             <form asp-area="Admin" asp-controller="Translations" asp-action="Approve" asp-route-id="@t.Id" method="post" class="d-inline"
                                                   data-confirm="@Localizer["Admin.Translations.ApproveConfirm"]"
                                                   data-confirm-title="@Localizer["Admin.Translations.ApproveTitle"]"
-                                                  data-confirm-action="@Localizer["Admin.Translations.Approve"]">
+                                                  data-confirm-action="@Localizer["Admin.Translations.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="entityType" value="@entityType" />
                                                 <input type="hidden" name="entityId" value="@entityId" />

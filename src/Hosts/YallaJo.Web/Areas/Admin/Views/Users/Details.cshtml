@@ -64,7 +64,7 @@
                               asp-action="Deactivate" asp-route-userId="@Model.UserId" method="post" class="d-inline"
                               data-confirm="@Localizer["Admin.UserDetails.DeactivateConfirm", Model.Email]"
                               data-confirm-title="@Localizer["Admin.UserDetails.DeactivateTitle"]"
-                              data-confirm-action="@Localizer["Admin.UserDetails.DeactivateAction"]">
+                              data-confirm-action="@Localizer["Admin.UserDetails.DeactivateAction"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-warning btn-sm">
                                 <i class="fa-solid fa-ban fa-fw" aria-hidden="true"></i>
@@ -135,7 +135,7 @@
                           asp-route-userId="@Model.UserId" method="post" class="d-inline"
                           data-confirm="@Localizer["Admin.UserDetails.RevokeConfirm"]"
                           data-confirm-title="@Localizer["Admin.UserDetails.RevokeTitle"]"
-                          data-confirm-action="@Localizer["Admin.UserDetails.RevokeAction"]">
+                          data-confirm-action="@Localizer["Admin.UserDetails.RevokeAction"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-outline-danger btn-sm">
                             <i class="fa-solid fa-right-from-bracket fa-fw" aria-hidden="true"></i>
@@ -207,7 +207,7 @@
                                                   asp-route-roleId="@role.Id" method="post" class="d-inline"
                                                   data-confirm="@Localizer["Admin.UserDetails.RemoveRoleConfirm", role.Name]"
                                                   data-confirm-title="@Localizer["Admin.UserDetails.RemoveRoleTitle"]"
-                                                  data-confirm-action="@Localizer["Admin.UserDetails.RemoveAction"]">
+                                                  data-confirm-action="@Localizer["Admin.UserDetails.RemoveAction"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-outline-danger btn-sm">
                                                     <i class="fa-solid fa-trash-can fa-fw" aria-hidden="true"></i>
@@ -286,7 +286,7 @@
                                                   asp-route-claimId="@c.Id" method="post" class="d-inline"
                                                   data-confirm="@Localizer["Admin.UserDetails.RemoveClaimConfirm", c.ClaimType]"
                                                   data-confirm-title="@Localizer["Admin.UserDetails.RemoveClaimTitle"]"
-                                                  data-confirm-action="@Localizer["Admin.UserDetails.RemoveAction"]">
+                                                  data-confirm-action="@Localizer["Admin.UserDetails.RemoveAction"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-outline-danger btn-sm">
                                                     <i class="fa-solid fa-trash-can fa-fw" aria-hidden="true"></i>

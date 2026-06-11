@@ -88,7 +88,7 @@
                                     <form asp-action="Approve" asp-route-id="@r.Id" method="post" class="d-inline"
                                           data-confirm="@Localizer["Admin.FlaggedReviews.ApproveConfirm"]"
                                           data-confirm-title="@Localizer["Admin.FlaggedReviews.ApproveTitle"]"
-                                          data-confirm-action="@Localizer["Admin.FlaggedReviews.Approve"]">
+                                          data-confirm-action="@Localizer["Admin.FlaggedReviews.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="rowVersion" value="@r.RowVersion" />
                                         <button type="submit" class="btn btn-sm btn-success-soft"><i class="fa-solid fa-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.FlaggedReviews.Approve"]</button>

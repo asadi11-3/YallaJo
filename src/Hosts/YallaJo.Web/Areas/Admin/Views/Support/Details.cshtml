@@ -179,7 +179,7 @@
                         <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Close" asp-route-id="@Model.Id"
                               data-confirm="@Localizer["Admin.SupportDetails.CloseConfirm"]"
                               data-confirm-title="@Localizer["Admin.SupportDetails.CloseTitle"]"
-                              data-confirm-action="@Localizer["Admin.SupportDetails.CloseAction"]">
+                              data-confirm-action="@Localizer["Admin.SupportDetails.CloseAction"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
                             <button type="submit" class="btn btn-outline-secondary w-100">

@@ -123,7 +123,7 @@ else
                                           asp-route-id="@p.Id" method="post" class="d-inline"
                                           data-confirm="@Localizer["Admin.Places.DeleteConfirm", p.Name]"
                                           data-confirm-title="@Localizer["Admin.Places.DeleteTitle"]"
-                                          data-confirm-action="@Localizer["Admin.Places.DeleteAction"]">
+                                          data-confirm-action="@Localizer["Admin.Places.DeleteAction"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                         @Html.AntiForgeryToken()
                                         <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Admin.Places.Delete"]</button>
                                     </form>

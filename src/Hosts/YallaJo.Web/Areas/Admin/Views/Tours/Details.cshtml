@@ -129,7 +129,7 @@
                         <form asp-area="Admin" asp-controller="Tours" asp-action="Approve" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Tours.ApproveConfirm", Model.Name]"
                               data-confirm-title="@Localizer["Admin.Tours.ApproveTitle"]"
-                              data-confirm-action="@Localizer["Admin.Tours.Approve"]">
+                              data-confirm-action="@Localizer["Admin.Tours.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-success w-100">
                                 <i class="fa-solid fa-check fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Tours.Approve"]
@@ -144,7 +144,7 @@
                         <form asp-area="Admin" asp-controller="Tours" asp-action="Reject" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Tours.RejectConfirm", Model.Name]"
                               data-confirm-title="@Localizer["Admin.Tours.RejectTitle"]"
-                              data-confirm-action="@Localizer["Admin.Tours.Reject"]">
+                              data-confirm-action="@Localizer["Admin.Tours.Reject"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <label class="form-label small mb-1" for="rejectReason">@Localizer["Admin.Tours.RejectReason"]</label>
                             <textarea id="rejectReason" name="reason" class="form-control mb-2" rows="2" maxlength="1000"
@@ -162,7 +162,7 @@
                         <form asp-area="Admin" asp-controller="Tours" asp-action="Suspend" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Tours.SuspendConfirm", Model.Name]"
                               data-confirm-title="@Localizer["Admin.Tours.SuspendTitle"]"
-                              data-confirm-action="@Localizer["Admin.Tours.Suspend"]">
+                              data-confirm-action="@Localizer["Admin.Tours.Suspend"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <label class="form-label small mb-1" for="suspendReason">@Localizer["Admin.Tours.SuspendReason"]</label>
                             <textarea id="suspendReason" name="reason" class="form-control mb-2" rows="2" maxlength="1000"
@@ -180,7 +180,7 @@
                         <form asp-area="Admin" asp-controller="Tours" asp-action="Reinstate" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Tours.ReinstateConfirm", Model.Name]"
                               data-confirm-title="@Localizer["Admin.Tours.ReinstateTitle"]"
-                              data-confirm-action="@Localizer["Admin.Tours.Reinstate"]">
+                              data-confirm-action="@Localizer["Admin.Tours.Reinstate"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-success w-100">
                                 <i class="fa-solid fa-rotate-left fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Tours.Reinstate"]

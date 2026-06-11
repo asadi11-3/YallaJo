@@ -57,7 +57,7 @@
                 {
                     <permission require="@WebPermission.SeoMetadata.Delete">
                         <form asp-area="Admin" asp-controller="SeoMetadata" asp-action="Delete" asp-route-id="@metaHead.Id" method="post" class="mb-0"
-                              data-confirm="@Localizer["Admin.SeoMetadata.DeleteConfirm"]" data-confirm-title="@Localizer["Admin.SeoMetadata.DeleteTitle"]" data-confirm-action="@Localizer["Admin.SeoMetadata.Delete"]">
+                              data-confirm="@Localizer["Admin.SeoMetadata.DeleteConfirm"]" data-confirm-title="@Localizer["Admin.SeoMetadata.DeleteTitle"]" data-confirm-action="@Localizer["Admin.SeoMetadata.Delete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="entityType" value="@metaHead.EntityType" />
                             <input type="hidden" name="entityId" value="@metaHead.EntityId" />

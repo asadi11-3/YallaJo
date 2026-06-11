@@ -113,7 +113,7 @@
                                         <form method="post" asp-area="Admin" asp-controller="Disputes" asp-action="Review" asp-route-id="@d.Id" class="d-inline"
                                               data-confirm="@Localizer["Admin.Disputes.ReviewConfirm"]"
                                               data-confirm-title="@Localizer["Admin.Disputes.ReviewTitle"]"
-                                              data-confirm-action="@Localizer["Admin.Disputes.Review"]">
+                                              data-confirm-action="@Localizer["Admin.Disputes.Review"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-sm btn-outline-info">
                                                 <i class="fa-solid fa-magnifying-glass fa-fw" aria-hidden="true"></i> @Localizer["Admin.Disputes.Review"]

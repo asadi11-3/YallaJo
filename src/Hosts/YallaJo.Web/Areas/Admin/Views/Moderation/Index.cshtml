@@ -190,7 +190,7 @@
             <form asp-action="Unban" method="post" class="row g-2 align-items-end"
                   data-confirm="@Localizer["Admin.Moderation.UnbanConfirm"]"
                   data-confirm-title="@Localizer["Admin.Moderation.UnbanHeading"]"
-                  data-confirm-action="@Localizer["Admin.Moderation.Unban"]">
+                  data-confirm-action="@Localizer["Admin.Moderation.Unban"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                 @Html.AntiForgeryToken()
                 <div class="col-sm-8">
                     <label class="form-label" for="unban-user-id">@Localizer["Admin.Moderation.BannedUserIdLabel"]</label>

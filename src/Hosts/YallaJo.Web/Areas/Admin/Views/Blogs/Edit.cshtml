@@ -142,7 +142,7 @@
                         <form asp-area="Admin" asp-controller="Blogs" asp-action="Approve" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Blogs.ApproveConfirm", Model.Title]"
                               data-confirm-title="@Localizer["Admin.Blogs.ApproveTitle"]"
-                              data-confirm-action="@Localizer["Admin.Blogs.ApprovePublish"]">
+                              data-confirm-action="@Localizer["Admin.Blogs.ApprovePublish"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="fromEdit" value="true" />
                             <button type="submit" class="btn btn-success w-100">
@@ -173,7 +173,7 @@
                         <form asp-area="Admin" asp-controller="Blogs" asp-action="Unpublish" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Blogs.UnpublishConfirm", Model.Title]"
                               data-confirm-title="@Localizer["Admin.Blogs.UnpublishTitle"]"
-                              data-confirm-action="@Localizer["Admin.Blogs.Unpublish"]">
+                              data-confirm-action="@Localizer["Admin.Blogs.Unpublish"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-outline-secondary w-100">
                                 <i class="fa-solid fa-eye-slash fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Unpublish"]
@@ -182,7 +182,7 @@
                         <form asp-area="Admin" asp-controller="Blogs" asp-action="Archive" asp-route-id="@Model.Id" method="post"
                               data-confirm="@Localizer["Admin.Blogs.ArchiveConfirm", Model.Title]"
                               data-confirm-title="@Localizer["Admin.Blogs.ArchiveTitle"]"
-                              data-confirm-action="@Localizer["Admin.Blogs.Archive"]">
+                              data-confirm-action="@Localizer["Admin.Blogs.Archive"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-outline-secondary w-100">
                                 <i class="fa-solid fa-box-archive fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Archive"]
@@ -232,7 +232,7 @@
                     <form asp-area="Admin" asp-controller="Blogs" asp-action="Delete" asp-route-id="@Model.Id" method="post"
                           data-confirm="@Localizer["Admin.Blogs.DeleteConfirm", Model.Title]"
                           data-confirm-title="@Localizer["Admin.Blogs.DeleteTitle"]"
-                          data-confirm-action="@Localizer["Admin.Blogs.Delete"]">
+                          data-confirm-action="@Localizer["Admin.Blogs.Delete"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-outline-danger w-100">
                             <i class="fa-solid fa-trash fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Delete"]
@@ -321,7 +321,7 @@
                                           asp-route-id="@Model.Id" asp-route-tourId="@tour.TourId" method="post" class="d-inline"
                                           data-confirm="@Localizer["Admin.Blogs.UnlinkConfirm", tour.DisplayName]"
                                           data-confirm-title="@Localizer["Admin.Blogs.UnlinkTitle"]"
-                                          data-confirm-action="@Localizer["Admin.Blogs.Unlink"]">
+                                          data-confirm-action="@Localizer["Admin.Blogs.Unlink"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                         @Html.AntiForgeryToken()
                                         <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Admin.Blogs.Unlink"]</button>
                                     </form>

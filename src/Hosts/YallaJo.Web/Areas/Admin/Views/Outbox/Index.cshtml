@@ -101,7 +101,7 @@
                                           class="d-inline"
                                           data-confirm="@Localizer["Admin.Outbox.ReplayConfirm"]"
                                           data-confirm-title="@Localizer["Admin.Outbox.ReplayTitle"]"
-                                          data-confirm-action="@Localizer["Admin.Outbox.Replay"]">
+                                          data-confirm-action="@Localizer["Admin.Outbox.Replay"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                                         @Html.AntiForgeryToken()
                                         <button type="submit" class="btn btn-sm btn-outline-primary">
                                             <i class="fa-solid fa-arrows-rotate fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Outbox.Replay"]
@@ -127,7 +127,7 @@
             <form method="post" asp-action="BackfillTourSnapshots" class="row g-2 align-items-end"
                   data-confirm="@Localizer["Admin.Outbox.BackfillConfirm"]"
                   data-confirm-title="@Localizer["Admin.Outbox.BackfillTitle"]"
-                  data-confirm-action="@Localizer["Admin.Outbox.BackfillSubmit"]">
+                  data-confirm-action="@Localizer["Admin.Outbox.BackfillSubmit"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
                 @Html.AntiForgeryToken()
                 <div class="col-sm-4">
                     <label class="form-label" for="outbox-batch-size">@Localizer["Admin.Outbox.BatchSizeLabel"]</label>
