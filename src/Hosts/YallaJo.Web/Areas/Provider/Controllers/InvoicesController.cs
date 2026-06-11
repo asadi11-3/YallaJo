@@ -34,7 +34,7 @@ public sealed class InvoicesController : BaseController
 
         if (!result.IsSuccess || result.Data is null)
         {
-            SetError(result.Error ?? "Could not download the invoice.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDownloadInvoice"].Value);
             return RedirectToAction("Index", "Finance");
         }
 

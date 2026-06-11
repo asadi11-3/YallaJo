@@ -71,7 +71,7 @@ public sealed class TourSchedulesController : ProviderTourResourceController
         switch (result.Outcome)
         {
             case TourScheduleOutcome.Ok:
-                SetSuccess("Schedule created.");
+                SetSuccess(L["Provider.Flash.ScheduleCreated"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourScheduleOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -82,7 +82,7 @@ public sealed class TourSchedulesController : ProviderTourResourceController
                 SetError(result.Error);
                 return RedirectToAction(nameof(Index), new { id });
             case TourScheduleOutcome.NothingCreated:
-                ModelState.AddModelError(string.Empty, result.Error ?? "No schedule was added.");
+                ModelState.AddModelError(string.Empty, result.Error ?? L["Provider.Flash.NoScheduleAdded"].Value);
                 return View("Upsert", vm);
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
@@ -124,7 +124,7 @@ public sealed class TourSchedulesController : ProviderTourResourceController
         switch (result.Outcome)
         {
             case TourScheduleOutcome.Ok:
-                SetSuccess("Schedule saved.");
+                SetSuccess(L["Provider.Flash.ScheduleSaved"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourScheduleOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -155,9 +155,9 @@ public sealed class TourSchedulesController : ProviderTourResourceController
         if (result.Outcome == TourScheduleOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourScheduleOutcome.Ok)
-            SetSuccess("Schedule deleted.");
+            SetSuccess(L["Provider.Flash.ScheduleDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the schedule.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDeleteSchedule"].Value);
 
         return RedirectToAction(nameof(Index), new { id });
     }

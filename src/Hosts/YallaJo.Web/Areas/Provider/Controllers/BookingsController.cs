@@ -36,7 +36,7 @@ public sealed class BookingsController : BaseController
     {
         if (lookupId is null || lookupId == Guid.Empty)
         {
-            SetError("Please enter a valid booking id.");
+            SetError(L["Provider.Flash.InvalidBookingId"]);
             return RedirectToAction(nameof(Index));
         }
 
@@ -54,7 +54,7 @@ public sealed class BookingsController : BaseController
         if (!result.IsSuccess)
             return await FailAsync(result.Error, lookupId: null, ct);
 
-        return await SucceedAsync("Join request approved.", lookupId: null, ct);
+        return await SucceedAsync(L["Provider.Flash.JoinApproved"], lookupId: null, ct);
     }
 
     [HttpPost("provider/bookings/join-requests/{id:guid}/reject")]
@@ -68,7 +68,7 @@ public sealed class BookingsController : BaseController
         if (!result.IsSuccess)
             return await FailAsync(result.Error, lookupId: null, ct);
 
-        return await SucceedAsync("Join request declined.", lookupId: null, ct);
+        return await SucceedAsync(L["Provider.Flash.JoinDeclined"], lookupId: null, ct);
     }
 
     [HttpPost("provider/bookings/{id:guid}/confirm")]
@@ -82,7 +82,7 @@ public sealed class BookingsController : BaseController
         if (!result.IsSuccess)
             return await FailAsync(result.Error, lookupId: id, ct);
 
-        return await SucceedAsync("Booking confirmed.", lookupId: id, ct);
+        return await SucceedAsync(L["Provider.Flash.BookingConfirmed"], lookupId: id, ct);
     }
 
     [HttpPost("provider/bookings/{id:guid}/reject")]
@@ -90,7 +90,7 @@ public sealed class BookingsController : BaseController
     public async Task<IActionResult> RejectBooking(Guid id, string? reason, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(reason))
-            return await FailAsync("Please provide a reason for rejecting the booking.", lookupId: id, ct);
+            return await FailAsync(L["Provider.Flash.RejectReasonRequired"], lookupId: id, ct);
 
         var result = await _bookings.RejectBookingAsync(id, reason, ct);
         if (GuardSignOut(result) is { } signOut)
@@ -99,7 +99,7 @@ public sealed class BookingsController : BaseController
         if (!result.IsSuccess)
             return await FailAsync(result.Error, lookupId: id, ct);
 
-        return await SucceedAsync("Booking rejected.", lookupId: id, ct);
+        return await SucceedAsync(L["Provider.Flash.BookingRejected"], lookupId: id, ct);
     }
 
     /// <summary>

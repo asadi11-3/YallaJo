@@ -38,7 +38,7 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
 
         var vm = await _facade.GetCalendarAsync(id, year, month, ct);
         if (vm is null)
-            return BadRequest(new { error = "Could not load the calendar." });
+            return BadRequest(new { error = L["Provider.Flash.CouldNotLoadCalendar"].Value });
 
         return PartialView("_AvailabilityCalendar", vm);
     }
@@ -70,7 +70,7 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
         vm.TourId = id;
         if (!ModelState.IsValid)
         {
-            SetError("Please complete the recurring-slots form correctly.");
+            SetError(L["Provider.Flash.BulkFormInvalid"]);
             return RedirectToAction(nameof(Index), new { id });
         }
 
@@ -78,7 +78,7 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
         switch (result.Outcome)
         {
             case TourAvailabilityOutcome.Ok:
-                SetSuccess("Recurring availability slots created.");
+                SetSuccess(L["Provider.Flash.BulkSlotsCreated"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourAvailabilityOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -86,7 +86,7 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
                 SetError(result.Error);
                 return RedirectToStatus();
             default:
-                SetError(result.Error ?? "Could not create the recurring slots.");
+                SetError(result.Error ?? L["Provider.Flash.CouldNotCreateBulkSlots"].Value);
                 return RedirectToAction(nameof(Index), new { id });
         }
     }
@@ -125,7 +125,7 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
         switch (result.Outcome)
         {
             case TourAvailabilityOutcome.Ok:
-                SetSuccess("Availability slot created.");
+                SetSuccess(L["Provider.Flash.SlotCreated"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourAvailabilityOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -136,7 +136,7 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
                 SetError(result.Error);
                 return RedirectToAction(nameof(Index), new { id });
             case TourAvailabilityOutcome.Conflict:
-                ModelState.AddModelError(string.Empty, result.Error ?? "This slot conflicts with an existing one.");
+                ModelState.AddModelError(string.Empty, result.Error ?? L["Provider.Flash.SlotConflict"].Value);
                 return View("Upsert", vm);
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
@@ -178,7 +178,7 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
         ModelState.Remove(nameof(vm.StartTime));
         ModelState.Remove(nameof(vm.EndTime));
         if (vm.MaxCapacity < 1)
-            ModelState.AddModelError(nameof(vm.MaxCapacity), "Capacity must be at least 1.");
+            ModelState.AddModelError(nameof(vm.MaxCapacity), L["Provider.Flash.CapacityMin"].Value);
 
         if (!ModelState.IsValid)
             return View("Upsert", vm);
@@ -187,7 +187,7 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
         switch (result.Outcome)
         {
             case TourAvailabilityOutcome.Ok:
-                SetSuccess("Availability slot saved.");
+                SetSuccess(L["Provider.Flash.SlotSaved"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourAvailabilityOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -218,9 +218,9 @@ public sealed class TourAvailabilityController : ProviderTourResourceController
         if (result.Outcome == TourAvailabilityOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourAvailabilityOutcome.Ok)
-            SetSuccess("Availability slot removed.");
+            SetSuccess(L["Provider.Flash.SlotRemoved"]);
         else
-            SetError(result.Error ?? "Could not remove the slot.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotRemoveSlot"].Value);
 
         return RedirectToAction(nameof(Index), new { id });
     }

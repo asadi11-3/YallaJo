@@ -4,6 +4,13 @@
     // AJAX fragment contract (PE1): this partial is the full swappable region for
     // provider-actions.js — BookingsController returns it from WantsAjax() branches.
     // The root element carries data-yj-swap so the client can replace it wholesale.
+    // Localized status label with raw-value fallback (CON1); keys Provider.Status.{s}.
+    string StatusText(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status)) { return "—"; }
+        var s = Localizer["Provider.Status." + status];
+        return s.ResourceNotFound ? status : s.Value;
+    }
     (string Color, string Icon) JoinBadge(string status) => status?.ToLowerInvariant() switch
     {
         "pending" => ("warning", "clock"),
@@ -63,7 +70,7 @@
                             {
                                 var jb = JoinBadge(jr.Status);
                                 <tr>
-                                    <td><span class="badge bg-@jb.Color bg-opacity-10 text-@jb.Color"><i class="fa-solid fa-@jb.Icon fa-fw" aria-hidden="true"></i> @jr.Status</span></td>
+                                    <td><span class="badge bg-@jb.Color bg-opacity-10 text-@jb.Color"><i class="fa-solid fa-@jb.Icon fa-fw" aria-hidden="true"></i> @StatusText(jr.Status)</span></td>
                                     <td><bdi dir="ltr" class="font-data">@Count(jr.ParticipantCount)</bdi></td>
                                     <td class="text-truncate" style="max-width:260px;">
                                         @if (string.IsNullOrWhiteSpace(jr.Message))
@@ -150,7 +157,7 @@
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                     <div>
                         <h2 class="h5 mb-1">@Localizer["Provider.Bookings.BookingRef"] <bdi dir="ltr" class="font-data">@b.Reference</bdi></h2>
-                        <span class="badge bg-@bb.Color bg-opacity-10 text-@bb.Color"><i class="fa-solid fa-@bb.Icon fa-fw" aria-hidden="true"></i> @b.Status</span>
+                        <span class="badge bg-@bb.Color bg-opacity-10 text-@bb.Color"><i class="fa-solid fa-@bb.Icon fa-fw" aria-hidden="true"></i> @StatusText(b.Status)</span>
                         <span class="text-body-secondary small ms-2">@Localizer["Provider.Bookings.GuestsCount", Count(b.ParticipantCount)] · <bdi dir="ltr">@Date(b.CreatedAt)</bdi></span>
                     </div>
                 </div>

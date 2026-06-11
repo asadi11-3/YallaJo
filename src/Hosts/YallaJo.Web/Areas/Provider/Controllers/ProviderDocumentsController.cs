@@ -54,7 +54,7 @@ public sealed class ProviderDocumentsController : BaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Document uploaded.");
+        SetSuccess(L["Provider.Flash.DocumentUploaded"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -68,7 +68,7 @@ public sealed class ProviderDocumentsController : BaseController
         var result = await _facade.ReplaceAsync(id, file, expiresAt, rowVersion ?? string.Empty, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Document replaced.", "Could not replace the document.");
+        SetFlash(result, L["Provider.Flash.DocumentReplaced"], L["Provider.Flash.CouldNotReplaceDocument"].Value);
         return RedirectToAction(nameof(Index));
     }
 

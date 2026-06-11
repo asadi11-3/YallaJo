@@ -48,7 +48,7 @@ public abstract class ProviderTourResourceController : BaseController
         }
 
         if (!applied)
-            ModelState.AddModelError(string.Empty, fallback ?? "Please correct the highlighted fields and try again.");
+            ModelState.AddModelError(string.Empty, fallback ?? L["Provider.Flash.FixHighlighted"].Value);
         else if (!string.IsNullOrWhiteSpace(fallback))
             SetError(fallback);
     }
@@ -56,7 +56,7 @@ public abstract class ProviderTourResourceController : BaseController
     /// <summary>Flash an access-denied message and bounce to the provider's tours list.</summary>
     protected IActionResult Denied(string? message)
     {
-        SetError(message ?? "You don't have access to this listing.");
+        SetError(message ?? L["Provider.Flash.NoAccess"].Value);
         return RedirectToTours();
     }
 
@@ -64,11 +64,11 @@ public abstract class ProviderTourResourceController : BaseController
     /// Flash a not-found message; redirect to the current controller's own
     /// Index for the tour when <paramref name="tourId"/> is known, otherwise
     /// to the tours list. <paramref name="notFoundFallback"/> lets callers
-    /// keep their original wording (e.g. "Listing not found.").
+    /// keep their original wording (e.g. L["Provider.Flash.ListingNotFound"].Value).
     /// </summary>
     protected IActionResult NotFoundRedirect(string? message, Guid? tourId = null, string? notFoundFallback = null)
     {
-        SetError(message ?? notFoundFallback ?? "Not found.");
+        SetError(message ?? notFoundFallback ?? L["Provider.Flash.NotFound"].Value);
         return tourId.HasValue
             ? RedirectToAction("Index", new { id = tourId.Value })
             : RedirectToTours();

@@ -69,7 +69,7 @@ public sealed class SettingsController : BaseController
             return await ReloadAsync(profile: form, ct: ct);
         }
 
-        SetSuccess("Your profile has been updated.");
+        SetSuccess(L["Provider.Flash.ProfileUpdated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -90,7 +90,7 @@ public sealed class SettingsController : BaseController
             return await ReloadAsync(password: form, ct: ct);
         }
 
-        SetSuccess("Your password has been changed.");
+        SetSuccess(L["Provider.Flash.PasswordChanged"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -111,7 +111,7 @@ public sealed class SettingsController : BaseController
             return await ReloadAsync(phone: form, ct: ct);
         }
 
-        SetSuccess("Your phone number has been updated.");
+        SetSuccess(L["Provider.Flash.PhoneUpdated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -179,15 +179,16 @@ public sealed class SettingsController : BaseController
 
     // Mirrors Accounts.Domain.Enums.ProviderType (byte). The API serializes the enum
     // as its numeric value for this client (no JsonStringEnumConverter configured).
-    private static string ProviderTypeLabel(int value) => value switch
+    // Labels come from resx (CON1) so the settings page localizes in AR.
+    private string ProviderTypeLabel(int value) => value switch
     {
-        0 => "Tour Operator",
-        1 => "Independent Guide",
-        2 => "Hotel / Resort",
-        3 => "Activity Center",
-        4 => "Agency",
-        5 => "Business Owner",
-        _ => "Unknown",
+        0 => L["Provider.Settings.Type.TourOperator"].Value,
+        1 => L["Provider.Settings.Type.IndependentGuide"].Value,
+        2 => L["Provider.Settings.Type.HotelResort"].Value,
+        3 => L["Provider.Settings.Type.ActivityCenter"].Value,
+        4 => L["Provider.Settings.Type.Agency"].Value,
+        5 => L["Provider.Settings.Type.BusinessOwner"].Value,
+        _ => L["Provider.Settings.Type.Unknown"].Value,
     };
 
 }

@@ -76,7 +76,7 @@ public sealed class ToursController : ProviderTourResourceController
         switch (result.Outcome)
         {
             case ProviderTourOutcome.Ok:
-                SetSuccess("Listing created as a draft.");
+                SetSuccess(L["Provider.Flash.ListingCreated"]);
                 return RedirectToAction(nameof(Edit), new { id = result.TourId });
             case ProviderTourOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -108,7 +108,7 @@ public sealed class ToursController : ProviderTourResourceController
             case ProviderTourOutcome.Forbidden:
                 return RedirectToStatus();
             default:
-                return NotFoundRedirect(result.Error, notFoundFallback: "Listing not found.");
+                return NotFoundRedirect(result.Error, notFoundFallback: L["Provider.Flash.ListingNotFound"].Value);
         }
     }
 
@@ -131,7 +131,7 @@ public sealed class ToursController : ProviderTourResourceController
         switch (result.Outcome)
         {
             case ProviderTourOutcome.Ok:
-                SetSuccess("Listing saved.");
+                SetSuccess(L["Provider.Flash.ListingSaved"]);
                 return RedirectToAction(nameof(Edit), new { id });
             case ProviderTourOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -163,9 +163,9 @@ public sealed class ToursController : ProviderTourResourceController
         if (result.Outcome == ProviderTourOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == ProviderTourOutcome.Ok)
-            SetSuccess("Listing submitted for review.");
+            SetSuccess(L["Provider.Flash.ListingSubmitted"]);
         else
-            SetError(result.Error ?? "Could not submit the listing.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotSubmitListing"].Value);
 
         return RedirectToAction(nameof(Index));
     }
@@ -182,9 +182,9 @@ public sealed class ToursController : ProviderTourResourceController
         if (result.Outcome == ProviderTourOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == ProviderTourOutcome.Ok)
-            SetSuccess("Listing archived.");
+            SetSuccess(L["Provider.Flash.ListingArchived"]);
         else
-            SetError(result.Error ?? "Could not archive the listing.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotArchiveListing"].Value);
 
         return RedirectToAction(nameof(Index));
     }
@@ -201,9 +201,9 @@ public sealed class ToursController : ProviderTourResourceController
         if (result.Outcome == ProviderTourOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == ProviderTourOutcome.Ok)
-            SetSuccess("Listing deleted.");
+            SetSuccess(L["Provider.Flash.ListingDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the listing.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDeleteListing"].Value);
 
         return RedirectToAction(nameof(Index));
     }

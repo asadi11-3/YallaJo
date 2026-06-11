@@ -37,7 +37,7 @@ public sealed class TourImagesController : ProviderTourResourceController
             TourImagesOutcome.Ok => View(result.Data),
             TourImagesOutcome.ForceSignOut => RedirectToLogin(),
             TourImagesOutcome.Forbidden => Denied(result.Error),
-            _ => NotFoundRedirect(result.Error, notFoundFallback: "Listing not found."),
+            _ => NotFoundRedirect(result.Error, notFoundFallback: L["Provider.Flash.ListingNotFound"].Value),
         };
     }
 
@@ -53,7 +53,7 @@ public sealed class TourImagesController : ProviderTourResourceController
         {
             var firstError = ModelState.Values.SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage).FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
-            SetError(firstError ?? "Please choose a valid image to upload.");
+            SetError(firstError ?? L["Provider.Flash.InvalidImage"].Value);
             return RedirectToImages(id);
         }
 
@@ -61,9 +61,9 @@ public sealed class TourImagesController : ProviderTourResourceController
         if (result.Outcome == TourImagesOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourImagesOutcome.Ok)
-            SetSuccess("Image uploaded.");
+            SetSuccess(L["Provider.Flash.ImageUploaded"]);
         else
-            SetError(result.Error ?? "Could not upload the image.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotUploadImage"].Value);
 
         return RedirectToImages(id);
     }
@@ -80,9 +80,9 @@ public sealed class TourImagesController : ProviderTourResourceController
         if (result.Outcome == TourImagesOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourImagesOutcome.Ok)
-            SetSuccess("Image deleted.");
+            SetSuccess(L["Provider.Flash.ImageDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the image.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDeleteImage"].Value);
 
         return RedirectToImages(id);
     }

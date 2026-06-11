@@ -66,7 +66,7 @@ public sealed class ProviderBookingsController : BaseController
     public async Task<IActionResult> Confirm(Guid id, CancellationToken ct = default)
     {
         var result = await _facade.ConfirmAsync(id, ct);
-        return Finish(result, id, "Booking confirmed.");
+        return Finish(result, id, L["Provider.Flash.BookingConfirmed"]);
     }
 
     [HttpPost("provider/bookings/manage/{id:guid}/reject")]
@@ -75,12 +75,12 @@ public sealed class ProviderBookingsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("Please provide a reason for rejecting the booking.");
+            SetError(L["Provider.Flash.RejectReasonRequired"]);
             return RedirectToAction(nameof(Details), new { id });
         }
 
         var result = await _facade.RejectAsync(id, reason, ct);
-        return Finish(result, id, "Booking rejected.");
+        return Finish(result, id, L["Provider.Flash.BookingRejected"]);
     }
 
     [HttpPost("provider/bookings/manage/{id:guid}/cancel")]
@@ -89,12 +89,12 @@ public sealed class ProviderBookingsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("Please provide a reason for cancelling the booking.");
+            SetError(L["Provider.Flash.CancelReasonRequired"]);
             return RedirectToAction(nameof(Details), new { id });
         }
 
         var result = await _facade.CancelAsync(id, reason, ct);
-        return Finish(result, id, "Booking cancelled.");
+        return Finish(result, id, L["Provider.Flash.BookingCancelled"]);
     }
 
     [HttpPost("provider/bookings/manage/{id:guid}/complete")]
@@ -102,7 +102,7 @@ public sealed class ProviderBookingsController : BaseController
     public async Task<IActionResult> Complete(Guid id, CancellationToken ct = default)
     {
         var result = await _facade.CompleteAsync(id, ct);
-        return Finish(result, id, "Booking marked as completed.");
+        return Finish(result, id, L["Provider.Flash.BookingCompleted"]);
     }
 
     private IActionResult Finish(ProviderBookingActionResult result, Guid id, string successMessage)

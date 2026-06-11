@@ -2,6 +2,13 @@
 @{
     // Payouts + disputes tab content. Rendered SSR inside Finance/Index (no-JS path, PE1)
     // and returned standalone by FinanceController.Payouts for AJAX tab refreshes (MOD8).
+    // Localized status label with raw-value fallback (CON1); keys Provider.Status.{s}.
+    string StatusText(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status)) { return "—"; }
+        var s = Localizer["Provider.Status." + status];
+        return s.ResourceNotFound ? status : s.Value;
+    }
     (string Color, string Icon) PayoutBadge(string? s) => (s ?? "").ToLowerInvariant() switch
     {
         "completed" or "paid" => ("success", "circle-check"),
@@ -40,7 +47,7 @@ else
                         <td class="text-end text-danger"><bdi dir="ltr" class="font-data">@Money(p.CommissionAmount, p.Currency)</bdi></td>
                         <td class="text-end text-success"><bdi dir="ltr" class="font-data">@Money(p.NetAmount, p.Currency)</bdi></td>
                         <td class="text-center"><bdi dir="ltr">@Count(p.ItemCount)</bdi></td>
-                        <td><span class="badge bg-@pb.Color bg-opacity-10 text-@pb.Color"><i class="fa-solid fa-@pb.Icon fa-fw" aria-hidden="true"></i> @(p.Status ?? "—")</span></td>
+                        <td><span class="badge bg-@pb.Color bg-opacity-10 text-@pb.Color"><i class="fa-solid fa-@pb.Icon fa-fw" aria-hidden="true"></i> @StatusText(p.Status)</span></td>
                         <td class="small text-body-secondary"><bdi dir="ltr">@Date(p.CreatedAt)</bdi></td>
                     </tr>
                 }
@@ -68,7 +75,7 @@ else
                     var db = PayoutBadge(d.Status);
                     <tr>
                         <td><bdi>@d.Reason</bdi></td>
-                        <td><span class="badge bg-@db.Color bg-opacity-10 text-@db.Color"><i class="fa-solid fa-@db.Icon fa-fw" aria-hidden="true"></i> @(d.Status ?? "—")</span></td>
+                        <td><span class="badge bg-@db.Color bg-opacity-10 text-@db.Color"><i class="fa-solid fa-@db.Icon fa-fw" aria-hidden="true"></i> @StatusText(d.Status)</span></td>
                         <td class="small"><bdi dir="ltr">@Date(d.CreatedAt)</bdi></td>
                         <td class="small">
                             @if (d.ResolvedAt is not null)

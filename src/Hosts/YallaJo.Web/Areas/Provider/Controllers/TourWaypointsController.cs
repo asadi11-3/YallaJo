@@ -71,7 +71,7 @@ public sealed class TourWaypointsController : ProviderTourResourceController
         switch (result.Outcome)
         {
             case TourWaypointOutcome.Ok:
-                SetSuccess("Waypoint added.");
+                SetSuccess(L["Provider.Flash.WaypointAdded"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourWaypointOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -121,7 +121,7 @@ public sealed class TourWaypointsController : ProviderTourResourceController
         switch (result.Outcome)
         {
             case TourWaypointOutcome.Ok:
-                SetSuccess("Waypoint saved.");
+                SetSuccess(L["Provider.Flash.WaypointSaved"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourWaypointOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -149,9 +149,9 @@ public sealed class TourWaypointsController : ProviderTourResourceController
         if (result.Outcome == TourWaypointOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourWaypointOutcome.Ok)
-            SetSuccess("Waypoint deleted.");
+            SetSuccess(L["Provider.Flash.WaypointDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the waypoint.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDeleteWaypoint"].Value);
 
         return RedirectToAction(nameof(Index), new { id });
     }
@@ -166,7 +166,7 @@ public sealed class TourWaypointsController : ProviderTourResourceController
 
         if (waypointIds is not { Count: > 0 })
         {
-            SetError("No waypoint order was submitted.");
+            SetError(L["Provider.Flash.NoOrderSubmitted"]);
             return RedirectToAction(nameof(Index), new { id });
         }
 
@@ -179,13 +179,13 @@ public sealed class TourWaypointsController : ProviderTourResourceController
         {
             return result.Outcome == TourWaypointOutcome.Ok
                 ? Ok()
-                : BadRequest(new { error = result.Error ?? "Could not reorder the waypoints." });
+                : BadRequest(new { error = result.Error ?? L["Provider.Flash.CouldNotReorder"].Value });
         }
 
         if (result.Outcome == TourWaypointOutcome.Ok)
-            SetSuccess("Route order updated.");
+            SetSuccess(L["Provider.Flash.OrderUpdated"]);
         else
-            SetError(result.Error ?? "Could not reorder the waypoints.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotReorder"].Value);
 
         return RedirectToAction(nameof(Index), new { id });
     }

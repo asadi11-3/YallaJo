@@ -46,7 +46,7 @@ public sealed class TourApplicationsController : ProviderTourResourceController
             return RedirectToStatus();
 
         var result = await _facade.ApproveAsync(id, applicationId, ct);
-        return Finish(result, id, "Application approved.");
+        return Finish(result, id, L["Provider.Flash.ApplicationApproved"]);
     }
 
     // ── POST /provider/tours/{id}/applications/{applicationId}/reject ─────────────
@@ -59,12 +59,12 @@ public sealed class TourApplicationsController : ProviderTourResourceController
 
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A reason is required to reject an application.");
+            SetError(L["Provider.Flash.RejectAppReasonRequired"]);
             return RedirectToAction(nameof(Index), new { id });
         }
 
         var result = await _facade.RejectAsync(id, applicationId, reason.Trim(), ct);
-        return Finish(result, id, "Application rejected.");
+        return Finish(result, id, L["Provider.Flash.ApplicationRejected"]);
     }
 
     // ── POST /provider/tours/{id}/applications/open ───────────────────────────────
@@ -76,7 +76,7 @@ public sealed class TourApplicationsController : ProviderTourResourceController
             return RedirectToStatus();
 
         var result = await _facade.OpenAsync(id, ct);
-        return Finish(result, id, "Tour opened for guide applications.");
+        return Finish(result, id, L["Provider.Flash.TourOpened"]);
     }
 
     // ── POST /provider/tours/{id}/applications/close ──────────────────────────────
@@ -88,7 +88,7 @@ public sealed class TourApplicationsController : ProviderTourResourceController
             return RedirectToStatus();
 
         var result = await _facade.CloseAsync(id, ct);
-        return Finish(result, id, "Tour closed for guide applications.");
+        return Finish(result, id, L["Provider.Flash.TourClosed"]);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -97,7 +97,7 @@ public sealed class TourApplicationsController : ProviderTourResourceController
     {
         if (result.Outcome == TourApplicationOutcome.ForceSignOut) return RedirectToLogin();
 
-        SetFlash(result.Outcome == TourApplicationOutcome.Ok, result.Error, success, "The action could not be completed.");
+        SetFlash(result.Outcome == TourApplicationOutcome.Ok, result.Error, success, L["Provider.Common.ActionFailed"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 }

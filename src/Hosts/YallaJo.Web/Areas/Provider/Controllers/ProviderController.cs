@@ -62,13 +62,13 @@ public sealed class ProviderController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Provider application started. Submit it for review when you're ready.");
+            SetSuccess(L["Provider.Flash.ApplicationStarted"]);
             return RedirectToAction(nameof(Status));
         }
 
         if (ApplyValidationErrors(result)) return View(vm);
 
-        ModelState.AddModelError(string.Empty, result.Error ?? "Could not start your provider application.");
+        ModelState.AddModelError(string.Empty, result.Error ?? L["Provider.Flash.CouldNotStartApplication"].Value);
         return View(vm);
     }
 
@@ -81,7 +81,7 @@ public sealed class ProviderController : BaseController
         var result = await _facade.SubmitAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Application submitted for review.", "Could not submit your application.");
+        SetFlash(result, L["Provider.Flash.ApplicationSubmitted"], L["Provider.Flash.CouldNotSubmitApplication"].Value);
         return RedirectToAction(nameof(Status));
     }
 
@@ -95,8 +95,8 @@ public sealed class ProviderController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result,
-            "Your application has been reopened as a draft. Update it and submit again when ready.",
-            "Could not reapply for your provider application.");
+            L["Provider.Flash.Reapplied"],
+            L["Provider.Flash.CouldNotReapply"].Value);
         return RedirectToAction(nameof(Status));
     }
 
@@ -115,7 +115,7 @@ public sealed class ProviderController : BaseController
                 .SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage)
                 .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
-            SetError(firstError ?? "Please correct the document upload form and try again.");
+            SetError(firstError ?? L["Provider.Flash.FixUploadForm"].Value);
             return RedirectToAction(nameof(Status));
         }
 
@@ -124,9 +124,9 @@ public sealed class ProviderController : BaseController
 
         if (result.IsValidationError)
             SetError(result.ValidationErrors!.SelectMany(kvp => kvp.Value).FirstOrDefault()
-                     ?? "The uploaded document was rejected. Check the file type and size.");
+                     ?? L["Provider.Flash.DocumentRejected"].Value);
         else
-            SetFlash(result, "Document uploaded.", "Could not upload the document.");
+            SetFlash(result, L["Provider.Flash.DocumentUploaded"], L["Provider.Flash.CouldNotUploadDocument"].Value);
 
         return RedirectToAction(nameof(Status));
     }
@@ -145,7 +145,7 @@ public sealed class ProviderController : BaseController
                 .SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage)
                 .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
-            SetError(firstError ?? "Please correct the replace-document form and try again.");
+            SetError(firstError ?? L["Provider.Flash.FixReplaceForm"].Value);
             return RedirectToAction(nameof(Status));
         }
 
@@ -154,9 +154,9 @@ public sealed class ProviderController : BaseController
 
         if (result.IsValidationError)
             SetError(result.ValidationErrors!.SelectMany(kvp => kvp.Value).FirstOrDefault()
-                     ?? "The replacement document was rejected.");
+                     ?? L["Provider.Flash.ReplacementRejected"].Value);
         else
-            SetFlash(result, "Document replaced.", "Could not replace the document.");
+            SetFlash(result, L["Provider.Flash.DocumentReplaced"], L["Provider.Flash.CouldNotReplaceDocument"].Value);
 
         return RedirectToAction(nameof(Status));
     }

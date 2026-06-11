@@ -71,7 +71,7 @@ public sealed class TourPricingController : ProviderTourResourceController
         switch (result.Outcome)
         {
             case TourPricingOutcome.Ok:
-                SetSuccess("Pricing tier created.");
+                SetSuccess(L["Provider.Flash.TierCreated"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourPricingOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -121,7 +121,7 @@ public sealed class TourPricingController : ProviderTourResourceController
         switch (result.Outcome)
         {
             case TourPricingOutcome.Ok:
-                SetSuccess("Pricing tier saved.");
+                SetSuccess(L["Provider.Flash.TierSaved"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourPricingOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -153,9 +153,9 @@ public sealed class TourPricingController : ProviderTourResourceController
         if (result.Outcome == TourPricingOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourPricingOutcome.Ok)
-            SetSuccess("Pricing tier deleted.");
+            SetSuccess(L["Provider.Flash.TierDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the pricing tier.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDeleteTier"].Value);
 
         return RedirectToAction(nameof(Index), new { id });
     }

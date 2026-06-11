@@ -35,7 +35,7 @@ public sealed class ReviewsController : BaseController
     public async Task<IActionResult> Reply(Guid id, string content, Guid tourId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(content))
-            return Fail("Please enter a reply.", tourId);
+            return Fail(L["Provider.Flash.ReplyRequired"], tourId);
 
         var result = await _reviews.ReplyAsync(id, content, ct);
         if (GuardSignOut(result) is { } signOut)
@@ -44,7 +44,7 @@ public sealed class ReviewsController : BaseController
         if (!result.IsSuccess)
             return Fail(result.Error, tourId);
 
-        return await SucceedAsync("Your reply was posted.", tourId, ct);
+        return await SucceedAsync(L["Provider.Flash.ReplyPosted"], tourId, ct);
     }
 
     [HttpPost("provider/reviews/{id:guid}/reply/{replyId:guid}/edit")]
@@ -52,7 +52,7 @@ public sealed class ReviewsController : BaseController
     public async Task<IActionResult> EditReply(Guid id, Guid replyId, string content, Guid tourId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(content))
-            return Fail("Please enter a reply.", tourId);
+            return Fail(L["Provider.Flash.ReplyRequired"], tourId);
 
         var result = await _reviews.EditReplyAsync(id, replyId, content, ct);
         if (GuardSignOut(result) is { } signOut)
@@ -61,7 +61,7 @@ public sealed class ReviewsController : BaseController
         if (!result.IsSuccess)
             return Fail(result.Error, tourId);
 
-        return await SucceedAsync("Your reply was updated.", tourId, ct);
+        return await SucceedAsync(L["Provider.Flash.ReplyUpdated"], tourId, ct);
     }
 
     [HttpPost("provider/reviews/{id:guid}/reply/{replyId:guid}/delete")]
@@ -75,7 +75,7 @@ public sealed class ReviewsController : BaseController
         if (!result.IsSuccess)
             return Fail(result.Error, tourId);
 
-        return await SucceedAsync("Your reply was deleted.", tourId, ct);
+        return await SucceedAsync(L["Provider.Flash.ReplyDeleted"], tourId, ct);
     }
 
     [HttpPost("provider/reviews/{id:guid}/report")]
@@ -89,7 +89,7 @@ public sealed class ReviewsController : BaseController
         if (!result.IsSuccess)
             return Fail(result.Error, tourId);
 
-        return await SucceedAsync("Thanks. Our moderation team will review this report.", tourId, ct);
+        return await SucceedAsync(L["Provider.Flash.ReportSubmitted"], tourId, ct);
     }
 
     /// <summary>

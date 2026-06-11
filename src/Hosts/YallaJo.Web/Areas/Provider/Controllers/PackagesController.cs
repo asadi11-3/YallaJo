@@ -50,7 +50,7 @@ public sealed class PackagesController : BaseController
         switch (result.Outcome)
         {
             case PackageOutcome.Ok:
-                SetSuccess("Package created as a draft. Add inclusions, then submit it for review.");
+                SetSuccess(L["Provider.Flash.PackageCreated"]);
                 return RedirectToAction(nameof(Index));
             case PackageOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -59,7 +59,7 @@ public sealed class PackagesController : BaseController
                 return RedirectToStatus();
             default:
                 if (!ApplyFacadeValidation(result.ValidationErrors))
-                    SetError(result.Error ?? "Could not create the package.");
+                    SetError(result.Error ?? L["Provider.Flash.CouldNotCreatePackage"].Value);
                 return await ReloadIndex(form, ct);
         }
     }
@@ -87,12 +87,12 @@ public sealed class PackagesController : BaseController
     {
         if (string.IsNullOrWhiteSpace(description))
         {
-            SetError("Enter an inclusion description.");
+            SetError(L["Provider.Flash.InclusionRequired"]);
             return RedirectToAction(nameof(Manage), new { id });
         }
 
         var result = await _facade.AddInclusionAsync(id, description, ct);
-        return Finish(result, id, "Inclusion added.");
+        return Finish(result, id, L["Provider.Flash.InclusionAdded"]);
     }
 
     // ── POST /provider/packages/{id}/submit ──────────────────────────────────────────
@@ -102,7 +102,7 @@ public sealed class PackagesController : BaseController
     public async Task<IActionResult> Submit(Guid id, CancellationToken ct = default)
     {
         var result = await _facade.SubmitAsync(id, ct);
-        return Finish(result, id, "Package submitted for review.");
+        return Finish(result, id, L["Provider.Flash.PackageSubmitted"]);
     }
 
     // ── POST /provider/packages/{id}/delete ──────────────────────────────────────────
@@ -115,9 +115,9 @@ public sealed class PackagesController : BaseController
         if (result.Outcome == PackageOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == PackageOutcome.Ok)
-            SetSuccess("Package deleted.");
+            SetSuccess(L["Provider.Flash.PackageDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the package.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDeletePackage"].Value);
 
         return RedirectToAction(nameof(Index));
     }
@@ -128,7 +128,7 @@ public sealed class PackagesController : BaseController
     {
         if (result.Outcome == PackageOutcome.ForceSignOut) return RedirectToLogin();
 
-        SetFlash(result.Outcome == PackageOutcome.Ok, result.Error, success, "The action could not be completed.");
+        SetFlash(result.Outcome == PackageOutcome.Ok, result.Error, success, L["Provider.Common.ActionFailed"].Value);
         return RedirectToAction(nameof(Manage), new { id });
     }
 
@@ -151,7 +151,7 @@ public sealed class PackagesController : BaseController
 
     private IActionResult Fail(string? message)
     {
-        SetError(message ?? "Could not load packages.");
+        SetError(message ?? L["Provider.Flash.CouldNotLoadPackages"].Value);
         return View(nameof(Index), new PackagesIndexVm());
     }
 

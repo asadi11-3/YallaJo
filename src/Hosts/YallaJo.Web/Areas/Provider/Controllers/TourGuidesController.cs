@@ -66,7 +66,7 @@ public sealed class TourGuidesController : ProviderTourResourceController
         switch (result.Outcome)
         {
             case TourGuideOutcome.Ok:
-                SetSuccess("Guide assigned.");
+                SetSuccess(L["Provider.Flash.GuideAssigned"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourGuideOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -94,9 +94,9 @@ public sealed class TourGuidesController : ProviderTourResourceController
         if (result.Outcome == TourGuideOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourGuideOutcome.Ok)
-            SetSuccess("Guide removed.");
+            SetSuccess(L["Provider.Flash.GuideRemoved"]);
         else
-            SetError(result.Error ?? "Could not remove the guide.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotRemoveGuide"].Value);
 
         return RedirectToAction(nameof(Index), new { id });
     }

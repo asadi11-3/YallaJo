@@ -39,11 +39,11 @@ public sealed class PaymentMethodsController : BaseController
 
         if (!result.IsSuccess)
         {
-            SetError(result.Error ?? "Could not add the payment method.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotAddMethod"].Value);
             return RedirectToFinanceMethods();
         }
 
-        SetSuccess("Payment method added.");
+        SetSuccess(L["Provider.Flash.MethodAdded"]);
         return RedirectToFinanceMethods();
     }
 
@@ -61,11 +61,11 @@ public sealed class PaymentMethodsController : BaseController
 
         if (!result.IsSuccess)
         {
-            SetError(result.Error ?? "Could not update the payment method.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotUpdateMethod"].Value);
             return RedirectToFinanceMethods();
         }
 
-        SetSuccess("Payment method updated.");
+        SetSuccess(L["Provider.Flash.MethodUpdated"]);
         return RedirectToFinanceMethods();
     }
 
@@ -78,7 +78,7 @@ public sealed class PaymentMethodsController : BaseController
         if (GuardSignOut(result) is { } signOut)
             return signOut;
 
-        SetFlash(result, "Payment method deleted.", "Could not delete the payment method.");
+        SetFlash(result, L["Provider.Flash.MethodDeleted"], L["Provider.Flash.CouldNotDeleteMethod"].Value);
         return RedirectToFinanceMethods();
     }
 
@@ -93,7 +93,7 @@ public sealed class PaymentMethodsController : BaseController
             .Select(e => e.ErrorMessage)
             .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
 
-        SetError(firstError ?? "Please correct the highlighted fields and try again.");
+        SetError(firstError ?? L["Provider.Flash.FixHighlighted"].Value);
         return RedirectToFinanceMethods();
     }
 
