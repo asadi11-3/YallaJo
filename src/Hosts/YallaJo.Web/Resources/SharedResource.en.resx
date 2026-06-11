@@ -13831,4 +13831,7 @@
 <data name="Accounts.Msg.WishlistCleared" xml:space="preserve">
 <value>Your wishlist has been cleared.</value>
 </data>
+<data name="Accounts.Support.CloseTicketBtn" xml:space="preserve">
+<value>Close ticket</value>
+</data>
 </root>

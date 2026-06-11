@@ -13831,4 +13831,7 @@
 <data name="Accounts.Msg.WishlistCleared" xml:space="preserve">
 <value>تم مسح قائمة أمنياتك.</value>
 </data>
+<data name="Accounts.Support.CloseTicketBtn" xml:space="preserve">
+<value>إغلاق التذكرة</value>
+</data>
 </root>

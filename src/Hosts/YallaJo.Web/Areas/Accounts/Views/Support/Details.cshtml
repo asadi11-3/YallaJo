@@ -54,7 +54,7 @@
                                       class="m-0" data-confirm="@Localizer["Accounts.Confirm.CloseTicket"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Accounts.Confirm.Close"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger mb-0">Close ticket</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger mb-0">@Localizer["Accounts.Support.CloseTicketBtn"]</button>
                                 </form>
                             </div>
                         </permission>
