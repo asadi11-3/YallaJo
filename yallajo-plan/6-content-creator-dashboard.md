@@ -39,7 +39,7 @@
 ### 7.0 Overview *(shipped `DashboardController`)*
 - `GET /creator` / `GET /creator/dashboard` `SSR` — creator KPIs/landing.
 - **Buttons:** state-dependent CTAs (shipped `Dashboard/Index.cshtml`) — **Approved profile:** New Article → §7.2 · View all articles → §7.1 · Audience → §7.4 · Preview → §7.6 · **application states:** Become a creator / Continue / Update / Reapply → §7.5. Read-only (nav only, no POST).
-- **Stack:** **Area** `Creator` · **Route** `/creator`, `/creator/dashboard` · **Cache** `NoStore` · **Perm** `[Authorize]` (shipped `DashboardController` has no `[RequirePermission]`) · **Rules** `R2 SSR · ERR3 section-degrade · A11Y1`
+- **Stack:** **Area** `Creator` · **Route** `/creator`, `/creator/dashboard` · **Cache** `NoStore` · **Perm** `[Authorize]` + `WebPermission.Creator.Read` (shipped `DashboardController` carries a class-level `[RequirePermission(WebPermission.Creator.Read)]`; safe for the "Become a creator" funnel because `Permission.Creator.Read` is part of `ConsumerPermissions` in `RolePermissionMapping.cs`, granted to every regular User) · **Rules** `R2 SSR · ERR3 section-degrade · A11Y1`
 
 ### 7.1 My Blogs *(shipped `ArticlesController`)*
 - `GET /blogs/my-blogs?status=` `SSR`

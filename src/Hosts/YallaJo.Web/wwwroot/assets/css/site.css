@@ -237,3 +237,11 @@ html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
 .max-w-200 { max-width: 200px; }
 .max-w-14r { max-width: 14rem; }
 .max-w-80 { max-width: 80%; }
+
+/* ---- Creator Phase 0 utilities (UI-PERF-X6, RTL1 logical properties) ---- */
+/* Quill rich-text host (Creator article editor). */
+.quill-editor-host { min-block-size: 16rem; }
+/* Toast container that must sit above Bootstrap modals (z-index 1055). */
+.toast-container-elevated { z-index: 1090; }
+/* 4:3 gallery thumbnail (Creator article images). */
+.img-thumb-4x3 { aspect-ratio: 4 / 3; object-fit: cover; }

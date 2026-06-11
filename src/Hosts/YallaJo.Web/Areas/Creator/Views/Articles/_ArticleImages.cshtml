@@ -42,8 +42,7 @@ else
             var img = Model.Images[idx];
             <div class="col-6 col-md-3">
                 <div class="card border h-100">
-                    <img src="@img.DisplayUrl" class="card-img-top" alt="@img.OriginalFileName" loading="lazy"
-                         style="aspect-ratio:4/3;object-fit:cover;" />
+                    <img src="@img.DisplayUrl" class="card-img-top img-thumb-4x3" alt="@img.OriginalFileName" loading="lazy" />
                     <div class="card-body p-2 d-flex flex-wrap gap-1 justify-content-between align-items-center">
                         <div class="btn-group btn-group-sm">
                             @* Reorder up/down — post the full order with this item swapped. *@

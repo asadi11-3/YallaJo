@@ -71,7 +71,7 @@
                     @* J1: Quill rich-text host. The textarea is the hidden backing field that is
                        posted; creator-article-editor.js syncs Quill HTML into it. Falls back to a
                        visible textarea if Quill fails to load. *@
-                    <div id="contentEditor" class="border rounded" style="min-height: 16rem;"></div>
+                    <div id="contentEditor" class="border rounded quill-editor-host"></div>
                     <textarea asp-for="Content" class="form-control" rows="12" data-quill-backing></textarea>
                     <span asp-validation-for="Content" class="text-danger small" role="alert"></span>
                 </div>

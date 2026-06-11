@@ -80,8 +80,8 @@
 
     // ── F5: autosave to localStorage + recovery banner ─────────────────────
     function hasStorage() {
+        var k = "__yj_test__";
         try {
-            var k = "__yj_test__";
             window.localStorage.setItem(k, "1");
             window.localStorage.removeItem(k);
             return true;
@@ -192,8 +192,9 @@
         if (!raw) {
             return;
         }
+        var data = null;
         try {
-            var data = JSON.parse(raw);
+            data = JSON.parse(raw);
             if (data && typeof data === "object") {
                 showRecoveryBanner(data);
             }
