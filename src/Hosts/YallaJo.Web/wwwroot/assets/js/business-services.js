@@ -15,10 +15,21 @@
         var hasBootstrap = typeof bootstrap !== 'undefined' && bootstrap.Offcanvas;
         if (!api || !hasBootstrap) { return; } // graceful fallback to full page load
 
+        var triggerEl = null; // remembers which edit link opened the offcanvas (a11y focus return)
+
+        // A11y: when the offcanvas closes, return focus to the link that opened it.
+        offcanvasEl.addEventListener('hidden.bs.offcanvas', function () {
+            if (triggerEl && document.contains(triggerEl)) {
+                triggerEl.focus();
+            }
+            triggerEl = null;
+        });
+
         document.addEventListener('click', function (event) {
             var link = event.target.closest('a[data-service-edit]');
             if (!link) { return; }
             event.preventDefault();
+            triggerEl = link;
 
             bodyEl.innerHTML = '<div class="placeholder-glow" aria-hidden="true">'
                 + '<span class="placeholder col-8 mb-2"></span>'
@@ -33,6 +44,9 @@
             api.loadPartial(link.href)
                 .then(function (markup) {
                     bodyEl.innerHTML = markup;
+                    // A11y: move focus to the first editable field of the loaded form.
+                    var firstField = bodyEl.querySelector('input:not([type="hidden"]), select, textarea');
+                    if (firstField) { firstField.focus(); }
                 })
                 .catch(function () {
                     offcanvas.hide();

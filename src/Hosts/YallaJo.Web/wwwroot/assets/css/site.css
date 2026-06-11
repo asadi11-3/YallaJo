@@ -271,3 +271,13 @@ html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
     height: 96px;
     object-fit: cover;
 }
+
+/* Business Phase 5 — minimum touch target for icon-only action buttons (D2, 44px).
+   Direction-neutral box sizing; flex centering keeps the icon balanced in RTL (RTL1). */
+.btn-icon-touch {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
