@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Recommendations;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class RecommendationsController : BaseController
 {
     private readonly RecommendationsFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public RecommendationsController(RecommendationsFacade facade) => _facade = facade;
+    public RecommendationsController(RecommendationsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
@@ -42,7 +49,7 @@ public sealed class RecommendationsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(req.SourceKind) || req.SourceId == Guid.Empty || string.IsNullOrWhiteSpace(req.Context))
         {
-            SetError("A batch source kind, source id and context are required to refresh.");
+            SetError(_localizer["Admin.Recommendations.Flash.RefreshFieldsRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -52,7 +59,7 @@ public sealed class RecommendationsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Recommendation batch refreshed.", "Could not refresh the recommendation batch.");
+        SetFlash(result, _localizer["Admin.Recommendations.Flash.BatchRefreshed"].Value, _localizer["Admin.Recommendations.Flash.BatchRefreshFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -67,7 +74,7 @@ public sealed class RecommendationsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Boost package created.", "Could not create the boost package.");
+        SetFlash(result, _localizer["Admin.Recommendations.Flash.BoostCreated"].Value, _localizer["Admin.Recommendations.Flash.BoostCreateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -78,7 +85,7 @@ public sealed class RecommendationsController : BaseController
     {
         if (boostId == Guid.Empty)
         {
-            SetError("A boost package id is required.");
+            SetError(_localizer["Admin.Recommendations.Flash.BoostIdRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -88,7 +95,7 @@ public sealed class RecommendationsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Boost package deactivated.", "Could not deactivate the boost package.");
+        SetFlash(result, _localizer["Admin.Recommendations.Flash.BoostDeactivated"].Value, _localizer["Admin.Recommendations.Flash.BoostDeactivateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -103,7 +110,7 @@ public sealed class RecommendationsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Editorial pin created.", "Could not create the editorial pin.");
+        SetFlash(result, _localizer["Admin.Recommendations.Flash.PinCreated"].Value, _localizer["Admin.Recommendations.Flash.PinCreateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -114,7 +121,7 @@ public sealed class RecommendationsController : BaseController
     {
         if (pinId == Guid.Empty)
         {
-            SetError("An editorial pin id is required.");
+            SetError(_localizer["Admin.Recommendations.Flash.PinIdRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -124,7 +131,7 @@ public sealed class RecommendationsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Editorial pin deactivated.", "Could not deactivate the editorial pin.");
+        SetFlash(result, _localizer["Admin.Recommendations.Flash.PinDeactivated"].Value, _localizer["Admin.Recommendations.Flash.PinDeactivateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 }

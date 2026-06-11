@@ -5,6 +5,8 @@ using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -13,7 +15,12 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class AttachmentsController : BaseController
 {
     private readonly AttachmentsFacade _facade;
-    public AttachmentsController(AttachmentsFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
+    public AttachmentsController(AttachmentsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(
@@ -45,7 +52,7 @@ public sealed class AttachmentsController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please fix the upload form errors.");
+            SetError(_localizer["Admin.Attachments.Flash.FormErrors"].Value);
             return RedirectToAction(nameof(Index),
                 new { entityType = vm.EntityType, entityId = vm.EntityId });
         }
@@ -53,7 +60,7 @@ public sealed class AttachmentsController : BaseController
         var result = await _facade.UploadAsync(vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Attachment uploaded.", "Upload failed.");
+        SetFlash(result, _localizer["Admin.Attachments.Flash.Uploaded"].Value, _localizer["Admin.Attachments.Flash.UploadFailed"].Value);
 
         return RedirectToAction(nameof(Index),
             new { entityType = vm.EntityType, entityId = vm.EntityId });
@@ -68,7 +75,7 @@ public sealed class AttachmentsController : BaseController
         var result = await _facade.DeleteAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Attachment deleted.", "Delete failed.");
+        SetFlash(result, _localizer["Admin.Attachments.Flash.Deleted"].Value, _localizer["Admin.Attachments.Flash.DeleteFailed"].Value);
 
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
@@ -82,7 +89,7 @@ public sealed class AttachmentsController : BaseController
         var result = await _facade.SetPrimaryAsync(entityType, entityId, id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Primary image set.", "Could not set primary image.");
+        SetFlash(result, _localizer["Admin.Attachments.Flash.PrimarySet"].Value, _localizer["Admin.Attachments.Flash.PrimarySetFailed"].Value);
 
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }

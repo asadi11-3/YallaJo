@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.NotificationTemplates;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class NotificationTemplatesController : BaseController
 {
     private readonly NotificationTemplatesFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public NotificationTemplatesController(NotificationTemplatesFacade facade) => _facade = facade;
+    public NotificationTemplatesController(NotificationTemplatesFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
@@ -76,7 +83,7 @@ public sealed class NotificationTemplatesController : BaseController
             || string.IsNullOrWhiteSpace(req.Title)
             || string.IsNullOrWhiteSpace(req.Body))
         {
-            SetError("Type, channel, language, title and body are all required.");
+            SetError(_localizer["Admin.NotificationTemplates.Flash.FieldsRequired"].Value);
             return View("Edit", new NotificationTemplateEditVm
             {
                 IsNew = true,
@@ -95,7 +102,7 @@ public sealed class NotificationTemplatesController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Notification template created.", "Could not create the notification template.");
+        SetFlash(result, _localizer["Admin.NotificationTemplates.Flash.Created"].Value, _localizer["Admin.NotificationTemplates.Flash.CreateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -110,7 +117,7 @@ public sealed class NotificationTemplatesController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Notification template updated.", "Could not update the notification template.");
+        SetFlash(result, _localizer["Admin.NotificationTemplates.Flash.Updated"].Value, _localizer["Admin.NotificationTemplates.Flash.UpdateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -125,7 +132,7 @@ public sealed class NotificationTemplatesController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Notification template deleted.", "Could not delete the notification template.");
+        SetFlash(result, _localizer["Admin.NotificationTemplates.Flash.Deleted"].Value, _localizer["Admin.NotificationTemplates.Flash.DeleteFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 }

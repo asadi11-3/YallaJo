@@ -4,15 +4,18 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Commissions;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
 [Authorize]
 [RequirePermission(WebPermission.CommissionRule.Read)]
-public sealed class CommissionsController(CommissionsFacade facade) : BaseController
+public sealed class CommissionsController(CommissionsFacade facade, IStringLocalizer<SharedResource> localizer) : BaseController
 {
     private readonly CommissionsFacade _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer = localizer;
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] CommissionsFilterRequest request, CancellationToken ct)
@@ -40,7 +43,7 @@ public sealed class CommissionsController(CommissionsFacade facade) : BaseContro
     {
         if (string.IsNullOrWhiteSpace(request.Tier) || string.IsNullOrWhiteSpace(request.Currency) || request.Percentage <= 0)
         {
-            SetError("Tier, currency, and a positive percentage are required.");
+            SetError(_localizer["Admin.Commissions.Flash.FieldsRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -50,7 +53,7 @@ public sealed class CommissionsController(CommissionsFacade facade) : BaseContro
             return signOut;
         }
 
-        SetFlash(result, "Commission rule created.", "Could not create the commission rule.");
+        SetFlash(result, _localizer["Admin.Commissions.Flash.Created"].Value, _localizer["Admin.Commissions.Flash.CreateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -61,7 +64,7 @@ public sealed class CommissionsController(CommissionsFacade facade) : BaseContro
     {
         if (request.Percentage <= 0)
         {
-            SetError("A positive percentage is required.");
+            SetError(_localizer["Admin.Commissions.Flash.PercentageRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -71,7 +74,7 @@ public sealed class CommissionsController(CommissionsFacade facade) : BaseContro
             return signOut;
         }
 
-        SetFlash(result, "Commission rule updated.", "Could not update the commission rule.");
+        SetFlash(result, _localizer["Admin.Commissions.Flash.Updated"].Value, _localizer["Admin.Commissions.Flash.UpdateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -86,7 +89,7 @@ public sealed class CommissionsController(CommissionsFacade facade) : BaseContro
             return signOut;
         }
 
-        SetFlash(result, "Commission rule deleted.", "Could not delete the commission rule.");
+        SetFlash(result, _localizer["Admin.Commissions.Flash.Deleted"].Value, _localizer["Admin.Commissions.Flash.DeleteFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 }

@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.SeoSitemap;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class SeoSitemapController : BaseController
 {
     private readonly SeoSitemapFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public SeoSitemapController(SeoSitemapFacade facade) => _facade = facade;
+    public SeoSitemapController(SeoSitemapFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] SitemapFilterRequest request, CancellationToken ct)
@@ -42,7 +49,7 @@ public sealed class SeoSitemapController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please provide a valid priority and change frequency.");
+            SetError(_localizer["Admin.SeoSitemap.Flash.FieldsRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -52,7 +59,7 @@ public sealed class SeoSitemapController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Sitemap entry updated.", "Could not update the sitemap entry.");
+        SetFlash(result, _localizer["Admin.SeoSitemap.Flash.Updated"].Value, _localizer["Admin.SeoSitemap.Flash.UpdateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -67,7 +74,7 @@ public sealed class SeoSitemapController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Sitemap entry deleted.", "Could not delete the sitemap entry.");
+        SetFlash(result, _localizer["Admin.SeoSitemap.Flash.Deleted"].Value, _localizer["Admin.SeoSitemap.Flash.DeleteFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -82,7 +89,7 @@ public sealed class SeoSitemapController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Sitemap regeneration triggered.", "Could not regenerate the sitemap.");
+        SetFlash(result, _localizer["Admin.SeoSitemap.Flash.RegenTriggered"].Value, _localizer["Admin.SeoSitemap.Flash.RegenFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 }

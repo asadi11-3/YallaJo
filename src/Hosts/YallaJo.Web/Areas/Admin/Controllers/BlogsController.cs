@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Blogs;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -15,8 +17,13 @@ public sealed class BlogsController : BaseController
     private const int DefaultPageSize = 20;
 
     private readonly BlogsFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public BlogsController(BlogsFacade facade) => _facade = facade;
+    public BlogsController(BlogsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     // ── GET /admin/blogs ──────────────────────────────────────────────────────────
     [HttpGet]
@@ -61,7 +68,7 @@ public sealed class BlogsController : BaseController
 
         if (result.IsSuccess && result.Data is not null)
         {
-            SetSuccess("Blog created as Draft.");
+            SetSuccess(_localizer["Admin.Blogs.Flash.CreatedDraft"].Value);
             return RedirectToAction(nameof(Edit), new { id = result.Data.BlogId });
         }
 
@@ -129,7 +136,7 @@ public sealed class BlogsController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Blog updated.");
+            SetSuccess(_localizer["Admin.Blogs.Flash.Updated"].Value);
             return RedirectToAction(nameof(Edit), new { id });
         }
 
@@ -149,7 +156,7 @@ public sealed class BlogsController : BaseController
         var result = await _facade.DeleteAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Blog deleted.", "Could not delete the blog.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.Deleted"].Value, _localizer["Admin.Blogs.Flash.DeleteFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -162,7 +169,7 @@ public sealed class BlogsController : BaseController
         var result = await _facade.RestoreAsync(id, BlogsMapper.DecodeRowVersion(rowVersion), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Blog restored.", "Could not restore the blog.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.Restored"].Value, _localizer["Admin.Blogs.Flash.RestoreFailed"].Value);
         return RedirectToAction(nameof(Index), new { tab = BlogAdminTab.Deleted });
     }
 
@@ -175,7 +182,7 @@ public sealed class BlogsController : BaseController
         var result = await _facade.PublishAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Blog published.", "Could not publish the blog.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.Published"].Value, _localizer["Admin.Blogs.Flash.PublishFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -188,7 +195,7 @@ public sealed class BlogsController : BaseController
         var result = await _facade.UnpublishAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Blog unpublished (back to Draft).", "Could not unpublish the blog.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.Unpublished"].Value, _localizer["Admin.Blogs.Flash.UnpublishFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -201,7 +208,7 @@ public sealed class BlogsController : BaseController
         var result = await _facade.ArchiveAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Blog archived.", "Could not archive the blog.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.Archived"].Value, _localizer["Admin.Blogs.Flash.ArchiveFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -214,7 +221,7 @@ public sealed class BlogsController : BaseController
         var result = await _facade.FeatureAsync(id, featuredUntil, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Blog featured.", "Could not feature the blog.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.Featured"].Value, _localizer["Admin.Blogs.Flash.FeatureFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -227,7 +234,7 @@ public sealed class BlogsController : BaseController
         var result = await _facade.UnfeatureAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Blog unfeatured.", "Could not unfeature the blog.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.Unfeatured"].Value, _localizer["Admin.Blogs.Flash.UnfeatureFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -242,7 +249,7 @@ public sealed class BlogsController : BaseController
         var result = await _facade.ApproveAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Blog approved and published.", "Could not approve the blog.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.ApprovedPublished"].Value, _localizer["Admin.Blogs.Flash.ApproveFailed"].Value);
         return ModerationRedirect(id, fromEdit);
     }
 
@@ -254,14 +261,14 @@ public sealed class BlogsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.ReasonRequired"].Value);
             return ModerationRedirect(id, fromEdit);
         }
 
         var result = await _facade.RejectAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Blog rejected.", "Could not reject the blog.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.Rejected"].Value, _localizer["Admin.Blogs.Flash.RejectFailed"].Value);
         return ModerationRedirect(id, fromEdit);
     }
 
@@ -282,14 +289,14 @@ public sealed class BlogsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.ReasonRequired"].Value);
             return RedirectToAction(nameof(Edit), new { id });
         }
 
         var result = await _facade.HideAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Blog hidden.", "Could not hide the blog.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.Hidden"].Value, _localizer["Admin.Blogs.Flash.HideFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -302,7 +309,7 @@ public sealed class BlogsController : BaseController
         var result = await _facade.UnhideAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Blog unhidden (back to Published).", "Could not unhide the blog.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.Unhidden"].Value, _localizer["Admin.Blogs.Flash.UnhideFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -314,14 +321,14 @@ public sealed class BlogsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.ReasonRequired"].Value);
             return RedirectToAction(nameof(Edit), new { id });
         }
 
         var result = await _facade.RemoveAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Blog removed.", "Could not remove the blog.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.Removed"].Value, _localizer["Admin.Blogs.Flash.RemoveFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -335,14 +342,14 @@ public sealed class BlogsController : BaseController
     {
         if (tourId == Guid.Empty)
         {
-            SetError("Please select a tour to link.");
+            SetError(_localizer["Admin.Blogs.Flash.SelectTour"].Value);
             return RedirectToAction(nameof(Edit), new { id });
         }
 
         var result = await _facade.LinkTourAsync(id, tourId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Tour linked.", "Could not link the tour.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.TourLinked"].Value, _localizer["Admin.Blogs.Flash.TourLinkFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -355,7 +362,7 @@ public sealed class BlogsController : BaseController
         var result = await _facade.UnlinkTourAsync(id, tourId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Tour unlinked.", "Could not unlink the tour.");
+        SetFlash(result, _localizer["Admin.Blogs.Flash.TourUnlinked"].Value, _localizer["Admin.Blogs.Flash.TourUnlinkFailed"].Value);
         return RedirectToAction(nameof(Edit), new { id });
     }
 }

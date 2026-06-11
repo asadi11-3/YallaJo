@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Payments;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class PaymentsController : BaseController
 {
     private readonly PaymentsFacade _payments;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public PaymentsController(PaymentsFacade payments) => _payments = payments;
+    public PaymentsController(PaymentsFacade payments, IStringLocalizer<SharedResource> localizer)
+    {
+        _payments = payments;
+        _localizer = localizer;
+    }
 
     [HttpGet("admin/finance")]
     public async Task<IActionResult> Index([FromQuery] PaymentsFilterRequest request, CancellationToken ct)
@@ -61,7 +68,7 @@ public sealed class PaymentsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A refund reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.RefundReasonRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -71,7 +78,7 @@ public sealed class PaymentsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Refund issued.", "Could not process the refund.");
+        SetFlash(result, _localizer["Admin.Payments.Flash.RefundIssued"].Value, _localizer["Admin.Payments.Flash.RefundFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 }

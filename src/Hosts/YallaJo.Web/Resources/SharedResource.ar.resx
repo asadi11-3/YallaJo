@@ -14095,4 +14095,1048 @@
 <data name="Admin.Lookup.NoResults" xml:space="preserve">
 <value>لا توجد نتائج مطابقة.</value>
 </data>
+<data name="Admin.Shared.Flash.RejectReasonRequired" xml:space="preserve">
+<value>يجب إدخال سبب الرفض.</value>
+</data>
+<data name="Admin.Shared.Flash.SuspendReasonRequired" xml:space="preserve">
+<value>يجب إدخال سبب الإيقاف.</value>
+</data>
+<data name="Admin.Shared.Flash.ReasonRequired" xml:space="preserve">
+<value>يجب إدخال سبب.</value>
+</data>
+<data name="Admin.Shared.Flash.RefundReasonRequired" xml:space="preserve">
+<value>يجب إدخال سبب الاسترداد.</value>
+</data>
+<data name="Admin.Shared.Flash.ClaimTypeValueRequired" xml:space="preserve">
+<value>نوع المطالبة وقيمتها مطلوبان.</value>
+</data>
+<data name="Admin.Shared.Flash.ClaimAdded" xml:space="preserve">
+<value>تمت إضافة المطالبة.</value>
+</data>
+<data name="Admin.Shared.Flash.ClaimRemoved" xml:space="preserve">
+<value>تمت إزالة المطالبة.</value>
+</data>
+<data name="Admin.Shared.Flash.Failed" xml:space="preserve">
+<value>فشلت العملية.</value>
+</data>
+<data name="Admin.Shared.Flash.ActionFailed" xml:space="preserve">
+<value>تعذر إكمال الإجراء.</value>
+</data>
+<data name="Admin.Shared.Flash.TourApproved" xml:space="preserve">
+<value>تمت الموافقة على الجولة.</value>
+</data>
+<data name="Admin.Shared.Flash.TourApproveFailed" xml:space="preserve">
+<value>تعذرت الموافقة على الجولة.</value>
+</data>
+<data name="Admin.Shared.Flash.TourRejected" xml:space="preserve">
+<value>تم رفض الجولة.</value>
+</data>
+<data name="Admin.Shared.Flash.TourRejectFailed" xml:space="preserve">
+<value>تعذر رفض الجولة.</value>
+</data>
+<data name="Admin.Shared.Flash.TourSuspended" xml:space="preserve">
+<value>تم إيقاف الجولة.</value>
+</data>
+<data name="Admin.Shared.Flash.TourSuspendFailed" xml:space="preserve">
+<value>تعذر إيقاف الجولة.</value>
+</data>
+<data name="Admin.Shared.Flash.TourReinstated" xml:space="preserve">
+<value>تمت إعادة تفعيل الجولة.</value>
+</data>
+<data name="Admin.Shared.Flash.TourReinstateFailed" xml:space="preserve">
+<value>تعذرت إعادة تفعيل الجولة.</value>
+</data>
+<data name="Admin.Shared.Flash.DisputeResolved" xml:space="preserve">
+<value>تم حل النزاع.</value>
+</data>
+<data name="Admin.Shared.Flash.DisputeResolveFailed" xml:space="preserve">
+<value>تعذر حل النزاع.</value>
+</data>
+<data name="Admin.Attachments.Flash.FormErrors" xml:space="preserve">
+<value>يرجى تصحيح أخطاء نموذج الرفع.</value>
+</data>
+<data name="Admin.Attachments.Flash.Uploaded" xml:space="preserve">
+<value>تم رفع المرفق.</value>
+</data>
+<data name="Admin.Attachments.Flash.UploadFailed" xml:space="preserve">
+<value>فشل الرفع.</value>
+</data>
+<data name="Admin.Attachments.Flash.Deleted" xml:space="preserve">
+<value>تم حذف المرفق.</value>
+</data>
+<data name="Admin.Attachments.Flash.DeleteFailed" xml:space="preserve">
+<value>فشل الحذف.</value>
+</data>
+<data name="Admin.Attachments.Flash.PrimarySet" xml:space="preserve">
+<value>تم تعيين الصورة الرئيسية.</value>
+</data>
+<data name="Admin.Attachments.Flash.PrimarySetFailed" xml:space="preserve">
+<value>تعذر تعيين الصورة الرئيسية.</value>
+</data>
+<data name="Admin.AuditLogs.Flash.RedactReasonRequired" xml:space="preserve">
+<value>يجب إدخال سبب التنقيح.</value>
+</data>
+<data name="Admin.AuditLogs.Flash.Redacted" xml:space="preserve">
+<value>تم تنقيح سجل التدقيق.</value>
+</data>
+<data name="Admin.AuditLogs.Flash.RedactFailed" xml:space="preserve">
+<value>تعذر تنقيح سجل التدقيق.</value>
+</data>
+<data name="Admin.AuditLogs.Flash.ExportFailed" xml:space="preserve">
+<value>تعذر تصدير سجلات التدقيق.</value>
+</data>
+<data name="Admin.Blogs.Flash.CreatedDraft" xml:space="preserve">
+<value>تم إنشاء المدونة كمسودة.</value>
+</data>
+<data name="Admin.Blogs.Flash.Updated" xml:space="preserve">
+<value>تم تحديث المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.SelectTour" xml:space="preserve">
+<value>يرجى اختيار جولة لربطها.</value>
+</data>
+<data name="Admin.Blogs.Flash.Deleted" xml:space="preserve">
+<value>تم حذف المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.DeleteFailed" xml:space="preserve">
+<value>تعذر حذف المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.Restored" xml:space="preserve">
+<value>تمت استعادة المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.RestoreFailed" xml:space="preserve">
+<value>تعذرت استعادة المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.Published" xml:space="preserve">
+<value>تم نشر المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.PublishFailed" xml:space="preserve">
+<value>تعذر نشر المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.Unpublished" xml:space="preserve">
+<value>تم إلغاء نشر المدونة (عادت إلى مسودة).</value>
+</data>
+<data name="Admin.Blogs.Flash.UnpublishFailed" xml:space="preserve">
+<value>تعذر إلغاء نشر المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.Archived" xml:space="preserve">
+<value>تمت أرشفة المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.ArchiveFailed" xml:space="preserve">
+<value>تعذرت أرشفة المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.Featured" xml:space="preserve">
+<value>تم تمييز المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.FeatureFailed" xml:space="preserve">
+<value>تعذر تمييز المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.Unfeatured" xml:space="preserve">
+<value>تم إلغاء تمييز المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.UnfeatureFailed" xml:space="preserve">
+<value>تعذر إلغاء تمييز المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.ApprovedPublished" xml:space="preserve">
+<value>تمت الموافقة على المدونة ونشرها.</value>
+</data>
+<data name="Admin.Blogs.Flash.ApproveFailed" xml:space="preserve">
+<value>تعذرت الموافقة على المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.Rejected" xml:space="preserve">
+<value>تم رفض المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.RejectFailed" xml:space="preserve">
+<value>تعذر رفض المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.Hidden" xml:space="preserve">
+<value>تم إخفاء المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.HideFailed" xml:space="preserve">
+<value>تعذر إخفاء المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.Unhidden" xml:space="preserve">
+<value>تم إظهار المدونة (عادت إلى منشورة).</value>
+</data>
+<data name="Admin.Blogs.Flash.UnhideFailed" xml:space="preserve">
+<value>تعذر إظهار المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.Removed" xml:space="preserve">
+<value>تمت إزالة المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.RemoveFailed" xml:space="preserve">
+<value>تعذرت إزالة المدونة.</value>
+</data>
+<data name="Admin.Blogs.Flash.TourLinked" xml:space="preserve">
+<value>تم ربط الجولة.</value>
+</data>
+<data name="Admin.Blogs.Flash.TourLinkFailed" xml:space="preserve">
+<value>تعذر ربط الجولة.</value>
+</data>
+<data name="Admin.Blogs.Flash.TourUnlinked" xml:space="preserve">
+<value>تم فك ربط الجولة.</value>
+</data>
+<data name="Admin.Blogs.Flash.TourUnlinkFailed" xml:space="preserve">
+<value>تعذر فك ربط الجولة.</value>
+</data>
+<data name="Admin.BlogTranslations.Flash.Saved" xml:space="preserve">
+<value>تم حفظ الترجمة '{0}'.</value>
+</data>
+<data name="Admin.Bookings.Flash.ResolutionNotesRequired" xml:space="preserve">
+<value>ملاحظات الحل مطلوبة (10 أحرف على الأقل).</value>
+</data>
+<data name="Admin.Bookings.Flash.RefundPermissionDenied" xml:space="preserve">
+<value>ليست لديك صلاحية إصدار المبالغ المستردة.</value>
+</data>
+<data name="Admin.Bookings.Flash.PaymentIdRequired" xml:space="preserve">
+<value>معرّف الدفع مطلوب لإصدار الاسترداد.</value>
+</data>
+<data name="Admin.Bookings.Flash.RefundAmountRequired" xml:space="preserve">
+<value>يجب إدخال مبلغ استرداد موجب.</value>
+</data>
+<data name="Admin.Bookings.Flash.RefundCurrencyRequired" xml:space="preserve">
+<value>يجب تحديد عملة الاسترداد.</value>
+</data>
+<data name="Admin.Bookings.Flash.DisputeResolvedRefunded" xml:space="preserve">
+<value>تم حل النزاع وإصدار الاسترداد.</value>
+</data>
+<data name="Admin.Bookings.Flash.ForceRefunded" xml:space="preserve">
+<value>تم استرداد قيمة الحجز إلزاميًا.</value>
+</data>
+<data name="Admin.Bookings.Flash.ForceRefundFailed" xml:space="preserve">
+<value>تعذر الاسترداد الإلزامي لقيمة الحجز.</value>
+</data>
+<data name="Admin.Businesses.Flash.NoteRequired" xml:space="preserve">
+<value>يجب إدخال ملاحظة.</value>
+</data>
+<data name="Admin.Businesses.Flash.Approved" xml:space="preserve">
+<value>تمت الموافقة على النشاط التجاري.</value>
+</data>
+<data name="Admin.Businesses.Flash.ApproveFailed" xml:space="preserve">
+<value>تعذرت الموافقة على النشاط التجاري.</value>
+</data>
+<data name="Admin.Businesses.Flash.Rejected" xml:space="preserve">
+<value>تم رفض النشاط التجاري.</value>
+</data>
+<data name="Admin.Businesses.Flash.RejectFailed" xml:space="preserve">
+<value>تعذر رفض النشاط التجاري.</value>
+</data>
+<data name="Admin.Businesses.Flash.DocsRequested" xml:space="preserve">
+<value>تم طلب مستندات إضافية من النشاط التجاري.</value>
+</data>
+<data name="Admin.Businesses.Flash.DocsRequestFailed" xml:space="preserve">
+<value>تعذر طلب مستندات إضافية.</value>
+</data>
+<data name="Admin.Businesses.Flash.Suspended" xml:space="preserve">
+<value>تم إيقاف النشاط التجاري.</value>
+</data>
+<data name="Admin.Businesses.Flash.SuspendFailed" xml:space="preserve">
+<value>تعذر إيقاف النشاط التجاري.</value>
+</data>
+<data name="Admin.Businesses.Flash.Reinstated" xml:space="preserve">
+<value>تمت إعادة تفعيل النشاط التجاري.</value>
+</data>
+<data name="Admin.Businesses.Flash.ReinstateFailed" xml:space="preserve">
+<value>تعذرت إعادة تفعيل النشاط التجاري.</value>
+</data>
+<data name="Admin.Businesses.Flash.Deleted" xml:space="preserve">
+<value>تم حذف النشاط التجاري.</value>
+</data>
+<data name="Admin.Businesses.Flash.DeleteFailed" xml:space="preserve">
+<value>تعذر حذف النشاط التجاري.</value>
+</data>
+<data name="Admin.Categories.Flash.Created" xml:space="preserve">
+<value>تم إنشاء الفئة.</value>
+</data>
+<data name="Admin.Categories.Flash.Updated" xml:space="preserve">
+<value>تم تحديث الفئة.</value>
+</data>
+<data name="Admin.Categories.Flash.NotFound" xml:space="preserve">
+<value>الفئة غير موجودة.</value>
+</data>
+<data name="Admin.Categories.Flash.Deactivated" xml:space="preserve">
+<value>تم تعطيل الفئة.</value>
+</data>
+<data name="Admin.Categories.Flash.Activated" xml:space="preserve">
+<value>تم تفعيل الفئة.</value>
+</data>
+<data name="Admin.Categories.Flash.Deleted" xml:space="preserve">
+<value>تم حذف الفئة.</value>
+</data>
+<data name="Admin.Categories.Flash.Restored" xml:space="preserve">
+<value>تمت استعادة الفئة.</value>
+</data>
+<data name="Admin.Categories.Flash.Reordered" xml:space="preserve">
+<value>تمت إعادة ترتيب الفئات.</value>
+</data>
+<data name="Admin.Commissions.Flash.FieldsRequired" xml:space="preserve">
+<value>الفئة والعملة ونسبة موجبة كلها مطلوبة.</value>
+</data>
+<data name="Admin.Commissions.Flash.PercentageRequired" xml:space="preserve">
+<value>يجب إدخال نسبة موجبة.</value>
+</data>
+<data name="Admin.Commissions.Flash.Created" xml:space="preserve">
+<value>تم إنشاء قاعدة العمولة.</value>
+</data>
+<data name="Admin.Commissions.Flash.CreateFailed" xml:space="preserve">
+<value>تعذر إنشاء قاعدة العمولة.</value>
+</data>
+<data name="Admin.Commissions.Flash.Updated" xml:space="preserve">
+<value>تم تحديث قاعدة العمولة.</value>
+</data>
+<data name="Admin.Commissions.Flash.UpdateFailed" xml:space="preserve">
+<value>تعذر تحديث قاعدة العمولة.</value>
+</data>
+<data name="Admin.Commissions.Flash.Deleted" xml:space="preserve">
+<value>تم حذف قاعدة العمولة.</value>
+</data>
+<data name="Admin.Commissions.Flash.DeleteFailed" xml:space="preserve">
+<value>تعذر حذف قاعدة العمولة.</value>
+</data>
+<data name="Admin.Creators.Flash.DisplayNameRequiredApprove" xml:space="preserve">
+<value>يجب إدخال اسم العرض للموافقة على المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.InfoNoteRequired" xml:space="preserve">
+<value>يجب إدخال ملاحظة توضح المعلومات المطلوبة.</value>
+</data>
+<data name="Admin.Creators.Flash.DemoteReasonRequired" xml:space="preserve">
+<value>يجب إدخال سبب تخفيض المستوى.</value>
+</data>
+<data name="Admin.Creators.Flash.DisplayNameRequired" xml:space="preserve">
+<value>يجب إدخال اسم العرض.</value>
+</data>
+<data name="Admin.Creators.Flash.DeleteReasonRequired" xml:space="preserve">
+<value>يجب إدخال سبب لحذف ملف المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.ProfileDeleted" xml:space="preserve">
+<value>تم حذف ملف المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.ApplicationApproved" xml:space="preserve">
+<value>تمت الموافقة على طلب المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.ApplicationApproveFailed" xml:space="preserve">
+<value>تعذرت الموافقة على طلب المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.ApplicationRejected" xml:space="preserve">
+<value>تم رفض طلب المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.ApplicationRejectFailed" xml:space="preserve">
+<value>تعذر رفض طلب المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.InfoRequested" xml:space="preserve">
+<value>تم طلب معلومات إضافية من مقدم الطلب.</value>
+</data>
+<data name="Admin.Creators.Flash.InfoRequestFailed" xml:space="preserve">
+<value>تعذر طلب معلومات إضافية.</value>
+</data>
+<data name="Admin.Creators.Flash.ProfileSuspended" xml:space="preserve">
+<value>تم إيقاف ملف المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.ProfileSuspendFailed" xml:space="preserve">
+<value>تعذر إيقاف ملف المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.ProfileReinstated" xml:space="preserve">
+<value>تمت إعادة تفعيل ملف المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.ProfileReinstateFailed" xml:space="preserve">
+<value>تعذرت إعادة تفعيل ملف المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.Promoted" xml:space="preserve">
+<value>تمت ترقية المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.PromoteFailed" xml:space="preserve">
+<value>تعذرت ترقية المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.Demoted" xml:space="preserve">
+<value>تم تخفيض مستوى المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.DemoteFailed" xml:space="preserve">
+<value>تعذر تخفيض مستوى المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.ProfileUpdated" xml:space="preserve">
+<value>تم تحديث ملف المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.ProfileUpdateFailed" xml:space="preserve">
+<value>تعذر تحديث ملف المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.ProfileDeleteFailed" xml:space="preserve">
+<value>تعذر حذف ملف المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.InvitationSent" xml:space="preserve">
+<value>تم إرسال دعوة المنشئ.</value>
+</data>
+<data name="Admin.Creators.Flash.InvitationSendFailed" xml:space="preserve">
+<value>تعذر إرسال دعوة المنشئ.</value>
+</data>
+<data name="Admin.Disputes.Flash.ResolutionRequired" xml:space="preserve">
+<value>يجب تحديد قرار الحل.</value>
+</data>
+<data name="Admin.Disputes.Flash.EscalationReasonRequired" xml:space="preserve">
+<value>يجب إدخال سبب التصعيد.</value>
+</data>
+<data name="Admin.Disputes.Flash.UnderReview" xml:space="preserve">
+<value>تم وضع النزاع قيد المراجعة.</value>
+</data>
+<data name="Admin.Disputes.Flash.UnderReviewFailed" xml:space="preserve">
+<value>تعذر وضع النزاع قيد المراجعة.</value>
+</data>
+<data name="Admin.Disputes.Flash.Escalated" xml:space="preserve">
+<value>تم تصعيد النزاع.</value>
+</data>
+<data name="Admin.Disputes.Flash.EscalateFailed" xml:space="preserve">
+<value>تعذر تصعيد النزاع.</value>
+</data>
+<data name="Admin.EntityCategories.Flash.Assigned" xml:space="preserve">
+<value>تم إسناد الفئات.</value>
+</data>
+<data name="Admin.EntityCategories.Flash.AssignFailed" xml:space="preserve">
+<value>تعذر إسناد الفئات.</value>
+</data>
+<data name="Admin.EntityCategories.Flash.Removed" xml:space="preserve">
+<value>تمت إزالة الفئة.</value>
+</data>
+<data name="Admin.EntityCategories.Flash.RemoveFailed" xml:space="preserve">
+<value>تعذرت إزالة الفئة.</value>
+</data>
+<data name="Admin.EntityTags.Flash.Assigned" xml:space="preserve">
+<value>تم إسناد الوسوم.</value>
+</data>
+<data name="Admin.EntityTags.Flash.AssignFailed" xml:space="preserve">
+<value>تعذر إسناد الوسوم.</value>
+</data>
+<data name="Admin.EntityTags.Flash.Removed" xml:space="preserve">
+<value>تمت إزالة الوسم.</value>
+</data>
+<data name="Admin.EntityTags.Flash.RemoveFailed" xml:space="preserve">
+<value>تعذرت إزالة الوسم.</value>
+</data>
+<data name="Admin.FlaggedReviews.Flash.Approved" xml:space="preserve">
+<value>تمت الموافقة على المراجعة.</value>
+</data>
+<data name="Admin.FlaggedReviews.Flash.ApproveFailed" xml:space="preserve">
+<value>تعذرت الموافقة على المراجعة.</value>
+</data>
+<data name="Admin.FlaggedReviews.Flash.Removed" xml:space="preserve">
+<value>تمت إزالة المراجعة.</value>
+</data>
+<data name="Admin.FlaggedReviews.Flash.RemoveFailed" xml:space="preserve">
+<value>تعذرت إزالة المراجعة.</value>
+</data>
+<data name="Admin.Growth.Flash.PlaceNotFound" xml:space="preserve">
+<value>تعذر العثور على مكان مطابق لبحثك. اختر اقتراحًا أو الصق معرّف المكان.</value>
+</data>
+<data name="Admin.Growth.Flash.SeasonalityCreated" xml:space="preserve">
+<value>تم إنشاء قاعدة الموسمية.</value>
+</data>
+<data name="Admin.Growth.Flash.SeasonalityCreateFailed" xml:space="preserve">
+<value>تعذر إنشاء قاعدة الموسمية.</value>
+</data>
+<data name="Admin.Growth.Flash.SeasonalityDeactivated" xml:space="preserve">
+<value>تم تعطيل قاعدة الموسمية.</value>
+</data>
+<data name="Admin.Growth.Flash.SeasonalityDeactivateFailed" xml:space="preserve">
+<value>تعذر تعطيل قاعدة الموسمية.</value>
+</data>
+<data name="Admin.Growth.Flash.HolidayCreated" xml:space="preserve">
+<value>تم إنشاء سجل العطلة.</value>
+</data>
+<data name="Admin.Growth.Flash.HolidayCreateFailed" xml:space="preserve">
+<value>تعذر إنشاء سجل العطلة.</value>
+</data>
+<data name="Admin.Growth.Flash.PhotogenicMarked" xml:space="preserve">
+<value>تم وضع علامة فوتوغرافي.</value>
+</data>
+<data name="Admin.Growth.Flash.PhotogenicCleared" xml:space="preserve">
+<value>تمت إزالة علامة فوتوغرافي.</value>
+</data>
+<data name="Admin.Growth.Flash.PhotogenicUpdateFailed" xml:space="preserve">
+<value>تعذر تحديث علامة فوتوغرافي.</value>
+</data>
+<data name="Admin.Growth.Flash.ExperimentCreated" xml:space="preserve">
+<value>تم إنشاء التجربة.</value>
+</data>
+<data name="Admin.Growth.Flash.ExperimentCreateFailed" xml:space="preserve">
+<value>تعذر إنشاء التجربة.</value>
+</data>
+<data name="Admin.Growth.Flash.ExperimentStarted" xml:space="preserve">
+<value>تم بدء التجربة.</value>
+</data>
+<data name="Admin.Growth.Flash.ExperimentStartFailed" xml:space="preserve">
+<value>تعذر بدء التجربة.</value>
+</data>
+<data name="Admin.Growth.Flash.ExperimentCompleted" xml:space="preserve">
+<value>تم إكمال التجربة.</value>
+</data>
+<data name="Admin.Growth.Flash.ExperimentCompleteFailed" xml:space="preserve">
+<value>تعذر إكمال التجربة.</value>
+</data>
+<data name="Admin.GuideApplications.Flash.Approved" xml:space="preserve">
+<value>تمت الموافقة على طلب المرشد.</value>
+</data>
+<data name="Admin.GuideApplications.Flash.ApproveFailed" xml:space="preserve">
+<value>تعذرت الموافقة على طلب المرشد.</value>
+</data>
+<data name="Admin.GuideApplications.Flash.Rejected" xml:space="preserve">
+<value>تم رفض طلب المرشد.</value>
+</data>
+<data name="Admin.GuideApplications.Flash.RejectFailed" xml:space="preserve">
+<value>تعذر رفض طلب المرشد.</value>
+</data>
+<data name="Admin.Guides.Flash.FixFields" xml:space="preserve">
+<value>يرجى تصحيح الحقول المميزة والمحاولة مرة أخرى.</value>
+</data>
+<data name="Admin.Guides.Flash.Deactivated" xml:space="preserve">
+<value>تم تعطيل المرشد السياحي.</value>
+</data>
+<data name="Admin.Guides.Flash.DeactivateFailed" xml:space="preserve">
+<value>تعذر تعطيل المرشد السياحي.</value>
+</data>
+<data name="Admin.Guides.Flash.Suspended" xml:space="preserve">
+<value>تم إيقاف المرشد السياحي.</value>
+</data>
+<data name="Admin.Guides.Flash.SuspendFailed" xml:space="preserve">
+<value>تعذر إيقاف المرشد السياحي.</value>
+</data>
+<data name="Admin.Guides.Flash.Reinstated" xml:space="preserve">
+<value>تمت إعادة تفعيل المرشد السياحي.</value>
+</data>
+<data name="Admin.Guides.Flash.ReinstateFailed" xml:space="preserve">
+<value>تعذرت إعادة تفعيل المرشد السياحي.</value>
+</data>
+<data name="Admin.Guides.Flash.ProfileUpdated" xml:space="preserve">
+<value>تم تحديث ملف المرشد السياحي.</value>
+</data>
+<data name="Admin.Guides.Flash.ProfileUpdateFailed" xml:space="preserve">
+<value>تعذر تحديث ملف المرشد السياحي.</value>
+</data>
+<data name="Admin.Invitations.Flash.RoleOptionsFailed" xml:space="preserve">
+<value>تعذر تحميل خيارات الأدوار.</value>
+</data>
+<data name="Admin.Invitations.Flash.InviteSent" xml:space="preserve">
+<value>تم إرسال الدعوة إلى {0}. سيصلهم بريد إلكتروني لتعيين كلمة المرور وتفعيل الحساب.</value>
+</data>
+<data name="Admin.Invitations.Flash.ResendQueued" xml:space="preserve">
+<value>إذا كان هناك حساب مدعو بهذا البريد الإلكتروني، فقد تم إرسال دعوة جديدة.</value>
+</data>
+<data name="Admin.Invitations.Flash.ResendFailed" xml:space="preserve">
+<value>تعذرت إعادة إرسال الدعوة.</value>
+</data>
+<data name="Admin.Languages.Flash.Created" xml:space="preserve">
+<value>تم إنشاء اللغة.</value>
+</data>
+<data name="Admin.Languages.Flash.NotFound" xml:space="preserve">
+<value>اللغة غير موجودة.</value>
+</data>
+<data name="Admin.Languages.Flash.Updated" xml:space="preserve">
+<value>تم تحديث اللغة.</value>
+</data>
+<data name="Admin.Languages.Flash.LoadFailed" xml:space="preserve">
+<value>تعذر تحميل اللغات.</value>
+</data>
+<data name="Admin.Lifecycle.Flash.ReasonTooLong" xml:space="preserve">
+<value>السبب طويل جدًا (الحد الأقصى 500 حرف).</value>
+</data>
+<data name="Admin.Lifecycle.Flash.ReassignInvalid" xml:space="preserve">
+<value>مدخلات إعادة الإسناد غير صالحة.</value>
+</data>
+<data name="Admin.Lifecycle.Flash.Suspended" xml:space="preserve">
+<value>تم إيقاف المستخدم.</value>
+</data>
+<data name="Admin.Lifecycle.Flash.Reactivated" xml:space="preserve">
+<value>تمت إعادة تفعيل المستخدم.</value>
+</data>
+<data name="Admin.Lifecycle.Flash.Archived" xml:space="preserve">
+<value>تمت أرشفة المستخدم.</value>
+</data>
+<data name="Admin.Lifecycle.Flash.PasswordResetQueued" xml:space="preserve">
+<value>تمت جدولة بريد إعادة تعيين كلمة المرور.</value>
+</data>
+<data name="Admin.Lifecycle.Flash.Reassigned" xml:space="preserve">
+<value>تمت إعادة إسناد الحساب. تمت جدولة بريد التفعيل.</value>
+</data>
+<data name="Admin.Lifecycle.Flash.SessionsRevoked" xml:space="preserve">
+<value>تم إلغاء جميع الجلسات. سيحتاج المستخدم إلى تسجيل الدخول مجددًا.</value>
+</data>
+<data name="Admin.Moderation.Flash.WarnFieldsRequired" xml:space="preserve">
+<value>يرجى تحديد المستخدم والكيان وسبب التحذير.</value>
+</data>
+<data name="Admin.Moderation.Flash.BanFieldsRequired" xml:space="preserve">
+<value>يرجى تحديد المستخدم والكيان وسبب الحظر.</value>
+</data>
+<data name="Admin.Moderation.Flash.UserNotFound" xml:space="preserve">
+<value>تعذر العثور على مستخدم مطابق لبحثك. اختر اقتراحًا أو الصق معرّف المستخدم.</value>
+</data>
+<data name="Admin.Moderation.Flash.WarningIssued" xml:space="preserve">
+<value>تم إصدار التحذير.</value>
+</data>
+<data name="Admin.Moderation.Flash.WarnFailed" xml:space="preserve">
+<value>تعذر إصدار التحذير.</value>
+</data>
+<data name="Admin.Moderation.Flash.UserBanned" xml:space="preserve">
+<value>تم حظر المستخدم.</value>
+</data>
+<data name="Admin.Moderation.Flash.BanFailed" xml:space="preserve">
+<value>تعذر إصدار الحظر.</value>
+</data>
+<data name="Admin.Moderation.Flash.BanLifted" xml:space="preserve">
+<value>تم رفع الحظر.</value>
+</data>
+<data name="Admin.Moderation.Flash.UnbanFailed" xml:space="preserve">
+<value>تعذر رفع الحظر.</value>
+</data>
+<data name="Admin.NotificationTemplates.Flash.FieldsRequired" xml:space="preserve">
+<value>النوع والقناة واللغة والعنوان والمحتوى كلها مطلوبة.</value>
+</data>
+<data name="Admin.NotificationTemplates.Flash.Created" xml:space="preserve">
+<value>تم إنشاء قالب الإشعار.</value>
+</data>
+<data name="Admin.NotificationTemplates.Flash.CreateFailed" xml:space="preserve">
+<value>تعذر إنشاء قالب الإشعار.</value>
+</data>
+<data name="Admin.NotificationTemplates.Flash.Updated" xml:space="preserve">
+<value>تم تحديث قالب الإشعار.</value>
+</data>
+<data name="Admin.NotificationTemplates.Flash.UpdateFailed" xml:space="preserve">
+<value>تعذر تحديث قالب الإشعار.</value>
+</data>
+<data name="Admin.NotificationTemplates.Flash.Deleted" xml:space="preserve">
+<value>تم حذف قالب الإشعار.</value>
+</data>
+<data name="Admin.NotificationTemplates.Flash.DeleteFailed" xml:space="preserve">
+<value>تعذر حذف قالب الإشعار.</value>
+</data>
+<data name="Admin.Outbox.Flash.ModuleRequired" xml:space="preserve">
+<value>يجب تحديد الوحدة.</value>
+</data>
+<data name="Admin.Outbox.Flash.Replayed" xml:space="preserve">
+<value>تمت إعادة تشغيل رسالة الصندوق الصادر.</value>
+</data>
+<data name="Admin.Outbox.Flash.ReplayFailed" xml:space="preserve">
+<value>تعذرت إعادة تشغيل رسالة الصندوق الصادر.</value>
+</data>
+<data name="Admin.Outbox.Flash.BackfillStarted" xml:space="preserve">
+<value>تم بدء التعبئة الرجعية للقطات الجولات.</value>
+</data>
+<data name="Admin.Outbox.Flash.BackfillFailed" xml:space="preserve">
+<value>تعذر بدء التعبئة الرجعية للقطات الجولات.</value>
+</data>
+<data name="Admin.Payments.Flash.RefundIssued" xml:space="preserve">
+<value>تم إصدار الاسترداد.</value>
+</data>
+<data name="Admin.Payments.Flash.RefundFailed" xml:space="preserve">
+<value>تعذرت معالجة الاسترداد.</value>
+</data>
+<data name="Admin.Payouts.Flash.BatchTriggered" xml:space="preserve">
+<value>تم تشغيل دفعة المدفوعات.</value>
+</data>
+<data name="Admin.Payouts.Flash.BatchTriggerFailed" xml:space="preserve">
+<value>تعذر تشغيل دفعة المدفوعات.</value>
+</data>
+<data name="Admin.Payouts.Flash.Approved" xml:space="preserve">
+<value>تمت الموافقة على الدفعة.</value>
+</data>
+<data name="Admin.Payouts.Flash.ApproveFailed" xml:space="preserve">
+<value>تعذرت الموافقة على الدفعة.</value>
+</data>
+<data name="Admin.Places.Flash.Created" xml:space="preserve">
+<value>تم إنشاء المكان.</value>
+</data>
+<data name="Admin.Places.Flash.Updated" xml:space="preserve">
+<value>تم تحديث المكان.</value>
+</data>
+<data name="Admin.Places.Flash.NotFound" xml:space="preserve">
+<value>المكان غير موجود.</value>
+</data>
+<data name="Admin.Places.Flash.Deleted" xml:space="preserve">
+<value>تم حذف المكان.</value>
+</data>
+<data name="Admin.Places.Flash.DeleteFailed" xml:space="preserve">
+<value>تعذر حذف المكان.</value>
+</data>
+<data name="Admin.Places.Flash.Featured" xml:space="preserve">
+<value>تم تمييز المكان.</value>
+</data>
+<data name="Admin.Places.Flash.Unfeatured" xml:space="preserve">
+<value>تم إلغاء تمييز المكان.</value>
+</data>
+<data name="Admin.Places.Flash.Verified" xml:space="preserve">
+<value>تم توثيق المكان.</value>
+</data>
+<data name="Admin.Places.Flash.Unverified" xml:space="preserve">
+<value>تم إلغاء توثيق المكان.</value>
+</data>
+<data name="Admin.Places.Flash.AccessibilityUpdated" xml:space="preserve">
+<value>تم تحديث ميزات الوصول.</value>
+</data>
+<data name="Admin.Places.Flash.AccessibilityUpdateFailed" xml:space="preserve">
+<value>تعذر تحديث ميزات الوصول.</value>
+</data>
+<data name="Admin.Places.Flash.AccessibilityRemoved" xml:space="preserve">
+<value>تمت إزالة ميزة الوصول.</value>
+</data>
+<data name="Admin.Places.Flash.AccessibilityRemoveFailed" xml:space="preserve">
+<value>تعذرت إزالة ميزة الوصول.</value>
+</data>
+<data name="Admin.Providers.Flash.DocTypesRequired" xml:space="preserve">
+<value>اختر نوع مستند مفقود واحدًا على الأقل.</value>
+</data>
+<data name="Admin.Providers.Flash.DocNotesRequired" xml:space="preserve">
+<value>الملاحظات مطلوبة عند طلب المستندات.</value>
+</data>
+<data name="Admin.Providers.Flash.Approved" xml:space="preserve">
+<value>تمت الموافقة على طلب المزود.</value>
+</data>
+<data name="Admin.Providers.Flash.ApproveFailed" xml:space="preserve">
+<value>تعذرت الموافقة على الطلب.</value>
+</data>
+<data name="Admin.Providers.Flash.Rejected" xml:space="preserve">
+<value>تم رفض طلب المزود.</value>
+</data>
+<data name="Admin.Providers.Flash.RejectFailed" xml:space="preserve">
+<value>تعذر رفض الطلب.</value>
+</data>
+<data name="Admin.Providers.Flash.DocsRequested" xml:space="preserve">
+<value>تم طلب المستندات من المزود.</value>
+</data>
+<data name="Admin.Providers.Flash.DocsRequestFailed" xml:space="preserve">
+<value>تعذر طلب المستندات.</value>
+</data>
+<data name="Admin.Providers.Flash.Suspended" xml:space="preserve">
+<value>تم إيقاف المزود.</value>
+</data>
+<data name="Admin.Providers.Flash.SuspendFailed" xml:space="preserve">
+<value>تعذر إيقاف المزود.</value>
+</data>
+<data name="Admin.Providers.Flash.Reinstated" xml:space="preserve">
+<value>تمت إعادة تفعيل المزود.</value>
+</data>
+<data name="Admin.Providers.Flash.ReinstateFailed" xml:space="preserve">
+<value>تعذرت إعادة تفعيل المزود.</value>
+</data>
+<data name="Admin.Providers.Flash.PaymentVerified" xml:space="preserve">
+<value>تم توثيق وسيلة الدفع.</value>
+</data>
+<data name="Admin.Providers.Flash.PaymentUnverified" xml:space="preserve">
+<value>تم إلغاء توثيق وسيلة الدفع.</value>
+</data>
+<data name="Admin.Providers.Flash.PaymentVerifyFailed" xml:space="preserve">
+<value>تعذر تحديث توثيق وسيلة الدفع.</value>
+</data>
+<data name="Admin.Recommendations.Flash.RefreshFieldsRequired" xml:space="preserve">
+<value>نوع المصدر ومعرّفه والسياق كلها مطلوبة للتحديث.</value>
+</data>
+<data name="Admin.Recommendations.Flash.BoostIdRequired" xml:space="preserve">
+<value>معرّف باقة التعزيز مطلوب.</value>
+</data>
+<data name="Admin.Recommendations.Flash.PinIdRequired" xml:space="preserve">
+<value>معرّف التثبيت التحريري مطلوب.</value>
+</data>
+<data name="Admin.Recommendations.Flash.BatchRefreshed" xml:space="preserve">
+<value>تم تحديث دفعة التوصيات.</value>
+</data>
+<data name="Admin.Recommendations.Flash.BatchRefreshFailed" xml:space="preserve">
+<value>تعذر تحديث دفعة التوصيات.</value>
+</data>
+<data name="Admin.Recommendations.Flash.BoostCreated" xml:space="preserve">
+<value>تم إنشاء باقة التعزيز.</value>
+</data>
+<data name="Admin.Recommendations.Flash.BoostCreateFailed" xml:space="preserve">
+<value>تعذر إنشاء باقة التعزيز.</value>
+</data>
+<data name="Admin.Recommendations.Flash.BoostDeactivated" xml:space="preserve">
+<value>تم تعطيل باقة التعزيز.</value>
+</data>
+<data name="Admin.Recommendations.Flash.BoostDeactivateFailed" xml:space="preserve">
+<value>تعذر تعطيل باقة التعزيز.</value>
+</data>
+<data name="Admin.Recommendations.Flash.PinCreated" xml:space="preserve">
+<value>تم إنشاء التثبيت التحريري.</value>
+</data>
+<data name="Admin.Recommendations.Flash.PinCreateFailed" xml:space="preserve">
+<value>تعذر إنشاء التثبيت التحريري.</value>
+</data>
+<data name="Admin.Recommendations.Flash.PinDeactivated" xml:space="preserve">
+<value>تم تعطيل التثبيت التحريري.</value>
+</data>
+<data name="Admin.Recommendations.Flash.PinDeactivateFailed" xml:space="preserve">
+<value>تعذر تعطيل التثبيت التحريري.</value>
+</data>
+<data name="Admin.Reports.Flash.ActionRequired" xml:space="preserve">
+<value>يجب تحديد إجراء الإشراف.</value>
+</data>
+<data name="Admin.Reports.Flash.Resolved" xml:space="preserve">
+<value>تم حل البلاغ.</value>
+</data>
+<data name="Admin.Reports.Flash.ResolveFailed" xml:space="preserve">
+<value>تعذر حل البلاغ.</value>
+</data>
+<data name="Admin.Roles.Flash.Created" xml:space="preserve">
+<value>تم إنشاء الدور '{0}'.</value>
+</data>
+<data name="Admin.Roles.Flash.Updated" xml:space="preserve">
+<value>تم تحديث الدور.</value>
+</data>
+<data name="Admin.Roles.Flash.UpdateFailed" xml:space="preserve">
+<value>تعذر تحديث الدور.</value>
+</data>
+<data name="Admin.Roles.Flash.Deactivated" xml:space="preserve">
+<value>تم تعطيل الدور.</value>
+</data>
+<data name="Admin.SeoFaq.Flash.CreateFieldsRequired" xml:space="preserve">
+<value>يرجى إدخال كيان وسؤال وإجابة صالحة.</value>
+</data>
+<data name="Admin.SeoFaq.Flash.UpdateFieldsRequired" xml:space="preserve">
+<value>يرجى إدخال سؤال وإجابة صالحة.</value>
+</data>
+<data name="Admin.SeoFaq.Flash.ReorderInvalid" xml:space="preserve">
+<value>طلب إعادة الترتيب غير صالح.</value>
+</data>
+<data name="Admin.SeoFaq.Flash.Created" xml:space="preserve">
+<value>تم إنشاء عنصر الأسئلة الشائعة.</value>
+</data>
+<data name="Admin.SeoFaq.Flash.CreateFailed" xml:space="preserve">
+<value>تعذر إنشاء عنصر الأسئلة الشائعة.</value>
+</data>
+<data name="Admin.SeoFaq.Flash.Updated" xml:space="preserve">
+<value>تم تحديث عنصر الأسئلة الشائعة.</value>
+</data>
+<data name="Admin.SeoFaq.Flash.UpdateFailed" xml:space="preserve">
+<value>تعذر تحديث عنصر الأسئلة الشائعة.</value>
+</data>
+<data name="Admin.SeoFaq.Flash.Deleted" xml:space="preserve">
+<value>تم حذف عنصر الأسئلة الشائعة.</value>
+</data>
+<data name="Admin.SeoFaq.Flash.DeleteFailed" xml:space="preserve">
+<value>تعذر حذف عنصر الأسئلة الشائعة.</value>
+</data>
+<data name="Admin.SeoFaq.Flash.Reordered" xml:space="preserve">
+<value>تمت إعادة ترتيب عناصر الأسئلة الشائعة.</value>
+</data>
+<data name="Admin.SeoFaq.Flash.ReorderFailed" xml:space="preserve">
+<value>تعذرت إعادة ترتيب عناصر الأسئلة الشائعة.</value>
+</data>
+<data name="Admin.SeoMetadata.Flash.FixFields" xml:space="preserve">
+<value>يرجى تصحيح الحقول المميزة.</value>
+</data>
+<data name="Admin.SeoMetadata.Flash.Saved" xml:space="preserve">
+<value>تم حفظ بيانات تحسين محركات البحث.</value>
+</data>
+<data name="Admin.SeoMetadata.Flash.SaveFailed" xml:space="preserve">
+<value>تعذر حفظ بيانات تحسين محركات البحث.</value>
+</data>
+<data name="Admin.SeoMetadata.Flash.Deleted" xml:space="preserve">
+<value>تم حذف بيانات تحسين محركات البحث.</value>
+</data>
+<data name="Admin.SeoMetadata.Flash.DeleteFailed" xml:space="preserve">
+<value>تعذر حذف بيانات تحسين محركات البحث.</value>
+</data>
+<data name="Admin.SeoRedirects.Flash.CreateFieldsRequired" xml:space="preserve">
+<value>يرجى إدخال رابط قديم ورابط جديد ورمز حالة صالح.</value>
+</data>
+<data name="Admin.SeoRedirects.Flash.UpdateFieldsRequired" xml:space="preserve">
+<value>يرجى إدخال قيم صالحة لإعادة التوجيه.</value>
+</data>
+<data name="Admin.SeoRedirects.Flash.Created" xml:space="preserve">
+<value>تم إنشاء إعادة التوجيه.</value>
+</data>
+<data name="Admin.SeoRedirects.Flash.CreateFailed" xml:space="preserve">
+<value>تعذر إنشاء إعادة التوجيه.</value>
+</data>
+<data name="Admin.SeoRedirects.Flash.Updated" xml:space="preserve">
+<value>تم تحديث إعادة التوجيه.</value>
+</data>
+<data name="Admin.SeoRedirects.Flash.UpdateFailed" xml:space="preserve">
+<value>تعذر تحديث إعادة التوجيه.</value>
+</data>
+<data name="Admin.SeoRedirects.Flash.Deleted" xml:space="preserve">
+<value>تم حذف إعادة التوجيه.</value>
+</data>
+<data name="Admin.SeoRedirects.Flash.DeleteFailed" xml:space="preserve">
+<value>تعذر حذف إعادة التوجيه.</value>
+</data>
+<data name="Admin.SeoSitemap.Flash.FieldsRequired" xml:space="preserve">
+<value>يرجى إدخال أولوية وتكرار تغيير صالحين.</value>
+</data>
+<data name="Admin.SeoSitemap.Flash.Updated" xml:space="preserve">
+<value>تم تحديث سجل خريطة الموقع.</value>
+</data>
+<data name="Admin.SeoSitemap.Flash.UpdateFailed" xml:space="preserve">
+<value>تعذر تحديث سجل خريطة الموقع.</value>
+</data>
+<data name="Admin.SeoSitemap.Flash.Deleted" xml:space="preserve">
+<value>تم حذف سجل خريطة الموقع.</value>
+</data>
+<data name="Admin.SeoSitemap.Flash.DeleteFailed" xml:space="preserve">
+<value>تعذر حذف سجل خريطة الموقع.</value>
+</data>
+<data name="Admin.SeoSitemap.Flash.RegenTriggered" xml:space="preserve">
+<value>تم تشغيل إعادة توليد خريطة الموقع.</value>
+</data>
+<data name="Admin.SeoSitemap.Flash.RegenFailed" xml:space="preserve">
+<value>تعذرت إعادة توليد خريطة الموقع.</value>
+</data>
+<data name="Admin.SeoWeather.Flash.FieldsRequired" xml:space="preserve">
+<value>يرجى إدخال معرّف مكان وخط عرض وخط طول صالحة.</value>
+</data>
+<data name="Admin.SeoWeather.Flash.Refreshed" xml:space="preserve">
+<value>تم تحديث بيانات الطقس.</value>
+</data>
+<data name="Admin.SeoWeather.Flash.RefreshFailed" xml:space="preserve">
+<value>تعذر تحديث بيانات الطقس.</value>
+</data>
+<data name="Admin.SeoWeather.Flash.CachePurged" xml:space="preserve">
+<value>تم مسح ذاكرة الطقس المؤقتة.</value>
+</data>
+<data name="Admin.SeoWeather.Flash.CachePurgeFailed" xml:space="preserve">
+<value>تعذر مسح ذاكرة الطقس المؤقتة.</value>
+</data>
+<data name="Admin.SeoWeather.Flash.BudgetReset" xml:space="preserve">
+<value>تمت إعادة تعيين ميزانية الطقس.</value>
+</data>
+<data name="Admin.SeoWeather.Flash.BudgetResetFailed" xml:space="preserve">
+<value>تعذرت إعادة تعيين ميزانية الطقس.</value>
+</data>
+<data name="Admin.Specializations.Flash.Created" xml:space="preserve">
+<value>تم إنشاء التخصص.</value>
+</data>
+<data name="Admin.Specializations.Flash.NotFound" xml:space="preserve">
+<value>التخصص غير موجود.</value>
+</data>
+<data name="Admin.Specializations.Flash.Updated" xml:space="preserve">
+<value>تم تحديث التخصص.</value>
+</data>
+<data name="Admin.Specializations.Flash.LoadFailed" xml:space="preserve">
+<value>تعذر تحميل التخصصات.</value>
+</data>
+<data name="Admin.Support.Flash.ReplyRequired" xml:space="preserve">
+<value>يجب إدخال نص الرد.</value>
+</data>
+<data name="Admin.Support.Flash.AdminIdRequired" xml:space="preserve">
+<value>يجب إدخال معرّف مسؤول صالح.</value>
+</data>
+<data name="Admin.Support.Flash.ReplyPosted" xml:space="preserve">
+<value>تم نشر الرد.</value>
+</data>
+<data name="Admin.Support.Flash.ReplyFailed" xml:space="preserve">
+<value>تعذر نشر الرد.</value>
+</data>
+<data name="Admin.Support.Flash.TicketClosed" xml:space="preserve">
+<value>تم إغلاق التذكرة.</value>
+</data>
+<data name="Admin.Support.Flash.TicketCloseFailed" xml:space="preserve">
+<value>تعذر إغلاق التذكرة.</value>
+</data>
+<data name="Admin.Support.Flash.TicketAssigned" xml:space="preserve">
+<value>تم إسناد التذكرة.</value>
+</data>
+<data name="Admin.Support.Flash.TicketAssignFailed" xml:space="preserve">
+<value>تعذر إسناد التذكرة.</value>
+</data>
+<data name="Admin.Support.Flash.TicketResolved" xml:space="preserve">
+<value>تم حل التذكرة.</value>
+</data>
+<data name="Admin.Support.Flash.TicketResolveFailed" xml:space="preserve">
+<value>تعذر حل التذكرة.</value>
+</data>
+<data name="Admin.Tags.Flash.Created" xml:space="preserve">
+<value>تم إنشاء الوسم.</value>
+</data>
+<data name="Admin.Tags.Flash.NotFound" xml:space="preserve">
+<value>الوسم غير موجود.</value>
+</data>
+<data name="Admin.Tags.Flash.Updated" xml:space="preserve">
+<value>تم تحديث الوسم.</value>
+</data>
+<data name="Admin.Tags.Flash.LoadFailed" xml:space="preserve">
+<value>تعذر تحميل الوسوم.</value>
+</data>
+<data name="Admin.Tags.Flash.Deleted" xml:space="preserve">
+<value>تم حذف الوسم.</value>
+</data>
+<data name="Admin.Tags.Flash.DeleteFailed" xml:space="preserve">
+<value>تعذر حذف الوسم.</value>
+</data>
+<data name="Admin.Tours.Flash.Featured" xml:space="preserve">
+<value>تم تمييز الجولة.</value>
+</data>
+<data name="Admin.Tours.Flash.FeatureFailed" xml:space="preserve">
+<value>تعذر تمييز الجولة.</value>
+</data>
+<data name="Admin.Tours.Flash.Unfeatured" xml:space="preserve">
+<value>تم إلغاء تمييز الجولة.</value>
+</data>
+<data name="Admin.Tours.Flash.UnfeatureFailed" xml:space="preserve">
+<value>تعذر إلغاء تمييز الجولة.</value>
+</data>
+<data name="Admin.Tours.Flash.ProposalApproved" xml:space="preserve">
+<value>تمت الموافقة على المقترح وإنشاء الجولة.</value>
+</data>
+<data name="Admin.Tours.Flash.ProposalApproveFailed" xml:space="preserve">
+<value>تعذرت الموافقة على المقترح.</value>
+</data>
+<data name="Admin.Tours.Flash.ProposalRejected" xml:space="preserve">
+<value>تم رفض المقترح.</value>
+</data>
+<data name="Admin.Tours.Flash.ProposalRejectFailed" xml:space="preserve">
+<value>تعذر رفض المقترح.</value>
+</data>
+<data name="Admin.Tours.Flash.PackageApproved" xml:space="preserve">
+<value>تمت الموافقة على الباقة.</value>
+</data>
+<data name="Admin.Tours.Flash.PackageApproveFailed" xml:space="preserve">
+<value>تعذرت الموافقة على الباقة.</value>
+</data>
+<data name="Admin.Tours.Flash.PackageRejected" xml:space="preserve">
+<value>تم رفض الباقة.</value>
+</data>
+<data name="Admin.Tours.Flash.PackageRejectFailed" xml:space="preserve">
+<value>تعذر رفض الباقة.</value>
+</data>
+<data name="Admin.Tours.Flash.OfferingSuspended" xml:space="preserve">
+<value>تم إيقاف عرض المرشد.</value>
+</data>
+<data name="Admin.Tours.Flash.OfferingSuspendFailed" xml:space="preserve">
+<value>تعذر إيقاف عرض المرشد.</value>
+</data>
+<data name="Admin.Tours.Flash.OfferingReinstated" xml:space="preserve">
+<value>تمت إعادة تفعيل عرض المرشد.</value>
+</data>
+<data name="Admin.Tours.Flash.OfferingReinstateFailed" xml:space="preserve">
+<value>تعذرت إعادة تفعيل عرض المرشد.</value>
+</data>
+<data name="Admin.Translations.Flash.Updated" xml:space="preserve">
+<value>تم تحديث الترجمة.</value>
+</data>
+<data name="Admin.Translations.Flash.Approved" xml:space="preserve">
+<value>تمت الموافقة على الترجمة.</value>
+</data>
+<data name="Admin.Translations.Flash.ApproveFailed" xml:space="preserve">
+<value>تعذرت الموافقة على الترجمة.</value>
+</data>
+<data name="Admin.Translations.Flash.BackfillStarted" xml:space="preserve">
+<value>تم بدء التعبئة الرجعية للترجمات.</value>
+</data>
+<data name="Admin.Translations.Flash.BackfillFailed" xml:space="preserve">
+<value>تعذر بدء التعبئة الرجعية.</value>
+</data>
+<data name="Admin.Translations.Flash.BatchApproved" xml:space="preserve">
+<value>تمت الموافقة على الترجمات.</value>
+</data>
+<data name="Admin.Translations.Flash.BatchApproveFailed" xml:space="preserve">
+<value>تعذرت الموافقة على الترجمات.</value>
+</data>
+<data name="Admin.Users.Flash.SelectRole" xml:space="preserve">
+<value>يرجى اختيار دور.</value>
+</data>
+<data name="Admin.Users.Flash.Activated" xml:space="preserve">
+<value>تم تفعيل المستخدم.</value>
+</data>
+<data name="Admin.Users.Flash.Deactivated" xml:space="preserve">
+<value>تم تعطيل المستخدم.</value>
+</data>
+<data name="Admin.Users.Flash.RoleAssigned" xml:space="preserve">
+<value>تم إسناد الدور.</value>
+</data>
+<data name="Admin.Users.Flash.RoleRemoved" xml:space="preserve">
+<value>تمت إزالة الدور.</value>
+</data>
 </root>

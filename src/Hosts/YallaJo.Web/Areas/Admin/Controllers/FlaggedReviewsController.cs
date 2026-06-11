@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.FlaggedReviews;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class FlaggedReviewsController : BaseController
 {
     private readonly FlaggedReviewsFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public FlaggedReviewsController(FlaggedReviewsFacade facade) => _facade = facade;
+    public FlaggedReviewsController(FlaggedReviewsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] FlaggedReviewsFilterRequest request, CancellationToken ct)
@@ -48,7 +55,7 @@ public sealed class FlaggedReviewsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Review approved.", "Could not approve the review.");
+        SetFlash(result, _localizer["Admin.FlaggedReviews.Flash.Approved"].Value, _localizer["Admin.FlaggedReviews.Flash.ApproveFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -63,7 +70,7 @@ public sealed class FlaggedReviewsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Review removed.", "Could not remove the review.");
+        SetFlash(result, _localizer["Admin.FlaggedReviews.Flash.Removed"].Value, _localizer["Admin.FlaggedReviews.Flash.RemoveFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 }

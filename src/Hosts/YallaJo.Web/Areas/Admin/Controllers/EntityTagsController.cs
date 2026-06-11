@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.EntityTags;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class EntityTagsController : BaseController
 {
     private readonly EntityTagsFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public EntityTagsController(EntityTagsFacade facade) => _facade = facade;
+    public EntityTagsController(EntityTagsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(
@@ -46,7 +53,7 @@ public sealed class EntityTagsController : BaseController
         var result = await _facade.AssignAsync(entityType, entityId, tagIds, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Tags assigned.", "Could not assign tags.");
+        SetFlash(result, _localizer["Admin.EntityTags.Flash.Assigned"].Value, _localizer["Admin.EntityTags.Flash.AssignFailed"].Value);
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
 
@@ -59,7 +66,7 @@ public sealed class EntityTagsController : BaseController
         var result = await _facade.RemoveAsync(entityType, entityId, tagId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Tag removed.", "Could not remove tag.");
+        SetFlash(result, _localizer["Admin.EntityTags.Flash.Removed"].Value, _localizer["Admin.EntityTags.Flash.RemoveFailed"].Value);
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
 }

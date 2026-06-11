@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Businesses;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class BusinessesController : BaseController
 {
     private readonly BusinessesFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public BusinessesController(BusinessesFacade facade) => _facade = facade;
+    public BusinessesController(BusinessesFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(
@@ -52,7 +59,7 @@ public sealed class BusinessesController : BaseController
             return so;
         }
 
-        SetFlash(result, "Business approved.", "Could not approve the business.");
+        SetFlash(result, _localizer["Admin.Businesses.Flash.Approved"].Value, _localizer["Admin.Businesses.Flash.ApproveFailed"].Value);
         return Back(placeId);
     }
 
@@ -63,7 +70,7 @@ public sealed class BusinessesController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A rejection reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.RejectReasonRequired"].Value);
             return Back(placeId);
         }
 
@@ -73,7 +80,7 @@ public sealed class BusinessesController : BaseController
             return so;
         }
 
-        SetFlash(result, "Business rejected.", "Could not reject the business.");
+        SetFlash(result, _localizer["Admin.Businesses.Flash.Rejected"].Value, _localizer["Admin.Businesses.Flash.RejectFailed"].Value);
         return Back(placeId);
     }
 
@@ -84,7 +91,7 @@ public sealed class BusinessesController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A note is required.");
+            SetError(_localizer["Admin.Businesses.Flash.NoteRequired"].Value);
             return Back(placeId);
         }
 
@@ -94,7 +101,7 @@ public sealed class BusinessesController : BaseController
             return so;
         }
 
-        SetFlash(result, "Requested more documents from the business.", "Could not request more documents.");
+        SetFlash(result, _localizer["Admin.Businesses.Flash.DocsRequested"].Value, _localizer["Admin.Businesses.Flash.DocsRequestFailed"].Value);
         return Back(placeId);
     }
 
@@ -105,7 +112,7 @@ public sealed class BusinessesController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A suspension reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.SuspendReasonRequired"].Value);
             return Back(placeId);
         }
 
@@ -115,7 +122,7 @@ public sealed class BusinessesController : BaseController
             return so;
         }
 
-        SetFlash(result, "Business suspended.", "Could not suspend the business.");
+        SetFlash(result, _localizer["Admin.Businesses.Flash.Suspended"].Value, _localizer["Admin.Businesses.Flash.SuspendFailed"].Value);
         return Back(placeId);
     }
 
@@ -130,7 +137,7 @@ public sealed class BusinessesController : BaseController
             return so;
         }
 
-        SetFlash(result, "Business reinstated.", "Could not reinstate the business.");
+        SetFlash(result, _localizer["Admin.Businesses.Flash.Reinstated"].Value, _localizer["Admin.Businesses.Flash.ReinstateFailed"].Value);
         return Back(placeId);
     }
 
@@ -145,7 +152,7 @@ public sealed class BusinessesController : BaseController
             return so;
         }
 
-        SetFlash(result, "Business deleted.", "Could not delete the business.");
+        SetFlash(result, _localizer["Admin.Businesses.Flash.Deleted"].Value, _localizer["Admin.Businesses.Flash.DeleteFailed"].Value);
         return Back(placeId);
     }
 

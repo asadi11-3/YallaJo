@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Support;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class SupportController : BaseController
 {
     private readonly SupportFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public SupportController(SupportFacade facade) => _facade = facade;
+    public SupportController(SupportFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] SupportFilterRequest request, CancellationToken ct)
@@ -61,7 +68,7 @@ public sealed class SupportController : BaseController
     {
         if (string.IsNullOrWhiteSpace(body))
         {
-            SetError("A reply message is required.");
+            SetError(_localizer["Admin.Support.Flash.ReplyRequired"].Value);
             return Back(id);
         }
 
@@ -71,7 +78,7 @@ public sealed class SupportController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Reply posted.", "Could not post the reply.");
+        SetFlash(result, _localizer["Admin.Support.Flash.ReplyPosted"].Value, _localizer["Admin.Support.Flash.ReplyFailed"].Value);
         return Back(id);
     }
 
@@ -86,7 +93,7 @@ public sealed class SupportController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Ticket closed.", "Could not close the ticket.");
+        SetFlash(result, _localizer["Admin.Support.Flash.TicketClosed"].Value, _localizer["Admin.Support.Flash.TicketCloseFailed"].Value);
         return Back(id);
     }
 
@@ -97,7 +104,7 @@ public sealed class SupportController : BaseController
     {
         if (adminUserId == Guid.Empty)
         {
-            SetError("A valid admin user id is required.");
+            SetError(_localizer["Admin.Support.Flash.AdminIdRequired"].Value);
             return Back(id);
         }
 
@@ -107,7 +114,7 @@ public sealed class SupportController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Ticket assigned.", "Could not assign the ticket.");
+        SetFlash(result, _localizer["Admin.Support.Flash.TicketAssigned"].Value, _localizer["Admin.Support.Flash.TicketAssignFailed"].Value);
         return Back(id);
     }
 
@@ -122,7 +129,7 @@ public sealed class SupportController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Ticket resolved.", "Could not resolve the ticket.");
+        SetFlash(result, _localizer["Admin.Support.Flash.TicketResolved"].Value, _localizer["Admin.Support.Flash.TicketResolveFailed"].Value);
         return Back(id);
     }
 

@@ -5,6 +5,8 @@ using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -13,7 +15,12 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class AuditLogsController : BaseController
 {
     private readonly AuditLogsFacade _facade;
-    public AuditLogsController(AuditLogsFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
+    public AuditLogsController(AuditLogsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(
@@ -67,14 +74,14 @@ public sealed class AuditLogsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A redaction reason is required.");
+            SetError(_localizer["Admin.AuditLogs.Flash.RedactReasonRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
         var result = await _facade.RedactAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Audit-log entry redacted.", "Could not redact the audit-log entry.");
+        SetFlash(result, _localizer["Admin.AuditLogs.Flash.Redacted"].Value, _localizer["Admin.AuditLogs.Flash.RedactFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -92,7 +99,7 @@ public sealed class AuditLogsController : BaseController
 
         if (!result.IsSuccess || result.Data is null)
         {
-            SetError(result.Error ?? "Could not export the audit logs.");
+            SetError(result.Error ?? _localizer["Admin.AuditLogs.Flash.ExportFailed"].Value);
             return RedirectToAction(nameof(Index));
         }
 

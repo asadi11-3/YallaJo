@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Guides;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class GuidesController : BaseController
 {
     private readonly GuidesFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public GuidesController(GuidesFacade facade) => _facade = facade;
+    public GuidesController(GuidesFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(Guid? id = null, CancellationToken ct = default)
@@ -43,7 +50,7 @@ public sealed class GuidesController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A suspension reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.SuspendReasonRequired"].Value);
             return Back(id);
         }
 
@@ -53,7 +60,7 @@ public sealed class GuidesController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Tour guide suspended.", "Could not suspend the tour guide.");
+        SetFlash(result, _localizer["Admin.Guides.Flash.Suspended"].Value, _localizer["Admin.Guides.Flash.SuspendFailed"].Value);
         return Back(id);
     }
 
@@ -68,7 +75,7 @@ public sealed class GuidesController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Tour guide reinstated.", "Could not reinstate the tour guide.");
+        SetFlash(result, _localizer["Admin.Guides.Flash.Reinstated"].Value, _localizer["Admin.Guides.Flash.ReinstateFailed"].Value);
         return Back(id);
     }
 
@@ -83,7 +90,7 @@ public sealed class GuidesController : BaseController
 
         if (!ModelState.IsValid)
         {
-            SetError("Please correct the highlighted fields and try again.");
+            SetError(_localizer["Admin.Guides.Flash.FixFields"].Value);
             return Back(id);
         }
 
@@ -93,7 +100,7 @@ public sealed class GuidesController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Tour guide profile updated.", "Could not update the tour guide profile.");
+        SetFlash(result, _localizer["Admin.Guides.Flash.ProfileUpdated"].Value, _localizer["Admin.Guides.Flash.ProfileUpdateFailed"].Value);
         return Back(id);
     }
 
@@ -112,11 +119,11 @@ public sealed class GuidesController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Tour guide deactivated.");
+            SetSuccess(_localizer["Admin.Guides.Flash.Deactivated"].Value);
             return RedirectToAction(nameof(Index));
         }
 
-        SetError(result.Error ?? "Could not deactivate the tour guide.");
+        SetError(result.Error ?? _localizer["Admin.Guides.Flash.DeactivateFailed"].Value);
         return Back(id);
     }
 

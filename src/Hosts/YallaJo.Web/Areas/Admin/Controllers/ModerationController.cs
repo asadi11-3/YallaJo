@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Moderation;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -14,9 +16,11 @@ public sealed class ModerationController : BaseController
 {
     private readonly ModerationFacade _facade;
     private readonly LookupsFacade _lookups;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public ModerationController(ModerationFacade facade, LookupsFacade lookups)
+    public ModerationController(ModerationFacade facade, LookupsFacade lookups, IStringLocalizer<SharedResource> localizer)
     {
+        _localizer = localizer;
         _facade = facade;
         _lookups = lookups;
     }
@@ -60,7 +64,7 @@ public sealed class ModerationController : BaseController
         form.UserId = await ResolveUserAsync(form.UserId, userQuery, ct) ?? Guid.Empty;
         if (!ModelState.IsValid || form.UserId == Guid.Empty)
         {
-            SetError("Please provide a user, entity, and reason for the warning.");
+            SetError(_localizer["Admin.Moderation.Flash.WarnFieldsRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -70,7 +74,7 @@ public sealed class ModerationController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Warning issued.", "Could not issue the warning.");
+        SetFlash(result, _localizer["Admin.Moderation.Flash.WarningIssued"].Value, _localizer["Admin.Moderation.Flash.WarnFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -83,7 +87,7 @@ public sealed class ModerationController : BaseController
         form.UserId = await ResolveUserAsync(form.UserId, userQuery, ct) ?? Guid.Empty;
         if (!ModelState.IsValid || form.UserId == Guid.Empty)
         {
-            SetError("Please provide a user, entity, and reason for the ban.");
+            SetError(_localizer["Admin.Moderation.Flash.BanFieldsRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -93,7 +97,7 @@ public sealed class ModerationController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "User banned.", "Could not issue the ban.");
+        SetFlash(result, _localizer["Admin.Moderation.Flash.UserBanned"].Value, _localizer["Admin.Moderation.Flash.BanFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -106,7 +110,7 @@ public sealed class ModerationController : BaseController
         userId = await ResolveUserAsync(userId, userQuery, ct) ?? Guid.Empty;
         if (userId == Guid.Empty)
         {
-            SetError("Could not find a user matching that search. Pick a suggestion or paste the user id.");
+            SetError(_localizer["Admin.Moderation.Flash.UserNotFound"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -116,7 +120,7 @@ public sealed class ModerationController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Ban lifted.", "Could not lift the ban.");
+        SetFlash(result, _localizer["Admin.Moderation.Flash.BanLifted"].Value, _localizer["Admin.Moderation.Flash.UnbanFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 

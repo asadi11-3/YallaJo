@@ -6,6 +6,8 @@ using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -14,8 +16,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class InvitationsController : BaseController
 {
     private readonly InvitationsFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public InvitationsController(InvitationsFacade facade) => _facade = facade;
+    public InvitationsController(InvitationsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
@@ -25,7 +32,7 @@ public sealed class InvitationsController : BaseController
         if (GuardSignOut(loaded) is { } signOut) return signOut;
 
         if (!loaded.IsSuccess)
-            SetError(loaded.Error ?? "Could not load role options.");
+            SetError(loaded.Error ?? _localizer["Admin.Invitations.Flash.RoleOptionsFailed"].Value);
 
         return View(vm);
     }
@@ -45,7 +52,7 @@ public sealed class InvitationsController : BaseController
         if (GuardSignOut(loaded) is { } signOut) return signOut;
 
         if (!loaded.IsSuccess)
-            ModelState.AddModelError(string.Empty, loaded.Error ?? "Could not load role options.");
+            ModelState.AddModelError(string.Empty, loaded.Error ?? _localizer["Admin.Invitations.Flash.RoleOptionsFailed"].Value);
 
         if (!ModelState.IsValid)
             return View(nameof(Index), vm);
@@ -57,7 +64,7 @@ public sealed class InvitationsController : BaseController
         if (result.IsSuccess)
         {
             SetSuccess(
-                $"Invite sent to {vm.Email}. They will receive an email to set a password and activate the account.");
+                _localizer["Admin.Invitations.Flash.InviteSent", vm.Email].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -81,7 +88,7 @@ public sealed class InvitationsController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("If an invited account exists for that email, a new invite has been sent.");
+            SetSuccess(_localizer["Admin.Invitations.Flash.ResendQueued"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -94,7 +101,7 @@ public sealed class InvitationsController : BaseController
         }
         else
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Could not resend invite.");
+            ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Admin.Invitations.Flash.ResendFailed"].Value);
         }
 
         return await IndexWithResend(vm, ct);
@@ -107,7 +114,7 @@ public sealed class InvitationsController : BaseController
         var loaded = await PopulateRoleOptionsAsync(vm, ct);
 
         if (!loaded.IsSuccess)
-            SetError(loaded.Error ?? "Could not load role options.");
+            SetError(loaded.Error ?? _localizer["Admin.Invitations.Flash.RoleOptionsFailed"].Value);
 
         return View(nameof(Index), vm);
     }
@@ -120,7 +127,7 @@ public sealed class InvitationsController : BaseController
             vm.AvailableRoles = [];
             return result.IsUnauthorized
                 ? ApiResult.ForceSignOut()
-                : ApiResult.Fail(result.Error ?? "Could not load role options.");
+                : ApiResult.Fail(result.Error ?? _localizer["Admin.Invitations.Flash.RoleOptionsFailed"].Value);
         }
 
         vm.AvailableRoles = result.Data;

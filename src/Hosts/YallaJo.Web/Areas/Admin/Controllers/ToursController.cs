@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Tours;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -16,8 +18,13 @@ public sealed class ToursController : BaseController
     private const string DefaultStatus = "Pending";
 
     private readonly AdminToursFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public ToursController(AdminToursFacade facade) => _facade = facade;
+    public ToursController(AdminToursFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     // ── GET /admin/tours ──────────────────────────────────────────────────────────
     [HttpGet]
@@ -70,7 +77,7 @@ public sealed class ToursController : BaseController
         var result = await _facade.ApproveAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Tour approved.", "Could not approve the tour.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.TourApproved"].Value, _localizer["Admin.Shared.Flash.TourApproveFailed"].Value);
         return BackToDetails(id);
     }
 
@@ -82,14 +89,14 @@ public sealed class ToursController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A rejection reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.RejectReasonRequired"].Value);
             return BackToDetails(id);
         }
 
         var result = await _facade.RejectAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Tour rejected.", "Could not reject the tour.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.TourRejected"].Value, _localizer["Admin.Shared.Flash.TourRejectFailed"].Value);
         return BackToDetails(id);
     }
 
@@ -101,14 +108,14 @@ public sealed class ToursController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A suspension reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.SuspendReasonRequired"].Value);
             return BackToDetails(id);
         }
 
         var result = await _facade.SuspendAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Tour suspended.", "Could not suspend the tour.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.TourSuspended"].Value, _localizer["Admin.Shared.Flash.TourSuspendFailed"].Value);
         return BackToDetails(id);
     }
 
@@ -121,7 +128,7 @@ public sealed class ToursController : BaseController
         var result = await _facade.ReinstateAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Tour reinstated.", "Could not reinstate the tour.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.TourReinstated"].Value, _localizer["Admin.Shared.Flash.TourReinstateFailed"].Value);
         return BackToDetails(id);
     }
 
@@ -136,8 +143,8 @@ public sealed class ToursController : BaseController
 
         SetFlash(
             result,
-            isFeatured ? "Tour featured." : "Tour unfeatured.",
-            isFeatured ? "Could not feature the tour." : "Could not unfeature the tour.");
+            isFeatured ? _localizer["Admin.Tours.Flash.Featured"].Value : _localizer["Admin.Tours.Flash.Unfeatured"].Value,
+            isFeatured ? _localizer["Admin.Tours.Flash.FeatureFailed"].Value : _localizer["Admin.Tours.Flash.UnfeatureFailed"].Value);
         return BackToDetails(id);
     }
 
@@ -150,7 +157,7 @@ public sealed class ToursController : BaseController
         var result = await _facade.ApproveProposalAsync(id, isExclusive, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Proposal approved and tour created.", "Could not approve the proposal.");
+        SetFlash(result, _localizer["Admin.Tours.Flash.ProposalApproved"].Value, _localizer["Admin.Tours.Flash.ProposalApproveFailed"].Value);
         return RedirectToAction(nameof(Index), new { status = DefaultStatus });
     }
 
@@ -162,14 +169,14 @@ public sealed class ToursController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A rejection reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.RejectReasonRequired"].Value);
             return RedirectToAction(nameof(Index), new { status = DefaultStatus });
         }
 
         var result = await _facade.RejectProposalAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Proposal rejected.", "Could not reject the proposal.");
+        SetFlash(result, _localizer["Admin.Tours.Flash.ProposalRejected"].Value, _localizer["Admin.Tours.Flash.ProposalRejectFailed"].Value);
         return RedirectToAction(nameof(Index), new { status = DefaultStatus });
     }
 
@@ -182,7 +189,7 @@ public sealed class ToursController : BaseController
         var result = await _facade.ApprovePackageAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Package approved.", "Could not approve the package.");
+        SetFlash(result, _localizer["Admin.Tours.Flash.PackageApproved"].Value, _localizer["Admin.Tours.Flash.PackageApproveFailed"].Value);
         return tourId is { } tid
             ? BackToDetails(tid)
             : RedirectToAction(nameof(Index), new { status = DefaultStatus });
@@ -196,7 +203,7 @@ public sealed class ToursController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A rejection reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.RejectReasonRequired"].Value);
             return tourId is { } tidErr
                 ? BackToDetails(tidErr)
                 : RedirectToAction(nameof(Index), new { status = DefaultStatus });
@@ -205,7 +212,7 @@ public sealed class ToursController : BaseController
         var result = await _facade.RejectPackageAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Package rejected.", "Could not reject the package.");
+        SetFlash(result, _localizer["Admin.Tours.Flash.PackageRejected"].Value, _localizer["Admin.Tours.Flash.PackageRejectFailed"].Value);
         return tourId is { } tid
             ? BackToDetails(tid)
             : RedirectToAction(nameof(Index), new { status = DefaultStatus });
@@ -219,14 +226,14 @@ public sealed class ToursController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A suspension reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.SuspendReasonRequired"].Value);
             return BackToDetails(tourId);
         }
 
         var result = await _facade.SuspendOfferingAsync(tourId, guideId, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Guide offering suspended.", "Could not suspend the guide offering.");
+        SetFlash(result, _localizer["Admin.Tours.Flash.OfferingSuspended"].Value, _localizer["Admin.Tours.Flash.OfferingSuspendFailed"].Value);
         return BackToDetails(tourId);
     }
 
@@ -239,7 +246,7 @@ public sealed class ToursController : BaseController
         var result = await _facade.ReinstateOfferingAsync(tourId, guideId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Guide offering reinstated.", "Could not reinstate the guide offering.");
+        SetFlash(result, _localizer["Admin.Tours.Flash.OfferingReinstated"].Value, _localizer["Admin.Tours.Flash.OfferingReinstateFailed"].Value);
         return BackToDetails(tourId);
     }
 

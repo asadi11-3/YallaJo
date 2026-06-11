@@ -5,6 +5,8 @@ using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -13,7 +15,12 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class UsersController : BaseController
 {
     private readonly UsersFacade _facade;
-    public UsersController(UsersFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
+    public UsersController(UsersFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
@@ -57,7 +64,7 @@ public sealed class UsersController : BaseController
     {
         var result = await _facade.ActivateAsync(userId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "User activated.");
+        SetFlash(result, _localizer["Admin.Users.Flash.Activated"].Value);
         return RedirectToAction("Details", new { userId });
     }
 
@@ -68,7 +75,7 @@ public sealed class UsersController : BaseController
     {
         var result = await _facade.DeactivateAsync(userId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "User deactivated.");
+        SetFlash(result, _localizer["Admin.Users.Flash.Deactivated"].Value);
         return RedirectToAction("Details", new { userId });
     }
 
@@ -79,14 +86,14 @@ public sealed class UsersController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please select a role.");
+            SetError(_localizer["Admin.Users.Flash.SelectRole"].Value);
             return RedirectToAction("Details", new { userId });
         }
 
         var result = await _facade.AssignRoleAsync(userId, vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         ApplyValidationErrors(result);
-        SetFlash(result, "Role assigned.");
+        SetFlash(result, _localizer["Admin.Users.Flash.RoleAssigned"].Value);
         return RedirectToAction("Details", new { userId });
     }
 
@@ -97,7 +104,7 @@ public sealed class UsersController : BaseController
     {
         var result = await _facade.RemoveRoleAsync(userId, roleId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Role removed.");
+        SetFlash(result, _localizer["Admin.Users.Flash.RoleRemoved"].Value);
         return RedirectToAction("Details", new { userId });
     }
 
@@ -108,13 +115,13 @@ public sealed class UsersController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Claim type and value are required.");
+            SetError(_localizer["Admin.Shared.Flash.ClaimTypeValueRequired"].Value);
             return RedirectToAction("Details", new { userId });
         }
 
         var result = await _facade.AddClaimAsync(userId, vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Claim added.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.ClaimAdded"].Value);
         return RedirectToAction("Details", new { userId });
     }
 
@@ -125,7 +132,7 @@ public sealed class UsersController : BaseController
     {
         var result = await _facade.RemoveClaimAsync(userId, claimId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Claim removed.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.ClaimRemoved"].Value);
         return RedirectToAction("Details", new { userId });
     }
 }

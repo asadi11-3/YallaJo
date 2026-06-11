@@ -6,6 +6,8 @@ using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -14,7 +16,12 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class RolesController : BaseController
 {
     private readonly RolesFacade _facade;
-    public RolesController(RolesFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
+    public RolesController(RolesFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
 
     [HttpGet]
@@ -64,7 +71,7 @@ public sealed class RolesController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess($"Role '{vm.Name}' created.");
+            SetSuccess(_localizer["Admin.Roles.Flash.Created", vm.Name].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -101,14 +108,14 @@ public sealed class RolesController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Role updated.");
+            SetSuccess(_localizer["Admin.Roles.Flash.Updated"].Value);
             return RedirectToAction(nameof(Details), new { roleId });
         }
 
         // Failure: re-render the Details view with field-level errors (UI-UX-F6) rather
         // than redirecting (which would discard ModelState). Reload the detail model first.
         if (!ApplyValidationErrors(result))
-            ModelState.AddModelError(string.Empty, result.Error ?? "Could not update role.");
+            ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Admin.Roles.Flash.UpdateFailed"].Value);
 
         var details = await _facade.GetDetailsAsync(roleId, ct);
         if (details.State == ApiResultState.Unauthorized) return RedirectToLogin();
@@ -116,7 +123,7 @@ public sealed class RolesController : BaseController
         if (!details.IsSuccess || details.Data is null)
         {
             // Can't re-render without the model; fall back to a flash on Details.
-            SetError(result.Error ?? "Could not update role.");
+            SetError(result.Error ?? _localizer["Admin.Roles.Flash.UpdateFailed"].Value);
             return RedirectToAction(nameof(Details), new { roleId });
         }
 
@@ -133,7 +140,7 @@ public sealed class RolesController : BaseController
         if (result.State == ApiResultState.Unauthorized) return RedirectToLogin();
         if (result.State == ApiResultState.Forbidden)    return new ForbidResult();
 
-        SetFlash(result, "Role deactivated.");
+        SetFlash(result, _localizer["Admin.Roles.Flash.Deactivated"].Value);
 
         return RedirectToAction(nameof(Index));
     }
@@ -147,7 +154,7 @@ public sealed class RolesController : BaseController
         {
             // Add-claim is a modal on the Details page with no view of its own; surface
             // the guard as a flash on the redirect target.
-            SetError("Claim type and value are required.");
+            SetError(_localizer["Admin.Shared.Flash.ClaimTypeValueRequired"].Value);
             return RedirectToAction(nameof(Details), new { roleId });
         }
 
@@ -156,7 +163,7 @@ public sealed class RolesController : BaseController
         if (result.State == ApiResultState.Unauthorized) return RedirectToLogin();
         if (result.State == ApiResultState.Forbidden)    return new ForbidResult();
 
-        SetFlash(result, "Claim added.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.ClaimAdded"].Value);
 
         return RedirectToAction(nameof(Details), new { roleId });
     }
@@ -171,7 +178,7 @@ public sealed class RolesController : BaseController
         if (result.State == ApiResultState.Unauthorized) return RedirectToLogin();
         if (result.State == ApiResultState.Forbidden)    return new ForbidResult();
 
-        SetFlash(result, "Claim removed.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.ClaimRemoved"].Value);
 
         return RedirectToAction(nameof(Details), new { roleId });
     }

@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Outbox;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class OutboxController : BaseController
 {
     private readonly OutboxFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public OutboxController(OutboxFacade facade) => _facade = facade;
+    public OutboxController(OutboxFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] OutboxFilterRequest request, CancellationToken ct)
@@ -51,7 +58,7 @@ public sealed class OutboxController : BaseController
     {
         if (string.IsNullOrWhiteSpace(module))
         {
-            SetError("A module is required.");
+            SetError(_localizer["Admin.Outbox.Flash.ModuleRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -61,7 +68,7 @@ public sealed class OutboxController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Outbox message replayed.", "Could not replay the outbox message.");
+        SetFlash(result, _localizer["Admin.Outbox.Flash.Replayed"].Value, _localizer["Admin.Outbox.Flash.ReplayFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -77,7 +84,7 @@ public sealed class OutboxController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Tour-snapshot backfill started.", "Could not start the tour-snapshot backfill.");
+        SetFlash(result, _localizer["Admin.Outbox.Flash.BackfillStarted"].Value, _localizer["Admin.Outbox.Flash.BackfillFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 }

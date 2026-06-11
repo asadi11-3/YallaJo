@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.EntityCategories;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class EntityCategoriesController : BaseController
 {
     private readonly EntityCategoriesFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public EntityCategoriesController(EntityCategoriesFacade facade) => _facade = facade;
+    public EntityCategoriesController(EntityCategoriesFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(string? entityType = null, Guid? entityId = null, CancellationToken ct = default)
@@ -45,7 +52,7 @@ public sealed class EntityCategoriesController : BaseController
         var result = await _facade.AssignAsync(entityType, entityId, categoryIds, ct);
         if (GuardSignOut(result) is { } signOut)
             return signOut;
-        SetFlash(result, "Categories assigned.", "Could not assign categories.");
+        SetFlash(result, _localizer["Admin.EntityCategories.Flash.Assigned"].Value, _localizer["Admin.EntityCategories.Flash.AssignFailed"].Value);
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
 
@@ -57,7 +64,7 @@ public sealed class EntityCategoriesController : BaseController
         var result = await _facade.RemoveAsync(entityType, entityId, categoryId, ct);
         if (GuardSignOut(result) is { } signOut)
             return signOut;
-        SetFlash(result, "Category removed.", "Could not remove category.");
+        SetFlash(result, _localizer["Admin.EntityCategories.Flash.Removed"].Value, _localizer["Admin.EntityCategories.Flash.RemoveFailed"].Value);
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
 }

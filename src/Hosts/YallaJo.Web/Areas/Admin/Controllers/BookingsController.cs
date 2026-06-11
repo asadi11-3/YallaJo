@@ -5,6 +5,8 @@ using YallaJo.Web.Areas.Admin.Models.Bookings;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Identity;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -18,9 +20,11 @@ public sealed class BookingsController : BaseController
 
     private readonly AdminBookingsFacade _facade;
     private readonly ICurrentUser _currentUser;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public BookingsController(AdminBookingsFacade facade, ICurrentUser currentUser)
+    public BookingsController(AdminBookingsFacade facade, ICurrentUser currentUser, IStringLocalizer<SharedResource> localizer)
     {
+        _localizer = localizer;
         _facade = facade;
         _currentUser = currentUser;
     }
@@ -87,14 +91,14 @@ public sealed class BookingsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A refund reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.RefundReasonRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
         var result = await _facade.ForceRefundAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Booking force-refunded.", "Could not force-refund the booking.");
+        SetFlash(result, _localizer["Admin.Bookings.Flash.ForceRefunded"].Value, _localizer["Admin.Bookings.Flash.ForceRefundFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -115,7 +119,7 @@ public sealed class BookingsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(resolutionNotes) || resolutionNotes.Trim().Length < 10)
         {
-            SetError("Resolution notes are required (at least 10 characters).");
+            SetError(_localizer["Admin.Bookings.Flash.ResolutionNotesRequired"].Value);
             return RedirectToAction(nameof(Details), new { id });
         }
 
@@ -126,25 +130,25 @@ public sealed class BookingsController : BaseController
             // controller-level attribute only covers BookingDispute.Resolve.
             if (!_currentUser.HasPermission(WebPermission.Refund.Create))
             {
-                SetError("You don't have permission to issue refunds.");
+                SetError(_localizer["Admin.Bookings.Flash.RefundPermissionDenied"].Value);
                 return RedirectToAction(nameof(Details), new { id });
             }
 
             if (paymentId is null || paymentId == Guid.Empty)
             {
-                SetError("A payment ID is required to issue a refund.");
+                SetError(_localizer["Admin.Bookings.Flash.PaymentIdRequired"].Value);
                 return RedirectToAction(nameof(Details), new { id });
             }
 
             if (refundAmount is not { } amount || amount <= 0m)
             {
-                SetError("A positive refund amount is required.");
+                SetError(_localizer["Admin.Bookings.Flash.RefundAmountRequired"].Value);
                 return RedirectToAction(nameof(Details), new { id });
             }
 
             if (string.IsNullOrWhiteSpace(refundCurrency))
             {
-                SetError("A refund currency is required.");
+                SetError(_localizer["Admin.Bookings.Flash.RefundCurrencyRequired"].Value);
                 return RedirectToAction(nameof(Details), new { id });
             }
 
@@ -162,10 +166,10 @@ public sealed class BookingsController : BaseController
         switch (outcome.Kind)
         {
             case ResolveDisputeOutcome.OutcomeKind.ResolvedNoRefund:
-                SetSuccess("Dispute resolved.");
+                SetSuccess(_localizer["Admin.Shared.Flash.DisputeResolved"].Value);
                 break;
             case ResolveDisputeOutcome.OutcomeKind.ResolvedAndRefunded:
-                SetSuccess("Dispute resolved and refund issued.");
+                SetSuccess(_localizer["Admin.Bookings.Flash.DisputeResolvedRefunded"].Value);
                 break;
             case ResolveDisputeOutcome.OutcomeKind.ResolvedButRefundFailed:
                 // Partial failure — the dispute is Resolved but the money did NOT move.
@@ -175,7 +179,7 @@ public sealed class BookingsController : BaseController
                 break;
             case ResolveDisputeOutcome.OutcomeKind.ResolveFailed:
             default:
-                SetError(outcome.Message ?? "Could not resolve the dispute.");
+                SetError(outcome.Message ?? _localizer["Admin.Shared.Flash.DisputeResolveFailed"].Value);
                 break;
         }
 

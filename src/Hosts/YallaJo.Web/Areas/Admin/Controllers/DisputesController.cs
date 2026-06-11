@@ -4,15 +4,18 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Disputes;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
 [Authorize]
 [RequirePermission(WebPermission.AdminFinanceDashboard.Read)]
-public sealed class DisputesController(DisputesFacade facade) : BaseController
+public sealed class DisputesController(DisputesFacade facade, IStringLocalizer<SharedResource> localizer) : BaseController
 {
     private readonly DisputesFacade _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer = localizer;
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] DisputesFilterRequest request, CancellationToken ct)
@@ -44,7 +47,7 @@ public sealed class DisputesController(DisputesFacade facade) : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Dispute marked under review.", "Could not mark the dispute under review.");
+        SetFlash(result, _localizer["Admin.Disputes.Flash.UnderReview"].Value, _localizer["Admin.Disputes.Flash.UnderReviewFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -55,7 +58,7 @@ public sealed class DisputesController(DisputesFacade facade) : BaseController
     {
         if (string.IsNullOrWhiteSpace(resolution))
         {
-            SetError("A resolution is required.");
+            SetError(_localizer["Admin.Disputes.Flash.ResolutionRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -65,7 +68,7 @@ public sealed class DisputesController(DisputesFacade facade) : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Dispute resolved.", "Could not resolve the dispute.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.DisputeResolved"].Value, _localizer["Admin.Shared.Flash.DisputeResolveFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -76,7 +79,7 @@ public sealed class DisputesController(DisputesFacade facade) : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("An escalation reason is required.");
+            SetError(_localizer["Admin.Disputes.Flash.EscalationReasonRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -86,7 +89,7 @@ public sealed class DisputesController(DisputesFacade facade) : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Dispute escalated.", "Could not escalate the dispute.");
+        SetFlash(result, _localizer["Admin.Disputes.Flash.Escalated"].Value, _localizer["Admin.Disputes.Flash.EscalateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 }

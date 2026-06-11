@@ -5,6 +5,8 @@ using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -13,7 +15,12 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class TranslationsController : BaseController
 {
     private readonly TranslationsFacade _facade;
-    public TranslationsController(TranslationsFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
+    public TranslationsController(TranslationsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(
@@ -114,7 +121,7 @@ public sealed class TranslationsController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Translation updated.");
+            SetSuccess(_localizer["Admin.Translations.Flash.Updated"].Value);
             return RedirectToAction(nameof(Index), new { entityType, entityId });
         }
 
@@ -159,7 +166,7 @@ public sealed class TranslationsController : BaseController
         var result = await _facade.ApproveAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Translation approved.", "Could not approve translation.");
+        SetFlash(result, _localizer["Admin.Translations.Flash.Approved"].Value, _localizer["Admin.Translations.Flash.ApproveFailed"].Value);
 
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
@@ -173,7 +180,7 @@ public sealed class TranslationsController : BaseController
         var result = await _facade.BackfillAsync(entityKind, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Translation backfill started.", "Could not start the backfill.");
+        SetFlash(result, _localizer["Admin.Translations.Flash.BackfillStarted"].Value, _localizer["Admin.Translations.Flash.BackfillFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -187,7 +194,7 @@ public sealed class TranslationsController : BaseController
         var result = await _facade.ApproveBatchAsync(entityType.ToString(), entityId, languageCode, fieldNames, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Translations approved.", "Could not approve the translations.");
+        SetFlash(result, _localizer["Admin.Translations.Flash.BatchApproved"].Value, _localizer["Admin.Translations.Flash.BatchApproveFailed"].Value);
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
 }

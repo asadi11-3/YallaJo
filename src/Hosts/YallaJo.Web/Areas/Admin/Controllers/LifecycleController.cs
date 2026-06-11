@@ -41,7 +41,7 @@ public sealed class LifecycleController : BaseController
     public async Task<IActionResult> Suspend(Guid userId, CancellationToken ct)
     {
         var result = await _facade.SuspendAsync(userId, ct);
-        return RedirectAfter(userId, result, "User suspended.");
+        return RedirectAfter(userId, result, _localizer["Admin.Lifecycle.Flash.Suspended"].Value);
     }
 
     [HttpPost("admin/users/{userId:guid}/reactivate")]
@@ -49,7 +49,7 @@ public sealed class LifecycleController : BaseController
     public async Task<IActionResult> Reactivate(Guid userId, CancellationToken ct)
     {
         var result = await _facade.ReactivateAsync(userId, ct);
-        return RedirectAfter(userId, result, "User reactivated.");
+        return RedirectAfter(userId, result, _localizer["Admin.Lifecycle.Flash.Reactivated"].Value);
     }
 
     [HttpPost("admin/users/{userId:guid}/archive")]
@@ -70,7 +70,7 @@ public sealed class LifecycleController : BaseController
         }
 
         var result = await _facade.ArchiveAsync(userId, ct);
-        return RedirectAfter(userId, result, "User archived.");
+        return RedirectAfter(userId, result, _localizer["Admin.Lifecycle.Flash.Archived"].Value);
     }
 
     [HttpPost("admin/users/{userId:guid}/reset-password")]
@@ -80,12 +80,12 @@ public sealed class LifecycleController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Reason is too long (max 500 characters).");
+            SetError(_localizer["Admin.Lifecycle.Flash.ReasonTooLong"].Value);
             return RedirectToDetails(userId);
         }
 
         var result = await _facade.ResetPasswordAsync(userId, vm, ct);
-        return RedirectAfter(userId, result, "Password reset email queued.");
+        return RedirectAfter(userId, result, _localizer["Admin.Lifecycle.Flash.PasswordResetQueued"].Value);
     }
 
     [HttpPost("admin/users/{userId:guid}/reassign")]
@@ -102,13 +102,13 @@ public sealed class LifecycleController : BaseController
                 .SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage)
                 .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m))
-                ?? "Reassignment input is invalid.";
+                ?? _localizer["Admin.Lifecycle.Flash.ReassignInvalid"].Value;
             SetError(firstError);
             return RedirectToDetails(userId);
         }
 
         var result = await _facade.ReassignAsync(userId, vm, ct);
-        return RedirectAfter(userId, result, "Account reassigned. Activation email queued.");
+        return RedirectAfter(userId, result, _localizer["Admin.Lifecycle.Flash.Reassigned"].Value);
     }
 
     // §8.13 — force-revoke all active sessions for a user.
@@ -117,7 +117,7 @@ public sealed class LifecycleController : BaseController
     public async Task<IActionResult> RevokeSessions(Guid userId, CancellationToken ct)
     {
         var result = await _facade.RevokeSessionsAsync(userId, ct);
-        return RedirectAfter(userId, result, "All sessions revoked. The user will need to sign in again.");
+        return RedirectAfter(userId, result, _localizer["Admin.Lifecycle.Flash.SessionsRevoked"].Value);
     }
 
     private IActionResult RedirectAfter(Guid userId, Infrastructure.Api.Contracts.ApiResult result, string successMessage)
@@ -136,11 +136,11 @@ public sealed class LifecycleController : BaseController
             var first = result.ValidationErrors
                 .SelectMany(kv => kv.Value)
                 .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
-            SetError(first ?? "The action could not be completed.");
+            SetError(first ?? _localizer["Admin.Shared.Flash.ActionFailed"].Value);
         }
         else
         {
-            SetError(result.Error ?? "The action could not be completed.");
+            SetError(result.Error ?? _localizer["Admin.Shared.Flash.ActionFailed"].Value);
         }
 
         return RedirectToDetails(userId);

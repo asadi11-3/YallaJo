@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -21,9 +23,11 @@ public sealed class ProvidersController : BaseController
 
     private readonly ProvidersFacade _facade;
     private readonly ProviderPaymentMethodsFacade _paymentMethods;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public ProvidersController(ProvidersFacade facade, ProviderPaymentMethodsFacade paymentMethods)
+    public ProvidersController(ProvidersFacade facade, ProviderPaymentMethodsFacade paymentMethods, IStringLocalizer<SharedResource> localizer)
     {
+        _localizer = localizer;
         _facade = facade;
         _paymentMethods = paymentMethods;
     }
@@ -84,7 +88,7 @@ public sealed class ProvidersController : BaseController
         var result = await _facade.ApproveAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Provider application approved.", "Could not approve the application.");
+        SetFlash(result, _localizer["Admin.Providers.Flash.Approved"].Value, _localizer["Admin.Providers.Flash.ApproveFailed"].Value);
         return Back(id, fromDetails);
     }
 
@@ -96,14 +100,14 @@ public sealed class ProvidersController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A rejection reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.RejectReasonRequired"].Value);
             return Back(id, fromDetails);
         }
 
         var result = await _facade.RejectAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Provider application rejected.", "Could not reject the application.");
+        SetFlash(result, _localizer["Admin.Providers.Flash.Rejected"].Value, _localizer["Admin.Providers.Flash.RejectFailed"].Value);
         return Back(id, fromDetails);
     }
 
@@ -121,20 +125,20 @@ public sealed class ProvidersController : BaseController
 
         if (docs.Count == 0)
         {
-            SetError("Select at least one missing document type.");
+            SetError(_localizer["Admin.Providers.Flash.DocTypesRequired"].Value);
             return Back(id, fromDetails);
         }
 
         if (string.IsNullOrWhiteSpace(notes))
         {
-            SetError("Notes are required when requesting documents.");
+            SetError(_localizer["Admin.Providers.Flash.DocNotesRequired"].Value);
             return Back(id, fromDetails);
         }
 
         var result = await _facade.RequestDocsAsync(id, docs, notes.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Documents requested from the provider.", "Could not request documents.");
+        SetFlash(result, _localizer["Admin.Providers.Flash.DocsRequested"].Value, _localizer["Admin.Providers.Flash.DocsRequestFailed"].Value);
         return Back(id, fromDetails);
     }
 
@@ -146,14 +150,14 @@ public sealed class ProvidersController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A suspension reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.SuspendReasonRequired"].Value);
             return Back(id, fromDetails);
         }
 
         var result = await _facade.SuspendAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Provider suspended.", "Could not suspend the provider.");
+        SetFlash(result, _localizer["Admin.Providers.Flash.Suspended"].Value, _localizer["Admin.Providers.Flash.SuspendFailed"].Value);
         return Back(id, fromDetails);
     }
 
@@ -166,7 +170,7 @@ public sealed class ProvidersController : BaseController
         var result = await _facade.ReinstateAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Provider reinstated.", "Could not reinstate the provider.");
+        SetFlash(result, _localizer["Admin.Providers.Flash.Reinstated"].Value, _localizer["Admin.Providers.Flash.ReinstateFailed"].Value);
         return Back(id, fromDetails);
     }
 
@@ -185,8 +189,8 @@ public sealed class ProvidersController : BaseController
 
         SetFlash(
             result,
-            isVerified ? "Payment method verified." : "Payment method verification revoked.",
-            "Could not update the payment method verification.");
+            isVerified ? _localizer["Admin.Providers.Flash.PaymentVerified"].Value : _localizer["Admin.Providers.Flash.PaymentUnverified"].Value,
+            _localizer["Admin.Providers.Flash.PaymentVerifyFailed"].Value);
         return RedirectToAction(nameof(Details), new { id });
     }
 

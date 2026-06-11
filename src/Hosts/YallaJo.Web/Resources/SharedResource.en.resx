@@ -14095,4 +14095,1048 @@
   <data name="Admin.Lookup.NoResults" xml:space="preserve">
     <value>No matches found.</value>
   </data>
+  <data name="Admin.Shared.Flash.RejectReasonRequired" xml:space="preserve">
+    <value>A rejection reason is required.</value>
+  </data>
+  <data name="Admin.Shared.Flash.SuspendReasonRequired" xml:space="preserve">
+    <value>A suspension reason is required.</value>
+  </data>
+  <data name="Admin.Shared.Flash.ReasonRequired" xml:space="preserve">
+    <value>A reason is required.</value>
+  </data>
+  <data name="Admin.Shared.Flash.RefundReasonRequired" xml:space="preserve">
+    <value>A refund reason is required.</value>
+  </data>
+  <data name="Admin.Shared.Flash.ClaimTypeValueRequired" xml:space="preserve">
+    <value>Claim type and value are required.</value>
+  </data>
+  <data name="Admin.Shared.Flash.ClaimAdded" xml:space="preserve">
+    <value>Claim added.</value>
+  </data>
+  <data name="Admin.Shared.Flash.ClaimRemoved" xml:space="preserve">
+    <value>Claim removed.</value>
+  </data>
+  <data name="Admin.Shared.Flash.Failed" xml:space="preserve">
+    <value>Failed.</value>
+  </data>
+  <data name="Admin.Shared.Flash.ActionFailed" xml:space="preserve">
+    <value>The action could not be completed.</value>
+  </data>
+  <data name="Admin.Shared.Flash.TourApproved" xml:space="preserve">
+    <value>Tour approved.</value>
+  </data>
+  <data name="Admin.Shared.Flash.TourApproveFailed" xml:space="preserve">
+    <value>Could not approve the tour.</value>
+  </data>
+  <data name="Admin.Shared.Flash.TourRejected" xml:space="preserve">
+    <value>Tour rejected.</value>
+  </data>
+  <data name="Admin.Shared.Flash.TourRejectFailed" xml:space="preserve">
+    <value>Could not reject the tour.</value>
+  </data>
+  <data name="Admin.Shared.Flash.TourSuspended" xml:space="preserve">
+    <value>Tour suspended.</value>
+  </data>
+  <data name="Admin.Shared.Flash.TourSuspendFailed" xml:space="preserve">
+    <value>Could not suspend the tour.</value>
+  </data>
+  <data name="Admin.Shared.Flash.TourReinstated" xml:space="preserve">
+    <value>Tour reinstated.</value>
+  </data>
+  <data name="Admin.Shared.Flash.TourReinstateFailed" xml:space="preserve">
+    <value>Could not reinstate the tour.</value>
+  </data>
+  <data name="Admin.Shared.Flash.DisputeResolved" xml:space="preserve">
+    <value>Dispute resolved.</value>
+  </data>
+  <data name="Admin.Shared.Flash.DisputeResolveFailed" xml:space="preserve">
+    <value>Could not resolve the dispute.</value>
+  </data>
+  <data name="Admin.Attachments.Flash.FormErrors" xml:space="preserve">
+    <value>Please fix the upload form errors.</value>
+  </data>
+  <data name="Admin.Attachments.Flash.Uploaded" xml:space="preserve">
+    <value>Attachment uploaded.</value>
+  </data>
+  <data name="Admin.Attachments.Flash.UploadFailed" xml:space="preserve">
+    <value>Upload failed.</value>
+  </data>
+  <data name="Admin.Attachments.Flash.Deleted" xml:space="preserve">
+    <value>Attachment deleted.</value>
+  </data>
+  <data name="Admin.Attachments.Flash.DeleteFailed" xml:space="preserve">
+    <value>Delete failed.</value>
+  </data>
+  <data name="Admin.Attachments.Flash.PrimarySet" xml:space="preserve">
+    <value>Primary image set.</value>
+  </data>
+  <data name="Admin.Attachments.Flash.PrimarySetFailed" xml:space="preserve">
+    <value>Could not set primary image.</value>
+  </data>
+  <data name="Admin.AuditLogs.Flash.RedactReasonRequired" xml:space="preserve">
+    <value>A redaction reason is required.</value>
+  </data>
+  <data name="Admin.AuditLogs.Flash.Redacted" xml:space="preserve">
+    <value>Audit-log entry redacted.</value>
+  </data>
+  <data name="Admin.AuditLogs.Flash.RedactFailed" xml:space="preserve">
+    <value>Could not redact the audit-log entry.</value>
+  </data>
+  <data name="Admin.AuditLogs.Flash.ExportFailed" xml:space="preserve">
+    <value>Could not export the audit logs.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.CreatedDraft" xml:space="preserve">
+    <value>Blog created as Draft.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.Updated" xml:space="preserve">
+    <value>Blog updated.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.SelectTour" xml:space="preserve">
+    <value>Please select a tour to link.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.Deleted" xml:space="preserve">
+    <value>Blog deleted.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.DeleteFailed" xml:space="preserve">
+    <value>Could not delete the blog.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.Restored" xml:space="preserve">
+    <value>Blog restored.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.RestoreFailed" xml:space="preserve">
+    <value>Could not restore the blog.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.Published" xml:space="preserve">
+    <value>Blog published.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.PublishFailed" xml:space="preserve">
+    <value>Could not publish the blog.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.Unpublished" xml:space="preserve">
+    <value>Blog unpublished (back to Draft).</value>
+  </data>
+  <data name="Admin.Blogs.Flash.UnpublishFailed" xml:space="preserve">
+    <value>Could not unpublish the blog.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.Archived" xml:space="preserve">
+    <value>Blog archived.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.ArchiveFailed" xml:space="preserve">
+    <value>Could not archive the blog.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.Featured" xml:space="preserve">
+    <value>Blog featured.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.FeatureFailed" xml:space="preserve">
+    <value>Could not feature the blog.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.Unfeatured" xml:space="preserve">
+    <value>Blog unfeatured.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.UnfeatureFailed" xml:space="preserve">
+    <value>Could not unfeature the blog.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.ApprovedPublished" xml:space="preserve">
+    <value>Blog approved and published.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.ApproveFailed" xml:space="preserve">
+    <value>Could not approve the blog.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.Rejected" xml:space="preserve">
+    <value>Blog rejected.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.RejectFailed" xml:space="preserve">
+    <value>Could not reject the blog.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.Hidden" xml:space="preserve">
+    <value>Blog hidden.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.HideFailed" xml:space="preserve">
+    <value>Could not hide the blog.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.Unhidden" xml:space="preserve">
+    <value>Blog unhidden (back to Published).</value>
+  </data>
+  <data name="Admin.Blogs.Flash.UnhideFailed" xml:space="preserve">
+    <value>Could not unhide the blog.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.Removed" xml:space="preserve">
+    <value>Blog removed.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.RemoveFailed" xml:space="preserve">
+    <value>Could not remove the blog.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.TourLinked" xml:space="preserve">
+    <value>Tour linked.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.TourLinkFailed" xml:space="preserve">
+    <value>Could not link the tour.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.TourUnlinked" xml:space="preserve">
+    <value>Tour unlinked.</value>
+  </data>
+  <data name="Admin.Blogs.Flash.TourUnlinkFailed" xml:space="preserve">
+    <value>Could not unlink the tour.</value>
+  </data>
+  <data name="Admin.BlogTranslations.Flash.Saved" xml:space="preserve">
+    <value>Translation '{0}' saved.</value>
+  </data>
+  <data name="Admin.Bookings.Flash.ResolutionNotesRequired" xml:space="preserve">
+    <value>Resolution notes are required (at least 10 characters).</value>
+  </data>
+  <data name="Admin.Bookings.Flash.RefundPermissionDenied" xml:space="preserve">
+    <value>You don't have permission to issue refunds.</value>
+  </data>
+  <data name="Admin.Bookings.Flash.PaymentIdRequired" xml:space="preserve">
+    <value>A payment ID is required to issue a refund.</value>
+  </data>
+  <data name="Admin.Bookings.Flash.RefundAmountRequired" xml:space="preserve">
+    <value>A positive refund amount is required.</value>
+  </data>
+  <data name="Admin.Bookings.Flash.RefundCurrencyRequired" xml:space="preserve">
+    <value>A refund currency is required.</value>
+  </data>
+  <data name="Admin.Bookings.Flash.DisputeResolvedRefunded" xml:space="preserve">
+    <value>Dispute resolved and refund issued.</value>
+  </data>
+  <data name="Admin.Bookings.Flash.ForceRefunded" xml:space="preserve">
+    <value>Booking force-refunded.</value>
+  </data>
+  <data name="Admin.Bookings.Flash.ForceRefundFailed" xml:space="preserve">
+    <value>Could not force-refund the booking.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.NoteRequired" xml:space="preserve">
+    <value>A note is required.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.Approved" xml:space="preserve">
+    <value>Business approved.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.ApproveFailed" xml:space="preserve">
+    <value>Could not approve the business.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.Rejected" xml:space="preserve">
+    <value>Business rejected.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.RejectFailed" xml:space="preserve">
+    <value>Could not reject the business.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.DocsRequested" xml:space="preserve">
+    <value>Requested more documents from the business.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.DocsRequestFailed" xml:space="preserve">
+    <value>Could not request more documents.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.Suspended" xml:space="preserve">
+    <value>Business suspended.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.SuspendFailed" xml:space="preserve">
+    <value>Could not suspend the business.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.Reinstated" xml:space="preserve">
+    <value>Business reinstated.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.ReinstateFailed" xml:space="preserve">
+    <value>Could not reinstate the business.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.Deleted" xml:space="preserve">
+    <value>Business deleted.</value>
+  </data>
+  <data name="Admin.Businesses.Flash.DeleteFailed" xml:space="preserve">
+    <value>Could not delete the business.</value>
+  </data>
+  <data name="Admin.Categories.Flash.Created" xml:space="preserve">
+    <value>Category created.</value>
+  </data>
+  <data name="Admin.Categories.Flash.Updated" xml:space="preserve">
+    <value>Category updated.</value>
+  </data>
+  <data name="Admin.Categories.Flash.NotFound" xml:space="preserve">
+    <value>Category not found.</value>
+  </data>
+  <data name="Admin.Categories.Flash.Deactivated" xml:space="preserve">
+    <value>Category deactivated.</value>
+  </data>
+  <data name="Admin.Categories.Flash.Activated" xml:space="preserve">
+    <value>Category activated.</value>
+  </data>
+  <data name="Admin.Categories.Flash.Deleted" xml:space="preserve">
+    <value>Category deleted.</value>
+  </data>
+  <data name="Admin.Categories.Flash.Restored" xml:space="preserve">
+    <value>Category restored.</value>
+  </data>
+  <data name="Admin.Categories.Flash.Reordered" xml:space="preserve">
+    <value>Categories reordered.</value>
+  </data>
+  <data name="Admin.Commissions.Flash.FieldsRequired" xml:space="preserve">
+    <value>Tier, currency, and a positive percentage are required.</value>
+  </data>
+  <data name="Admin.Commissions.Flash.PercentageRequired" xml:space="preserve">
+    <value>A positive percentage is required.</value>
+  </data>
+  <data name="Admin.Commissions.Flash.Created" xml:space="preserve">
+    <value>Commission rule created.</value>
+  </data>
+  <data name="Admin.Commissions.Flash.CreateFailed" xml:space="preserve">
+    <value>Could not create the commission rule.</value>
+  </data>
+  <data name="Admin.Commissions.Flash.Updated" xml:space="preserve">
+    <value>Commission rule updated.</value>
+  </data>
+  <data name="Admin.Commissions.Flash.UpdateFailed" xml:space="preserve">
+    <value>Could not update the commission rule.</value>
+  </data>
+  <data name="Admin.Commissions.Flash.Deleted" xml:space="preserve">
+    <value>Commission rule deleted.</value>
+  </data>
+  <data name="Admin.Commissions.Flash.DeleteFailed" xml:space="preserve">
+    <value>Could not delete the commission rule.</value>
+  </data>
+  <data name="Admin.Creators.Flash.DisplayNameRequiredApprove" xml:space="preserve">
+    <value>A display name is required to approve a creator.</value>
+  </data>
+  <data name="Admin.Creators.Flash.InfoNoteRequired" xml:space="preserve">
+    <value>A note describing the requested information is required.</value>
+  </data>
+  <data name="Admin.Creators.Flash.DemoteReasonRequired" xml:space="preserve">
+    <value>A demotion reason is required.</value>
+  </data>
+  <data name="Admin.Creators.Flash.DisplayNameRequired" xml:space="preserve">
+    <value>A display name is required.</value>
+  </data>
+  <data name="Admin.Creators.Flash.DeleteReasonRequired" xml:space="preserve">
+    <value>A reason is required to delete a creator profile.</value>
+  </data>
+  <data name="Admin.Creators.Flash.ProfileDeleted" xml:space="preserve">
+    <value>Creator profile deleted.</value>
+  </data>
+  <data name="Admin.Creators.Flash.ApplicationApproved" xml:space="preserve">
+    <value>Creator application approved.</value>
+  </data>
+  <data name="Admin.Creators.Flash.ApplicationApproveFailed" xml:space="preserve">
+    <value>Could not approve the creator application.</value>
+  </data>
+  <data name="Admin.Creators.Flash.ApplicationRejected" xml:space="preserve">
+    <value>Creator application rejected.</value>
+  </data>
+  <data name="Admin.Creators.Flash.ApplicationRejectFailed" xml:space="preserve">
+    <value>Could not reject the creator application.</value>
+  </data>
+  <data name="Admin.Creators.Flash.InfoRequested" xml:space="preserve">
+    <value>Requested more information from the applicant.</value>
+  </data>
+  <data name="Admin.Creators.Flash.InfoRequestFailed" xml:space="preserve">
+    <value>Could not request more information.</value>
+  </data>
+  <data name="Admin.Creators.Flash.ProfileSuspended" xml:space="preserve">
+    <value>Creator profile suspended.</value>
+  </data>
+  <data name="Admin.Creators.Flash.ProfileSuspendFailed" xml:space="preserve">
+    <value>Could not suspend the creator profile.</value>
+  </data>
+  <data name="Admin.Creators.Flash.ProfileReinstated" xml:space="preserve">
+    <value>Creator profile reinstated.</value>
+  </data>
+  <data name="Admin.Creators.Flash.ProfileReinstateFailed" xml:space="preserve">
+    <value>Could not reinstate the creator profile.</value>
+  </data>
+  <data name="Admin.Creators.Flash.Promoted" xml:space="preserve">
+    <value>Creator promoted.</value>
+  </data>
+  <data name="Admin.Creators.Flash.PromoteFailed" xml:space="preserve">
+    <value>Could not promote the creator.</value>
+  </data>
+  <data name="Admin.Creators.Flash.Demoted" xml:space="preserve">
+    <value>Creator demoted.</value>
+  </data>
+  <data name="Admin.Creators.Flash.DemoteFailed" xml:space="preserve">
+    <value>Could not demote the creator.</value>
+  </data>
+  <data name="Admin.Creators.Flash.ProfileUpdated" xml:space="preserve">
+    <value>Creator profile updated.</value>
+  </data>
+  <data name="Admin.Creators.Flash.ProfileUpdateFailed" xml:space="preserve">
+    <value>Could not update the creator profile.</value>
+  </data>
+  <data name="Admin.Creators.Flash.ProfileDeleteFailed" xml:space="preserve">
+    <value>Could not delete the creator profile.</value>
+  </data>
+  <data name="Admin.Creators.Flash.InvitationSent" xml:space="preserve">
+    <value>Creator invitation sent.</value>
+  </data>
+  <data name="Admin.Creators.Flash.InvitationSendFailed" xml:space="preserve">
+    <value>Could not send the creator invitation.</value>
+  </data>
+  <data name="Admin.Disputes.Flash.ResolutionRequired" xml:space="preserve">
+    <value>A resolution is required.</value>
+  </data>
+  <data name="Admin.Disputes.Flash.EscalationReasonRequired" xml:space="preserve">
+    <value>An escalation reason is required.</value>
+  </data>
+  <data name="Admin.Disputes.Flash.UnderReview" xml:space="preserve">
+    <value>Dispute marked under review.</value>
+  </data>
+  <data name="Admin.Disputes.Flash.UnderReviewFailed" xml:space="preserve">
+    <value>Could not mark the dispute under review.</value>
+  </data>
+  <data name="Admin.Disputes.Flash.Escalated" xml:space="preserve">
+    <value>Dispute escalated.</value>
+  </data>
+  <data name="Admin.Disputes.Flash.EscalateFailed" xml:space="preserve">
+    <value>Could not escalate the dispute.</value>
+  </data>
+  <data name="Admin.EntityCategories.Flash.Assigned" xml:space="preserve">
+    <value>Categories assigned.</value>
+  </data>
+  <data name="Admin.EntityCategories.Flash.AssignFailed" xml:space="preserve">
+    <value>Could not assign categories.</value>
+  </data>
+  <data name="Admin.EntityCategories.Flash.Removed" xml:space="preserve">
+    <value>Category removed.</value>
+  </data>
+  <data name="Admin.EntityCategories.Flash.RemoveFailed" xml:space="preserve">
+    <value>Could not remove category.</value>
+  </data>
+  <data name="Admin.EntityTags.Flash.Assigned" xml:space="preserve">
+    <value>Tags assigned.</value>
+  </data>
+  <data name="Admin.EntityTags.Flash.AssignFailed" xml:space="preserve">
+    <value>Could not assign tags.</value>
+  </data>
+  <data name="Admin.EntityTags.Flash.Removed" xml:space="preserve">
+    <value>Tag removed.</value>
+  </data>
+  <data name="Admin.EntityTags.Flash.RemoveFailed" xml:space="preserve">
+    <value>Could not remove tag.</value>
+  </data>
+  <data name="Admin.FlaggedReviews.Flash.Approved" xml:space="preserve">
+    <value>Review approved.</value>
+  </data>
+  <data name="Admin.FlaggedReviews.Flash.ApproveFailed" xml:space="preserve">
+    <value>Could not approve the review.</value>
+  </data>
+  <data name="Admin.FlaggedReviews.Flash.Removed" xml:space="preserve">
+    <value>Review removed.</value>
+  </data>
+  <data name="Admin.FlaggedReviews.Flash.RemoveFailed" xml:space="preserve">
+    <value>Could not remove the review.</value>
+  </data>
+  <data name="Admin.Growth.Flash.PlaceNotFound" xml:space="preserve">
+    <value>Could not find a place matching that search. Pick a suggestion or paste the place id.</value>
+  </data>
+  <data name="Admin.Growth.Flash.SeasonalityCreated" xml:space="preserve">
+    <value>Seasonality rule created.</value>
+  </data>
+  <data name="Admin.Growth.Flash.SeasonalityCreateFailed" xml:space="preserve">
+    <value>Could not create the seasonality rule.</value>
+  </data>
+  <data name="Admin.Growth.Flash.SeasonalityDeactivated" xml:space="preserve">
+    <value>Seasonality rule deactivated.</value>
+  </data>
+  <data name="Admin.Growth.Flash.SeasonalityDeactivateFailed" xml:space="preserve">
+    <value>Could not deactivate the seasonality rule.</value>
+  </data>
+  <data name="Admin.Growth.Flash.HolidayCreated" xml:space="preserve">
+    <value>Holiday entry created.</value>
+  </data>
+  <data name="Admin.Growth.Flash.HolidayCreateFailed" xml:space="preserve">
+    <value>Could not create the holiday entry.</value>
+  </data>
+  <data name="Admin.Growth.Flash.PhotogenicMarked" xml:space="preserve">
+    <value>Marked as photogenic.</value>
+  </data>
+  <data name="Admin.Growth.Flash.PhotogenicCleared" xml:space="preserve">
+    <value>Photogenic flag cleared.</value>
+  </data>
+  <data name="Admin.Growth.Flash.PhotogenicUpdateFailed" xml:space="preserve">
+    <value>Could not update the photogenic flag.</value>
+  </data>
+  <data name="Admin.Growth.Flash.ExperimentCreated" xml:space="preserve">
+    <value>Experiment created.</value>
+  </data>
+  <data name="Admin.Growth.Flash.ExperimentCreateFailed" xml:space="preserve">
+    <value>Could not create the experiment.</value>
+  </data>
+  <data name="Admin.Growth.Flash.ExperimentStarted" xml:space="preserve">
+    <value>Experiment started.</value>
+  </data>
+  <data name="Admin.Growth.Flash.ExperimentStartFailed" xml:space="preserve">
+    <value>Could not start the experiment.</value>
+  </data>
+  <data name="Admin.Growth.Flash.ExperimentCompleted" xml:space="preserve">
+    <value>Experiment completed.</value>
+  </data>
+  <data name="Admin.Growth.Flash.ExperimentCompleteFailed" xml:space="preserve">
+    <value>Could not complete the experiment.</value>
+  </data>
+  <data name="Admin.GuideApplications.Flash.Approved" xml:space="preserve">
+    <value>Guide application approved.</value>
+  </data>
+  <data name="Admin.GuideApplications.Flash.ApproveFailed" xml:space="preserve">
+    <value>Could not approve the guide application.</value>
+  </data>
+  <data name="Admin.GuideApplications.Flash.Rejected" xml:space="preserve">
+    <value>Guide application rejected.</value>
+  </data>
+  <data name="Admin.GuideApplications.Flash.RejectFailed" xml:space="preserve">
+    <value>Could not reject the guide application.</value>
+  </data>
+  <data name="Admin.Guides.Flash.FixFields" xml:space="preserve">
+    <value>Please correct the highlighted fields and try again.</value>
+  </data>
+  <data name="Admin.Guides.Flash.Deactivated" xml:space="preserve">
+    <value>Tour guide deactivated.</value>
+  </data>
+  <data name="Admin.Guides.Flash.DeactivateFailed" xml:space="preserve">
+    <value>Could not deactivate the tour guide.</value>
+  </data>
+  <data name="Admin.Guides.Flash.Suspended" xml:space="preserve">
+    <value>Tour guide suspended.</value>
+  </data>
+  <data name="Admin.Guides.Flash.SuspendFailed" xml:space="preserve">
+    <value>Could not suspend the tour guide.</value>
+  </data>
+  <data name="Admin.Guides.Flash.Reinstated" xml:space="preserve">
+    <value>Tour guide reinstated.</value>
+  </data>
+  <data name="Admin.Guides.Flash.ReinstateFailed" xml:space="preserve">
+    <value>Could not reinstate the tour guide.</value>
+  </data>
+  <data name="Admin.Guides.Flash.ProfileUpdated" xml:space="preserve">
+    <value>Tour guide profile updated.</value>
+  </data>
+  <data name="Admin.Guides.Flash.ProfileUpdateFailed" xml:space="preserve">
+    <value>Could not update the tour guide profile.</value>
+  </data>
+  <data name="Admin.Invitations.Flash.RoleOptionsFailed" xml:space="preserve">
+    <value>Could not load role options.</value>
+  </data>
+  <data name="Admin.Invitations.Flash.InviteSent" xml:space="preserve">
+    <value>Invite sent to {0}. They will receive an email to set a password and activate the account.</value>
+  </data>
+  <data name="Admin.Invitations.Flash.ResendQueued" xml:space="preserve">
+    <value>If an invited account exists for that email, a new invite has been sent.</value>
+  </data>
+  <data name="Admin.Invitations.Flash.ResendFailed" xml:space="preserve">
+    <value>Could not resend invite.</value>
+  </data>
+  <data name="Admin.Languages.Flash.Created" xml:space="preserve">
+    <value>Language created.</value>
+  </data>
+  <data name="Admin.Languages.Flash.NotFound" xml:space="preserve">
+    <value>Language not found.</value>
+  </data>
+  <data name="Admin.Languages.Flash.Updated" xml:space="preserve">
+    <value>Language updated.</value>
+  </data>
+  <data name="Admin.Languages.Flash.LoadFailed" xml:space="preserve">
+    <value>Could not load languages.</value>
+  </data>
+  <data name="Admin.Lifecycle.Flash.ReasonTooLong" xml:space="preserve">
+    <value>Reason is too long (max 500 characters).</value>
+  </data>
+  <data name="Admin.Lifecycle.Flash.ReassignInvalid" xml:space="preserve">
+    <value>Reassignment input is invalid.</value>
+  </data>
+  <data name="Admin.Lifecycle.Flash.Suspended" xml:space="preserve">
+    <value>User suspended.</value>
+  </data>
+  <data name="Admin.Lifecycle.Flash.Reactivated" xml:space="preserve">
+    <value>User reactivated.</value>
+  </data>
+  <data name="Admin.Lifecycle.Flash.Archived" xml:space="preserve">
+    <value>User archived.</value>
+  </data>
+  <data name="Admin.Lifecycle.Flash.PasswordResetQueued" xml:space="preserve">
+    <value>Password reset email queued.</value>
+  </data>
+  <data name="Admin.Lifecycle.Flash.Reassigned" xml:space="preserve">
+    <value>Account reassigned. Activation email queued.</value>
+  </data>
+  <data name="Admin.Lifecycle.Flash.SessionsRevoked" xml:space="preserve">
+    <value>All sessions revoked. The user will need to sign in again.</value>
+  </data>
+  <data name="Admin.Moderation.Flash.WarnFieldsRequired" xml:space="preserve">
+    <value>Please provide a user, entity, and reason for the warning.</value>
+  </data>
+  <data name="Admin.Moderation.Flash.BanFieldsRequired" xml:space="preserve">
+    <value>Please provide a user, entity, and reason for the ban.</value>
+  </data>
+  <data name="Admin.Moderation.Flash.UserNotFound" xml:space="preserve">
+    <value>Could not find a user matching that search. Pick a suggestion or paste the user id.</value>
+  </data>
+  <data name="Admin.Moderation.Flash.WarningIssued" xml:space="preserve">
+    <value>Warning issued.</value>
+  </data>
+  <data name="Admin.Moderation.Flash.WarnFailed" xml:space="preserve">
+    <value>Could not issue the warning.</value>
+  </data>
+  <data name="Admin.Moderation.Flash.UserBanned" xml:space="preserve">
+    <value>User banned.</value>
+  </data>
+  <data name="Admin.Moderation.Flash.BanFailed" xml:space="preserve">
+    <value>Could not issue the ban.</value>
+  </data>
+  <data name="Admin.Moderation.Flash.BanLifted" xml:space="preserve">
+    <value>Ban lifted.</value>
+  </data>
+  <data name="Admin.Moderation.Flash.UnbanFailed" xml:space="preserve">
+    <value>Could not lift the ban.</value>
+  </data>
+  <data name="Admin.NotificationTemplates.Flash.FieldsRequired" xml:space="preserve">
+    <value>Type, channel, language, title and body are all required.</value>
+  </data>
+  <data name="Admin.NotificationTemplates.Flash.Created" xml:space="preserve">
+    <value>Notification template created.</value>
+  </data>
+  <data name="Admin.NotificationTemplates.Flash.CreateFailed" xml:space="preserve">
+    <value>Could not create the notification template.</value>
+  </data>
+  <data name="Admin.NotificationTemplates.Flash.Updated" xml:space="preserve">
+    <value>Notification template updated.</value>
+  </data>
+  <data name="Admin.NotificationTemplates.Flash.UpdateFailed" xml:space="preserve">
+    <value>Could not update the notification template.</value>
+  </data>
+  <data name="Admin.NotificationTemplates.Flash.Deleted" xml:space="preserve">
+    <value>Notification template deleted.</value>
+  </data>
+  <data name="Admin.NotificationTemplates.Flash.DeleteFailed" xml:space="preserve">
+    <value>Could not delete the notification template.</value>
+  </data>
+  <data name="Admin.Outbox.Flash.ModuleRequired" xml:space="preserve">
+    <value>A module is required.</value>
+  </data>
+  <data name="Admin.Outbox.Flash.Replayed" xml:space="preserve">
+    <value>Outbox message replayed.</value>
+  </data>
+  <data name="Admin.Outbox.Flash.ReplayFailed" xml:space="preserve">
+    <value>Could not replay the outbox message.</value>
+  </data>
+  <data name="Admin.Outbox.Flash.BackfillStarted" xml:space="preserve">
+    <value>Tour-snapshot backfill started.</value>
+  </data>
+  <data name="Admin.Outbox.Flash.BackfillFailed" xml:space="preserve">
+    <value>Could not start the tour-snapshot backfill.</value>
+  </data>
+  <data name="Admin.Payments.Flash.RefundIssued" xml:space="preserve">
+    <value>Refund issued.</value>
+  </data>
+  <data name="Admin.Payments.Flash.RefundFailed" xml:space="preserve">
+    <value>Could not process the refund.</value>
+  </data>
+  <data name="Admin.Payouts.Flash.BatchTriggered" xml:space="preserve">
+    <value>Payout batch triggered.</value>
+  </data>
+  <data name="Admin.Payouts.Flash.BatchTriggerFailed" xml:space="preserve">
+    <value>Could not trigger the payout batch.</value>
+  </data>
+  <data name="Admin.Payouts.Flash.Approved" xml:space="preserve">
+    <value>Payout approved.</value>
+  </data>
+  <data name="Admin.Payouts.Flash.ApproveFailed" xml:space="preserve">
+    <value>Could not approve the payout.</value>
+  </data>
+  <data name="Admin.Places.Flash.Created" xml:space="preserve">
+    <value>Place created.</value>
+  </data>
+  <data name="Admin.Places.Flash.Updated" xml:space="preserve">
+    <value>Place updated.</value>
+  </data>
+  <data name="Admin.Places.Flash.NotFound" xml:space="preserve">
+    <value>Place not found.</value>
+  </data>
+  <data name="Admin.Places.Flash.Deleted" xml:space="preserve">
+    <value>Place deleted.</value>
+  </data>
+  <data name="Admin.Places.Flash.DeleteFailed" xml:space="preserve">
+    <value>Could not delete place.</value>
+  </data>
+  <data name="Admin.Places.Flash.Featured" xml:space="preserve">
+    <value>Place featured.</value>
+  </data>
+  <data name="Admin.Places.Flash.Unfeatured" xml:space="preserve">
+    <value>Place unfeatured.</value>
+  </data>
+  <data name="Admin.Places.Flash.Verified" xml:space="preserve">
+    <value>Place verified.</value>
+  </data>
+  <data name="Admin.Places.Flash.Unverified" xml:space="preserve">
+    <value>Place unverified.</value>
+  </data>
+  <data name="Admin.Places.Flash.AccessibilityUpdated" xml:space="preserve">
+    <value>Accessibility features updated.</value>
+  </data>
+  <data name="Admin.Places.Flash.AccessibilityUpdateFailed" xml:space="preserve">
+    <value>Could not update accessibility features.</value>
+  </data>
+  <data name="Admin.Places.Flash.AccessibilityRemoved" xml:space="preserve">
+    <value>Accessibility feature removed.</value>
+  </data>
+  <data name="Admin.Places.Flash.AccessibilityRemoveFailed" xml:space="preserve">
+    <value>Could not remove the accessibility feature.</value>
+  </data>
+  <data name="Admin.Providers.Flash.DocTypesRequired" xml:space="preserve">
+    <value>Select at least one missing document type.</value>
+  </data>
+  <data name="Admin.Providers.Flash.DocNotesRequired" xml:space="preserve">
+    <value>Notes are required when requesting documents.</value>
+  </data>
+  <data name="Admin.Providers.Flash.Approved" xml:space="preserve">
+    <value>Provider application approved.</value>
+  </data>
+  <data name="Admin.Providers.Flash.ApproveFailed" xml:space="preserve">
+    <value>Could not approve the application.</value>
+  </data>
+  <data name="Admin.Providers.Flash.Rejected" xml:space="preserve">
+    <value>Provider application rejected.</value>
+  </data>
+  <data name="Admin.Providers.Flash.RejectFailed" xml:space="preserve">
+    <value>Could not reject the application.</value>
+  </data>
+  <data name="Admin.Providers.Flash.DocsRequested" xml:space="preserve">
+    <value>Documents requested from the provider.</value>
+  </data>
+  <data name="Admin.Providers.Flash.DocsRequestFailed" xml:space="preserve">
+    <value>Could not request documents.</value>
+  </data>
+  <data name="Admin.Providers.Flash.Suspended" xml:space="preserve">
+    <value>Provider suspended.</value>
+  </data>
+  <data name="Admin.Providers.Flash.SuspendFailed" xml:space="preserve">
+    <value>Could not suspend the provider.</value>
+  </data>
+  <data name="Admin.Providers.Flash.Reinstated" xml:space="preserve">
+    <value>Provider reinstated.</value>
+  </data>
+  <data name="Admin.Providers.Flash.ReinstateFailed" xml:space="preserve">
+    <value>Could not reinstate the provider.</value>
+  </data>
+  <data name="Admin.Providers.Flash.PaymentVerified" xml:space="preserve">
+    <value>Payment method verified.</value>
+  </data>
+  <data name="Admin.Providers.Flash.PaymentUnverified" xml:space="preserve">
+    <value>Payment method verification revoked.</value>
+  </data>
+  <data name="Admin.Providers.Flash.PaymentVerifyFailed" xml:space="preserve">
+    <value>Could not update the payment method verification.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.RefreshFieldsRequired" xml:space="preserve">
+    <value>A batch source kind, source id and context are required to refresh.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.BoostIdRequired" xml:space="preserve">
+    <value>A boost package id is required.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.PinIdRequired" xml:space="preserve">
+    <value>An editorial pin id is required.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.BatchRefreshed" xml:space="preserve">
+    <value>Recommendation batch refreshed.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.BatchRefreshFailed" xml:space="preserve">
+    <value>Could not refresh the recommendation batch.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.BoostCreated" xml:space="preserve">
+    <value>Boost package created.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.BoostCreateFailed" xml:space="preserve">
+    <value>Could not create the boost package.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.BoostDeactivated" xml:space="preserve">
+    <value>Boost package deactivated.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.BoostDeactivateFailed" xml:space="preserve">
+    <value>Could not deactivate the boost package.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.PinCreated" xml:space="preserve">
+    <value>Editorial pin created.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.PinCreateFailed" xml:space="preserve">
+    <value>Could not create the editorial pin.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.PinDeactivated" xml:space="preserve">
+    <value>Editorial pin deactivated.</value>
+  </data>
+  <data name="Admin.Recommendations.Flash.PinDeactivateFailed" xml:space="preserve">
+    <value>Could not deactivate the editorial pin.</value>
+  </data>
+  <data name="Admin.Reports.Flash.ActionRequired" xml:space="preserve">
+    <value>A moderation action is required.</value>
+  </data>
+  <data name="Admin.Reports.Flash.Resolved" xml:space="preserve">
+    <value>Report resolved.</value>
+  </data>
+  <data name="Admin.Reports.Flash.ResolveFailed" xml:space="preserve">
+    <value>Could not resolve the report.</value>
+  </data>
+  <data name="Admin.Roles.Flash.Created" xml:space="preserve">
+    <value>Role '{0}' created.</value>
+  </data>
+  <data name="Admin.Roles.Flash.Updated" xml:space="preserve">
+    <value>Role updated.</value>
+  </data>
+  <data name="Admin.Roles.Flash.UpdateFailed" xml:space="preserve">
+    <value>Could not update role.</value>
+  </data>
+  <data name="Admin.Roles.Flash.Deactivated" xml:space="preserve">
+    <value>Role deactivated.</value>
+  </data>
+  <data name="Admin.SeoFaq.Flash.CreateFieldsRequired" xml:space="preserve">
+    <value>Please provide a valid entity, question, and answer.</value>
+  </data>
+  <data name="Admin.SeoFaq.Flash.UpdateFieldsRequired" xml:space="preserve">
+    <value>Please provide a valid question and answer.</value>
+  </data>
+  <data name="Admin.SeoFaq.Flash.ReorderInvalid" xml:space="preserve">
+    <value>Invalid reorder request.</value>
+  </data>
+  <data name="Admin.SeoFaq.Flash.Created" xml:space="preserve">
+    <value>FAQ item created.</value>
+  </data>
+  <data name="Admin.SeoFaq.Flash.CreateFailed" xml:space="preserve">
+    <value>Could not create the FAQ item.</value>
+  </data>
+  <data name="Admin.SeoFaq.Flash.Updated" xml:space="preserve">
+    <value>FAQ item updated.</value>
+  </data>
+  <data name="Admin.SeoFaq.Flash.UpdateFailed" xml:space="preserve">
+    <value>Could not update the FAQ item.</value>
+  </data>
+  <data name="Admin.SeoFaq.Flash.Deleted" xml:space="preserve">
+    <value>FAQ item deleted.</value>
+  </data>
+  <data name="Admin.SeoFaq.Flash.DeleteFailed" xml:space="preserve">
+    <value>Could not delete the FAQ item.</value>
+  </data>
+  <data name="Admin.SeoFaq.Flash.Reordered" xml:space="preserve">
+    <value>FAQ items reordered.</value>
+  </data>
+  <data name="Admin.SeoFaq.Flash.ReorderFailed" xml:space="preserve">
+    <value>Could not reorder the FAQ items.</value>
+  </data>
+  <data name="Admin.SeoMetadata.Flash.FixFields" xml:space="preserve">
+    <value>Please correct the highlighted fields.</value>
+  </data>
+  <data name="Admin.SeoMetadata.Flash.Saved" xml:space="preserve">
+    <value>SEO metadata saved.</value>
+  </data>
+  <data name="Admin.SeoMetadata.Flash.SaveFailed" xml:space="preserve">
+    <value>Could not save the SEO metadata.</value>
+  </data>
+  <data name="Admin.SeoMetadata.Flash.Deleted" xml:space="preserve">
+    <value>SEO metadata deleted.</value>
+  </data>
+  <data name="Admin.SeoMetadata.Flash.DeleteFailed" xml:space="preserve">
+    <value>Could not delete the SEO metadata.</value>
+  </data>
+  <data name="Admin.SeoRedirects.Flash.CreateFieldsRequired" xml:space="preserve">
+    <value>Please provide a valid old URL, new URL, and status code.</value>
+  </data>
+  <data name="Admin.SeoRedirects.Flash.UpdateFieldsRequired" xml:space="preserve">
+    <value>Please provide valid values for the redirect.</value>
+  </data>
+  <data name="Admin.SeoRedirects.Flash.Created" xml:space="preserve">
+    <value>Redirect created.</value>
+  </data>
+  <data name="Admin.SeoRedirects.Flash.CreateFailed" xml:space="preserve">
+    <value>Could not create the redirect.</value>
+  </data>
+  <data name="Admin.SeoRedirects.Flash.Updated" xml:space="preserve">
+    <value>Redirect updated.</value>
+  </data>
+  <data name="Admin.SeoRedirects.Flash.UpdateFailed" xml:space="preserve">
+    <value>Could not update the redirect.</value>
+  </data>
+  <data name="Admin.SeoRedirects.Flash.Deleted" xml:space="preserve">
+    <value>Redirect deleted.</value>
+  </data>
+  <data name="Admin.SeoRedirects.Flash.DeleteFailed" xml:space="preserve">
+    <value>Could not delete the redirect.</value>
+  </data>
+  <data name="Admin.SeoSitemap.Flash.FieldsRequired" xml:space="preserve">
+    <value>Please provide a valid priority and change frequency.</value>
+  </data>
+  <data name="Admin.SeoSitemap.Flash.Updated" xml:space="preserve">
+    <value>Sitemap entry updated.</value>
+  </data>
+  <data name="Admin.SeoSitemap.Flash.UpdateFailed" xml:space="preserve">
+    <value>Could not update the sitemap entry.</value>
+  </data>
+  <data name="Admin.SeoSitemap.Flash.Deleted" xml:space="preserve">
+    <value>Sitemap entry deleted.</value>
+  </data>
+  <data name="Admin.SeoSitemap.Flash.DeleteFailed" xml:space="preserve">
+    <value>Could not delete the sitemap entry.</value>
+  </data>
+  <data name="Admin.SeoSitemap.Flash.RegenTriggered" xml:space="preserve">
+    <value>Sitemap regeneration triggered.</value>
+  </data>
+  <data name="Admin.SeoSitemap.Flash.RegenFailed" xml:space="preserve">
+    <value>Could not regenerate the sitemap.</value>
+  </data>
+  <data name="Admin.SeoWeather.Flash.FieldsRequired" xml:space="preserve">
+    <value>Please provide a valid place id, latitude, and longitude.</value>
+  </data>
+  <data name="Admin.SeoWeather.Flash.Refreshed" xml:space="preserve">
+    <value>Weather data refreshed.</value>
+  </data>
+  <data name="Admin.SeoWeather.Flash.RefreshFailed" xml:space="preserve">
+    <value>Could not refresh the weather data.</value>
+  </data>
+  <data name="Admin.SeoWeather.Flash.CachePurged" xml:space="preserve">
+    <value>Weather cache purged.</value>
+  </data>
+  <data name="Admin.SeoWeather.Flash.CachePurgeFailed" xml:space="preserve">
+    <value>Could not purge the weather cache.</value>
+  </data>
+  <data name="Admin.SeoWeather.Flash.BudgetReset" xml:space="preserve">
+    <value>Weather budget reset.</value>
+  </data>
+  <data name="Admin.SeoWeather.Flash.BudgetResetFailed" xml:space="preserve">
+    <value>Could not reset the weather budget.</value>
+  </data>
+  <data name="Admin.Specializations.Flash.Created" xml:space="preserve">
+    <value>Specialization created.</value>
+  </data>
+  <data name="Admin.Specializations.Flash.NotFound" xml:space="preserve">
+    <value>Specialization not found.</value>
+  </data>
+  <data name="Admin.Specializations.Flash.Updated" xml:space="preserve">
+    <value>Specialization updated.</value>
+  </data>
+  <data name="Admin.Specializations.Flash.LoadFailed" xml:space="preserve">
+    <value>Could not load specializations.</value>
+  </data>
+  <data name="Admin.Support.Flash.ReplyRequired" xml:space="preserve">
+    <value>A reply message is required.</value>
+  </data>
+  <data name="Admin.Support.Flash.AdminIdRequired" xml:space="preserve">
+    <value>A valid admin user id is required.</value>
+  </data>
+  <data name="Admin.Support.Flash.ReplyPosted" xml:space="preserve">
+    <value>Reply posted.</value>
+  </data>
+  <data name="Admin.Support.Flash.ReplyFailed" xml:space="preserve">
+    <value>Could not post the reply.</value>
+  </data>
+  <data name="Admin.Support.Flash.TicketClosed" xml:space="preserve">
+    <value>Ticket closed.</value>
+  </data>
+  <data name="Admin.Support.Flash.TicketCloseFailed" xml:space="preserve">
+    <value>Could not close the ticket.</value>
+  </data>
+  <data name="Admin.Support.Flash.TicketAssigned" xml:space="preserve">
+    <value>Ticket assigned.</value>
+  </data>
+  <data name="Admin.Support.Flash.TicketAssignFailed" xml:space="preserve">
+    <value>Could not assign the ticket.</value>
+  </data>
+  <data name="Admin.Support.Flash.TicketResolved" xml:space="preserve">
+    <value>Ticket resolved.</value>
+  </data>
+  <data name="Admin.Support.Flash.TicketResolveFailed" xml:space="preserve">
+    <value>Could not resolve the ticket.</value>
+  </data>
+  <data name="Admin.Tags.Flash.Created" xml:space="preserve">
+    <value>Tag created.</value>
+  </data>
+  <data name="Admin.Tags.Flash.NotFound" xml:space="preserve">
+    <value>Tag not found.</value>
+  </data>
+  <data name="Admin.Tags.Flash.Updated" xml:space="preserve">
+    <value>Tag updated.</value>
+  </data>
+  <data name="Admin.Tags.Flash.LoadFailed" xml:space="preserve">
+    <value>Could not load tags.</value>
+  </data>
+  <data name="Admin.Tags.Flash.Deleted" xml:space="preserve">
+    <value>Tag deleted.</value>
+  </data>
+  <data name="Admin.Tags.Flash.DeleteFailed" xml:space="preserve">
+    <value>Could not delete tag.</value>
+  </data>
+  <data name="Admin.Tours.Flash.Featured" xml:space="preserve">
+    <value>Tour featured.</value>
+  </data>
+  <data name="Admin.Tours.Flash.FeatureFailed" xml:space="preserve">
+    <value>Could not feature the tour.</value>
+  </data>
+  <data name="Admin.Tours.Flash.Unfeatured" xml:space="preserve">
+    <value>Tour unfeatured.</value>
+  </data>
+  <data name="Admin.Tours.Flash.UnfeatureFailed" xml:space="preserve">
+    <value>Could not unfeature the tour.</value>
+  </data>
+  <data name="Admin.Tours.Flash.ProposalApproved" xml:space="preserve">
+    <value>Proposal approved and tour created.</value>
+  </data>
+  <data name="Admin.Tours.Flash.ProposalApproveFailed" xml:space="preserve">
+    <value>Could not approve the proposal.</value>
+  </data>
+  <data name="Admin.Tours.Flash.ProposalRejected" xml:space="preserve">
+    <value>Proposal rejected.</value>
+  </data>
+  <data name="Admin.Tours.Flash.ProposalRejectFailed" xml:space="preserve">
+    <value>Could not reject the proposal.</value>
+  </data>
+  <data name="Admin.Tours.Flash.PackageApproved" xml:space="preserve">
+    <value>Package approved.</value>
+  </data>
+  <data name="Admin.Tours.Flash.PackageApproveFailed" xml:space="preserve">
+    <value>Could not approve the package.</value>
+  </data>
+  <data name="Admin.Tours.Flash.PackageRejected" xml:space="preserve">
+    <value>Package rejected.</value>
+  </data>
+  <data name="Admin.Tours.Flash.PackageRejectFailed" xml:space="preserve">
+    <value>Could not reject the package.</value>
+  </data>
+  <data name="Admin.Tours.Flash.OfferingSuspended" xml:space="preserve">
+    <value>Guide offering suspended.</value>
+  </data>
+  <data name="Admin.Tours.Flash.OfferingSuspendFailed" xml:space="preserve">
+    <value>Could not suspend the guide offering.</value>
+  </data>
+  <data name="Admin.Tours.Flash.OfferingReinstated" xml:space="preserve">
+    <value>Guide offering reinstated.</value>
+  </data>
+  <data name="Admin.Tours.Flash.OfferingReinstateFailed" xml:space="preserve">
+    <value>Could not reinstate the guide offering.</value>
+  </data>
+  <data name="Admin.Translations.Flash.Updated" xml:space="preserve">
+    <value>Translation updated.</value>
+  </data>
+  <data name="Admin.Translations.Flash.Approved" xml:space="preserve">
+    <value>Translation approved.</value>
+  </data>
+  <data name="Admin.Translations.Flash.ApproveFailed" xml:space="preserve">
+    <value>Could not approve translation.</value>
+  </data>
+  <data name="Admin.Translations.Flash.BackfillStarted" xml:space="preserve">
+    <value>Translation backfill started.</value>
+  </data>
+  <data name="Admin.Translations.Flash.BackfillFailed" xml:space="preserve">
+    <value>Could not start the backfill.</value>
+  </data>
+  <data name="Admin.Translations.Flash.BatchApproved" xml:space="preserve">
+    <value>Translations approved.</value>
+  </data>
+  <data name="Admin.Translations.Flash.BatchApproveFailed" xml:space="preserve">
+    <value>Could not approve the translations.</value>
+  </data>
+  <data name="Admin.Users.Flash.SelectRole" xml:space="preserve">
+    <value>Please select a role.</value>
+  </data>
+  <data name="Admin.Users.Flash.Activated" xml:space="preserve">
+    <value>User activated.</value>
+  </data>
+  <data name="Admin.Users.Flash.Deactivated" xml:space="preserve">
+    <value>User deactivated.</value>
+  </data>
+  <data name="Admin.Users.Flash.RoleAssigned" xml:space="preserve">
+    <value>Role assigned.</value>
+  </data>
+  <data name="Admin.Users.Flash.RoleRemoved" xml:space="preserve">
+    <value>Role removed.</value>
+  </data>
 </root>

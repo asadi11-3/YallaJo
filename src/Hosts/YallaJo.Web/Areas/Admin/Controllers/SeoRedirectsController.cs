@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.SeoRedirects;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class SeoRedirectsController : BaseController
 {
     private readonly SeoRedirectsFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public SeoRedirectsController(SeoRedirectsFacade facade) => _facade = facade;
+    public SeoRedirectsController(SeoRedirectsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] RedirectsFilterRequest request, CancellationToken ct)
@@ -42,7 +49,7 @@ public sealed class SeoRedirectsController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please provide a valid old URL, new URL, and status code.");
+            SetError(_localizer["Admin.SeoRedirects.Flash.CreateFieldsRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -52,7 +59,7 @@ public sealed class SeoRedirectsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Redirect created.", "Could not create the redirect.");
+        SetFlash(result, _localizer["Admin.SeoRedirects.Flash.Created"].Value, _localizer["Admin.SeoRedirects.Flash.CreateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -63,7 +70,7 @@ public sealed class SeoRedirectsController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please provide valid values for the redirect.");
+            SetError(_localizer["Admin.SeoRedirects.Flash.UpdateFieldsRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -73,7 +80,7 @@ public sealed class SeoRedirectsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Redirect updated.", "Could not update the redirect.");
+        SetFlash(result, _localizer["Admin.SeoRedirects.Flash.Updated"].Value, _localizer["Admin.SeoRedirects.Flash.UpdateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -88,7 +95,7 @@ public sealed class SeoRedirectsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Redirect deleted.", "Could not delete the redirect.");
+        SetFlash(result, _localizer["Admin.SeoRedirects.Flash.Deleted"].Value, _localizer["Admin.SeoRedirects.Flash.DeleteFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 }

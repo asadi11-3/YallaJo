@@ -10,6 +10,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.SeoFaq;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 [Area("Admin")]
 [Authorize]
@@ -17,8 +19,13 @@ using YallaJo.Web.Infrastructure.Mvc;
 public sealed class SeoFaqController : BaseController
 {
     private readonly SeoFaqFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public SeoFaqController(SeoFaqFacade facade) => this._facade = facade;
+    public SeoFaqController(SeoFaqFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        this._facade = facade;
+        this._localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] FaqFilterRequest request, CancellationToken ct)
@@ -46,7 +53,7 @@ public sealed class SeoFaqController : BaseController
     {
         if (!this.ModelState.IsValid)
         {
-            this.SetError("Please provide a valid entity, question, and answer.");
+            this.SetError(this._localizer["Admin.SeoFaq.Flash.CreateFieldsRequired"].Value);
             return this.RedirectToAction(nameof(this.Index), new { entityType = form.EntityType });
         }
 
@@ -56,7 +63,7 @@ public sealed class SeoFaqController : BaseController
             return signOut;
         }
 
-        this.SetFlash(result, "FAQ item created.", "Could not create the FAQ item.");
+        this.SetFlash(result, this._localizer["Admin.SeoFaq.Flash.Created"].Value, this._localizer["Admin.SeoFaq.Flash.CreateFailed"].Value);
         return this.RedirectToAction(nameof(this.Index), new { entityType = form.EntityType });
     }
 
@@ -67,7 +74,7 @@ public sealed class SeoFaqController : BaseController
     {
         if (!this.ModelState.IsValid)
         {
-            this.SetError("Please provide a valid question and answer.");
+            this.SetError(this._localizer["Admin.SeoFaq.Flash.UpdateFieldsRequired"].Value);
             return this.RedirectToAction(nameof(this.Index));
         }
 
@@ -77,7 +84,7 @@ public sealed class SeoFaqController : BaseController
             return signOut;
         }
 
-        this.SetFlash(result, "FAQ item updated.", "Could not update the FAQ item.");
+        this.SetFlash(result, this._localizer["Admin.SeoFaq.Flash.Updated"].Value, this._localizer["Admin.SeoFaq.Flash.UpdateFailed"].Value);
         return this.RedirectToAction(nameof(this.Index));
     }
 
@@ -92,7 +99,7 @@ public sealed class SeoFaqController : BaseController
             return signOut;
         }
 
-        this.SetFlash(result, "FAQ item deleted.", "Could not delete the FAQ item.");
+        this.SetFlash(result, this._localizer["Admin.SeoFaq.Flash.Deleted"].Value, this._localizer["Admin.SeoFaq.Flash.DeleteFailed"].Value);
         return this.RedirectToAction(nameof(this.Index));
     }
 
@@ -105,7 +112,7 @@ public sealed class SeoFaqController : BaseController
     {
         if (ids is null || ids.Count == 0 || sortOrders is null || ids.Count != sortOrders.Count)
         {
-            this.SetError("Invalid reorder request.");
+            this.SetError(this._localizer["Admin.SeoFaq.Flash.ReorderInvalid"].Value);
             return this.RedirectToAction(nameof(this.Index), new { entityType, entityId });
         }
 
@@ -119,7 +126,7 @@ public sealed class SeoFaqController : BaseController
             return signOut;
         }
 
-        this.SetFlash(result, "FAQ items reordered.", "Could not reorder the FAQ items.");
+        this.SetFlash(result, this._localizer["Admin.SeoFaq.Flash.Reordered"].Value, this._localizer["Admin.SeoFaq.Flash.ReorderFailed"].Value);
         return this.RedirectToAction(nameof(this.Index), new { entityType, entityId });
     }
 }

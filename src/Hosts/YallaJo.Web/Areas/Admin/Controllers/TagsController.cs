@@ -5,6 +5,8 @@ using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -13,7 +15,12 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class TagsController : BaseController
 {
     private readonly TagsFacade _facade;
-    public TagsController(TagsFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
+    public TagsController(TagsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(bool activeOnly = false, CancellationToken ct = default)
@@ -40,7 +47,7 @@ public sealed class TagsController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Tag created.");
+            SetSuccess(_localizer["Admin.Tags.Flash.Created"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -64,13 +71,13 @@ public sealed class TagsController : BaseController
         if (GuardSignOut(list) is { } signOut) return signOut;
         if (!list.IsSuccess || list.Data is null)
         {
-            SetError(list.Error ?? "Could not load tags.");
+            SetError(list.Error ?? _localizer["Admin.Tags.Flash.LoadFailed"].Value);
             return RedirectToAction(nameof(Index));
         }
         var row = list.Data.Tags.FirstOrDefault(t => t.Id == id);
         if (row is null)
         {
-            SetError("Tag not found.");
+            SetError(_localizer["Admin.Tags.Flash.NotFound"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -96,7 +103,7 @@ public sealed class TagsController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Tag updated.");
+            SetSuccess(_localizer["Admin.Tags.Flash.Updated"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -120,7 +127,7 @@ public sealed class TagsController : BaseController
         var result = await _facade.DeleteAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Tag deleted.", "Could not delete tag.");
+        SetFlash(result, _localizer["Admin.Tags.Flash.Deleted"].Value, _localizer["Admin.Tags.Flash.DeleteFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 

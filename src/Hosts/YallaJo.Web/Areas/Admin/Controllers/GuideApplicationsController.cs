@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.GuideApplications;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class GuideApplicationsController : BaseController
 {
     private readonly GuideApplicationsFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public GuideApplicationsController(GuideApplicationsFacade facade) => _facade = facade;
+    public GuideApplicationsController(GuideApplicationsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(
@@ -65,7 +72,7 @@ public sealed class GuideApplicationsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Guide application approved.", "Could not approve the guide application.");
+        SetFlash(result, _localizer["Admin.GuideApplications.Flash.Approved"].Value, _localizer["Admin.GuideApplications.Flash.ApproveFailed"].Value);
         return Back(tourId);
     }
 
@@ -76,7 +83,7 @@ public sealed class GuideApplicationsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A rejection reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.RejectReasonRequired"].Value);
             return Back(tourId);
         }
 
@@ -86,7 +93,7 @@ public sealed class GuideApplicationsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Guide application rejected.", "Could not reject the guide application.");
+        SetFlash(result, _localizer["Admin.GuideApplications.Flash.Rejected"].Value, _localizer["Admin.GuideApplications.Flash.RejectFailed"].Value);
         return Back(tourId);
     }
 

@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Reports;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class ReportsController : BaseController
 {
     private readonly ReportsFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public ReportsController(ReportsFacade facade) => _facade = facade;
+    public ReportsController(ReportsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] ReportsFilterRequest request, CancellationToken ct)
@@ -44,7 +51,7 @@ public sealed class ReportsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(action))
         {
-            SetError("A moderation action is required.");
+            SetError(_localizer["Admin.Reports.Flash.ActionRequired"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -54,7 +61,7 @@ public sealed class ReportsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Report resolved.", "Could not resolve the report.");
+        SetFlash(result, _localizer["Admin.Reports.Flash.Resolved"].Value, _localizer["Admin.Reports.Flash.ResolveFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 }

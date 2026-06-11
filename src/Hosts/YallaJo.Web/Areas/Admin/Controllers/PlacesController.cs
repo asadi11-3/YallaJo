@@ -5,6 +5,8 @@ using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -16,7 +18,12 @@ public sealed class PlacesController : BaseController
     private const int MaxPageSize = 50;
 
     private readonly PlacesFacade _facade;
-    public PlacesController(PlacesFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
+    public PlacesController(PlacesFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     // ── List ─────────────────────────────────────────────────────────────────
     [HttpGet]
@@ -64,7 +71,7 @@ public sealed class PlacesController : BaseController
 
         if (!result.IsSuccess || result.Data is null)
         {
-            SetError(result.Error ?? "Place not found.");
+            SetError(result.Error ?? _localizer["Admin.Places.Flash.NotFound"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -88,7 +95,7 @@ public sealed class PlacesController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Place created.");
+            SetSuccess(_localizer["Admin.Places.Flash.Created"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -109,7 +116,7 @@ public sealed class PlacesController : BaseController
 
         if (!result.IsSuccess || result.Data is null)
         {
-            SetError(result.Error ?? "Place not found.");
+            SetError(result.Error ?? _localizer["Admin.Places.Flash.NotFound"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -129,7 +136,7 @@ public sealed class PlacesController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Place updated.");
+            SetSuccess(_localizer["Admin.Places.Flash.Updated"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -150,7 +157,7 @@ public sealed class PlacesController : BaseController
         var result = await _facade.DeleteAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Place deleted.", "Could not delete place.");
+        SetFlash(result, _localizer["Admin.Places.Flash.Deleted"].Value, _localizer["Admin.Places.Flash.DeleteFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -164,9 +171,9 @@ public sealed class PlacesController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess(featured ? "Place featured." : "Place unfeatured.");
+            SetSuccess(featured ? _localizer["Admin.Places.Flash.Featured"].Value : _localizer["Admin.Places.Flash.Unfeatured"].Value);
         else
-            SetError(result.Error ?? "Failed.");
+            SetError(result.Error ?? _localizer["Admin.Shared.Flash.Failed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -180,9 +187,9 @@ public sealed class PlacesController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess(verified ? "Place verified." : "Place unverified.");
+            SetSuccess(verified ? _localizer["Admin.Places.Flash.Verified"].Value : _localizer["Admin.Places.Flash.Unverified"].Value);
         else
-            SetError(result.Error ?? "Failed.");
+            SetError(result.Error ?? _localizer["Admin.Shared.Flash.Failed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -197,9 +204,9 @@ public sealed class PlacesController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Accessibility features updated.");
+            SetSuccess(_localizer["Admin.Places.Flash.AccessibilityUpdated"].Value);
         else
-            SetError(result.Error ?? "Could not update accessibility features.");
+            SetError(result.Error ?? _localizer["Admin.Places.Flash.AccessibilityUpdateFailed"].Value);
         return RedirectToAction(nameof(Details), new { id });
     }
 
@@ -213,9 +220,9 @@ public sealed class PlacesController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Accessibility feature removed.");
+            SetSuccess(_localizer["Admin.Places.Flash.AccessibilityRemoved"].Value);
         else
-            SetError(result.Error ?? "Could not remove the accessibility feature.");
+            SetError(result.Error ?? _localizer["Admin.Places.Flash.AccessibilityRemoveFailed"].Value);
         return RedirectToAction(nameof(Details), new { id });
     }
 }

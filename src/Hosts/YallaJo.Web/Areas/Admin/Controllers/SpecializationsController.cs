@@ -5,6 +5,8 @@ using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -13,7 +15,12 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class SpecializationsController : BaseController
 {
     private readonly SpecializationsFacade _facade;
-    public SpecializationsController(SpecializationsFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
+    public SpecializationsController(SpecializationsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(bool activeOnly = false, CancellationToken ct = default)
@@ -40,7 +47,7 @@ public sealed class SpecializationsController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Specialization created.");
+            SetSuccess(_localizer["Admin.Specializations.Flash.Created"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -64,13 +71,13 @@ public sealed class SpecializationsController : BaseController
         if (GuardSignOut(list) is { } signOut) return signOut;
         if (!list.IsSuccess || list.Data is null)
         {
-            SetError(list.Error ?? "Could not load specializations.");
+            SetError(list.Error ?? _localizer["Admin.Specializations.Flash.LoadFailed"].Value);
             return RedirectToAction(nameof(Index));
         }
         var row = list.Data.Specializations.FirstOrDefault(s => s.Id == id);
         if (row is null)
         {
-            SetError("Specialization not found.");
+            SetError(_localizer["Admin.Specializations.Flash.NotFound"].Value);
             return RedirectToAction(nameof(Index));
         }
         // PE1: deep links render the Index with the edit modal server-side open.
@@ -102,7 +109,7 @@ public sealed class SpecializationsController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Specialization updated.");
+            SetSuccess(_localizer["Admin.Specializations.Flash.Updated"].Value);
             return RedirectToAction(nameof(Index));
         }
 

@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Growth;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -20,9 +22,11 @@ public sealed class GrowthController : BaseController
 {
     private readonly GrowthFacade _facade;
     private readonly LookupsFacade _lookups;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public GrowthController(GrowthFacade facade, LookupsFacade lookups)
+    public GrowthController(GrowthFacade facade, LookupsFacade lookups, IStringLocalizer<SharedResource> localizer)
     {
+        _localizer = localizer;
         _facade = facade;
         _lookups = lookups;
     }
@@ -65,14 +69,14 @@ public sealed class GrowthController : BaseController
 
         if (form.PlaceId == Guid.Empty)
         {
-            SetError("Could not find a place matching that search. Pick a suggestion or paste the place id.");
+            SetError(_localizer["Admin.Growth.Flash.PlaceNotFound"].Value);
             return RedirectToAction(nameof(Index));
         }
 
         var result = await _facade.CreateSeasonalityRuleAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Seasonality rule created.", "Could not create the seasonality rule.");
+        SetFlash(result, _localizer["Admin.Growth.Flash.SeasonalityCreated"].Value, _localizer["Admin.Growth.Flash.SeasonalityCreateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -84,7 +88,7 @@ public sealed class GrowthController : BaseController
         var result = await _facade.DeactivateSeasonalityRuleAsync(ruleId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Seasonality rule deactivated.", "Could not deactivate the seasonality rule.");
+        SetFlash(result, _localizer["Admin.Growth.Flash.SeasonalityDeactivated"].Value, _localizer["Admin.Growth.Flash.SeasonalityDeactivateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -97,7 +101,7 @@ public sealed class GrowthController : BaseController
         var result = await _facade.CreateHolidayAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Holiday entry created.", "Could not create the holiday entry.");
+        SetFlash(result, _localizer["Admin.Growth.Flash.HolidayCreated"].Value, _localizer["Admin.Growth.Flash.HolidayCreateFailed"].Value);
         return RedirectToAction(nameof(Index), new { year = form.Year });
     }
 
@@ -112,8 +116,8 @@ public sealed class GrowthController : BaseController
 
         SetFlash(
             result,
-            isPhotogenic ? "Marked as photogenic." : "Photogenic flag cleared.",
-            "Could not update the photogenic flag.");
+            isPhotogenic ? _localizer["Admin.Growth.Flash.PhotogenicMarked"].Value : _localizer["Admin.Growth.Flash.PhotogenicCleared"].Value,
+            _localizer["Admin.Growth.Flash.PhotogenicUpdateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -126,7 +130,7 @@ public sealed class GrowthController : BaseController
         var result = await _facade.CreateExperimentAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Experiment created.", "Could not create the experiment.");
+        SetFlash(result, _localizer["Admin.Growth.Flash.ExperimentCreated"].Value, _localizer["Admin.Growth.Flash.ExperimentCreateFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -138,7 +142,7 @@ public sealed class GrowthController : BaseController
         var result = await _facade.StartExperimentAsync(experimentId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Experiment started.", "Could not start the experiment.");
+        SetFlash(result, _localizer["Admin.Growth.Flash.ExperimentStarted"].Value, _localizer["Admin.Growth.Flash.ExperimentStartFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -150,7 +154,7 @@ public sealed class GrowthController : BaseController
         var result = await _facade.CompleteExperimentAsync(experimentId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Experiment completed.", "Could not complete the experiment.");
+        SetFlash(result, _localizer["Admin.Growth.Flash.ExperimentCompleted"].Value, _localizer["Admin.Growth.Flash.ExperimentCompleteFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 

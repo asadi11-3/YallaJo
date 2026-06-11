@@ -10,6 +10,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.SeoWeather;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 [Area("Admin")]
 [Authorize]
@@ -17,8 +19,13 @@ using YallaJo.Web.Infrastructure.Mvc;
 public sealed class SeoWeatherController : BaseController
 {
     private readonly SeoWeatherFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public SeoWeatherController(SeoWeatherFacade facade) => _facade = facade;
+    public SeoWeatherController(SeoWeatherFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] WeatherLookupRequest request, CancellationToken ct)
@@ -46,7 +53,7 @@ public sealed class SeoWeatherController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please provide a valid place id, latitude, and longitude.");
+            SetError(_localizer["Admin.SeoWeather.Flash.FieldsRequired"].Value);
             return RedirectToAction(nameof(Index), new { placeId = form.PlaceId });
         }
 
@@ -56,7 +63,7 @@ public sealed class SeoWeatherController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Weather data refreshed.", "Could not refresh the weather data.");
+        SetFlash(result, _localizer["Admin.SeoWeather.Flash.Refreshed"].Value, _localizer["Admin.SeoWeather.Flash.RefreshFailed"].Value);
         return RedirectToAction(nameof(Index), new { placeId = form.PlaceId });
     }
 
@@ -71,7 +78,7 @@ public sealed class SeoWeatherController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Weather cache purged.", "Could not purge the weather cache.");
+        SetFlash(result, _localizer["Admin.SeoWeather.Flash.CachePurged"].Value, _localizer["Admin.SeoWeather.Flash.CachePurgeFailed"].Value);
         return RedirectToAction(nameof(Index), new { placeId });
     }
 
@@ -86,7 +93,7 @@ public sealed class SeoWeatherController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Weather budget reset.", "Could not reset the weather budget.");
+        SetFlash(result, _localizer["Admin.SeoWeather.Flash.BudgetReset"].Value, _localizer["Admin.SeoWeather.Flash.BudgetResetFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 }

@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Creators;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class CreatorsController : BaseController
 {
     private readonly CreatorsFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public CreatorsController(CreatorsFacade facade) => _facade = facade;
+    public CreatorsController(CreatorsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(string? status = null, Guid? id = null, int page = 1, CancellationToken ct = default)
@@ -48,7 +55,7 @@ public sealed class CreatorsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(displayName))
         {
-            SetError("A display name is required to approve a creator.");
+            SetError(_localizer["Admin.Creators.Flash.DisplayNameRequiredApprove"].Value);
             return Back(id);
         }
 
@@ -58,7 +65,7 @@ public sealed class CreatorsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Creator application approved.", "Could not approve the creator application.");
+        SetFlash(result, _localizer["Admin.Creators.Flash.ApplicationApproved"].Value, _localizer["Admin.Creators.Flash.ApplicationApproveFailed"].Value);
         return Back(id);
     }
 
@@ -69,7 +76,7 @@ public sealed class CreatorsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A rejection reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.RejectReasonRequired"].Value);
             return Back(id);
         }
 
@@ -79,7 +86,7 @@ public sealed class CreatorsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Creator application rejected.", "Could not reject the creator application.");
+        SetFlash(result, _localizer["Admin.Creators.Flash.ApplicationRejected"].Value, _localizer["Admin.Creators.Flash.ApplicationRejectFailed"].Value);
         return Back(id);
     }
 
@@ -90,7 +97,7 @@ public sealed class CreatorsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(adminNote))
         {
-            SetError("A note describing the requested information is required.");
+            SetError(_localizer["Admin.Creators.Flash.InfoNoteRequired"].Value);
             return Back(id);
         }
 
@@ -100,7 +107,7 @@ public sealed class CreatorsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Requested more information from the applicant.", "Could not request more information.");
+        SetFlash(result, _localizer["Admin.Creators.Flash.InfoRequested"].Value, _localizer["Admin.Creators.Flash.InfoRequestFailed"].Value);
         return Back(id);
     }
 
@@ -111,7 +118,7 @@ public sealed class CreatorsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A suspension reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.SuspendReasonRequired"].Value);
             return Back(id);
         }
 
@@ -121,7 +128,7 @@ public sealed class CreatorsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Creator profile suspended.", "Could not suspend the creator profile.");
+        SetFlash(result, _localizer["Admin.Creators.Flash.ProfileSuspended"].Value, _localizer["Admin.Creators.Flash.ProfileSuspendFailed"].Value);
         return Back(id);
     }
 
@@ -136,7 +143,7 @@ public sealed class CreatorsController : BaseController
             return signOut;
         }
 
-        SetFlash(result, "Creator profile reinstated.", "Could not reinstate the creator profile.");
+        SetFlash(result, _localizer["Admin.Creators.Flash.ProfileReinstated"].Value, _localizer["Admin.Creators.Flash.ProfileReinstateFailed"].Value);
         return Back(id);
     }
 
@@ -149,7 +156,7 @@ public sealed class CreatorsController : BaseController
         var result = await _facade.PromoteAsync(id, targetTier, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Creator promoted.", "Could not promote the creator.");
+        SetFlash(result, _localizer["Admin.Creators.Flash.Promoted"].Value, _localizer["Admin.Creators.Flash.PromoteFailed"].Value);
         return Back(id);
     }
 
@@ -160,14 +167,14 @@ public sealed class CreatorsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A demotion reason is required.");
+            SetError(_localizer["Admin.Creators.Flash.DemoteReasonRequired"].Value);
             return Back(id);
         }
 
         var result = await _facade.DemoteAsync(id, targetTier, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Creator demoted.", "Could not demote the creator.");
+        SetFlash(result, _localizer["Admin.Creators.Flash.Demoted"].Value, _localizer["Admin.Creators.Flash.DemoteFailed"].Value);
         return Back(id);
     }
 
@@ -180,14 +187,14 @@ public sealed class CreatorsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(displayName))
         {
-            SetError("A display name is required.");
+            SetError(_localizer["Admin.Creators.Flash.DisplayNameRequired"].Value);
             return Back(id);
         }
 
         var result = await _facade.EditAsync(id, displayName.Trim(), bio, avatarUrl, slug, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Creator profile updated.", "Could not update the creator profile.");
+        SetFlash(result, _localizer["Admin.Creators.Flash.ProfileUpdated"].Value, _localizer["Admin.Creators.Flash.ProfileUpdateFailed"].Value);
         return Back(id);
     }
 
@@ -199,7 +206,7 @@ public sealed class CreatorsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A reason is required to delete a creator profile.");
+            SetError(_localizer["Admin.Creators.Flash.DeleteReasonRequired"].Value);
             return Back(id);
         }
 
@@ -208,11 +215,11 @@ public sealed class CreatorsController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Creator profile deleted.");
+            SetSuccess(_localizer["Admin.Creators.Flash.ProfileDeleted"].Value);
             return RedirectToAction(nameof(Index));
         }
 
-        SetError(result.Error ?? "Could not delete the creator profile.");
+        SetError(result.Error ?? _localizer["Admin.Creators.Flash.ProfileDeleteFailed"].Value);
         return Back(id);
     }
 
@@ -226,7 +233,7 @@ public sealed class CreatorsController : BaseController
         var result = await _facade.SendInvitationAsync(kind, email, invitedUserId, personalMessage, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Creator invitation sent.", "Could not send the creator invitation.");
+        SetFlash(result, _localizer["Admin.Creators.Flash.InvitationSent"].Value, _localizer["Admin.Creators.Flash.InvitationSendFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 

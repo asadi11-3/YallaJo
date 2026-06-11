@@ -5,6 +5,8 @@ using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -13,7 +15,12 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class CategoriesController : BaseController
 {
     private readonly CategoriesFacade _facade;
-    public CategoriesController(CategoriesFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
+    public CategoriesController(CategoriesFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
@@ -40,7 +47,7 @@ public sealed class CategoriesController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Category created.");
+            SetSuccess(_localizer["Admin.Categories.Flash.Created"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -68,7 +75,7 @@ public sealed class CategoriesController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
         {
-            SetError(result.Error ?? "Category not found.");
+            SetError(result.Error ?? _localizer["Admin.Categories.Flash.NotFound"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -95,7 +102,7 @@ public sealed class CategoriesController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Category updated.");
+            SetSuccess(_localizer["Admin.Categories.Flash.Updated"].Value);
             return RedirectToAction(nameof(Index));
         }
 
@@ -120,7 +127,7 @@ public sealed class CategoriesController : BaseController
     {
         var result = await _facade.DeactivateAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Category deactivated.", "Failed.");
+        SetFlash(result, _localizer["Admin.Categories.Flash.Deactivated"].Value, _localizer["Admin.Shared.Flash.Failed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -131,7 +138,7 @@ public sealed class CategoriesController : BaseController
     {
         var result = await _facade.ActivateAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Category activated.", "Failed.");
+        SetFlash(result, _localizer["Admin.Categories.Flash.Activated"].Value, _localizer["Admin.Shared.Flash.Failed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -142,7 +149,7 @@ public sealed class CategoriesController : BaseController
     {
         var result = await _facade.DeleteAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Category deleted.", "Failed.");
+        SetFlash(result, _localizer["Admin.Categories.Flash.Deleted"].Value, _localizer["Admin.Shared.Flash.Failed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -154,7 +161,7 @@ public sealed class CategoriesController : BaseController
     {
         var result = await _facade.RestoreAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Category restored.", "Failed.");
+        SetFlash(result, _localizer["Admin.Categories.Flash.Restored"].Value, _localizer["Admin.Shared.Flash.Failed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -166,7 +173,7 @@ public sealed class CategoriesController : BaseController
     {
         var result = await _facade.ReorderAsync(ids, sortOrders, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Categories reordered.", "Failed.");
+        SetFlash(result, _localizer["Admin.Categories.Flash.Reordered"].Value, _localizer["Admin.Shared.Flash.Failed"].Value);
         return RedirectToAction(nameof(Index));
     }
 

@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.SeoMetadata;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class SeoMetadataController : BaseController
 {
     private readonly SeoMetadataFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public SeoMetadataController(SeoMetadataFacade facade) => _facade = facade;
+    public SeoMetadataController(SeoMetadataFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] SeoMetadataLookupRequest request, CancellationToken ct)
@@ -38,13 +45,13 @@ public sealed class SeoMetadataController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please correct the highlighted fields.");
+            SetError(_localizer["Admin.SeoMetadata.Flash.FixFields"].Value);
             return RedirectToAction(nameof(Index), new { entityType = form.EntityType, entityId = form.EntityId });
         }
 
         var result = await _facade.UpsertAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "SEO metadata saved.", "Could not save the SEO metadata.");
+        SetFlash(result, _localizer["Admin.SeoMetadata.Flash.Saved"].Value, _localizer["Admin.SeoMetadata.Flash.SaveFailed"].Value);
         return RedirectToAction(nameof(Index), new { entityType = form.EntityType, entityId = form.EntityId });
     }
 
@@ -57,7 +64,7 @@ public sealed class SeoMetadataController : BaseController
         var result = await _facade.DeleteAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "SEO metadata deleted.", "Could not delete the SEO metadata.");
+        SetFlash(result, _localizer["Admin.SeoMetadata.Flash.Deleted"].Value, _localizer["Admin.SeoMetadata.Flash.DeleteFailed"].Value);
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
 }

@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Trips;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using Microsoft.Extensions.Localization;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -19,8 +21,13 @@ public sealed class TripsController : BaseController
 {
     private const int DefaultPageSize = 20;
     private readonly TripsFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public TripsController(TripsFacade facade) => _facade = facade;
+    public TripsController(TripsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(Guid? id = null, int page = 1, CancellationToken ct = default)
@@ -46,7 +53,7 @@ public sealed class TripsController : BaseController
     {
         var result = await _facade.ApproveAsync(id, rowVersion, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Tour approved.", "Could not approve the tour.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.TourApproved"].Value, _localizer["Admin.Shared.Flash.TourApproveFailed"].Value);
         return Back(id);
     }
 
@@ -57,7 +64,7 @@ public sealed class TripsController : BaseController
     {
         var result = await _facade.ReinstateAsync(id, rowVersion, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Tour reinstated.", "Could not reinstate the tour.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.TourReinstated"].Value, _localizer["Admin.Shared.Flash.TourReinstateFailed"].Value);
         return Back(id);
     }
 
@@ -68,13 +75,13 @@ public sealed class TripsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A rejection reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.RejectReasonRequired"].Value);
             return Back(id);
         }
 
         var result = await _facade.RejectAsync(id, rowVersion, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Tour rejected.", "Could not reject the tour.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.TourRejected"].Value, _localizer["Admin.Shared.Flash.TourRejectFailed"].Value);
         return Back(id);
     }
 
@@ -85,13 +92,13 @@ public sealed class TripsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A suspension reason is required.");
+            SetError(_localizer["Admin.Shared.Flash.SuspendReasonRequired"].Value);
             return Back(id);
         }
 
         var result = await _facade.SuspendAsync(id, rowVersion, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Tour suspended.", "Could not suspend the tour.");
+        SetFlash(result, _localizer["Admin.Shared.Flash.TourSuspended"].Value, _localizer["Admin.Shared.Flash.TourSuspendFailed"].Value);
         return Back(id);
     }
 

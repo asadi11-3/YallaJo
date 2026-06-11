@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.BlogTranslations;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -13,8 +15,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class BlogTranslationsController : BaseController
 {
     private readonly BlogTranslationsFacade _facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public BlogTranslationsController(BlogTranslationsFacade facade) => _facade = facade;
+    public BlogTranslationsController(BlogTranslationsFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     // GET /admin/blogs/{id}/translations
     [HttpGet("admin/blogs/{id:guid}/translations")]
@@ -65,7 +72,7 @@ public sealed class BlogTranslationsController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess($"Translation '{languageCode}' saved.");
+            SetSuccess(_localizer["Admin.BlogTranslations.Flash.Saved", languageCode].Value);
             return RedirectToAction(nameof(Index), new { id });
         }
 
