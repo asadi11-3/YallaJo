@@ -13468,4 +13468,49 @@
 <data name="Accounts.Billing.DescriptionPlaceholder" xml:space="preserve">
 <value>Describe what happened (at least 10 characters).</value>
 </data>
+<data name="Accounts.Common.Edit" xml:space="preserve">
+<value>Edit</value>
+</data>
+<data name="Accounts.Reviews.StatusPublished" xml:space="preserve">
+<value>Published</value>
+</data>
+<data name="Accounts.Reviews.StatusAwaitingModeration" xml:space="preserve">
+<value>Awaiting moderation</value>
+</data>
+<data name="Accounts.Reviews.StatusHidden" xml:space="preserve">
+<value>Hidden</value>
+</data>
+<data name="Accounts.Reviews.StatusRemoved" xml:space="preserve">
+<value>Removed</value>
+</data>
+<data name="Accounts.Reviews.EmptyTitle" xml:space="preserve">
+<value>You haven't written any reviews yet</value>
+</data>
+<data name="Accounts.Reviews.EmptyMessage" xml:space="preserve">
+<value>Once you complete a tour or visit a place, you can share your experience here.</value>
+</data>
+<data name="Accounts.Reviews.Edited" xml:space="preserve">
+<value>Edited {0}</value>
+</data>
+<data name="Accounts.Reviews.HelpfulCount" xml:space="preserve">
+<value>{0} helpful</value>
+</data>
+<data name="Accounts.Reviews.ProviderResponse" xml:space="preserve">
+<value>Provider response</value>
+</data>
+<data name="Accounts.Reviews.StarCount" xml:space="preserve">
+<value>{0} stars</value>
+</data>
+<data name="Accounts.Reviews.YourReview" xml:space="preserve">
+<value>Your review</value>
+</data>
+<data name="Accounts.Reviews.AccessibilityHint" xml:space="preserve">
+<value>Edit a review from the place, tour, business or guide page within 48 hours of posting.</value>
+</data>
+<data name="Accounts.Reviews.AccessibilityEmpty" xml:space="preserve">
+<value>You haven't written any accessibility reviews yet.</value>
+</data>
+<data name="Accounts.Reviews.ViewEntity" xml:space="preserve">
+<value>View {0}</value>
+</data>
 </root>

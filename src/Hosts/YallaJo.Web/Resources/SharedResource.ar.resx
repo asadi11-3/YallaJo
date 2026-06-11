@@ -13468,4 +13468,49 @@
 <data name="Accounts.Billing.DescriptionPlaceholder" xml:space="preserve">
 <value>صف ما حدث (10 أحرف على الأقل).</value>
 </data>
+<data name="Accounts.Common.Edit" xml:space="preserve">
+<value>تعديل</value>
+</data>
+<data name="Accounts.Reviews.StatusPublished" xml:space="preserve">
+<value>منشور</value>
+</data>
+<data name="Accounts.Reviews.StatusAwaitingModeration" xml:space="preserve">
+<value>بانتظار المراجعة</value>
+</data>
+<data name="Accounts.Reviews.StatusHidden" xml:space="preserve">
+<value>مخفي</value>
+</data>
+<data name="Accounts.Reviews.StatusRemoved" xml:space="preserve">
+<value>محذوف</value>
+</data>
+<data name="Accounts.Reviews.EmptyTitle" xml:space="preserve">
+<value>لم تكتب أي مراجعات بعد</value>
+</data>
+<data name="Accounts.Reviews.EmptyMessage" xml:space="preserve">
+<value>بمجرد إكمالك لجولة أو زيارة مكان، يمكنك مشاركة تجربتك هنا.</value>
+</data>
+<data name="Accounts.Reviews.Edited" xml:space="preserve">
+<value>عُدّل {0}</value>
+</data>
+<data name="Accounts.Reviews.HelpfulCount" xml:space="preserve">
+<value>{0} مفيد</value>
+</data>
+<data name="Accounts.Reviews.ProviderResponse" xml:space="preserve">
+<value>رد مقدم الخدمة</value>
+</data>
+<data name="Accounts.Reviews.StarCount" xml:space="preserve">
+<value>{0} نجوم</value>
+</data>
+<data name="Accounts.Reviews.YourReview" xml:space="preserve">
+<value>مراجعتك</value>
+</data>
+<data name="Accounts.Reviews.AccessibilityHint" xml:space="preserve">
+<value>يمكنك تعديل مراجعة من صفحة المكان أو الجولة أو النشاط التجاري أو المرشد خلال 48 ساعة من النشر.</value>
+</data>
+<data name="Accounts.Reviews.AccessibilityEmpty" xml:space="preserve">
+<value>لم تكتب أي مراجعات إمكانية وصول بعد.</value>
+</data>
+<data name="Accounts.Reviews.ViewEntity" xml:space="preserve">
+<value>عرض {0}</value>
+</data>
 </root>

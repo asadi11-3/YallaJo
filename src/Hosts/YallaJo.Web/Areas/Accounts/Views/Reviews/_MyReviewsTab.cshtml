@@ -7,16 +7,16 @@
         var full = (int)Math.Round(rating, MidpointRounding.AwayFromZero);
         return string.Concat(Enumerable.Range(1, 5).Select(i =>
             i <= full
-                ? "<i class=\"bi bi-star-fill text-warning\"></i>"
-                : "<i class=\"bi bi-star text-warning\"></i>"));
+                ? "<i class=\"bi bi-star-fill text-warning\" aria-hidden=\"true\"></i>"
+                : "<i class=\"bi bi-star text-warning\" aria-hidden=\"true\"></i>"));
     }
 
     (string Css, string Text) StatusBadge(string status) => status switch
     {
-        "Published" => ("success", "Published"),
-        "AwaitingModeration" => ("warning", "Awaiting moderation"),
-        "AutoHidden" => ("danger", "Hidden"),
-        "RemovedByAdmin" => ("danger", "Removed"),
+        "Published" => ("success", Localizer["Accounts.Reviews.StatusPublished"].Value),
+        "AwaitingModeration" => ("warning", Localizer["Accounts.Reviews.StatusAwaitingModeration"].Value),
+        "AutoHidden" => ("danger", Localizer["Accounts.Reviews.StatusHidden"].Value),
+        "RemovedByAdmin" => ("danger", Localizer["Accounts.Reviews.StatusRemoved"].Value),
         _ => ("secondary", status),
     };
 }
@@ -24,9 +24,9 @@
 @if (!Model.HasReviews)
 {
     <div class="text-center py-5">
-        <i class="bi bi-star display-5 text-secondary d-block mb-3"></i>
-        <h6 class="mb-1">You haven't written any reviews yet</h6>
-        <p class="text-muted mb-0">Once you complete a tour or visit a place, you can share your experience here.</p>
+        <i class="bi bi-star display-5 text-secondary d-block mb-3" aria-hidden="true"></i>
+        <h6 class="mb-1">@Localizer["Accounts.Reviews.EmptyTitle"]</h6>
+        <p class="text-muted mb-0">@Localizer["Accounts.Reviews.EmptyMessage"]</p>
     </div>
 }
 else
@@ -39,7 +39,7 @@ else
                 <div class="card-body">
                     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
                         <div>
-                            <span>@Html.Raw(Stars(r.Rating))</span>
+                            <span role="img" aria-label="@string.Format(Localizer["Public.RatingOutOfFive"].Value, r.Rating.ToString("0.#"))">@Html.Raw(Stars(r.Rating))</span>
                             @if (!string.IsNullOrWhiteSpace(r.Title))
                             {
                                 <span class="fw-bold ms-2">@r.Title</span>
@@ -49,7 +49,7 @@ else
                             <span class="badge bg-@badge.Css bg-opacity-10 text-@badge.Css">@badge.Text</span>
                             @if (r.IsVerifiedBooking)
                             {
-                                <span class="badge bg-info bg-opacity-10 text-info"><i class="bi bi-patch-check me-1"></i>Verified</span>
+                                <span class="badge bg-info bg-opacity-10 text-info"><i class="bi bi-patch-check me-1" aria-hidden="true"></i>@Localizer["Public.Verified"]</span>
                             }
                         </div>
                     </div>
@@ -59,22 +59,22 @@ else
                     <div class="d-flex flex-wrap align-items-center gap-3 small text-muted">
                         @if (r.TargetUrl is not null)
                         {
-                            <a href="@r.TargetUrl" class="text-reset"><i class="bi bi-box-arrow-up-right me-1"></i>@r.TargetLabel</a>
+                            <a href="@r.TargetUrl" class="text-reset"><i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>@r.TargetLabel</a>
                         }
                         else
                         {
-                            <span><i class="bi bi-tag me-1"></i>@r.TargetLabel</span>
+                            <span><i class="bi bi-tag me-1" aria-hidden="true"></i>@r.TargetLabel</span>
                         }
-                        <span><i class="bi bi-calendar3 me-1"></i>@r.CreatedAt.ToString("dd MMM yyyy")</span>
+                        <span><i class="bi bi-calendar3 me-1" aria-hidden="true"></i>@r.CreatedAt.ToString("dd MMM yyyy")</span>
                         @if (r.LastEditedAt is { } edited)
                         {
-                            <span><i class="bi bi-pencil me-1"></i>Edited @edited.ToString("dd MMM yyyy")</span>
+                            <span><i class="bi bi-pencil me-1" aria-hidden="true"></i>@Localizer["Accounts.Reviews.Edited", edited.ToString("dd MMM yyyy")]</span>
                         }
                         @if (r.VisitDate is { } visit)
                         {
-                            <span><i class="bi bi-geo-alt me-1"></i>Visited @visit.ToString("dd MMM yyyy")</span>
+                            <span><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>@Localizer["Public.Visited", visit.ToString("dd MMM yyyy")]</span>
                         }
-                        <span><i class="bi bi-hand-thumbs-up me-1"></i>@r.HelpfulVoteCount helpful</span>
+                        <span><i class="bi bi-hand-thumbs-up me-1" aria-hidden="true"></i>@Localizer["Accounts.Reviews.HelpfulCount", r.HelpfulVoteCount]</span>
                     </div>
 
                     @if (r.Replies.Count > 0)
@@ -83,7 +83,7 @@ else
                             @foreach (var reply in r.Replies)
                             {
                                 <div class="mb-2">
-                                    <div class="small fw-semibold mb-1"><i class="bi bi-reply me-1"></i>Provider response</div>
+                                    <div class="small fw-semibold mb-1"><i class="bi bi-reply me-1" aria-hidden="true"></i>@Localizer["Accounts.Reviews.ProviderResponse"]</div>
                                     <p class="small mb-1">@reply.Content</p>
                                     <span class="small text-muted">@reply.CreatedAt.ToString("dd MMM yyyy")</span>
                                 </div>
@@ -96,7 +96,7 @@ else
                         <div class="mt-3 d-flex gap-2">
                             <button class="btn btn-sm btn-primary-soft mb-0" type="button"
                                     data-bs-toggle="collapse" data-bs-target="#edit-@r.Id.ToString("N")">
-                                <i class="bi bi-pencil me-1"></i>Edit
+                                <i class="bi bi-pencil me-1" aria-hidden="true"></i>@Localizer["Accounts.Common.Edit"]
                             </button>
                             <form asp-area="Accounts" asp-controller="Reviews" asp-action="Delete"
                                   asp-route-id="@r.Id" method="post" class="mb-0"
@@ -104,7 +104,7 @@ else
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="rowVersion" value="@r.RowVersion" />
                                 <button type="submit" class="btn btn-sm btn-danger-soft mb-0">
-                                    <i class="bi bi-trash me-1"></i>Delete
+                                    <i class="bi bi-trash me-1" aria-hidden="true"></i>@Localizer["Public.Confirm.Delete"]
                                 </button>
                             </form>
                         </div>
@@ -117,39 +117,39 @@ else
 
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <label class="form-label">Rating</label>
-                                        <select name="Rating" class="form-select">
+                                        <label class="form-label" for="editRating-@r.Id.ToString("N")">@Localizer["Public.Rating"]</label>
+                                        <select name="Rating" id="editRating-@r.Id.ToString("N")" class="form-select">
                                             @for (var n = 5; n >= 1; n--)
                                             {
                                                 if ((int)Math.Round(r.Rating) == n)
                                                 {
-                                                    <option value="@n" selected>@n star@(n == 1 ? "" : "s")</option>
+                                                    <option value="@n" selected>@Localizer["Accounts.Reviews.StarCount", n]</option>
                                                 }
                                                 else
                                                 {
-                                                    <option value="@n">@n star@(n == 1 ? "" : "s")</option>
+                                                    <option value="@n">@Localizer["Accounts.Reviews.StarCount", n]</option>
                                                 }
                                             }
                                         </select>
                                     </div>
                                     <div class="col-md-8">
-                                        <label class="form-label">Title</label>
-                                        <input type="text" name="Title" class="form-control" maxlength="150" value="@r.Title" />
+                                        <label class="form-label" for="editTitle-@r.Id.ToString("N")">@Localizer["Public.Title"]</label>
+                                        <input type="text" name="Title" id="editTitle-@r.Id.ToString("N")" class="form-control" maxlength="150" value="@r.Title" />
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label">Your review</label>
-                                        <textarea name="Content" class="form-control" rows="3" maxlength="4000" required>@r.Content</textarea>
+                                        <label class="form-label" for="editContent-@r.Id.ToString("N")">@Localizer["Accounts.Reviews.YourReview"]</label>
+                                        <textarea name="Content" id="editContent-@r.Id.ToString("N")" class="form-control" rows="3" maxlength="4000" required>@r.Content</textarea>
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Visit date</label>
-                                        <input type="date" name="VisitDate" class="form-control"
+                                        <label class="form-label" for="editVisit-@r.Id.ToString("N")">@Localizer["Public.Visit.date"]</label>
+                                        <input type="date" name="VisitDate" id="editVisit-@r.Id.ToString("N")" class="form-control"
                                                value="@(r.VisitDate?.ToString("yyyy-MM-dd"))" />
                                     </div>
                                 </div>
                                 <div class="mt-3">
-                                    <button type="submit" class="btn btn-sm btn-primary mb-0">Save changes</button>
+                                    <button type="submit" class="btn btn-sm btn-primary mb-0">@Localizer["Public.Save.changes"]</button>
                                     <button type="button" class="btn btn-sm btn-link mb-0"
-                                            data-bs-toggle="collapse" data-bs-target="#edit-@r.Id.ToString("N")">Cancel</button>
+                                            data-bs-toggle="collapse" data-bs-target="#edit-@r.Id.ToString("N")">@Localizer["Public.Confirm.Cancel"]</button>
                                 </div>
                             </form>
                         </div>
