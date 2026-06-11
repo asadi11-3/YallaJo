@@ -13513,4 +13513,37 @@
 <data name="Accounts.Reviews.ViewEntity" xml:space="preserve">
 <value>عرض {0}</value>
 </data>
+<data name="Accounts.Common.View" xml:space="preserve">
+<value>عرض</value>
+</data>
+<data name="Accounts.Wishlist.Title" xml:space="preserve">
+<value>قائمة أمنياتي</value>
+</data>
+<data name="Accounts.Wishlist.SortLabel" xml:space="preserve">
+<value>ترتيب القائمة</value>
+</data>
+<data name="Accounts.Wishlist.SortRecent" xml:space="preserve">
+<value>المضاف حديثًا</value>
+</data>
+<data name="Accounts.Wishlist.SortTitle" xml:space="preserve">
+<value>الاسم (أ-ي)</value>
+</data>
+<data name="Accounts.Wishlist.SortRating" xml:space="preserve">
+<value>الأعلى تقييمًا</value>
+</data>
+<data name="Accounts.Wishlist.SortPrice" xml:space="preserve">
+<value>السعر (منخفض-مرتفع)</value>
+</data>
+<data name="Accounts.Wishlist.RemoveAll" xml:space="preserve">
+<value>إزالة الكل</value>
+</data>
+<data name="Accounts.Wishlist.EmptyTitle" xml:space="preserve">
+<value>قائمة أمنياتك فارغة</value>
+</data>
+<data name="Accounts.Wishlist.EmptyMessage" xml:space="preserve">
+<value>احفظ الجولات والأماكن والمرشدين الذين تحبهم وجدهم هنا.</value>
+</data>
+<data name="Accounts.Wishlist.BrowseTours" xml:space="preserve">
+<value>تصفح الجولات</value>
+</data>
 </root>
