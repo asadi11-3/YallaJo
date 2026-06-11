@@ -6,6 +6,7 @@ using Auth.Application.Commands.AdminSuspendUser;
 using Auth.Application.Commands.ForceRevokeUserSessions;
 using Auth.Application.Commands.Logout;
 using Auth.Application.Commands.LogoutAll;
+using Auth.Application.Commands.RevokeOtherSessions;
 using Auth.Application.Commands.RevokeSession;
 using Auth.Application.Queries.ListSessions;
 using Auth.Contracts.Authorization;
@@ -49,6 +50,26 @@ internal static class SessionEndpoints
         .WithSummary("Logout all sessions — revokes all refresh tokens for the current user")
         .WithMetadata(new MustHavePermissionAttribute(AuthFeatures.Session, AppAction.Delete))
         .RequireAuthorization();
+
+        group.MapPost("/sessions/revoke-others", async (ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
+        {
+            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+                return Results.Unauthorized();
+
+            var sidClaim = currentUser.GetClaim("sid");
+            if (sidClaim is null || !Guid.TryParse(sidClaim, out var currentSessionId))
+                return Results.Unauthorized();
+
+            var result = await sender.Send(new RevokeOtherSessionsCommand(currentSessionId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("RevokeOtherSessions")
+        .Produces<RevokeOtherSessionsResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .WithSummary("Revoke all of the current user's sessions except the current one")
+        .WithMetadata(new MustHavePermissionAttribute(AuthFeatures.Session, AppAction.Delete))
+        .RequireAuthorization();
+
         group.MapGet("/sessions", async (ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
         {
             if (!currentUser.IsAuthenticated || currentUser.UserId is null)
