@@ -37,22 +37,25 @@ public sealed class AuditLogsController : BaseController
 
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        // S1/PE1 — the same action serves the full page and the listing.js
+        // fragment (WantsAjax = X-Requested-With: fetch). No [OutputCache] ever (C2).
         if (!result.IsSuccess)
         {
             ViewBag.Error = result.Error;
             // Preserve whatever filters the caller supplied so the view
             // can re-render the filter bar correctly even on error.
-            return View(new AuditLogListVm
+            var fallback = new AuditLogListVm
             {
                 FilterUserId      = userId,
                 FilterActorUserId = actorUserId,
                 FilterAction      = action,
                 FilterFrom        = from,
                 FilterTo          = to,
-            });
+            };
+            return WantsAjax() ? PartialView("_AuditLogsResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        return WantsAjax() ? PartialView("_AuditLogsResults", result.Data) : View(result.Data);
     }
 
     // ── POST /admin/audit-logs/{id}/redact ──────────────────────────────────────────

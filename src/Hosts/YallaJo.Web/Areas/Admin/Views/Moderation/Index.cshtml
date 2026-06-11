@@ -1,4 +1,3 @@
-@using System.Globalization
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Moderation
 @using YallaJo.Web.Infrastructure.Authorization
@@ -9,8 +8,6 @@
     ViewData["Title"] = Localizer["Admin.Moderation.Title"].Value;
     ViewData["AdminNav"] = "Moderation";
     var entityTypes = Enum.GetValues<ModerationEntityType>();
-    var culture = CultureInfo.CurrentCulture;
-    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
 }
 
 <div class="d-sm-flex justify-content-between align-items-center mb-4">
@@ -32,77 +29,19 @@
     </div>
 </div>
 
-@if (ViewBag.Error is string err && !string.IsNullOrWhiteSpace(err))
-{
-    <div class="alert alert-danger" role="alert">@err</div>
-}
+@* ViewBag.Error renders inside the listing fragment so AJAX fallbacks surface it too. *@
 
 <section class="card shadow" aria-labelledby="moderation-heading">
     <div class="card-header border-bottom">
         <h2 id="moderation-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Moderation.Directory"]</h2>
     </div>
-    @if (!Model.HasLogs)
-    {
-        <partial name="Partials/_EmptyState"
-                 model="@(new EmptyStateVm { Message = Localizer["Admin.Moderation.EmptyMessage"].Value, ContainerClass = "card-body text-center py-5" })" />
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th scope="col">@Localizer["Admin.Moderation.ColAction"]</th>
-                        <th scope="col">@Localizer["Admin.Moderation.ColTarget"]</th>
-                        <th scope="col">@Localizer["Admin.Moderation.ColNotes"]</th>
-                        <th scope="col">@Localizer["Admin.Moderation.ColAdmin"]</th>
-                        <th scope="col">@Localizer["Admin.Moderation.ColWhen"]</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var l in Model.Logs)
-                    {
-                        var color = ModerationMapper.ActionColor(l.Action);
-                        var icon = ModerationMapper.ActionIcon(l.Action);
-                        <tr>
-                            <td>
-                                <span class="badge bg-@color bg-opacity-10 text-@color"><i class="fa-solid fa-@icon fa-fw" aria-hidden="true"></i> @l.Action</span>
-                            </td>
-                            <td><span class="fw-semibold">@l.EntityType</span></td>
-                            <td>
-                                @if (string.IsNullOrWhiteSpace(l.Notes))
-                                {
-                                    <span class="text-secondary" aria-label="@Localizer["Admin.Moderation.NoNotes"]">&mdash;</span>
-                                }
-                                else
-                                {
-                                    @l.Notes
-                                }
-                            </td>
-                            <td>
-                                @if (string.IsNullOrWhiteSpace(l.AdminEmail))
-                                {
-                                    <span class="text-secondary">@Localizer["Admin.Moderation.UnknownAdmin"]</span>
-                                }
-                                else
-                                {
-                                    <bdi dir="ltr">@l.AdminEmail</bdi>
-                                }
-                            </td>
-                            <td><bdi dir="ltr" class="font-data">@Date(l.ActionedAt)</bdi></td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        @if (Model.NextCursor is { } next && next != Guid.Empty)
-        {
-            <div class="card-footer border-top text-center">
-                <a class="btn btn-sm btn-outline-primary" asp-action="Index" asp-route-afterCursor="@next">@Localizer["Admin.Moderation.LoadMore"]</a>
-            </div>
-        }
-    }
+    @* S1/L1/A11Y9: listing.js swaps this fragment in place for cursor paging without a reload. *@
+    <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+         data-error-text="@Localizer["Public.Results.Error"]"
+         data-retry-text="@Localizer["Public.Retry"]"
+         data-loading-text="@Localizer["Public.Loading"]">
+        <partial name="_ModerationResults" model="Model" />
+    </div>
 </section>
 
 <permission require="@WebPermission.AdminModerationQueue.Warn">
@@ -199,3 +138,7 @@
         </div>
     </section>
 </permission>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true" defer></script>
+}

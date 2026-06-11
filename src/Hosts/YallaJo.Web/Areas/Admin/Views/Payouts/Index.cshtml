@@ -1,4 +1,3 @@
-@using System.Globalization
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Payouts
 @using YallaJo.Web.Infrastructure.Authorization
@@ -8,13 +7,6 @@
 @{
     ViewData["Title"] = Localizer["Admin.Payouts.Title"].Value;
     ViewData["AdminNav"] = "Payouts";
-
-    var culture = CultureInfo.CurrentCulture;
-    // CON3: culture-aware, JOD uses 3 decimals (fils).
-    string Money(decimal amount, string? currency) => amount.ToString("N3", culture) + " " + (currency ?? "JOD");
-    string Count(int n) => n.ToString("N0", culture);
-    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
-    string Period(DateOnly start, DateOnly end) => start.ToString("yyyy-MM-dd", culture) + " \u2013 " + end.ToString("yyyy-MM-dd", culture);
 }
 
 <div class="d-sm-flex justify-content-between align-items-center mb-4">
@@ -33,90 +25,13 @@
     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
         <h2 id="payouts-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Payouts.Directory"]</h2>
     </div>
-
-    @if (Model.Payouts.Count == 0)
-    {
-        <div class="card-body">
-            <partial name="Partials/_EmptyState"
-                     model="@(new EmptyStateVm { Message = Localizer["Admin.Payouts.EmptyMessage"].Value, CtaText = Localizer["Admin.Payouts.EmptyCta"].Value, CtaUrl = Url.Action("Index", "Home") })" />
-        </div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th scope="col">@Localizer["Admin.Payouts.ColPeriod"]</th>
-                        <th scope="col" class="text-end">@Localizer["Admin.Payouts.ColGross"]</th>
-                        <th scope="col" class="text-end">@Localizer["Admin.Payouts.ColCommission"]</th>
-                        <th scope="col" class="text-end">@Localizer["Admin.Payouts.ColNet"]</th>
-                        <th scope="col" class="text-end">@Localizer["Admin.Payouts.ColLines"]</th>
-                        <th scope="col">@Localizer["Admin.Payouts.ColStatus"]</th>
-                        <th scope="col">@Localizer["Admin.Payouts.ColCreated"]</th>
-                        <th scope="col" class="text-end">@Localizer["Admin.Payouts.ColActions"]</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var p in Model.Payouts)
-                    {
-                        var color = PayoutsMapper.StatusColor(p.Status);
-                        var icon = PayoutsMapper.StatusIcon(p.Status);
-                        <tr>
-                            <td>
-                                <span class="fw-semibold d-block"><bdi dir="ltr" class="font-data">@Period(p.BatchPeriodStart, p.BatchPeriodEnd)</bdi></span>
-                                @if (!string.IsNullOrWhiteSpace(p.FailureReason))
-                                {
-                                    <small class="text-danger d-block">
-                                        <i class="fa-solid fa-triangle-exclamation fa-fw" aria-hidden="true"></i> @p.FailureReason
-                                    </small>
-                                }
-                            </td>
-                            <td class="text-end"><bdi dir="ltr" class="font-data">@Money(p.GrossAmount, p.Currency)</bdi></td>
-                            <td class="text-end"><bdi dir="ltr" class="font-data">@Money(p.CommissionAmount, p.Currency)</bdi></td>
-                            <td class="text-end fw-semibold"><bdi dir="ltr" class="font-data">@Money(p.NetAmount, p.Currency)</bdi></td>
-                            <td class="text-end"><bdi dir="ltr" class="font-data">@Count(p.ItemCount)</bdi></td>
-                            <td>
-                                <span class="badge bg-@color bg-opacity-10 text-@color">
-                                    <i class="fa-solid fa-@icon fa-fw" aria-hidden="true"></i> @p.Status
-                                </span>
-                            </td>
-                            <td><bdi dir="ltr" class="font-data">@Date(p.CreatedAt)</bdi></td>
-                            <td class="text-end">
-                                @if (p.CanApprove)
-                                {
-                                    <permission require="@WebPermission.Payout.Approve">
-                                        <form asp-action="Approve" asp-route-id="@p.Id" method="post" class="d-inline"
-                                              data-confirm="@Localizer["Admin.Payouts.ApproveConfirm", Money(p.NetAmount, p.Currency)]"
-                                              data-confirm-title="@Localizer["Admin.Payouts.ApproveTitle"]"
-                                              data-confirm-action="@Localizer["Admin.Payouts.Approve"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-success">
-                                                <i class="fa-solid fa-check fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Payouts.Approve"]
-                                            </button>
-                                        </form>
-                                    </permission>
-                                }
-                                else
-                                {
-                                    <span class="text-secondary small" aria-label="@Localizer["Admin.Payouts.NoAction"]">&mdash;</span>
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        @if (Model.NextCursor is { } next && next != Guid.Empty)
-        {
-            <div class="card-footer border-top text-center">
-                <a asp-action="Index" asp-route-Cursor="@next" class="btn btn-outline-primary btn-sm">
-                    @Localizer["Admin.Payouts.LoadMore"]
-                </a>
-            </div>
-        }
-    }
+    @* S1/L1/A11Y9 — listing.js swaps this fragment in place; ViewBag.Error renders inside it. *@
+    <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+         data-error-text="@Localizer["Public.Results.Error"]"
+         data-retry-text="@Localizer["Public.Retry"]"
+         data-loading-text="@Localizer["Public.Loading"]">
+        <partial name="_PayoutsResults" model="Model" />
+    </div>
 </section>
 
 <permission require="@WebPermission.Payout.Trigger">
@@ -138,3 +53,7 @@
         </div>
     </div>
 </permission>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true" defer></script>
+}

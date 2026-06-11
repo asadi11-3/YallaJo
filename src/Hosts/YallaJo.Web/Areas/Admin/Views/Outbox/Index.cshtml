@@ -11,8 +11,6 @@
 
     var culture = CultureInfo.CurrentCulture;
     string Count(int n) => n.ToString("N0", culture);
-    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
-    var hasFilter = !string.IsNullOrWhiteSpace(Model.ModuleFilter);
 }
 
 <div class="d-sm-flex justify-content-between align-items-center mb-4">
@@ -29,12 +27,9 @@
     }
 </div>
 
-@if (ViewBag.Error is string outboxError && !string.IsNullOrWhiteSpace(outboxError))
-{
-    <div class="alert alert-danger" role="alert">@outboxError</div>
-}
+@* ViewBag.Error renders inside the listing fragment so AJAX fallbacks surface it too. *@
 
-<form method="get" asp-controller="Outbox" asp-action="Index" class="card card-body shadow mb-4">
+<form method="get" asp-controller="Outbox" asp-action="Index" class="card card-body shadow mb-4" data-yj-listing>
     <div class="row g-2 align-items-end">
         <div class="col-md-4">
             <label class="form-label" for="outbox-module">@Localizer["Admin.Outbox.ModuleLabel"]</label>
@@ -53,63 +48,13 @@
     <div class="card-header border-bottom">
         <h2 id="outbox-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Outbox.Directory"]</h2>
     </div>
-    @if (Model.DeadLetters.Count == 0)
-    {
-        <partial name="Partials/_EmptyState"
-                 model="@(new EmptyStateVm { Message = Localizer["Admin.Outbox.EmptyMessage"].Value, CtaText = hasFilter ? Localizer["Admin.Outbox.ClearFilter"].Value : null, CtaUrl = hasFilter ? Url.Action("Index", "Outbox") : null, ContainerClass = "card-body text-center py-5" })" />
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th scope="col">@Localizer["Admin.Outbox.ColModule"]</th>
-                        <th scope="col">@Localizer["Admin.Outbox.ColType"]</th>
-                        <th scope="col">@Localizer["Admin.Outbox.ColOccurred"]</th>
-                        <th scope="col" class="text-end">@Localizer["Admin.Outbox.ColRetries"]</th>
-                        <th scope="col">@Localizer["Admin.Outbox.ColLastError"]</th>
-                        <th scope="col" class="text-end">@Localizer["Admin.Outbox.ColActions"]</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var d in Model.DeadLetters)
-                    {
-                        <tr>
-                            <td class="fw-semibold">@d.Module</td>
-                            <td><bdi dir="ltr">@d.Type</bdi></td>
-                            <td><bdi class="font-data" dir="ltr">@Date(d.OccurredOnUtc)</bdi></td>
-                            <td class="text-end"><bdi class="font-data">@Count(d.RetryCount)</bdi></td>
-                            <td class="text-truncate mw-280">
-                                @if (string.IsNullOrWhiteSpace(d.LastError))
-                                {
-                                    <span class="text-secondary" aria-label="@Localizer["Admin.Outbox.NoError"]">&mdash;</span>
-                                }
-                                else
-                                {
-                                    <bdi dir="ltr" class="text-break">@d.LastError</bdi>
-                                }
-                            </td>
-                            <td class="text-end">
-                                <permission require="@WebPermission.Outbox.Replay">
-                                    <form method="post" asp-action="Replay" asp-route-module="@d.Module" asp-route-id="@d.Id"
-                                          class="d-inline"
-                                          data-confirm="@Localizer["Admin.Outbox.ReplayConfirm"]"
-                                          data-confirm-title="@Localizer["Admin.Outbox.ReplayTitle"]"
-                                          data-confirm-action="@Localizer["Admin.Outbox.Replay"]" data-confirm-cancel="@Localizer["Admin.Confirm.Cancel"]">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">
-                                            <i class="fa-solid fa-arrows-rotate fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Outbox.Replay"]
-                                        </button>
-                                    </form>
-                                </permission>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
+    @* S1/L1/A11Y9 — listing.js swaps this fragment for AJAX filtering. *@
+    <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+         data-error-text="@Localizer["Public.Results.Error"]"
+         data-retry-text="@Localizer["Public.Retry"]"
+         data-loading-text="@Localizer["Public.Loading"]">
+        <partial name="_OutboxResults" model="Model" />
+    </div>
 </section>
 
 <permission require="@WebPermission.Outbox.Replay">
@@ -139,3 +84,7 @@
         </div>
     </section>
 </permission>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true" defer></script>
+}

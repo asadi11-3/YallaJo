@@ -1,0 +1,141 @@
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Admin.Models.Shared
+@model YallaJo.Web.Areas.Admin.Models.AuditLogs.AuditLogListVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Swappable listing fragment (S1/PE1): rendered inside the page on full
+    requests and returned alone for listing.js AJAX refinements.
+*@
+@{
+    // UTC audit timestamps are deliberately rendered in a stable, sortable,
+    // machine-comparable form (CON3: invariant by intent for an audit ledger),
+    // then wrapped in <bdi> at the call site for RTL safety (RTL3).
+    string FmtOccurred(DateTime d) => d.ToString("u");
+
+    string ShortId(Guid id) => id.ToString()[..8];
+
+    bool HasAnyFilter =
+        Model.FilterUserId.HasValue
+        || Model.FilterActorUserId.HasValue
+        || !string.IsNullOrWhiteSpace(Model.FilterAction)
+        || Model.FilterFrom.HasValue
+        || Model.FilterTo.HasValue;
+}
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger m-3 mb-0" role="alert">
+        <i class="fa-solid fa-triangle-exclamation fa-fw me-2" aria-hidden="true"></i>
+        <span>@vbe</span>
+    </div>
+}
+<div class="card-body">
+    @if (Model.Logs.Count == 0)
+    {
+        <partial name="Partials/_EmptyState"
+                 model="@(new EmptyStateVm
+                 {
+                     Message = Localizer["Admin.Audit.EmptyMessage"].Value,
+                     CtaText = HasAnyFilter ? Localizer["Admin.Audit.ClearFilters"].Value : null,
+                     CtaUrl = HasAnyFilter ? Url.Action("Index") : null
+                 })" />
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="text-nowrap">@Localizer["Admin.Audit.ColOccurred"]</th>
+                        <th scope="col">@Localizer["Admin.Audit.ColActor"]</th>
+                        <th scope="col">@Localizer["Admin.Audit.ColAction"]</th>
+                        <th scope="col">@Localizer["Admin.Audit.ColTarget"]</th>
+                        <th scope="col">@Localizer["Admin.Audit.ColReason"]</th>
+                        <th scope="col">@Localizer["Admin.Audit.ColIp"]</th>
+                        <th scope="col">@Localizer["Admin.Audit.ColDetails"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model.Logs)
+                    {
+                        <tr>
+                            <td class="small text-nowrap">
+                                <bdi dir="ltr">@FmtOccurred(log.OccurredAt)</bdi>
+                            </td>
+                            <td>
+                                @if (log.ActorUserId.HasValue)
+                                {
+                                    <a asp-area="Admin" asp-controller="Users"
+                                       asp-action="Details" asp-route-userId="@log.ActorUserId"
+                                       title="@log.ActorUserId">
+                                        <bdi dir="ltr">@ShortId(log.ActorUserId.Value)…</bdi>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary" aria-label="@Localizer["Admin.Audit.NotAvailable"]">—</span>
+                                }
+                            </td>
+                            <td><code class="small"><bdi dir="ltr">@log.Action</bdi></code></td>
+                            <td>
+                                @if (log.UserId.HasValue)
+                                {
+                                    <a asp-area="Admin" asp-controller="Users"
+                                       asp-action="Details" asp-route-userId="@log.UserId"
+                                       title="@log.UserId">
+                                        <bdi dir="ltr">@ShortId(log.UserId.Value)…</bdi>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary" aria-label="@Localizer["Admin.Audit.NotAvailable"]">—</span>
+                                }
+                            </td>
+                            <td class="small">
+                                @if (string.IsNullOrWhiteSpace(log.Reason))
+                                {
+                                    <span class="text-secondary" aria-label="@Localizer["Admin.Audit.NotAvailable"]">—</span>
+                                }
+                                else
+                                {
+                                    @log.Reason
+                                }
+                            </td>
+                            <td class="small text-nowrap">
+                                @if (string.IsNullOrWhiteSpace(log.IpAddress))
+                                {
+                                    <span class="text-secondary" aria-label="@Localizer["Admin.Audit.NotAvailable"]">—</span>
+                                }
+                                else
+                                {
+                                    <bdi dir="ltr">@log.IpAddress</bdi>
+                                }
+                            </td>
+                            <td>
+                                <partial name="Partials/_MetadataDetails"
+                                         model="@log.Metadata"
+                                         view-data='new ViewDataDictionary(ViewData) { ["id-suffix"] = log.Id.ToString("N") }' />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@* ── Pagination (filters preserved across page changes; driven by HasPrevious/HasNext per D1) ── *@
+@if (Model.Logs.Count > 0 && (Model.HasPrevious || Model.HasNext))
+{
+    <partial name="Partials/_PaginationFooter"
+             model="@(new PaginationFooterVm
+             {
+                 HasPrevious = Model.HasPrevious,
+                 HasNext = Model.HasNext,
+                 Page = Model.Page,
+                 PreviousUrl = Url.Action("Index", new { page = Model.Page - 1, userId = Model.FilterUserId, actorUserId = Model.FilterActorUserId, action = Model.FilterAction, from = Model.FilterFrom?.ToString("o"), to = Model.FilterTo?.ToString("o") }),
+                 NextUrl = Url.Action("Index", new { page = Model.Page + 1, userId = Model.FilterUserId, actorUserId = Model.FilterActorUserId, action = Model.FilterAction, from = Model.FilterFrom?.ToString("o"), to = Model.FilterTo?.ToString("o") }),
+                 PreviousText = Localizer["Admin.Audit.Previous"].Value,
+                 NextText = Localizer["Admin.Audit.Next"].Value,
+                 PageLabel = Localizer["Admin.Audit.PageLabel"].Value
+             })" />
+}

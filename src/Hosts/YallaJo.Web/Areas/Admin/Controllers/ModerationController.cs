@@ -28,13 +28,22 @@ public sealed class ModerationController : BaseController
             return signOut;
         }
 
+        // S1/PE1: the same action serves the full page and the listing.js fragment
+        // (WantsAjax = X-Requested-With: fetch). No [OutputCache] ever (C2).
         if (!result.IsSuccess || result.Data is null)
         {
+            var fallback = new ModerationVm();
+            if (WantsAjax())
+            {
+                ViewBag.Error = result.Error;
+                return PartialView("_ModerationResults", fallback);
+            }
+
             SetError(result.Error);
-            return View(new ModerationVm());
+            return View(fallback);
         }
 
-        return View(result.Data);
+        return WantsAjax() ? PartialView("_ModerationResults", result.Data) : View(result.Data);
     }
 
     [HttpPost("admin/moderation/warn")]

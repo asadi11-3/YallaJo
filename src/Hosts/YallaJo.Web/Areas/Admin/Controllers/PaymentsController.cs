@@ -27,13 +27,22 @@ public sealed class PaymentsController : BaseController
             return signOut;
         }
 
+        // S1/PE1 — same action serves the full page and the listing.js fragment
+        // (WantsAjax = X-Requested-With: fetch). No [OutputCache] ever (C2).
         if (!result.IsSuccess || result.Data is null)
         {
+            var fallback = new PaymentsVm();
+            if (WantsAjax())
+            {
+                ViewBag.Error = result.Error;
+                return PartialView("_PaymentsResults", fallback);
+            }
+
             SetError(result.Error);
-            return View(new PaymentsVm());
+            return View(fallback);
         }
 
-        return View(result.Data);
+        return WantsAjax() ? PartialView("_PaymentsResults", result.Data) : View(result.Data);
     }
 
     // ── POST /admin/finance/{id}/refund ───────────────────────────────────────────────

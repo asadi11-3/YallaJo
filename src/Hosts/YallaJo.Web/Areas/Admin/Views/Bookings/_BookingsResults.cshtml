@@ -1,0 +1,147 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Admin.Models.Bookings
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Shared
+@model AdminBookingsIndexVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Swappable listing fragment (S1/PE1): rendered inside the page on full
+    requests and returned alone for listing.js AJAX refinements.
+    Cursor paging (R6): the Next link carries the cursor route value, so
+    listing.js same-pathname link delegation handles it unchanged.
+*@
+@{
+    var culture = CultureInfo.CurrentCulture;
+    string Count(int n) => n.ToString("N0", culture);
+    string Money(decimal amount, string? currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N2", culture) : $"{amount.ToString("N2", culture)} {currency}";
+    string Date(DateTime value) => value.ToString("yyyy-MM-dd HH:mm", culture);
+
+    var hasFilters = !string.IsNullOrWhiteSpace(Model.Filters.Status)
+        || !string.IsNullOrWhiteSpace(Model.Filters.FromDate)
+        || !string.IsNullOrWhiteSpace(Model.Filters.ToDate);
+
+    string NextPageUrl() => Url.Action("Index", "Bookings", new
+    {
+        area = "Admin",
+        status = Model.Filters.Status,
+        fromDate = Model.Filters.FromDate,
+        toDate = Model.Filters.ToDate,
+        cursor = Model.NextCursor,
+    })!;
+}
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger m-3 mb-0" role="alert">@vbe</div>
+}
+<div class="card-body">
+    @if (!Model.HasItems)
+    {
+        <partial name="Partials/_EmptyState"
+                 model="@(new EmptyStateVm { Message = Localizer["Admin.Bookings.EmptyMessage"].Value, CtaText = hasFilters ? Localizer["Admin.Bookings.ClearFilters"].Value : null, CtaUrl = hasFilters ? Url.Action("Index", "Bookings", new { area = "Admin" }) : null })" />
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">@Localizer["Admin.Bookings.ColReference"]</th>
+                        <th scope="col">@Localizer["Admin.Bookings.ColTour"]</th>
+                        <th scope="col">@Localizer["Admin.Bookings.ColTraveler"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Bookings.ColGuests"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Bookings.ColTotal"]</th>
+                        <th scope="col">@Localizer["Admin.Bookings.ColStatus"]</th>
+                        <th scope="col">@Localizer["Admin.Bookings.ColCreated"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Bookings.ColRefund"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Bookings.ColActions"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in Model.Items)
+                    {
+                        <tr>
+                            <td><bdi dir="ltr" class="font-data">@b.Reference</bdi></td>
+                            <td><span class="fw-semibold">@b.TourName</span></td>
+                            <td><span class="text-secondary">@b.TravelerHandle</span></td>
+                            <td class="text-end"><bdi class="font-data">@Count(b.ParticipantCount)</bdi></td>
+                            <td class="text-end"><bdi class="font-data" dir="ltr">@Money(b.TotalAmount, b.Currency)</bdi></td>
+                            <td>
+                                <span class="badge @b.StatusBadgeClass">
+                                    <i class="fa-solid fa-@(AdminBookingsMapper.StatusIcon(b.Status)) fa-fw" aria-hidden="true"></i>
+                                    @Localizer["Admin.Bookings.Status." + b.Status]
+                                </span>
+                            </td>
+                            <td><bdi class="font-data" dir="ltr">@Date(b.CreatedAt)</bdi></td>
+                            <td class="text-end">
+                                @if (b.RefundAmount is { } r)
+                                {
+                                    <bdi class="font-data" dir="ltr">@Money(r, b.Currency)</bdi>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary" aria-label="@Localizer["Admin.Bookings.NoRefund"]">—</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a asp-area="Admin" asp-controller="Bookings" asp-action="Details"
+                                       asp-route-id="@b.Id" class="btn btn-sm btn-outline-primary">@Localizer["Admin.Bookings.Details"]</a>
+                                    <permission require="@WebPermission.AdminBookingDashboard.Update">
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal" data-bs-target="#forceRefundModal-@b.Id">
+                                            @Localizer["Admin.Bookings.ForceRefund"]
+                                        </button>
+                                    </permission>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@if (Model.HasNextPage)
+{
+    <div class="card-footer border-top">
+        <nav aria-label="@Localizer["Admin.Bookings.PaginationLabel"]">
+            <ul class="pagination justify-content-center mb-0">
+                <li class="page-item"><a class="page-link tap-target" href="@NextPageUrl()">@Localizer["Admin.Bookings.Next"]</a></li>
+            </ul>
+        </nav>
+    </div>
+}
+
+@if (Model.HasItems)
+{
+    <permission require="@WebPermission.AdminBookingDashboard.Update">
+        @foreach (var b in Model.Items)
+        {
+            <div class="modal fade" id="forceRefundModal-@b.Id" tabindex="-1"
+                 aria-labelledby="forceRefundTitle-@b.Id" aria-describedby="forceRefundBody-@b.Id" aria-hidden="true"
+                 data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form method="post" asp-area="Admin" asp-controller="Bookings" asp-action="ForceRefund" asp-route-id="@b.Id"
+                          class="modal-content" role="dialog" aria-modal="true" aria-labelledby="forceRefundTitle-@b.Id">
+                        @Html.AntiForgeryToken()
+                        <partial name="Partials/_ModalHeader"
+                                 model="@(new ModalHeaderVm { TitleId = $"forceRefundTitle-{b.Id}", Title = Localizer["Admin.Bookings.ForceRefundTitle", b.Reference].Value, CloseLabel = Localizer["Admin.Bookings.Close"].Value })" />
+                        <div class="modal-body" id="forceRefundBody-@b.Id">
+                            <label class="form-label" for="reason-@b.Id">@Localizer["Admin.Bookings.ForceRefundReasonLabel"]</label>
+                            <textarea class="form-control" id="reason-@b.Id" name="reason" rows="3" maxlength="1000" required
+                                      aria-describedby="reason-help-@b.Id"></textarea>
+                            <div class="form-text" id="reason-help-@b.Id">@Localizer["Admin.Bookings.ForceRefundReasonHelp"]</div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Bookings.Cancel"]</button>
+                            <button type="submit" class="btn btn-danger">@Localizer["Admin.Bookings.ForceRefundSubmit"]</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </permission>
+}

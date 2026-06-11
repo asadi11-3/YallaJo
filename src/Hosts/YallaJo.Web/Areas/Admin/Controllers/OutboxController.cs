@@ -26,13 +26,22 @@ public sealed class OutboxController : BaseController
             return signOut;
         }
 
+        // S1/PE1 — same action serves the full page and the listing.js fragment
+        // (WantsAjax = X-Requested-With: fetch). No [OutputCache] ever (C2).
         if (!result.IsSuccess || result.Data is null)
         {
+            var fallback = new OutboxVm();
+            if (WantsAjax())
+            {
+                ViewBag.Error = result.Error;
+                return PartialView("_OutboxResults", fallback);
+            }
+
             SetError(result.Error);
-            return View(new OutboxVm());
+            return View(fallback);
         }
 
-        return View(result.Data);
+        return WantsAjax() ? PartialView("_OutboxResults", result.Data) : View(result.Data);
     }
 
     [HttpPost("admin/outbox/{module}/{id:guid}/replay")]
