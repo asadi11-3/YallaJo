@@ -54,12 +54,20 @@
         event.preventDefault();
         if (form.dataset.yjBusy === '1') { return; }
         form.dataset.yjBusy = '1';
+        var formInContainer = container.contains(form);
         setBusy(form, true);
+        container.setAttribute('aria-busy', 'true'); // L1: container is loading
 
         window.YallaJo.api.postForm(form.action, new FormData(form))
             .then(function (response) { return response.text(); })
             .then(function (html) {
                 container.innerHTML = html;
+                // A11Y: row forms were replaced by the swap — move focus to the
+                // refreshed container so keyboard focus never lands on <body>.
+                // Header forms survive the swap and keep their own focus.
+                if (formInContainer) {
+                    container.focus({ preventScroll: true });
+                }
                 if (form.dataset.successMsg && window.YallaJo.toast) {
                     window.YallaJo.toast(form.dataset.successMsg, 'success');
                 }
@@ -72,6 +80,7 @@
             })
             .finally(function () {
                 delete form.dataset.yjBusy;
+                container.removeAttribute('aria-busy');
                 // Header forms (sign-out-other-devices) survive the partial swap;
                 // row forms inside the container were replaced, so this is a no-op
                 // for them.

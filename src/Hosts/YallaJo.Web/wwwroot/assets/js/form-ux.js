@@ -119,6 +119,7 @@
 
     var confirmModalEl = null;
     var pendingForm = null;
+    var confirmInvoker = null; // element to restore focus to on dismiss (A11Y8)
 
     function buildConfirmModal() {
         if (confirmModalEl) { return confirmModalEl; }
@@ -144,6 +145,14 @@
 
         confirmModalEl.addEventListener("shown.bs.modal", function () {
             confirmModalEl.querySelector("#yj-confirm-cancel").focus();
+        });
+        // A11Y8: return focus to the invoking control when the modal closes
+        // (Esc, backdrop-dismiss button or cancel) so focus never drops to <body>.
+        confirmModalEl.addEventListener("hidden.bs.modal", function () {
+            if (confirmInvoker && document.contains(confirmInvoker)) {
+                confirmInvoker.focus();
+            }
+            confirmInvoker = null;
         });
         confirmModalEl.querySelector("#yj-confirm-accept").addEventListener("click", function () {
             var form = pendingForm;
@@ -173,6 +182,7 @@
         modal.querySelector("#yj-confirm-accept").textContent =
             form.dataset.confirmAction || "Confirm";
         pendingForm = form;
+        confirmInvoker = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         window.bootstrap.Modal.getOrCreateInstance(modal).show();
         return false;
     }

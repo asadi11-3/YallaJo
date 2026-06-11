@@ -52,7 +52,8 @@
                     <h2 class="card-header-title h5 mb-0">@Localizer["Auth.Sessions.ListHeading"]</h2>
                 </div>
                 <div class="card-body">
-                    <div id="sessions-table-container" aria-live="polite">
+                    @* tabindex="-1": focus target after AJAX swaps so keyboard focus never drops to <body> (A11Y). *@
+                    <div id="sessions-table-container" aria-live="polite" tabindex="-1">
                         <partial name="_SessionsTable" model="Model" />
                     </div>
                 </div>

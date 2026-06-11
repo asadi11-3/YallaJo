@@ -80,4 +80,13 @@
         justify-content: flex-end;
         flex-wrap: wrap;
     }
+
+    /* D2: row action buttons (btn-sm on desktop) grow to a ≥44px touch target
+       on touch-first viewports. Logical sizing only (RTL1). */
+    .yj-table-stack .btn {
+        min-block-size: 44px;
+        min-inline-size: 44px;
+        padding-block: .5rem;
+        padding-inline: .75rem;
+    }
 }

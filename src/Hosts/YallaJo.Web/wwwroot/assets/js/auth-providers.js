@@ -56,12 +56,19 @@
         event.preventDefault();
         if (form.dataset.yjBusy === '1') { return; }
         form.dataset.yjBusy = '1';
+        var formInContainer = container.contains(form);
         setBusy(form, true);
+        container.setAttribute('aria-busy', 'true'); // L1: container is loading
 
         window.YallaJo.api.postForm(form.action, new FormData(form))
             .then(function (response) { return response.text(); })
             .then(function (html) {
                 container.innerHTML = html;
+                // A11Y: the unlink form was replaced by the swap — move focus to
+                // the refreshed container so keyboard focus never lands on <body>.
+                if (formInContainer) {
+                    container.focus({ preventScroll: true });
+                }
                 if (form.dataset.successMsg && window.YallaJo.toast) {
                     window.YallaJo.toast(form.dataset.successMsg, 'success');
                 }
@@ -74,6 +81,7 @@
             })
             .finally(function () {
                 delete form.dataset.yjBusy;
+                container.removeAttribute('aria-busy');
                 // Forms inside the container were replaced on success; reset only
                 // if this one is still attached (failure path).
                 if (document.contains(form)) { setBusy(form, false); }

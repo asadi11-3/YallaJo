@@ -13843,4 +13843,13 @@
 <data name="Auth.Confirm.Cancel" xml:space="preserve">
 <value>Cancel</value>
 </data>
+<data name="Auth.Password.StrengthWeak" xml:space="preserve">
+<value>Weak password</value>
+</data>
+<data name="Auth.Password.StrengthFair" xml:space="preserve">
+<value>Fair password</value>
+</data>
+<data name="Auth.Password.StrengthStrong" xml:space="preserve">
+<value>Strong password</value>
+</data>
 </root>

@@ -13843,4 +13843,13 @@
 <data name="Auth.Confirm.Cancel" xml:space="preserve">
 <value>إلغاء</value>
 </data>
+<data name="Auth.Password.StrengthWeak" xml:space="preserve">
+<value>كلمة مرور ضعيفة</value>
+</data>
+<data name="Auth.Password.StrengthFair" xml:space="preserve">
+<value>كلمة مرور متوسطة</value>
+</data>
+<data name="Auth.Password.StrengthStrong" xml:space="preserve">
+<value>كلمة مرور قوية</value>
+</data>
 </root>

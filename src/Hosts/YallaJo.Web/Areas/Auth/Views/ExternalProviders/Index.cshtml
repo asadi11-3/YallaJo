@@ -11,7 +11,8 @@
             <h1 class="h3 mb-1">@Localizer["Auth.External.Heading"]</h1>
             <p class="text-secondary mb-4">@Localizer["Auth.External.Intro"]</p>
 
-            <div id="providers-list-container" aria-live="polite">
+            @* tabindex="-1": focus target after AJAX swaps so keyboard focus never drops to <body> (A11Y). *@
+            <div id="providers-list-container" aria-live="polite" tabindex="-1">
                 <partial name="_ProvidersList" model="Model" />
             </div>
         </div>

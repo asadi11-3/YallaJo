@@ -14,6 +14,10 @@
         var meter = document.querySelector(input.getAttribute('data-psw-meter') || '#pswMeter');
         if (!meter) return;
         input.dataset.yjMeterWired = '1';
+        // A11Y4: optional visually-hidden live region announces tier changes
+        // ("Weak" / "Fair" / "Strong" from localized data attributes on the meter).
+        var live = document.getElementById(meter.id + 'Live');
+        var lastTier = '';
         input.addEventListener('input', function () {
             var v = input.value, score = 0;
             if (v.length >= 8) score++;
@@ -27,6 +31,16 @@
             // X6: width is a dynamic computed value driven by input scoring.
             meter.style.width = pct + '%';
             meter.setAttribute('aria-valuenow', pct);
+            if (live) {
+                var tier = score <= 2
+                    ? (meter.dataset.strengthWeak || '')
+                    : (score <= 4 ? (meter.dataset.strengthFair || '') : (meter.dataset.strengthStrong || ''));
+                if (v.length === 0) tier = '';
+                if (tier !== lastTier) { // announce only when the tier actually changes
+                    live.textContent = tier;
+                    lastTier = tier;
+                }
+            }
         });
     }
 
