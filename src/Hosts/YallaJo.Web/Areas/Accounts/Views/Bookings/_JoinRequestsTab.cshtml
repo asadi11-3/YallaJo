@@ -1,26 +1,15 @@
 @model YallaJo.Web.Areas.Accounts.Models.JoinRequests.MyJoinRequestsVm
-@* Phase 3 (Accounts plan): join requests extracted from JoinRequests/Index into the My Trips
-   "Join requests" tab (R2/PE1/D1). Create POST keeps its /accounts/join-requests route and
-   JoinRequest.Create gate; its PRG now returns to /accounts/bookings?tab=join-requests. *@
-@{
-    string StatusBadge(string status) => status?.ToLowerInvariant() switch
-    {
-        "pending" => "badge text-bg-warning",
-        "approved" => "badge text-bg-success",
-        "rejected" => "badge text-bg-danger",
-        "cancelled" => "badge text-bg-secondary",
-        "expired" => "badge text-bg-secondary",
-        _ => "badge text-bg-light"
-    };
-}
+@* Phase 3 (Accounts plan): join requests extracted into the My Trips "Join requests" tab (R2/PE1/D1).
+   Create POST keeps its /accounts/join-requests route and JoinRequest.Create gate; PRG returns to
+   /accounts/bookings?tab=join-requests. *@
 
 @if (!Model.HasRequests)
 {
     @* Phase 1: shared empty state (UI-UX-L6) *@
     <partial name="~/Areas/Public/Views/Shared/_EmptyState.cshtml" view-data='@(new ViewDataDictionary(ViewData)
     {
-        { "title", "No join requests yet" },
-        { "message", "When you ask to join a group tour, your requests will appear here." }
+        { "title", Localizer["Accounts.JoinRequests.EmptyTitle"].Value },
+        { "message", Localizer["Accounts.JoinRequests.EmptyMessage"].Value }
     })' />
 }
 else
@@ -29,12 +18,12 @@ else
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>Status</th>
-                    <th>Guests</th>
-                    <th>Message</th>
-                    <th>Requested</th>
-                    <th>Expires</th>
-                    <th>Response</th>
+                    <th>@Localizer["Accounts.JoinRequests.Status"]</th>
+                    <th>@Localizer["Accounts.Booking.Guests"]</th>
+                    <th>@Localizer["Accounts.JoinRequests.Message"]</th>
+                    <th>@Localizer["Accounts.JoinRequests.Requested"]</th>
+                    <th>@Localizer["Accounts.JoinRequests.Expires"]</th>
+                    <th>@Localizer["Accounts.JoinRequests.Response"]</th>
                     <th></th>
                 </tr>
             </thead>
@@ -42,7 +31,7 @@ else
                 @foreach (var row in Model.Requests)
                 {
                     <tr>
-                        <td><span class="@StatusBadge(row.Status)">@row.Status</span></td>
+                        <td><partial name="_StatusBadge" model="@row.Status" /></td>
                         <td>@row.ParticipantCount</td>
                         <td class="text-truncate max-w-220">@(string.IsNullOrWhiteSpace(row.Message) ? "—" : row.Message)</td>
                         <td><small>@row.CreatedAt.ToString("d MMM yyyy")</small></td>
@@ -51,7 +40,7 @@ else
                         <td class="text-end">
                             @if (row.ResultingBookingId is { } bookingId)
                             {
-                                <a class="btn btn-sm btn-primary-soft" asp-area="Accounts" asp-controller="Bookings" asp-action="Detail" asp-route-id="@bookingId">View booking</a>
+                                <a class="btn btn-sm btn-primary-soft" asp-area="Accounts" asp-controller="Bookings" asp-action="Detail" asp-route-id="@bookingId">@Localizer["Accounts.JoinRequests.ViewBooking"]</a>
                             }
                         </td>
                     </tr>
@@ -61,12 +50,11 @@ else
     </div>
 }
 
-@* §3.2 — request to join an existing confirmed group booking.
-   Posts to JoinRequestsController.Create (POST /accounts/join-requests). *@
+@* §3.2 — request to join an existing confirmed group booking. Posts to JoinRequestsController.Create. *@
 <div class="card border mt-4">
     <div class="card-header border-bottom">
-        <h4 class="card-header-title mb-0">Request to join a group</h4>
-        <p class="small text-body mb-0">Have a booking reference and slot from the organiser? Ask to join their group.</p>
+        <h4 class="card-header-title mb-0">@Localizer["Accounts.JoinRequests.RequestToJoin"]</h4>
+        <p class="small text-body mb-0">@Localizer["Accounts.JoinRequests.RequestHint"]</p>
     </div>
     <div class="card-body">
         <partial name="_JoinRequestForm" model="new YallaJo.Web.Areas.Accounts.Models.JoinRequests.JoinRequestFormVm()" />

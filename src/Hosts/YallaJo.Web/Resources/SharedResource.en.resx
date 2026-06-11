@@ -13105,4 +13105,40 @@
 <data name="Accounts.Booking.ResolutionLabel" xml:space="preserve">
 <value>Resolution:</value>
 </data>
+<data name="Accounts.JoinRequests.EmptyTitle" xml:space="preserve">
+<value>No join requests yet</value>
+</data>
+<data name="Accounts.JoinRequests.EmptyMessage" xml:space="preserve">
+<value>When you ask to join a group tour, your requests will appear here.</value>
+</data>
+<data name="Accounts.JoinRequests.Status" xml:space="preserve">
+<value>Status</value>
+</data>
+<data name="Accounts.JoinRequests.Message" xml:space="preserve">
+<value>Message</value>
+</data>
+<data name="Accounts.JoinRequests.Requested" xml:space="preserve">
+<value>Requested</value>
+</data>
+<data name="Accounts.JoinRequests.Expires" xml:space="preserve">
+<value>Expires</value>
+</data>
+<data name="Accounts.JoinRequests.Response" xml:space="preserve">
+<value>Response</value>
+</data>
+<data name="Accounts.JoinRequests.ViewBooking" xml:space="preserve">
+<value>View booking</value>
+</data>
+<data name="Accounts.JoinRequests.RequestToJoin" xml:space="preserve">
+<value>Request to join a group</value>
+</data>
+<data name="Accounts.JoinRequests.RequestHint" xml:space="preserve">
+<value>Have a booking reference and slot from the organiser? Ask to join their group.</value>
+</data>
+<data name="Accounts.JoinRequests.SendRequest" xml:space="preserve">
+<value>Send request</value>
+</data>
+<data name="Accounts.Status.Expired" xml:space="preserve">
+<value>Expired</value>
+</data>
 </root>

@@ -13105,4 +13105,40 @@
 <data name="Accounts.Booking.ResolutionLabel" xml:space="preserve">
 <value>الحل:</value>
 </data>
+<data name="Accounts.JoinRequests.EmptyTitle" xml:space="preserve">
+<value>لا توجد طلبات انضمام بعد</value>
+</data>
+<data name="Accounts.JoinRequests.EmptyMessage" xml:space="preserve">
+<value>عندما تطلب الانضمام إلى جولة جماعية، ستظهر طلباتك هنا.</value>
+</data>
+<data name="Accounts.JoinRequests.Status" xml:space="preserve">
+<value>الحالة</value>
+</data>
+<data name="Accounts.JoinRequests.Message" xml:space="preserve">
+<value>الرسالة</value>
+</data>
+<data name="Accounts.JoinRequests.Requested" xml:space="preserve">
+<value>تاريخ الطلب</value>
+</data>
+<data name="Accounts.JoinRequests.Expires" xml:space="preserve">
+<value>تنتهي</value>
+</data>
+<data name="Accounts.JoinRequests.Response" xml:space="preserve">
+<value>الرد</value>
+</data>
+<data name="Accounts.JoinRequests.ViewBooking" xml:space="preserve">
+<value>عرض الحجز</value>
+</data>
+<data name="Accounts.JoinRequests.RequestToJoin" xml:space="preserve">
+<value>طلب الانضمام إلى مجموعة</value>
+</data>
+<data name="Accounts.JoinRequests.RequestHint" xml:space="preserve">
+<value>لديك مرجع حجز وموعد من المنظم؟ اطلب الانضمام إلى مجموعتهم.</value>
+</data>
+<data name="Accounts.JoinRequests.SendRequest" xml:space="preserve">
+<value>إرسال الطلب</value>
+</data>
+<data name="Accounts.Status.Expired" xml:space="preserve">
+<value>منتهٍ</value>
+</data>
 </root>
