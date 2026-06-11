@@ -245,3 +245,13 @@ html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
         margin-inline: calc(-1 * var(--bs-gutter-x, .75rem));
     }
 }
+
+/* Provider Phase 8 — utilities replacing legacy inline styles (X6).
+   Width caps are direction-neutral, so no RTL override needed (RTL1). */
+.yj-cell-max-260 {
+    max-width: 260px;
+}
+
+.yj-min-w-14r {
+    min-width: 14rem;
+}

@@ -38,8 +38,12 @@ public sealed class SettingsController : BaseController
     [HttpGet("provider/settings")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
+        // API1: profile and business settings are independent — fetch in parallel.
+        var profileTask = _profile.GetAsync(ct);
+        var businessTask = SafeBusinessAsync(ct);
+        await Task.WhenAll(profileTask, businessTask);
 
-        var result = await _profile.GetAsync(ct);
+        var result = profileTask.Result;
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (!result.IsSuccess || result.Data is null)
@@ -48,8 +52,7 @@ public sealed class SettingsController : BaseController
             return View(new ProviderSettingsVm());
         }
 
-        var business = await SafeBusinessAsync(ct);
-        return View(BuildVm(result.Data, business));
+        return View(BuildVm(result.Data, businessTask.Result));
     }
 
     [HttpPost("provider/settings/profile")]
