@@ -91,7 +91,7 @@ public sealed class ApplicationsController : GuideBaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Application submitted.");
+        SetSuccess(L["Guide.Flash.ApplicationSubmitted"]);
         return RedirectToAction(nameof(Index));
     }
 

@@ -37,7 +37,7 @@ public sealed class DiscountsController : GuideBaseController
 
         if (form.ValidUntil.HasValue && form.ValidUntil.Value < form.ValidFrom)
         {
-            ModelState.AddModelError(nameof(form.ValidUntil), "Valid-until must be on or after the valid-from date.");
+            ModelState.AddModelError(nameof(form.ValidUntil), L["Guide.Validation.ValidUntilAfterValidFrom"].Value);
         }
 
         if (!ModelState.IsValid)
@@ -61,7 +61,7 @@ public sealed class DiscountsController : GuideBaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Discount created.");
+        SetSuccess(L["Guide.Flash.DiscountCreated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -73,7 +73,7 @@ public sealed class DiscountsController : GuideBaseController
 
         if (form.ValidUntil.HasValue && form.ValidUntil.Value < form.ValidFrom)
         {
-            ModelState.AddModelError(nameof(form.ValidUntil), "Valid-until must be on or after the valid-from date.");
+            ModelState.AddModelError(nameof(form.ValidUntil), L["Guide.Validation.ValidUntilAfterValidFrom"].Value);
         }
 
         // Re-render with the user's submitted values preserved instead of flash+redirect (no data loss).
@@ -92,13 +92,13 @@ public sealed class DiscountsController : GuideBaseController
         {
             if (!ApplyValidationErrors(result))
             {
-                SetError(result.Error ?? "Could not update the discount.");
+                SetError(result.Error ?? L["Guide.Flash.DiscountUpdateFailed"].Value);
             }
 
             return await ReloadEditAsync(id, form, ct);
         }
 
-        SetSuccess("Discount updated.");
+        SetSuccess(L["Guide.Flash.DiscountUpdated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -112,7 +112,7 @@ public sealed class DiscountsController : GuideBaseController
             return signOut;
         }
 
-        SetFlash(result, "Discount deactivated.");
+        SetFlash(result, L["Guide.Flash.DiscountDeactivated"]);
         return RedirectToAction(nameof(Index));
     }
 

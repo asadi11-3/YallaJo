@@ -45,7 +45,7 @@ public sealed class AgencyController : GuideBaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Application submitted to the agency.");
+        SetSuccess(L["Guide.Flash.AgencyApplicationSubmitted"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -56,7 +56,7 @@ public sealed class AgencyController : GuideBaseController
     {
         var result = await _facade.AcceptAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Invitation accepted.");
+        SetFlash(result, L["Guide.Flash.InvitationAccepted"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -67,7 +67,7 @@ public sealed class AgencyController : GuideBaseController
     {
         var result = await _facade.DeclineAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Invitation declined.");
+        SetFlash(result, L["Guide.Flash.InvitationDeclined"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -78,7 +78,7 @@ public sealed class AgencyController : GuideBaseController
     {
         var result = await _facade.LeaveAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "You have left the agency.");
+        SetFlash(result, L["Guide.Flash.LeftAgency"]);
         return RedirectToAction(nameof(Index));
     }
 

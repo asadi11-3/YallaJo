@@ -77,7 +77,7 @@ public sealed class MyToursController : GuideBaseController
         }
 
         var result = await _facade.AddScheduleAsync(tourId, form, ct);
-        return await HandleMutationAsync(result, tourId, "Schedule added.", "_OfferingSchedules", ct);
+        return await HandleMutationAsync(result, tourId, L["Guide.Offering.Flash.ScheduleAdded"], "_OfferingSchedules", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/schedules/{scheduleId:guid}/delete")]
@@ -85,7 +85,7 @@ public sealed class MyToursController : GuideBaseController
     public async Task<IActionResult> DeleteSchedule(Guid tourId, Guid scheduleId, CancellationToken ct = default)
     {
         var result = await _facade.DeleteScheduleAsync(tourId, scheduleId, ct);
-        return await HandleMutationAsync(result, tourId, "Schedule removed.", "_OfferingSchedules", ct);
+        return await HandleMutationAsync(result, tourId, L["Guide.Offering.Flash.ScheduleRemoved"], "_OfferingSchedules", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/pricing-tiers")]
@@ -98,7 +98,7 @@ public sealed class MyToursController : GuideBaseController
         }
 
         var result = await _facade.AddPricingTierAsync(tourId, form, ct);
-        return await HandleMutationAsync(result, tourId, "Pricing tier added.", "_OfferingPricingTiers", ct);
+        return await HandleMutationAsync(result, tourId, L["Guide.Offering.Flash.TierAdded"], "_OfferingPricingTiers", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/pricing-tiers/{tierId:guid}/delete")]
@@ -106,7 +106,7 @@ public sealed class MyToursController : GuideBaseController
     public async Task<IActionResult> DeletePricingTier(Guid tourId, Guid tierId, CancellationToken ct = default)
     {
         var result = await _facade.DeletePricingTierAsync(tourId, tierId, ct);
-        return await HandleMutationAsync(result, tourId, "Pricing tier removed.", "_OfferingPricingTiers", ct);
+        return await HandleMutationAsync(result, tourId, L["Guide.Offering.Flash.TierRemoved"], "_OfferingPricingTiers", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/private-tour")]
@@ -119,7 +119,7 @@ public sealed class MyToursController : GuideBaseController
         }
 
         var result = await _facade.EnablePrivateTourAsync(tourId, form, ct);
-        return await HandleMutationAsync(result, tourId, "Private tour enabled.", "_OfferingPrivateTour", ct);
+        return await HandleMutationAsync(result, tourId, L["Guide.Offering.Flash.PrivateUpdated"], "_OfferingPrivateTour", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/private-tour/delete")]
@@ -127,7 +127,7 @@ public sealed class MyToursController : GuideBaseController
     public async Task<IActionResult> DisablePrivateTour(Guid tourId, CancellationToken ct = default)
     {
         var result = await _facade.DisablePrivateTourAsync(tourId, ct);
-        return await HandleMutationAsync(result, tourId, "Private tour disabled.", "_OfferingPrivateTour", ct);
+        return await HandleMutationAsync(result, tourId, L["Guide.Offering.Flash.PrivateDisabled"], "_OfferingPrivateTour", ct);
     }
 
     // POST /guide/tours/{tourId}/offering/remove — remove the guide's whole offering on this tour.
@@ -144,11 +144,11 @@ public sealed class MyToursController : GuideBaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Offering removed.");
+            SetSuccess(L["Guide.Flash.OfferingRemoved"]);
         }
         else
         {
-            SetError(result.Error ?? "Could not remove the offering.");
+            SetError(result.Error ?? L["Guide.Flash.OfferingRemoveFailed"].Value);
         }
 
         // The offering no longer exists — return to the tours list, not the offering page.
@@ -174,10 +174,10 @@ public sealed class MyToursController : GuideBaseController
 
         if (WantsAjax())
         {
-            return BadRequest(new { error = firstError ?? "Please check the form and try again." });
+            return BadRequest(new { error = firstError ?? L["Guide.Flash.CheckForm"].Value });
         }
 
-        SetError(firstError ?? "Please check the form and try again.");
+        SetError(firstError ?? L["Guide.Flash.CheckForm"].Value);
         return RedirectToAction(nameof(Offering), new { tourId });
     }
 
@@ -199,7 +199,7 @@ public sealed class MyToursController : GuideBaseController
         {
             if (!result.IsSuccess)
             {
-                return BadRequest(new { error = result.Message ?? "The action could not be completed." });
+                return BadRequest(new { error = result.Message ?? L["Guide.Flash.ActionFailed"].Value });
             }
 
             var refreshed = await _facade.GetOfferingDetailAsync(tourId, ct);

@@ -60,7 +60,7 @@ public sealed class ReviewsController : GuideBaseController
         {
             if (!result.IsSuccess)
             {
-                return BadRequest(new { error = result.Message ?? "Could not post your reply." });
+                return BadRequest(new { error = result.Message ?? L["Guide.Flash.ReplyFailed"].Value });
             }
 
             var refreshed = await _reviews.GetAsync(page, DefaultPageSize, ct);
@@ -71,11 +71,11 @@ public sealed class ReviewsController : GuideBaseController
 
         if (!result.IsSuccess)
         {
-            SetError(result.Error ?? "Could not post your reply.");
+            SetError(result.Error ?? L["Guide.Flash.ReplyFailed"].Value);
         }
         else
         {
-            SetSuccess("Reply posted.");
+            SetSuccess(L["Guide.Reviews.ReplyPosted"]);
         }
 
         return RedirectToAction(nameof(Index), new { page });

@@ -31,7 +31,7 @@ public sealed class JoinRequestsController : GuideBaseController
     {
         var result = await _joinRequests.ApproveAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Join request approved.");
+        SetFlash(result, L["Guide.Flash.JoinRequestApproved"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -41,7 +41,7 @@ public sealed class JoinRequestsController : GuideBaseController
     {
         var result = await _joinRequests.RejectAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Join request rejected.");
+        SetFlash(result, L["Guide.Flash.JoinRequestRejected"]);
         return RedirectToAction(nameof(Index));
     }
 }

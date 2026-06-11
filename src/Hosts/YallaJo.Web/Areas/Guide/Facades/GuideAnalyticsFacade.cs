@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 using YallaJo.Web.Areas.Guide.ApiClients;
 using YallaJo.Web.Areas.Guide.Models.Analytics;
@@ -59,12 +60,18 @@ public sealed class GuideAnalyticsFacade
                 .Select(p => new PopularTourRowVm(p.TourId, p.TourName, p.BookingCount))
                 .ToList(),
             PeakDays = peak
-                .Select(d => new PeakDayRowVm(d.DayOfWeek, d.BookingCount))
+                .Select(d => new PeakDayRowVm(LocalizeDay(d.DayOfWeek), d.BookingCount))
                 .ToList(),
         };
 
         return ApiResult<AnalyticsVm>.Ok(vm);
     }
+
+    // CON3: localize the API's English day name for the current UI culture.
+    private static string LocalizeDay(string raw) =>
+        Enum.TryParse<DayOfWeek>(raw, ignoreCase: true, out var dow)
+            ? CultureInfo.CurrentUICulture.DateTimeFormat.GetDayName(dow)
+            : raw;
 
     private async Task<List<BookingTrendResponse>> SafeBookingTrendsAsync(CancellationToken ct)
     {

@@ -218,3 +218,31 @@
     display: inline-block;
     transform: scaleX(-1);
 }
+
+/* ============================================================
+   9. Offcanvas "end" re-anchoring (RTL1)
+   Bootstrap's LTR build pins .offcanvas-end to the physical right;
+   in RTL the logical "end" is the left edge. Applies to the Guide
+   dashboard sidebar (#guideDashboardMenu, .offcanvas-xl) and any
+   other end-anchored offcanvas. The responsive -xl variant only
+   behaves as an offcanvas below the xl breakpoint.
+   (.show resets transform to translateX(0) in Bootstrap — unaffected.)
+   ============================================================ */
+
+[dir="rtl"] .offcanvas.offcanvas-end {
+    right: auto;
+    left: 0;
+    transform: translateX(-100%);
+    border-left: 0;
+    border-right: var(--bs-offcanvas-border-width) solid var(--bs-offcanvas-border-color);
+}
+
+@media (max-width: 1199.98px) {
+    [dir="rtl"] .offcanvas-xl.offcanvas-end {
+        right: auto;
+        left: 0;
+        transform: translateX(-100%);
+        border-left: 0;
+        border-right: var(--bs-offcanvas-border-width) solid var(--bs-offcanvas-border-color);
+    }
+}

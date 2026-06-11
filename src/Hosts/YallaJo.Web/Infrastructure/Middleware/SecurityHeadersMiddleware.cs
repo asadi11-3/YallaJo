@@ -104,10 +104,10 @@ public sealed class SecurityHeadersMiddleware
                 "default-src 'self'; " +
                 "img-src 'self' data: https:; " +
                 $"script-src 'self' 'unsafe-inline' {scriptCdns}; " +
-                // Google Fonts stylesheet (fonts.googleapis.com) + the inline styles the template uses.
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-                // Google Fonts files (fonts.gstatic.com) + base64 data: fonts.
-                "font-src 'self' data: https://fonts.gstatic.com; " +
+                // Fonts are self-hosted (V3/A5) — no Google Fonts stylesheet; 'unsafe-inline' kept for the template's inline styles.
+                "style-src 'self' 'unsafe-inline'; " +
+                // Self-hosted font files + base64 data: fonts (no fonts.gstatic.com — fonts are self-hosted).
+                "font-src 'self' data:; " +
                 // SignalR live-slots (§2.5): allow the cross-origin API host + its wss:// origin.
                 $"connect-src 'self' {apiConnectSources}; " +
                 // reCAPTCHA challenge iframe.

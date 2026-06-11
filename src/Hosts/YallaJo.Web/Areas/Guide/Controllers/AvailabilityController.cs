@@ -37,7 +37,7 @@ public sealed class AvailabilityController : GuideBaseController
 
         if (form.EndDate < form.StartDate)
         {
-            ModelState.AddModelError(nameof(form.EndDate), "End date must be on or after the start date.");
+            ModelState.AddModelError(nameof(form.EndDate), L["Guide.Validation.EndAfterStart"].Value);
         }
 
         if (!ModelState.IsValid)
@@ -61,7 +61,7 @@ public sealed class AvailabilityController : GuideBaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Availability block added.");
+        SetSuccess(L["Guide.Flash.AvailabilityAdded"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -75,7 +75,7 @@ public sealed class AvailabilityController : GuideBaseController
             return signOut;
         }
 
-        SetFlash(result, "Availability block removed.");
+        SetFlash(result, L["Guide.Flash.AvailabilityRemoved"]);
         return RedirectToAction(nameof(Index));
     }
 

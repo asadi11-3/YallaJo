@@ -65,7 +65,7 @@ public sealed class AgencyRosterController : GuideBaseController
             return await ReloadRosterAsync(form, ct);
         }
 
-        SetSuccess("Invitation sent.");
+        SetSuccess(L["Guide.Flash.InvitationSent"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -79,7 +79,7 @@ public sealed class AgencyRosterController : GuideBaseController
 
         if (WantsAjax()) return await AjaxResultAsync(result, ct);
 
-        SetFlash(result, "Application approved. The guide has been added to your roster.");
+        SetFlash(result, L["Guide.AgencyRoster.Flash.ApplicationApproved"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -88,7 +88,7 @@ public sealed class AgencyRosterController : GuideBaseController
     [RequirePermission(WebPermission.AgencyRoster.Reject)]
     public async Task<IActionResult> Reject(Guid id, string? reason, CancellationToken ct = default)
     {
-        if (RequireReason(reason, "Please provide a reason for rejecting the application.") is { } invalid)
+        if (RequireReason(reason, L["Guide.Flash.RejectReasonRequired"]) is { } invalid)
         {
             return invalid;
         }
@@ -98,7 +98,7 @@ public sealed class AgencyRosterController : GuideBaseController
 
         if (WantsAjax()) return await AjaxResultAsync(result, ct);
 
-        SetFlash(result, "Application rejected.");
+        SetFlash(result, L["Guide.AgencyRoster.Flash.ApplicationRejected"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -107,7 +107,7 @@ public sealed class AgencyRosterController : GuideBaseController
     [RequirePermission(WebPermission.AgencyRoster.Delete)]
     public async Task<IActionResult> Remove(Guid guideUserId, string? reason, CancellationToken ct = default)
     {
-        if (RequireReason(reason, "Please provide a reason for removing the guide.") is { } invalid)
+        if (RequireReason(reason, L["Guide.Flash.RemoveReasonRequired"]) is { } invalid)
         {
             return invalid;
         }
@@ -117,7 +117,7 @@ public sealed class AgencyRosterController : GuideBaseController
 
         if (WantsAjax()) return await AjaxResultAsync(result, ct);
 
-        SetFlash(result, "Guide removed from your roster.");
+        SetFlash(result, L["Guide.AgencyRoster.Flash.GuideRemoved"]);
         return RedirectToAction(nameof(Index));
     }
 

@@ -61,7 +61,7 @@ public sealed class ProposalsController : GuideBaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Proposal created. You can review and submit it for approval.");
+        SetSuccess(L["Guide.Flash.ProposalCreated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -71,7 +71,7 @@ public sealed class ProposalsController : GuideBaseController
     {
         var result = await _proposals.SubmitAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Proposal submitted for review.");
+        SetFlash(result, L["Guide.Flash.ProposalSubmitted"]);
         return RedirectToAction(nameof(Index));
     }
 

@@ -13375,4 +13375,115 @@
 <data name="Guide.Proposals.NoResults" xml:space="preserve">
 <value>لا توجد أماكن مطابقة لبحثك</value>
 </data>
+<data name="Guide.Flash.AgencyApplicationSubmitted" xml:space="preserve">
+<value>تم إرسال الطلب إلى الوكالة.</value>
+</data>
+<data name="Guide.Flash.InvitationAccepted" xml:space="preserve">
+<value>تم قبول الدعوة.</value>
+</data>
+<data name="Guide.Flash.InvitationDeclined" xml:space="preserve">
+<value>تم رفض الدعوة.</value>
+</data>
+<data name="Guide.Flash.LeftAgency" xml:space="preserve">
+<value>لقد غادرت الوكالة.</value>
+</data>
+<data name="Guide.Flash.ProposalCreated" xml:space="preserve">
+<value>تم إنشاء المقترح. يمكنك مراجعته وإرساله للموافقة.</value>
+</data>
+<data name="Guide.Flash.ProposalSubmitted" xml:space="preserve">
+<value>تم إرسال المقترح للمراجعة.</value>
+</data>
+<data name="Guide.Flash.ReplyFailed" xml:space="preserve">
+<value>تعذّر نشر ردّك.</value>
+</data>
+<data name="Guide.Flash.ApplicationSubmitted" xml:space="preserve">
+<value>تم إرسال الطلب.</value>
+</data>
+<data name="Guide.Flash.ProfileUpdated" xml:space="preserve">
+<value>تم تحديث الملف الشخصي.</value>
+</data>
+<data name="Guide.Flash.ProfileDeactivated" xml:space="preserve">
+<value>تم إلغاء تفعيل ملفك الشخصي كمرشد.</value>
+</data>
+<data name="Guide.Flash.LanguageAdded" xml:space="preserve">
+<value>تمت إضافة اللغة.</value>
+</data>
+<data name="Guide.Flash.LanguageRemoved" xml:space="preserve">
+<value>تمت إزالة اللغة.</value>
+</data>
+<data name="Guide.Flash.SpecializationAdded" xml:space="preserve">
+<value>تمت إضافة التخصص.</value>
+</data>
+<data name="Guide.Flash.SpecializationRemoved" xml:space="preserve">
+<value>تمت إزالة التخصص.</value>
+</data>
+<data name="Guide.Flash.AvatarUpdated" xml:space="preserve">
+<value>تم تحديث الصورة الشخصية.</value>
+</data>
+<data name="Guide.Flash.CoverUpdated" xml:space="preserve">
+<value>تم تحديث صورة الغلاف.</value>
+</data>
+<data name="Guide.Flash.DeactivateFailed" xml:space="preserve">
+<value>تعذّر إلغاء تفعيل ملفك الشخصي كمرشد.</value>
+</data>
+<data name="Guide.Flash.InvitationSent" xml:space="preserve">
+<value>تم إرسال الدعوة.</value>
+</data>
+<data name="Guide.Flash.RejectReasonRequired" xml:space="preserve">
+<value>يرجى تقديم سبب لرفض الطلب.</value>
+</data>
+<data name="Guide.Flash.RemoveReasonRequired" xml:space="preserve">
+<value>يرجى تقديم سبب لإزالة المرشد.</value>
+</data>
+<data name="Guide.Flash.OfferingRemoved" xml:space="preserve">
+<value>تمت إزالة العرض.</value>
+</data>
+<data name="Guide.Flash.OfferingRemoveFailed" xml:space="preserve">
+<value>تعذّرت إزالة العرض.</value>
+</data>
+<data name="Guide.Flash.CheckForm" xml:space="preserve">
+<value>يرجى التحقق من النموذج والمحاولة مرة أخرى.</value>
+</data>
+<data name="Guide.Flash.ActionFailed" xml:space="preserve">
+<value>تعذّر إتمام الإجراء.</value>
+</data>
+<data name="Guide.Flash.JoinRequestApproved" xml:space="preserve">
+<value>تمت الموافقة على طلب الانضمام.</value>
+</data>
+<data name="Guide.Flash.JoinRequestRejected" xml:space="preserve">
+<value>تم رفض طلب الانضمام.</value>
+</data>
+<data name="Guide.Flash.DiscountCreated" xml:space="preserve">
+<value>تم إنشاء الخصم.</value>
+</data>
+<data name="Guide.Flash.DiscountUpdated" xml:space="preserve">
+<value>تم تحديث الخصم.</value>
+</data>
+<data name="Guide.Flash.DiscountDeactivated" xml:space="preserve">
+<value>تم إلغاء تفعيل الخصم.</value>
+</data>
+<data name="Guide.Flash.DiscountUpdateFailed" xml:space="preserve">
+<value>تعذّر تحديث الخصم.</value>
+</data>
+<data name="Guide.Flash.AvailabilityAdded" xml:space="preserve">
+<value>تمت إضافة فترة عدم التوفر.</value>
+</data>
+<data name="Guide.Flash.AvailabilityRemoved" xml:space="preserve">
+<value>تمت إزالة فترة عدم التوفر.</value>
+</data>
+<data name="Guide.Validation.ValidUntilAfterValidFrom" xml:space="preserve">
+<value>يجب أن يكون تاريخ انتهاء الصلاحية في تاريخ البدء أو بعده.</value>
+</data>
+<data name="Guide.Validation.EndAfterStart" xml:space="preserve">
+<value>يجب أن يكون تاريخ الانتهاء في تاريخ البدء أو بعده.</value>
+</data>
+<data name="Guide.Validation.ImageRequired" xml:space="preserve">
+<value>يرجى اختيار صورة للرفع.</value>
+</data>
+<data name="Guide.Validation.ImageTooLarge" xml:space="preserve">
+<value>يجب ألا يتجاوز حجم الصورة 5 ميغابايت.</value>
+</data>
+<data name="Guide.Validation.ImageInvalid" xml:space="preserve">
+<value>يُسمح بملفات الصور فقط.</value>
+</data>
 </root>

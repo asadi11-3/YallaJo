@@ -105,7 +105,7 @@
                                             @a.Message
                                         }
                                     </td>
-                                    <td><span class="badge @a.StatusBadgeClass"><i class="fa-solid fa-circle-info fa-fw" aria-hidden="true"></i> @a.Status</span></td>
+                                    <td><partial name="_GuideStatusBadge" model="new StatusBadgeVm(a.Status.ToString())" /></td>
                                     <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(a.CreatedAt)</bdi></td>
                                     <td class="text-end">
                                         @if (a.IsPending)
@@ -183,7 +183,7 @@
                                 <tr>
                                     <td class="fw-semibold">@i.GuideHandle</td>
                                     <td class="text-end"><bdi dir="ltr" class="font-data">@Pct(i.ProposedCommissionPercentage)</bdi></td>
-                                    <td><span class="badge @i.StatusBadgeClass"><i class="fa-solid fa-circle-info fa-fw" aria-hidden="true"></i> @i.Status</span></td>
+                                    <td><partial name="_GuideStatusBadge" model="new StatusBadgeVm(i.Status.ToString())" /></td>
                                     <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(i.ExpiresAt)</bdi></td>
                                     <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(i.CreatedAt)</bdi></td>
                                 </tr>
