@@ -130,7 +130,7 @@
                 <div class="card border">
                     <div class="card-header bg-transparent"><h2 class="h6 mb-0">@Localizer["Public.At.a.glance"]</h2></div>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between"><span class="text-body-secondary">@Localizer["Public.Rating"]</span><span>@Model.AverageRating.ToString("0.0") / 5</span></li>
+                        <li class="list-group-item d-flex justify-content-between"><span class="text-body-secondary">@Localizer["Public.Rating"]</span><span><bdi dir="ltr" class="font-data">@Model.AverageRating.ToString("0.0") / 5</bdi></span></li>
                         <li class="list-group-item d-flex justify-content-between"><span class="text-body-secondary">@Localizer["Public.Reviews"]</span><span>@Model.ReviewCount</span></li>
                         <li class="list-group-item d-flex justify-content-between"><span class="text-body-secondary">@Localizer["Public.Tours"]</span><span>@Model.TourCount</span></li>
                         @if (Model.YearsOfExperience > 0)

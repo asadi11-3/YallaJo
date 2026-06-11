@@ -186,7 +186,7 @@
                                                 <small class="text-muted ms-2"><i class="bi bi-clock me-1"></i>@Localizer["Public.MinutesShort", s.DurationMinutes]</small>
                                             }
                                         </span>
-                                        <span class="text-success fw-semibold">@Money(s.Price, s.Currency)</span>
+                                        <span class="text-success fw-semibold"><bdi dir="ltr" class="font-data">@Money(s.Price, s.Currency)</bdi></span>
                                     </li>
                                 }
                             </ul>
@@ -235,7 +235,7 @@
                                     <h6 class="text-secondary mb-1"><i class="bi bi-cloud-sun me-1" aria-hidden="true"></i>@Localizer["Public.Weather"]</h6>
                                     @if (weather.HasTemperature)
                                     {
-                                        <span class="h3 mb-0">@weather.Temperature.GetValueOrDefault().ToString("0")&deg;C</span>
+                                        <span class="h3 mb-0"><bdi dir="ltr" class="font-data">@weather.Temperature.GetValueOrDefault().ToString("0")&deg;C</bdi></span>
                                     }
                                     @if (!string.IsNullOrWhiteSpace(weather.Condition))
                                     {

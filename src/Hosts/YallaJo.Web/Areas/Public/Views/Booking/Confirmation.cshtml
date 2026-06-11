@@ -84,29 +84,29 @@
                                 {
                                     <li class="list-group-item d-flex justify-content-between px-0 py-1">
                                         <span>@line.TierType &times; @line.Count</span>
-                                        <span>@Money(line.UnitPrice * line.Count, Model.Currency)</span>
+                                        <span><bdi dir="ltr" class="font-data">@Money(line.UnitPrice * line.Count, Model.Currency)</bdi></span>
                                     </li>
                                 }
                             </ul>
                         }
                         <ul class="list-group list-group-borderless mb-0">
                             <li class="list-group-item d-flex justify-content-between px-0 py-1">
-                                <span>@Localizer["Public.Subtotal"]</span><span>@Money(Model.Subtotal, Model.Currency)</span>
+                                <span>@Localizer["Public.Subtotal"]</span><span><bdi dir="ltr" class="font-data">@Money(Model.Subtotal, Model.Currency)</bdi></span>
                             </li>
                             @if (Model.DiscountAmount > 0)
                             {
                                 <li class="list-group-item d-flex justify-content-between px-0 py-1 text-success">
-                                    <span>@Localizer["Public.Discount"]</span><span>-@Money(Model.DiscountAmount, Model.Currency)</span>
+                                    <span>@Localizer["Public.Discount"]</span><span><bdi dir="ltr" class="font-data">-@Money(Model.DiscountAmount, Model.Currency)</bdi></span>
                                 </li>
                             }
                             @if (Model.LoyaltyAmount > 0)
                             {
                                 <li class="list-group-item d-flex justify-content-between px-0 py-1 text-success">
-                                    <span>@Localizer["Public.Loyalty"]</span><span>-@Money(Model.LoyaltyAmount, Model.Currency)</span>
+                                    <span>@Localizer["Public.Loyalty"]</span><span><bdi dir="ltr" class="font-data">-@Money(Model.LoyaltyAmount, Model.Currency)</bdi></span>
                                 </li>
                             }
                             <li class="list-group-item d-flex justify-content-between px-0 pt-2 border-top fw-bold">
-                                <span>@Localizer["Public.Total"]</span><span>@Money(Model.TotalAmount, Model.Currency)</span>
+                                <span>@Localizer["Public.Total"]</span><span><bdi dir="ltr" class="font-data">@Money(Model.TotalAmount, Model.Currency)</bdi></span>
                             </li>
                         </ul>
                     </div>

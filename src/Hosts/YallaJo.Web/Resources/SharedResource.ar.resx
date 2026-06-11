@@ -13334,7 +13334,7 @@
 <value>يؤدي هذا إلى جدولة حذف بيانات التوصيات والتحليلات فقط (وليس حسابك) بعد مهلة 30 يومًا. للتأكيد، اكتب DELETE أدناه.</value>
 </data>
 <data name="Accounts.Privacy.TypeToConfirm" xml:space="preserve">
-<value>اكتب DELETE للتأكيد</value>
+<value>اكتب {0} للتأكيد</value>
 </data>
 <data name="Accounts.Privacy.KeepData" xml:space="preserve">
 <value>الاحتفاظ ببياناتي</value>
@@ -15138,5 +15138,77 @@
 </data>
 <data name="Admin.Users.Flash.RoleRemoved" xml:space="preserve">
 <value>تمت إزالة الدور.</value>
+</data>
+<data name="Public.Cancel" xml:space="preserve">
+<value>إلغاء</value>
+</data>
+<data name="Public.MarkAsRead" xml:space="preserve">
+<value>وضع علامة كمقروء</value>
+</data>
+<data name="Public.LocalWeather" xml:space="preserve">
+<value>الطقس المحلي</value>
+</data>
+<data name="Public.BusinessesAt" xml:space="preserve">
+<value>الأنشطة التجارية في {0}</value>
+</data>
+<data name="Public.HumidityPct" xml:space="preserve">
+<value>الرطوبة {0}%</value>
+</data>
+<data name="Public.WindKmPerHour" xml:space="preserve">
+<value>الرياح {0} كم/س</value>
+</data>
+<data name="Public.Notifications" xml:space="preserve">
+<value>الإشعارات</value>
+</data>
+<data name="Public.CountNew" xml:space="preserve">
+<value>{0} جديد</value>
+</data>
+<data name="Public.MarkAllRead" xml:space="preserve">
+<value>وضع علامة مقروء على الكل</value>
+</data>
+<data name="Public.NoNewNotifications" xml:space="preserve">
+<value>لا توجد إشعارات جديدة</value>
+</data>
+<data name="Public.ViewAllNotifications" xml:space="preserve">
+<value>عرض جميع الإشعارات</value>
+</data>
+<data name="Public.TimeAgo.JustNow" xml:space="preserve">
+<value>الآن</value>
+</data>
+<data name="Public.TimeAgo.MinutesShort" xml:space="preserve">
+<value>قبل {0} د</value>
+</data>
+<data name="Public.TimeAgo.HoursShort" xml:space="preserve">
+<value>قبل {0} س</value>
+</data>
+<data name="Public.TimeAgo.DaysShort" xml:space="preserve">
+<value>قبل {0} ي</value>
+</data>
+<data name="Public.JoinModal.Title" xml:space="preserve">
+<value>طلب الانضمام إلى مجموعة</value>
+</data>
+<data name="Public.JoinModal.Intro" xml:space="preserve">
+<value>أدخل رقم الحجز الذي شاركه معك المنظم، ثم اختر التاريخ وعدد الأشخاص المنضمين.</value>
+</data>
+<data name="Public.JoinModal.BookingIdLabel" xml:space="preserve">
+<value>رقم الحجز الذي حصلت عليه</value>
+</data>
+<data name="Public.JoinModal.BookingIdPlaceholder" xml:space="preserve">
+<value>مثال: 3f9a...</value>
+</data>
+<data name="Public.JoinModal.DateTimeLabel" xml:space="preserve">
+<value>التاريخ والوقت</value>
+</data>
+<data name="Public.JoinModal.NoSlots" xml:space="preserve">
+<value>لا توجد مواعيد قادمة منشورة لهذه الجولة.</value>
+</data>
+<data name="Public.JoinModal.MessageLabel" xml:space="preserve">
+<value>رسالة إلى المنظم (اختياري)</value>
+</data>
+<data name="Public.JoinModal.Send" xml:space="preserve">
+<value>إرسال الطلب</value>
+</data>
+<data name="Accounts.Privacy.DeleteConfirmToken" xml:space="preserve">
+<value>حذف</value>
 </data>
 </root>

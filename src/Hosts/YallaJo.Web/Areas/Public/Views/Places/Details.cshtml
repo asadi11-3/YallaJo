@@ -147,7 +147,7 @@
                             <div>
                                 @if (weather.HasTemperature)
                                 {
-                                    <span class="h3 mb-0">@weather.Temperature.GetValueOrDefault().ToString("0")&deg;C</span>
+                                    <span class="h3 mb-0"><bdi dir="ltr" class="font-data">@weather.Temperature.GetValueOrDefault().ToString("0")&deg;C</bdi></span>
                                 }
                                 @if (!string.IsNullOrWhiteSpace(weather.Condition))
                                 {
@@ -161,7 +161,7 @@
                             <ul class="list-unstyled small text-body mb-0 text-end">
                                 @if (weather.FeelsLike.HasValue)
                                 {
-                                    <li>Feels like @weather.FeelsLike.Value.ToString("0")&deg;C</li>
+                                    <li>@Localizer["Public.FeelsLike", weather.FeelsLike.Value.ToString("0")]&deg;C</li>
                                 }
                                 @if (weather.Humidity.HasValue)
                                 {
@@ -169,7 +169,7 @@
                                 }
                                 @if (weather.WindSpeed.HasValue)
                                 {
-                                    <li><i class="bi bi-wind me-1" aria-hidden="true"></i>@weather.WindSpeed.Value.ToString("0.#") km/h</li>
+                                    <li><i class="bi bi-wind me-1" aria-hidden="true"></i>@Localizer["Public.KmPerHour", weather.WindSpeed.Value.ToString("0.#")]</li>
                                 }
                             </ul>
                         </div>
@@ -334,7 +334,7 @@
                                 </ul>
                             </div>
                             <div class="card-footer pt-0">
-                                <span class="fw-normal text-success">@(tour.Currency is { Length: > 0 } ? $"{tour.EffectivePrice:N0} {tour.Currency}" : tour.EffectivePrice.ToString("N0"))</span>
+                                <span class="fw-normal text-success"><bdi dir="ltr" class="font-data">@(tour.Currency is { Length: > 0 } ? $"{tour.EffectivePrice:N0} {tour.Currency}" : tour.EffectivePrice.ToString("N0"))</bdi></span>
                                 <small>@Localizer["Public.per.person"]</small>
                             </div>
                         </div>
@@ -350,7 +350,7 @@
 {
     <section class="pb-5">
         <div class="container">
-            <h4 class="mb-3">Businesses at @Model.Name</h4>
+            <h4 class="mb-3">@Localizer["Public.BusinessesAt", Model.Name]</h4>
             <div class="row g-4">
                 @foreach (var business in Model.Businesses)
                 {
@@ -366,7 +366,7 @@
                                     }
                                 </div>
                                 <p class="small text-body mb-2">@business.BusinessType</p>
-                                <span class="small"><i class="bi bi-star-fill text-warning me-1"></i>@business.AverageRating.ToString("0.0") (@business.ReviewCount)</span>
+                                <span class="small"><i class="bi bi-star-fill text-warning me-1"></i><bdi dir="ltr" class="font-data">@business.AverageRating.ToString("0.0") (@business.ReviewCount)</bdi></span>
                             </div>
                         </div>
                     </div>
@@ -399,7 +399,7 @@
                                 <div class="small text-body mb-2"><i class="bi bi-star-fill text-warning me-1"></i>@rec.AverageRating.ToString("0.0")</div>
                                 @if (rec.BasePrice.HasValue)
                                 {
-                                    <div class="small text-success">@(string.IsNullOrWhiteSpace(rec.Currency) ? rec.BasePrice.Value.ToString("N0") : $"{rec.BasePrice.Value:N0} {rec.Currency}")</div>
+                                    <div class="small text-success"><bdi dir="ltr" class="font-data">@(string.IsNullOrWhiteSpace(rec.Currency) ? rec.BasePrice.Value.ToString("N0") : $"{rec.BasePrice.Value:N0} {rec.Currency}")</bdi></div>
                                 }
                             </div>
                         </div>

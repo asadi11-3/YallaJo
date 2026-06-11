@@ -1,12 +1,13 @@
 @model YallaJo.Web.Features.Notifications.NotificationBellVm
+@inject Microsoft.Extensions.Localization.IStringLocalizer<YallaJo.Web.Resources.SharedResource> L
 @{
     string TimeAgo(DateTime utc)
     {
         var span = DateTime.UtcNow - utc;
-        if (span.TotalMinutes < 1) return "just now";
-        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
-        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
-        if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
+        if (span.TotalMinutes < 1) return L["Public.TimeAgo.JustNow"].Value;
+        if (span.TotalMinutes < 60) return L["Public.TimeAgo.MinutesShort", (int)span.TotalMinutes].Value;
+        if (span.TotalHours < 24) return L["Public.TimeAgo.HoursShort", (int)span.TotalHours].Value;
+        if (span.TotalDays < 7) return L["Public.TimeAgo.DaysShort", (int)span.TotalDays].Value;
         return utc.ToString("dd MMM yyyy");
     }
 }
@@ -28,9 +29,9 @@
             <!-- Card header -->
             <div class="card-header bg-transparent d-flex justify-content-between align-items-center border-bottom">
                 <h6 class="m-0">
-                    Notifications @if (Model.HasUnread)
+                    @L["Public.Notifications"] @if (Model.HasUnread)
                     {
-                        <span class="badge bg-danger bg-opacity-10 text-danger ms-2">@Model.UnreadCount new</span>
+                        <span class="badge bg-danger bg-opacity-10 text-danger ms-2">@L["Public.CountNew", Model.UnreadCount]</span>
                     }
                 </h6>
 
@@ -38,7 +39,7 @@
                 {
                     <form asp-area="" asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="m-0">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none">Mark all read</button>
+                        <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none">@L["Public.MarkAllRead"]</button>
                     </form>
                 }
             </div>
@@ -49,7 +50,7 @@
                     <!-- Notification item -->
                     @if (!Model.HasRecent)
                     {
-                        <li class="text-center small text-muted py-3">No new notifications</li>
+                        <li class="text-center small text-muted py-3">@L["Public.NoNewNotifications"]</li>
                     }
                     else
                     {
@@ -70,7 +71,7 @@
                                         <form asp-area="" asp-controller="Notifications" asp-action="MarkRead" method="post" class="m-0">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@n.Id" />
-                                            <button type="submit" class="btn btn-sm btn-link p-0 text-decoration-none" title="Mark as read"><i class="bi bi-check2"></i></button>
+                                            <button type="submit" class="btn btn-sm btn-link p-0 text-decoration-none" title="@L["Public.MarkAsRead"]"><i class="bi bi-check2"></i></button>
                                         </form>
                                     }
                                 </div>
@@ -84,7 +85,7 @@
             <!-- Card body END -->
             <!-- Card footer -->
             <div class="card-footer bg-transparent text-center border-top">
-                <a asp-area="Accounts" asp-controller="Notifications" asp-action="Index" class="btn btn-link btn-sm text-decoration-none">View all notifications</a>
+                <a asp-area="Accounts" asp-controller="Notifications" asp-action="Index" class="btn btn-link btn-sm text-decoration-none">@L["Public.ViewAllNotifications"]</a>
             </div>
         </div>
     </div>

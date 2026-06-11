@@ -24,8 +24,6 @@ namespace YallaJo.Web.Areas.Accounts.Controllers;
 [Authorize]
 public sealed class PrivacyController : BaseController
 {
-    private const string ConfirmationWord = "DELETE";
-
     private readonly PrivacyFacade _privacy;
     private readonly IStringLocalizer<SharedResource> _localizer;
 
@@ -62,9 +60,11 @@ public sealed class PrivacyController : BaseController
     public async Task<IActionResult> DeleteData(string? confirmation, CancellationToken ct)
     {
         // Destructive: require the explicit typed confirmation word before proceeding.
-        if (!string.Equals(confirmation?.Trim(), ConfirmationWord, StringComparison.Ordinal))
+        // CON1: the token is localized so the word users must type matches the UI language.
+        var expectedToken = _localizer["Accounts.Privacy.DeleteConfirmToken"].Value;
+        if (!string.Equals(confirmation?.Trim(), expectedToken, StringComparison.Ordinal))
         {
-            SetError(_localizer["Accounts.Msg.TypeToConfirmDeletion", ConfirmationWord]);
+            SetError(_localizer["Accounts.Msg.TypeToConfirmDeletion", expectedToken]);
             return BackToTab();
         }
 

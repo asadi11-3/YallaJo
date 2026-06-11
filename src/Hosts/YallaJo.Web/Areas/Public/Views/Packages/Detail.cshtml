@@ -31,7 +31,7 @@
             <div>
                 <h1 class="fs-2 mb-2">@Model.Name</h1>
                 <ul class="nav nav-divider align-items-center small">
-                    <li class="nav-item"><span class="h5 mb-0 text-primary">@Money(Model.PriceAmount, Model.Currency)</span></li>
+                    <li class="nav-item"><span class="h5 mb-0 text-primary"><bdi dir="ltr" class="font-data">@Money(Model.PriceAmount, Model.Currency)</bdi></span></li>
                     @if (Model.MaxParticipants is int max)
                     {
                         <li class="nav-item"><i class="bi bi-people me-1" aria-hidden="true"></i>@Localizer["Public.UpToParticipants", max]</li>

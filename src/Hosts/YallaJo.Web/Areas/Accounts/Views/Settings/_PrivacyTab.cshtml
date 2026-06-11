@@ -74,9 +74,10 @@
                 </div>
                 <div class="modal-body">
                     <p class="small mb-2">@Localizer["Accounts.Privacy.ModalBody"]</p>
-                    <label class="form-label small mb-1" for="confirmation">@Localizer["Accounts.Privacy.TypeToConfirm"]</label>
-                    <input type="text" class="form-control" id="confirmation" name="confirmation"
-                           autocomplete="off" placeholder="DELETE" required />
+                        @{ var confirmToken = Localizer["Accounts.Privacy.DeleteConfirmToken"].Value; }
+                        <label class="form-label small mb-1" for="confirmation">@Localizer["Accounts.Privacy.TypeToConfirm", confirmToken]</label>
+                        <input type="text" class="form-control" id="confirmation" name="confirmation"
+                               autocomplete="off" placeholder="@confirmToken" dir="auto" required />
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-primary-soft mb-0" data-bs-dismiss="modal">@Localizer["Accounts.Privacy.KeepData"]</button>

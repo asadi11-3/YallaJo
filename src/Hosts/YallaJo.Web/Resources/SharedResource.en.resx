@@ -13333,9 +13333,9 @@
 <data name="Accounts.Privacy.ModalBody" xml:space="preserve">
 <value>This schedules deletion of your recommendation &amp; analytics data only (not your account) after a 30-day window. To confirm, type DELETE below.</value>
 </data>
-<data name="Accounts.Privacy.TypeToConfirm" xml:space="preserve">
-<value>Type DELETE to confirm</value>
-</data>
+  <data name="Accounts.Privacy.TypeToConfirm" xml:space="preserve">
+    <value>Type {0} to confirm</value>
+  </data>
 <data name="Accounts.Privacy.KeepData" xml:space="preserve">
 <value>Keep my data</value>
 </data>
@@ -15138,5 +15138,77 @@
   </data>
   <data name="Admin.Users.Flash.RoleRemoved" xml:space="preserve">
     <value>Role removed.</value>
+  </data>
+  <data name="Public.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Public.MarkAsRead" xml:space="preserve">
+    <value>Mark as read</value>
+  </data>
+  <data name="Public.LocalWeather" xml:space="preserve">
+    <value>Local weather</value>
+  </data>
+  <data name="Public.BusinessesAt" xml:space="preserve">
+    <value>Businesses at {0}</value>
+  </data>
+  <data name="Public.HumidityPct" xml:space="preserve">
+    <value>{0}% humidity</value>
+  </data>
+  <data name="Public.WindKmPerHour" xml:space="preserve">
+    <value>wind {0} km/h</value>
+  </data>
+  <data name="Public.Notifications" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Public.CountNew" xml:space="preserve">
+    <value>{0} new</value>
+  </data>
+  <data name="Public.MarkAllRead" xml:space="preserve">
+    <value>Mark all read</value>
+  </data>
+  <data name="Public.NoNewNotifications" xml:space="preserve">
+    <value>No new notifications</value>
+  </data>
+  <data name="Public.ViewAllNotifications" xml:space="preserve">
+    <value>View all notifications</value>
+  </data>
+  <data name="Public.TimeAgo.JustNow" xml:space="preserve">
+    <value>just now</value>
+  </data>
+  <data name="Public.TimeAgo.MinutesShort" xml:space="preserve">
+    <value>{0}m ago</value>
+  </data>
+  <data name="Public.TimeAgo.HoursShort" xml:space="preserve">
+    <value>{0}h ago</value>
+  </data>
+  <data name="Public.TimeAgo.DaysShort" xml:space="preserve">
+    <value>{0}d ago</value>
+  </data>
+  <data name="Public.JoinModal.Title" xml:space="preserve">
+    <value>Request to join a group</value>
+  </data>
+  <data name="Public.JoinModal.Intro" xml:space="preserve">
+    <value>Enter the booking ID the organizer shared with you, then pick the date and how many people are joining.</value>
+  </data>
+  <data name="Public.JoinModal.BookingIdLabel" xml:space="preserve">
+    <value>Booking ID you were given</value>
+  </data>
+  <data name="Public.JoinModal.BookingIdPlaceholder" xml:space="preserve">
+    <value>e.g. 3f9a...</value>
+  </data>
+  <data name="Public.JoinModal.DateTimeLabel" xml:space="preserve">
+    <value>Date &amp; time</value>
+  </data>
+  <data name="Public.JoinModal.NoSlots" xml:space="preserve">
+    <value>No upcoming availability is published for this tour.</value>
+  </data>
+  <data name="Public.JoinModal.MessageLabel" xml:space="preserve">
+    <value>Message to the organizer (optional)</value>
+  </data>
+  <data name="Public.JoinModal.Send" xml:space="preserve">
+    <value>Send request</value>
+  </data>
+  <data name="Accounts.Privacy.DeleteConfirmToken" xml:space="preserve">
+    <value>DELETE</value>
   </data>
 </root>
