@@ -13627,4 +13627,154 @@
 <data name="Business.Amenities.Icon.Garden" xml:space="preserve">
 <value>Garden</value>
 </data>
+<data name="Business.Flash.AmenityAdded" xml:space="preserve">
+<value>Amenity added.</value>
+</data>
+<data name="Business.Flash.AmenityRemoved" xml:space="preserve">
+<value>Amenity removed.</value>
+</data>
+<data name="Business.Flash.AmenityInvalid" xml:space="preserve">
+<value>Please provide a valid amenity name.</value>
+</data>
+<data name="Business.Flash.ServiceAdded" xml:space="preserve">
+<value>Service added.</value>
+</data>
+<data name="Business.Flash.ServiceUpdated" xml:space="preserve">
+<value>Service updated.</value>
+</data>
+<data name="Business.Flash.ServiceRemoved" xml:space="preserve">
+<value>Service removed.</value>
+</data>
+<data name="Business.Flash.ServiceInvalid" xml:space="preserve">
+<value>Please provide a valid service name, price, and category.</value>
+</data>
+<data name="Business.Flash.StaffAdded" xml:space="preserve">
+<value>Staff member added.</value>
+</data>
+<data name="Business.Flash.StaffRemoved" xml:space="preserve">
+<value>Staff member removed.</value>
+</data>
+<data name="Business.Flash.StaffInvalid" xml:space="preserve">
+<value>Please provide a valid user ID and role.</value>
+</data>
+<data name="Business.Flash.HoursUpdated" xml:space="preserve">
+<value>Opening hours updated.</value>
+</data>
+<data name="Business.Flash.AccessibilityUpdated" xml:space="preserve">
+<value>Accessibility features updated.</value>
+</data>
+<data name="Business.Flash.Registered" xml:space="preserve">
+<value>Business registered. It is now pending review.</value>
+</data>
+<data name="Business.Flash.ProfileUpdated" xml:space="preserve">
+<value>Business profile updated.</value>
+</data>
+<data name="Business.Flash.Resubmitted" xml:space="preserve">
+<value>Business resubmitted for review.</value>
+</data>
+<data name="Business.Error.LoadBusiness" xml:space="preserve">
+<value>Could not load the business.</value>
+</data>
+<data name="Business.Error.LoadBusinesses" xml:space="preserve">
+<value>Could not load your businesses.</value>
+</data>
+<data name="Business.Error.LoadAmenities" xml:space="preserve">
+<value>Could not load the amenities.</value>
+</data>
+<data name="Business.Error.LoadHours" xml:space="preserve">
+<value>Could not load the opening hours.</value>
+</data>
+<data name="Business.Error.LoadServices" xml:space="preserve">
+<value>Could not load the services.</value>
+</data>
+<data name="Business.Error.LoadService" xml:space="preserve">
+<value>Could not load the service.</value>
+</data>
+<data name="Business.Error.LoadStaff" xml:space="preserve">
+<value>Could not load the staff members.</value>
+</data>
+<data name="Business.Error.LoadAccessibility" xml:space="preserve">
+<value>Could not load accessibility features.</value>
+</data>
+<data name="Business.Error.NotOwner" xml:space="preserve">
+<value>You do not own this business.</value>
+</data>
+<data name="Business.Error.BusinessNotFound" xml:space="preserve">
+<value>The business was not found.</value>
+</data>
+<data name="Business.Error.AmenityNotFound" xml:space="preserve">
+<value>The business or amenity was not found.</value>
+</data>
+<data name="Business.Error.ServiceNotFound" xml:space="preserve">
+<value>The business or service was not found.</value>
+</data>
+<data name="Business.Error.StaffNotFound" xml:space="preserve">
+<value>The business or staff member was not found.</value>
+</data>
+<data name="Business.Error.AmenityExists" xml:space="preserve">
+<value>This amenity already exists.</value>
+</data>
+<data name="Business.Error.ServiceConflict" xml:space="preserve">
+<value>This service conflicts with an existing one.</value>
+</data>
+<data name="Business.Error.StaffExists" xml:space="preserve">
+<value>This person is already a staff member.</value>
+</data>
+<data name="Business.Error.StateConflict" xml:space="preserve">
+<value>This action is not allowed in the current state. Please reload and try again.</value>
+</data>
+<data name="Business.Error.RegisterDenied" xml:space="preserve">
+<value>You do not have permission to register a business.</value>
+</data>
+<data name="Business.Error.RegisterConflict" xml:space="preserve">
+<value>A business like this already exists. Please reload and try again.</value>
+</data>
+<data name="Business.Error.RegisterFailed" xml:space="preserve">
+<value>Could not register the business.</value>
+</data>
+<data name="Business.Error.UpdateFailed" xml:space="preserve">
+<value>Could not update the business.</value>
+</data>
+<data name="Business.Error.SaveHoursFailed" xml:space="preserve">
+<value>Could not save the opening hours.</value>
+</data>
+<data name="Business.Error.SaveAccessibilityFailed" xml:space="preserve">
+<value>Could not save the accessibility features.</value>
+</data>
+<data name="Business.Error.AddAmenityFailed" xml:space="preserve">
+<value>Could not add the amenity.</value>
+</data>
+<data name="Business.Error.RemoveAmenityFailed" xml:space="preserve">
+<value>Could not remove the amenity.</value>
+</data>
+<data name="Business.Error.AddServiceFailed" xml:space="preserve">
+<value>Could not add the service.</value>
+</data>
+<data name="Business.Error.UpdateServiceFailed" xml:space="preserve">
+<value>Could not update the service.</value>
+</data>
+<data name="Business.Error.RemoveServiceFailed" xml:space="preserve">
+<value>Could not delete the service.</value>
+</data>
+<data name="Business.Error.AddStaffFailed" xml:space="preserve">
+<value>Could not add the staff member.</value>
+</data>
+<data name="Business.Error.RemoveStaffFailed" xml:space="preserve">
+<value>Could not remove the staff member.</value>
+</data>
+<data name="Business.Error.ResubmitFailed" xml:space="preserve">
+<value>Could not resubmit the business for review.</value>
+</data>
+<data name="Business.Weather.RegionLabel" xml:space="preserve">
+<value>Local weather</value>
+</data>
+<data name="Business.Weather.FeelsLike" xml:space="preserve">
+<value>Feels like</value>
+</data>
+<data name="Business.Weather.Humidity" xml:space="preserve">
+<value>{0}% humidity</value>
+</data>
+<data name="Business.Weather.Wind" xml:space="preserve">
+<value>wind</value>
+</data>
 </root>

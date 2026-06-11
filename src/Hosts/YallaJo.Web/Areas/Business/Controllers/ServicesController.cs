@@ -40,7 +40,7 @@ public sealed class ServicesController : BusinessControllerBase
         {
             if (WantsAjax())
             {
-                return AjaxValidationProblem("Please provide a valid service name, price, and category.");
+                return AjaxValidationProblem(L["Business.Flash.ServiceInvalid"].Value);
             }
 
             // No-JS validation failure: re-render the page with the submitted form so input is preserved (D-6, F1-F4).
@@ -54,20 +54,20 @@ public sealed class ServicesController : BusinessControllerBase
         {
             if (WantsAjax())
             {
-                return AjaxFailure(result, "Could not add the service.");
+                return AjaxFailure(result, L["Business.Error.AddServiceFailed"].Value);
             }
 
             ApplyValidationErrors(result);
-            SetError(result.Error ?? "Could not add the service.");
+            SetError(result.Error ?? L["Business.Error.AddServiceFailed"].Value);
             return await ReloadIndexAsync(id, form, ct);
         }
 
         if (WantsAjax())
         {
-            return await ListPartialAsync(id, "Service added.", ct);
+            return await ListPartialAsync(id, L["Business.Flash.ServiceAdded"].Value, ct);
         }
 
-        SetSuccess("Service added.");
+        SetSuccess(L["Business.Flash.ServiceAdded"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 
@@ -105,7 +105,7 @@ public sealed class ServicesController : BusinessControllerBase
         {
             if (WantsAjax())
             {
-                return AjaxValidationProblem("Please provide a valid service name, price, and category.");
+                return AjaxValidationProblem(L["Business.Flash.ServiceInvalid"].Value);
             }
 
             return await IndexWithEditAsync(id, form, ct);
@@ -118,7 +118,7 @@ public sealed class ServicesController : BusinessControllerBase
         {
             if (WantsAjax())
             {
-                return AjaxFailure(result, "Could not update the service.");
+                return AjaxFailure(result, L["Business.Error.UpdateServiceFailed"].Value);
             }
 
             if (!ApplyValidationErrors(result))
@@ -128,10 +128,10 @@ public sealed class ServicesController : BusinessControllerBase
 
         if (WantsAjax())
         {
-            return await ListPartialAsync(id, "Service updated.", ct);
+            return await ListPartialAsync(id, L["Business.Flash.ServiceUpdated"].Value, ct);
         }
 
-        SetSuccess("Service updated.");
+        SetSuccess(L["Business.Flash.ServiceUpdated"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 
@@ -147,13 +147,13 @@ public sealed class ServicesController : BusinessControllerBase
         {
             if (!result.IsSuccess)
             {
-                return AjaxFailure(result, "Could not remove the service.");
+                return AjaxFailure(result, L["Business.Error.RemoveServiceFailed"].Value);
             }
 
-            return await ListPartialAsync(id, "Service removed.", ct);
+            return await ListPartialAsync(id, L["Business.Flash.ServiceRemoved"].Value, ct);
         }
 
-        SetFlash(result, "Service removed.", "Could not remove the service.");
+        SetFlash(result, L["Business.Flash.ServiceRemoved"].Value, L["Business.Error.RemoveServiceFailed"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 

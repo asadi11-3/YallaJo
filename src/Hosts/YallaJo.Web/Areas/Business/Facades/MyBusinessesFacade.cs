@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Business.ApiClients;
 using YallaJo.Web.Areas.Business.Models.MyBusinesses;
 using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Business.Facades;
 
@@ -9,11 +11,13 @@ public sealed class MyBusinessesFacade
 {
     private readonly MyBusinessesApiClient _api;
     private readonly IOutputCacheStore _cache;
+    private readonly IStringLocalizer<SharedResource> _l;
 
-    public MyBusinessesFacade(MyBusinessesApiClient api, IOutputCacheStore cache)
+    public MyBusinessesFacade(MyBusinessesApiClient api, IOutputCacheStore cache, IStringLocalizer<SharedResource> localizer)
     {
         _api = api;
         _cache = cache;
+        _l = localizer;
     }
 
     public async Task<ApiResult<MyBusinessesVm>> GetIndexAsync(CancellationToken ct = default)
@@ -22,7 +26,7 @@ public sealed class MyBusinessesFacade
         if (result.IsUnauthorized)
             return ApiResult<MyBusinessesVm>.ForceSignOut();
         if (result is not { IsSuccess: true, Data: not null })
-            return ApiResult<MyBusinessesVm>.Fail(result.StatusCode, result.Error ?? "Could not load your businesses.");
+            return ApiResult<MyBusinessesVm>.Fail(result.StatusCode, result.Error ?? _l["Business.Error.LoadBusinesses"].Value);
 
         return ApiResult<MyBusinessesVm>.Ok(MyBusinessesMapper.ToVm(result.Data));
     }
@@ -67,12 +71,12 @@ public sealed class MyBusinessesFacade
         var result = await _api.CreateAsync(request, ct);
 
         if (result.IsUnauthorized) return ApiResult<Guid>.ForceSignOut();
-        if (result.IsForbidden) return ApiResult<Guid>.Fail(403, "You do not have permission to register a business.");
-        if (result.IsConflict) return ApiResult<Guid>.Fail(409, "A business like this already exists. Please reload and try again.");
+        if (result.IsForbidden) return ApiResult<Guid>.Fail(403, _l["Business.Error.RegisterDenied"].Value);
+        if (result.IsConflict) return ApiResult<Guid>.Fail(409, _l["Business.Error.RegisterConflict"].Value);
         if (result.IsValidationError && result.ValidationErrors is { } errors)
             return ApiResult<Guid>.ValidationFail(result.StatusCode, errors);
         if (result is not { IsSuccess: true, Data: not null })
-            return ApiResult<Guid>.Fail(result.StatusCode, result.Error ?? "Could not register the business.");
+            return ApiResult<Guid>.Fail(result.StatusCode, result.Error ?? _l["Business.Error.RegisterFailed"].Value);
 
         var newId = result.Data.Id;
         await _cache.EvictByTagAsync($"business:{newId}", ct);
@@ -85,7 +89,7 @@ public sealed class MyBusinessesFacade
         if (result.IsUnauthorized)
             return ApiResult<ManageBusinessVm>.ForceSignOut();
         if (result is not { IsSuccess: true, Data: not null })
-            return ApiResult<ManageBusinessVm>.Fail(result.StatusCode, result.Error ?? "Could not load the business.");
+            return ApiResult<ManageBusinessVm>.Fail(result.StatusCode, result.Error ?? _l["Business.Error.LoadBusiness"].Value);
 
         return ApiResult<ManageBusinessVm>.Ok(MyBusinessesMapper.ToManageVm(result.Data));
     }
@@ -108,7 +112,7 @@ public sealed class MyBusinessesFacade
             HasVegetarianOptions: form.HasVegetarianOptions,
             HasAlcoholFreeArea: form.HasAlcoholFreeArea);
 
-        var result = await Normalize(_api.UpdateAsync(form.Id, request, ct), "Could not update the business.");
+        var result = await Normalize(_api.UpdateAsync(form.Id, request, ct), _l["Business.Error.UpdateFailed"].Value);
         if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{form.Id}", ct);
         return result;
     }
@@ -127,19 +131,19 @@ public sealed class MyBusinessesFacade
 
     public async Task<ApiResult> ResubmitAsync(Guid id, CancellationToken ct = default)
     {
-        var result = await Normalize(_api.ResubmitAsync(id, ct), "Could not resubmit the business for review.");
+        var result = await Normalize(_api.ResubmitAsync(id, ct), _l["Business.Error.ResubmitFailed"].Value);
         if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{id}", ct);
         return result;
     }
 
-    private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
+    private async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
     {
         var result = await call;
         if (result.IsSuccess) return ApiResult.Ok();
         if (result.IsUnauthorized) return ApiResult.ForceSignOut();
-        if (result.IsForbidden) return ApiResult.Fail(403, "You do not own this business.");
-        if (result.IsNotFound) return ApiResult.Fail(404, "The business was not found.");
-        if (result.IsConflict) return ApiResult.Fail(409, "This action is not allowed in the current state. Please reload and try again.");
+        if (result.IsForbidden) return ApiResult.Fail(403, _l["Business.Error.NotOwner"].Value);
+        if (result.IsNotFound) return ApiResult.Fail(404, _l["Business.Error.BusinessNotFound"].Value);
+        if (result.IsConflict) return ApiResult.Fail(409, _l["Business.Error.StateConflict"].Value);
         if (result.IsValidationError) return ApiResult.Invalid(result.ValidationErrors!);
         return ApiResult.Fail(result.StatusCode, result.Error ?? fallback);
     }

@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Business.ApiClients;
 using YallaJo.Web.Areas.Business.Models.Accessibility;
 using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Business.Facades;
 
@@ -10,12 +12,14 @@ public sealed class BusinessAccessibilityFacade
     private readonly AccessibilityApiClient _api;
     private readonly MyBusinessesApiClient _businesses;
     private readonly IOutputCacheStore _cache;
+    private readonly IStringLocalizer<SharedResource> _l;
 
-    public BusinessAccessibilityFacade(AccessibilityApiClient api, MyBusinessesApiClient businesses, IOutputCacheStore cache)
+    public BusinessAccessibilityFacade(AccessibilityApiClient api, MyBusinessesApiClient businesses, IOutputCacheStore cache, IStringLocalizer<SharedResource> localizer)
     {
         _api = api;
         _businesses = businesses;
         _cache = cache;
+        _l = localizer;
     }
 
     public async Task<ApiResult<AccessibilityVm>> GetAsync(Guid businessId, CancellationToken ct = default)
@@ -28,7 +32,7 @@ public sealed class BusinessAccessibilityFacade
 
         if (business is not { IsSuccess: true, Data: not null })
         {
-            return ApiResult<AccessibilityVm>.Fail(business.StatusCode, business.Error ?? "Could not load the business.");
+            return ApiResult<AccessibilityVm>.Fail(business.StatusCode, business.Error ?? _l["Business.Error.LoadBusiness"].Value);
         }
 
         var features = await _api.GetAsync(businessId, ct);
@@ -39,7 +43,7 @@ public sealed class BusinessAccessibilityFacade
 
         if (features is not { IsSuccess: true, Data: not null })
         {
-            return ApiResult<AccessibilityVm>.Fail(features.StatusCode, features.Error ?? "Could not load accessibility features.");
+            return ApiResult<AccessibilityVm>.Fail(features.StatusCode, features.Error ?? _l["Business.Error.LoadAccessibility"].Value);
         }
 
         var vm = new AccessibilityVm
@@ -63,12 +67,12 @@ public sealed class BusinessAccessibilityFacade
                 f.IsAvailable))
             .ToList();
 
-        var result = await Normalize(_api.SaveAsync(businessId, payload, ct), "Could not save the accessibility features.");
+        var result = await Normalize(_api.SaveAsync(businessId, payload, ct), _l["Business.Error.SaveAccessibilityFailed"].Value);
         if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{businessId}", ct);
         return result;
     }
 
-    private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
+    private async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
     {
         var result = await call;
         if (result.IsSuccess)
@@ -83,17 +87,17 @@ public sealed class BusinessAccessibilityFacade
 
         if (result.IsForbidden)
         {
-            return ApiResult.Fail(403, "You do not own this business.");
+            return ApiResult.Fail(403, _l["Business.Error.NotOwner"].Value);
         }
 
         if (result.IsNotFound)
         {
-            return ApiResult.Fail(404, "The business was not found.");
+            return ApiResult.Fail(404, _l["Business.Error.BusinessNotFound"].Value);
         }
 
         if (result.IsConflict)
         {
-            return ApiResult.Fail(409, "This action is not allowed in the current state. Please reload and try again.");
+            return ApiResult.Fail(409, _l["Business.Error.StateConflict"].Value);
         }
 
         if (result.IsValidationError)

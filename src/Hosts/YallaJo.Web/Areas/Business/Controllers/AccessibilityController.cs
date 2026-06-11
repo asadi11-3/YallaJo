@@ -65,7 +65,7 @@ public sealed class AccessibilityController : BusinessControllerBase
             return await ReloadAsync(id, form, ct);
         }
 
-        SetSuccess("Accessibility features updated.");
+        SetSuccess(L["Business.Flash.AccessibilityUpdated"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 

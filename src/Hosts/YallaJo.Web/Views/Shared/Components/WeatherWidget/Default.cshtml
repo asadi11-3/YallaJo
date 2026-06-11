@@ -1,7 +1,9 @@
+@using Microsoft.Extensions.Localization
 @model YallaJo.Web.Areas.Business.Models.Weather.WeatherWidgetVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @if (Model.Available)
 {
-    <div class="card border bg-info bg-opacity-10" role="region" aria-label="Local weather">
+    <div class="card border bg-info bg-opacity-10" role="region" aria-label="@Localizer["Business.Weather.RegionLabel"]">
         <div class="card-body d-flex align-items-center gap-3 py-3">
             <i class="bi bi-cloud-sun fs-2 text-info" aria-hidden="true"></i>
             <div class="flex-grow-1">
@@ -16,9 +18,9 @@
                     }
                 </div>
                 <div class="small text-body-secondary">
-                    @if (Model.FeelsLike is { } f) { <span>Feels like <span dir="ltr">@f.ToString("0")°C</span></span> }
-                    @if (Model.Humidity is { } h) { <text> · @h% humidity</text> }
-                    @if (Model.WindSpeed is { } w) { <text> · wind <span dir="ltr">@w.ToString("0") km/h</span></text> }
+                    @if (Model.FeelsLike is { } f) { <span>@Localizer["Business.Weather.FeelsLike"] <span dir="ltr">@f.ToString("0")°C</span></span> }
+                    @if (Model.Humidity is { } h) { <text> · @Localizer["Business.Weather.Humidity", h]</text> }
+                    @if (Model.WindSpeed is { } w) { <text> · @Localizer["Business.Weather.Wind"] <span dir="ltr">@w.ToString("0") km/h</span></text> }
                 </div>
                 @if (Model.IsStale && !string.IsNullOrWhiteSpace(Model.StaleHumanLabel))
                 {

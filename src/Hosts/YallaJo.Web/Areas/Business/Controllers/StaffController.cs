@@ -77,7 +77,7 @@ public sealed class StaffController : BusinessControllerBase
         {
             if (WantsAjax())
             {
-                return AjaxValidationProblem("Please provide a valid user ID and role.");
+                return AjaxValidationProblem(L["Business.Flash.StaffInvalid"].Value);
             }
 
             // No-JS validation failure: re-render the page with the submitted form so input is preserved (D-6, F1-F4).
@@ -94,20 +94,20 @@ public sealed class StaffController : BusinessControllerBase
         {
             if (WantsAjax())
             {
-                return AjaxFailure(result, "Could not add the staff member.");
+                return AjaxFailure(result, L["Business.Error.AddStaffFailed"].Value);
             }
 
             ApplyValidationErrors(result);
-            SetError(result.Error ?? "Could not add the staff member.");
+            SetError(result.Error ?? L["Business.Error.AddStaffFailed"].Value);
             return await ReloadIndexAsync(id, form, ct);
         }
 
         if (WantsAjax())
         {
-            return await ListPartialAsync(id, "Staff member added.", ct);
+            return await ListPartialAsync(id, L["Business.Flash.StaffAdded"].Value, ct);
         }
 
-        SetSuccess("Staff member added.");
+        SetSuccess(L["Business.Flash.StaffAdded"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 
@@ -126,13 +126,13 @@ public sealed class StaffController : BusinessControllerBase
         {
             if (!result.IsSuccess)
             {
-                return AjaxFailure(result, "Could not remove the staff member.");
+                return AjaxFailure(result, L["Business.Error.RemoveStaffFailed"].Value);
             }
 
-            return await ListPartialAsync(id, "Staff member removed.", ct);
+            return await ListPartialAsync(id, L["Business.Flash.StaffRemoved"].Value, ct);
         }
 
-        SetFlash(result, "Staff member removed.", "Could not remove the staff member.");
+        SetFlash(result, L["Business.Flash.StaffRemoved"].Value, L["Business.Error.RemoveStaffFailed"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 

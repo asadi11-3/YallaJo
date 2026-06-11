@@ -45,7 +45,7 @@ public sealed class AmenitiesController : BusinessControllerBase
         {
             if (WantsAjax())
             {
-                return AjaxValidationProblem("Please provide a valid amenity name.");
+                return AjaxValidationProblem(L["Business.Flash.AmenityInvalid"].Value);
             }
 
             // No-JS validation failure: re-render the page with the submitted form so input is preserved (D-6, F1-F4).
@@ -62,20 +62,20 @@ public sealed class AmenitiesController : BusinessControllerBase
         {
             if (WantsAjax())
             {
-                return AjaxFailure(result, "Could not add the amenity.");
+                return AjaxFailure(result, L["Business.Error.AddAmenityFailed"].Value);
             }
 
             ApplyValidationErrors(result);
-            SetError(result.Error ?? "Could not add the amenity.");
+            SetError(result.Error ?? L["Business.Error.AddAmenityFailed"].Value);
             return await ReloadIndexAsync(id, form, ct);
         }
 
         if (WantsAjax())
         {
-            return await ListPartialAsync(id, "Amenity added.", ct);
+            return await ListPartialAsync(id, L["Business.Flash.AmenityAdded"].Value, ct);
         }
 
-        SetSuccess("Amenity added.");
+        SetSuccess(L["Business.Flash.AmenityAdded"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 
@@ -94,13 +94,13 @@ public sealed class AmenitiesController : BusinessControllerBase
         {
             if (!result.IsSuccess)
             {
-                return AjaxFailure(result, "Could not remove the amenity.");
+                return AjaxFailure(result, L["Business.Error.RemoveAmenityFailed"].Value);
             }
 
-            return await ListPartialAsync(id, "Amenity removed.", ct);
+            return await ListPartialAsync(id, L["Business.Flash.AmenityRemoved"].Value, ct);
         }
 
-        SetFlash(result, "Amenity removed.", "Could not remove the amenity.");
+        SetFlash(result, L["Business.Flash.AmenityRemoved"].Value, L["Business.Error.RemoveAmenityFailed"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 

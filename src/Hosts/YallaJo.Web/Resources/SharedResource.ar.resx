@@ -13627,4 +13627,154 @@
 <data name="Business.Amenities.Icon.Garden" xml:space="preserve">
 <value>حديقة</value>
 </data>
+<data name="Business.Flash.AmenityAdded" xml:space="preserve">
+<value>تمت إضافة المرفق.</value>
+</data>
+<data name="Business.Flash.AmenityRemoved" xml:space="preserve">
+<value>تمت إزالة المرفق.</value>
+</data>
+<data name="Business.Flash.AmenityInvalid" xml:space="preserve">
+<value>يرجى إدخال اسم مرفق صالح.</value>
+</data>
+<data name="Business.Flash.ServiceAdded" xml:space="preserve">
+<value>تمت إضافة الخدمة.</value>
+</data>
+<data name="Business.Flash.ServiceUpdated" xml:space="preserve">
+<value>تم تحديث الخدمة.</value>
+</data>
+<data name="Business.Flash.ServiceRemoved" xml:space="preserve">
+<value>تمت إزالة الخدمة.</value>
+</data>
+<data name="Business.Flash.ServiceInvalid" xml:space="preserve">
+<value>يرجى إدخال اسم وسعر وفئة صالحة للخدمة.</value>
+</data>
+<data name="Business.Flash.StaffAdded" xml:space="preserve">
+<value>تمت إضافة الموظف.</value>
+</data>
+<data name="Business.Flash.StaffRemoved" xml:space="preserve">
+<value>تمت إزالة الموظف.</value>
+</data>
+<data name="Business.Flash.StaffInvalid" xml:space="preserve">
+<value>يرجى إدخال معرف مستخدم ودور صالحين.</value>
+</data>
+<data name="Business.Flash.HoursUpdated" xml:space="preserve">
+<value>تم تحديث ساعات العمل.</value>
+</data>
+<data name="Business.Flash.AccessibilityUpdated" xml:space="preserve">
+<value>تم تحديث ميزات إمكانية الوصول.</value>
+</data>
+<data name="Business.Flash.Registered" xml:space="preserve">
+<value>تم تسجيل النشاط التجاري. وهو الآن قيد المراجعة.</value>
+</data>
+<data name="Business.Flash.ProfileUpdated" xml:space="preserve">
+<value>تم تحديث ملف النشاط التجاري.</value>
+</data>
+<data name="Business.Flash.Resubmitted" xml:space="preserve">
+<value>تمت إعادة إرسال النشاط التجاري للمراجعة.</value>
+</data>
+<data name="Business.Error.LoadBusiness" xml:space="preserve">
+<value>تعذر تحميل النشاط التجاري.</value>
+</data>
+<data name="Business.Error.LoadBusinesses" xml:space="preserve">
+<value>تعذر تحميل أنشطتك التجارية.</value>
+</data>
+<data name="Business.Error.LoadAmenities" xml:space="preserve">
+<value>تعذر تحميل المرافق.</value>
+</data>
+<data name="Business.Error.LoadHours" xml:space="preserve">
+<value>تعذر تحميل ساعات العمل.</value>
+</data>
+<data name="Business.Error.LoadServices" xml:space="preserve">
+<value>تعذر تحميل الخدمات.</value>
+</data>
+<data name="Business.Error.LoadService" xml:space="preserve">
+<value>تعذر تحميل الخدمة.</value>
+</data>
+<data name="Business.Error.LoadStaff" xml:space="preserve">
+<value>تعذر تحميل الموظفين.</value>
+</data>
+<data name="Business.Error.LoadAccessibility" xml:space="preserve">
+<value>تعذر تحميل ميزات إمكانية الوصول.</value>
+</data>
+<data name="Business.Error.NotOwner" xml:space="preserve">
+<value>أنت لا تملك هذا النشاط التجاري.</value>
+</data>
+<data name="Business.Error.BusinessNotFound" xml:space="preserve">
+<value>لم يتم العثور على النشاط التجاري.</value>
+</data>
+<data name="Business.Error.AmenityNotFound" xml:space="preserve">
+<value>لم يتم العثور على النشاط التجاري أو المرفق.</value>
+</data>
+<data name="Business.Error.ServiceNotFound" xml:space="preserve">
+<value>لم يتم العثور على النشاط التجاري أو الخدمة.</value>
+</data>
+<data name="Business.Error.StaffNotFound" xml:space="preserve">
+<value>لم يتم العثور على النشاط التجاري أو الموظف.</value>
+</data>
+<data name="Business.Error.AmenityExists" xml:space="preserve">
+<value>هذا المرفق موجود بالفعل.</value>
+</data>
+<data name="Business.Error.ServiceConflict" xml:space="preserve">
+<value>تتعارض هذه الخدمة مع خدمة موجودة.</value>
+</data>
+<data name="Business.Error.StaffExists" xml:space="preserve">
+<value>هذا الشخص موظف بالفعل.</value>
+</data>
+<data name="Business.Error.StateConflict" xml:space="preserve">
+<value>هذا الإجراء غير مسموح به في الحالة الحالية. يرجى إعادة التحميل والمحاولة مرة أخرى.</value>
+</data>
+<data name="Business.Error.RegisterDenied" xml:space="preserve">
+<value>ليست لديك صلاحية تسجيل نشاط تجاري.</value>
+</data>
+<data name="Business.Error.RegisterConflict" xml:space="preserve">
+<value>يوجد نشاط تجاري مماثل بالفعل. يرجى إعادة التحميل والمحاولة مرة أخرى.</value>
+</data>
+<data name="Business.Error.RegisterFailed" xml:space="preserve">
+<value>تعذر تسجيل النشاط التجاري.</value>
+</data>
+<data name="Business.Error.UpdateFailed" xml:space="preserve">
+<value>تعذر تحديث النشاط التجاري.</value>
+</data>
+<data name="Business.Error.SaveHoursFailed" xml:space="preserve">
+<value>تعذر حفظ ساعات العمل.</value>
+</data>
+<data name="Business.Error.SaveAccessibilityFailed" xml:space="preserve">
+<value>تعذر حفظ ميزات إمكانية الوصول.</value>
+</data>
+<data name="Business.Error.AddAmenityFailed" xml:space="preserve">
+<value>تعذر إضافة المرفق.</value>
+</data>
+<data name="Business.Error.RemoveAmenityFailed" xml:space="preserve">
+<value>تعذر إزالة المرفق.</value>
+</data>
+<data name="Business.Error.AddServiceFailed" xml:space="preserve">
+<value>تعذر إضافة الخدمة.</value>
+</data>
+<data name="Business.Error.UpdateServiceFailed" xml:space="preserve">
+<value>تعذر تحديث الخدمة.</value>
+</data>
+<data name="Business.Error.RemoveServiceFailed" xml:space="preserve">
+<value>تعذر حذف الخدمة.</value>
+</data>
+<data name="Business.Error.AddStaffFailed" xml:space="preserve">
+<value>تعذر إضافة الموظف.</value>
+</data>
+<data name="Business.Error.RemoveStaffFailed" xml:space="preserve">
+<value>تعذر إزالة الموظف.</value>
+</data>
+<data name="Business.Error.ResubmitFailed" xml:space="preserve">
+<value>تعذر إعادة إرسال النشاط التجاري للمراجعة.</value>
+</data>
+<data name="Business.Weather.RegionLabel" xml:space="preserve">
+<value>الطقس المحلي</value>
+</data>
+<data name="Business.Weather.FeelsLike" xml:space="preserve">
+<value>الإحساس كأنها</value>
+</data>
+<data name="Business.Weather.Humidity" xml:space="preserve">
+<value>الرطوبة {0}%</value>
+</data>
+<data name="Business.Weather.Wind" xml:space="preserve">
+<value>الرياح</value>
+</data>
 </root>

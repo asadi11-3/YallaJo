@@ -64,7 +64,7 @@ public sealed class MyBusinessesController : BaseController
             return await ReloadRegisterAsync(form, ct);
         }
 
-        SetSuccess("Business registered. It is now pending review.");
+        SetSuccess(L["Business.Flash.Registered"].Value);
         return RedirectToAction(nameof(Manage), new { id = result.Data });
     }
 
@@ -100,7 +100,7 @@ public sealed class MyBusinessesController : BaseController
             return await ReloadManageAsync(id, form, ct);
         }
 
-        SetSuccess("Business profile updated.");
+        SetSuccess(L["Business.Flash.ProfileUpdated"].Value);
         return RedirectToAction(nameof(Manage), new { id });
     }
 
@@ -131,7 +131,7 @@ public sealed class MyBusinessesController : BaseController
     {
         var result = await _facade.ResubmitAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Business resubmitted for review.", "Could not resubmit the business for review.");
+        SetFlash(result, L["Business.Flash.Resubmitted"].Value, L["Business.Error.ResubmitFailed"].Value);
         return RedirectToAction(nameof(Manage), new { id });
     }
 

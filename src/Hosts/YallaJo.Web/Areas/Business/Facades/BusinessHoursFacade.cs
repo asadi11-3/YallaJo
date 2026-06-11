@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Business.ApiClients;
 using YallaJo.Web.Areas.Business.Models.Hours;
 using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Business.Facades;
 
@@ -10,12 +12,14 @@ public sealed class BusinessHoursFacade
     private readonly HoursApiClient _api;
     private readonly MyBusinessesApiClient _businesses;
     private readonly IOutputCacheStore _cache;
+    private readonly IStringLocalizer<SharedResource> _l;
 
-    public BusinessHoursFacade(HoursApiClient api, MyBusinessesApiClient businesses, IOutputCacheStore cache)
+    public BusinessHoursFacade(HoursApiClient api, MyBusinessesApiClient businesses, IOutputCacheStore cache, IStringLocalizer<SharedResource> localizer)
     {
         _api = api;
         _businesses = businesses;
         _cache = cache;
+        _l = localizer;
     }
 
     public async Task<ApiResult<HoursVm>> GetAsync(Guid businessId, CancellationToken ct = default)
@@ -24,13 +28,13 @@ public sealed class BusinessHoursFacade
         if (detail.IsUnauthorized)
             return ApiResult<HoursVm>.ForceSignOut();
         if (detail is not { IsSuccess: true, Data: not null })
-            return ApiResult<HoursVm>.Fail(detail.StatusCode, detail.Error ?? "Could not load the business.");
+            return ApiResult<HoursVm>.Fail(detail.StatusCode, detail.Error ?? _l["Business.Error.LoadBusiness"].Value);
 
         var hours = await _api.GetHoursAsync(businessId, ct);
         if (hours.IsUnauthorized)
             return ApiResult<HoursVm>.ForceSignOut();
         if (hours is not { IsSuccess: true, Data: not null })
-            return ApiResult<HoursVm>.Fail(hours.StatusCode, hours.Error ?? "Could not load the opening hours.");
+            return ApiResult<HoursVm>.Fail(hours.StatusCode, hours.Error ?? _l["Business.Error.LoadHours"].Value);
 
         var vm = new HoursVm
         {
@@ -53,19 +57,19 @@ public sealed class BusinessHoursFacade
             .ToList();
 
         var request = new SetHoursApiRequest(entries);
-        var result = await Normalize(_api.SetHoursAsync(businessId, request, ct), "Could not save the opening hours.");
+        var result = await Normalize(_api.SetHoursAsync(businessId, request, ct), _l["Business.Error.SaveHoursFailed"].Value);
         if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{businessId}", ct);
         return result;
     }
 
-    private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
+    private async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
     {
         var result = await call;
         if (result.IsSuccess) return ApiResult.Ok();
         if (result.IsUnauthorized) return ApiResult.ForceSignOut();
-        if (result.IsForbidden) return ApiResult.Fail(403, "You do not own this business.");
-        if (result.IsNotFound) return ApiResult.Fail(404, "The business was not found.");
-        if (result.IsConflict) return ApiResult.Fail(409, "This action is not allowed in the current state. Please reload and try again.");
+        if (result.IsForbidden) return ApiResult.Fail(403, _l["Business.Error.NotOwner"].Value);
+        if (result.IsNotFound) return ApiResult.Fail(404, _l["Business.Error.BusinessNotFound"].Value);
+        if (result.IsConflict) return ApiResult.Fail(409, _l["Business.Error.StateConflict"].Value);
         if (result.IsValidationError) return ApiResult.Invalid(result.ValidationErrors!);
         return ApiResult.Fail(result.StatusCode, result.Error ?? fallback);
     }

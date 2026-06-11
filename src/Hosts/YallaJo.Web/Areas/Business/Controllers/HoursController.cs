@@ -50,7 +50,7 @@ public sealed class HoursController : BusinessControllerBase
             return await ReloadAsync(id, form, ct);
         }
 
-        SetSuccess("Opening hours updated.");
+        SetSuccess(L["Business.Flash.HoursUpdated"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 

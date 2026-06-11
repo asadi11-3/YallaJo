@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Business.ApiClients;
 using YallaJo.Web.Areas.Business.Models.Services;
 using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Business.Facades;
 
@@ -10,12 +12,14 @@ public sealed class BusinessServicesFacade
     private readonly ServicesApiClient _api;
     private readonly MyBusinessesApiClient _businesses;
     private readonly IOutputCacheStore _cache;
+    private readonly IStringLocalizer<SharedResource> _l;
 
-    public BusinessServicesFacade(ServicesApiClient api, MyBusinessesApiClient businesses, IOutputCacheStore cache)
+    public BusinessServicesFacade(ServicesApiClient api, MyBusinessesApiClient businesses, IOutputCacheStore cache, IStringLocalizer<SharedResource> localizer)
     {
         _api = api;
         _businesses = businesses;
         _cache = cache;
+        _l = localizer;
     }
 
     public async Task<ApiResult<ServicesVm>> GetAsync(Guid businessId, CancellationToken ct = default)
@@ -24,13 +28,13 @@ public sealed class BusinessServicesFacade
         if (business.IsUnauthorized)
             return ApiResult<ServicesVm>.ForceSignOut();
         if (business is not { IsSuccess: true, Data: not null })
-            return ApiResult<ServicesVm>.Fail(business.StatusCode, business.Error ?? "Could not load the business.");
+            return ApiResult<ServicesVm>.Fail(business.StatusCode, business.Error ?? _l["Business.Error.LoadBusiness"].Value);
 
         var services = await _api.GetServicesAsync(businessId, ct: ct);
         if (services.IsUnauthorized)
             return ApiResult<ServicesVm>.ForceSignOut();
         if (services is not { IsSuccess: true, Data: not null })
-            return ApiResult<ServicesVm>.Fail(services.StatusCode, services.Error ?? "Could not load the services.");
+            return ApiResult<ServicesVm>.Fail(services.StatusCode, services.Error ?? _l["Business.Error.LoadServices"].Value);
 
         var vm = new ServicesVm
         {
@@ -53,7 +57,7 @@ public sealed class BusinessServicesFacade
             form.Category,
             NullIfBlank(form.Description),
             form.SortOrder);
-        var result = await Normalize(_api.AddAsync(businessId, request, ct), "Could not add the service.");
+        var result = await Normalize(_api.AddAsync(businessId, request, ct), _l["Business.Error.AddServiceFailed"].Value);
         if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{businessId}", ct);
         return result;
     }
@@ -64,13 +68,13 @@ public sealed class BusinessServicesFacade
         if (business.IsUnauthorized)
             return ApiResult<EditServiceFormVm>.ForceSignOut();
         if (business is not { IsSuccess: true, Data: not null })
-            return ApiResult<EditServiceFormVm>.Fail(business.StatusCode, business.Error ?? "Could not load the business.");
+            return ApiResult<EditServiceFormVm>.Fail(business.StatusCode, business.Error ?? _l["Business.Error.LoadBusiness"].Value);
 
         var svc = await _api.GetByIdAsync(serviceId, ct);
         if (svc.IsUnauthorized)
             return ApiResult<EditServiceFormVm>.ForceSignOut();
         if (svc is not { IsSuccess: true, Data: not null })
-            return ApiResult<EditServiceFormVm>.Fail(svc.StatusCode, svc.Error ?? "Could not load the service.");
+            return ApiResult<EditServiceFormVm>.Fail(svc.StatusCode, svc.Error ?? _l["Business.Error.LoadService"].Value);
 
         var d = svc.Data;
         // The detail projection omits Category/Description — the user re-selects Category on edit.
@@ -100,26 +104,26 @@ public sealed class BusinessServicesFacade
             form.Category,
             NullIfBlank(form.Description),
             form.SortOrder);
-        var result = await Normalize(_api.UpdateAsync(serviceId, request, ct), "Could not update the service.");
+        var result = await Normalize(_api.UpdateAsync(serviceId, request, ct), _l["Business.Error.UpdateServiceFailed"].Value);
         if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{businessId}", ct);
         return result;
     }
 
     public async Task<ApiResult> RemoveAsync(Guid businessId, Guid serviceId, CancellationToken ct = default)
     {
-        var result = await Normalize(_api.RemoveAsync(serviceId, ct), "Could not delete the service.");
+        var result = await Normalize(_api.RemoveAsync(serviceId, ct), _l["Business.Error.RemoveServiceFailed"].Value);
         if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{businessId}", ct);
         return result;
     }
 
-    private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
+    private async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
     {
         var result = await call;
         if (result.IsSuccess) return ApiResult.Ok();
         if (result.IsUnauthorized) return ApiResult.ForceSignOut();
-        if (result.IsForbidden) return ApiResult.Fail(403, "You do not own this business.");
-        if (result.IsNotFound) return ApiResult.Fail(404, "The business or service was not found.");
-        if (result.IsConflict) return ApiResult.Fail(409, "This service conflicts with an existing one.");
+        if (result.IsForbidden) return ApiResult.Fail(403, _l["Business.Error.NotOwner"].Value);
+        if (result.IsNotFound) return ApiResult.Fail(404, _l["Business.Error.ServiceNotFound"].Value);
+        if (result.IsConflict) return ApiResult.Fail(409, _l["Business.Error.ServiceConflict"].Value);
         if (result.IsValidationError && result.ValidationErrors is not null)
             return ApiResult.Invalid(result.ValidationErrors);
         return ApiResult.Fail(result.StatusCode, result.Error ?? fallback);
