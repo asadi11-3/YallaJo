@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.Reviews;
 using YallaJo.Web.Areas.Accounts.Shared;
 using YallaJo.Web.Areas.Public.Models.AccessibilityReviews;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -22,15 +24,18 @@ public sealed class ReviewsController : BaseController
     private readonly ReviewsFacade _reviews;
     private readonly Areas.Public.Facades.AccessibilityReviewsFacade _accessibilityReviews;
     private readonly ProfileFacade _profile;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
     public ReviewsController(
         ReviewsFacade reviews,
         Areas.Public.Facades.AccessibilityReviewsFacade accessibilityReviews,
-        ProfileFacade profile)
+        ProfileFacade profile,
+        IStringLocalizer<SharedResource> localizer)
     {
         _reviews = reviews;
         _accessibilityReviews = accessibilityReviews;
         _profile = profile;
+        _localizer = localizer;
     }
 
     [HttpGet("accounts/reviews")]
@@ -77,7 +82,7 @@ public sealed class ReviewsController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please correct the highlighted fields and try again.");
+            SetError(_localizer["Accounts.Msg.FormError"]);
             return RedirectToAction(nameof(Index));
         }
 
@@ -85,9 +90,9 @@ public sealed class ReviewsController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Your review has been updated.");
+            SetSuccess(_localizer["Accounts.Msg.ReviewUpdated"]);
         else
-            SetError(result.Error ?? "Could not save your changes.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.ReviewUpdateFailed"].Value);
 
         return RedirectToAction(nameof(Index));
     }
@@ -101,9 +106,9 @@ public sealed class ReviewsController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Your review has been deleted.");
+            SetSuccess(_localizer["Accounts.Msg.ReviewDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the review.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.ReviewDeleteFailed"].Value);
 
         return RedirectToAction(nameof(Index));
     }

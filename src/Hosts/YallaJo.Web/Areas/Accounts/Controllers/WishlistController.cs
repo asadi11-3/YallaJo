@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.Wishlist;
 using YallaJo.Web.Areas.Accounts.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -13,11 +15,13 @@ public sealed class WishlistController : BaseController
 {
     private readonly WishlistFacade _wishlist;
     private readonly ProfileFacade _profile;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public WishlistController(WishlistFacade wishlist, ProfileFacade profile)
+    public WishlistController(WishlistFacade wishlist, ProfileFacade profile, IStringLocalizer<SharedResource> localizer)
     {
         _wishlist = wishlist;
         _profile = profile;
+        _localizer = localizer;
     }
 
     // TODO(backend) Accounts plan Phase 4: add GET /api/v1/social/favorites/with-details
@@ -49,7 +53,7 @@ public sealed class WishlistController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Removed from your wishlist.");
+            SetSuccess(_localizer["Accounts.Msg.WishlistRemoved"]);
         else
             SetError(result.Error);
 
@@ -82,7 +86,7 @@ public sealed class WishlistController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Your wishlist has been cleared.");
+            SetSuccess(_localizer["Accounts.Msg.WishlistCleared"]);
         else
             SetError(result.Error);
 

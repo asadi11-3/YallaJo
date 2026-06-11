@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.Notifications;
 using YallaJo.Web.Areas.Accounts.Shared;
 using YallaJo.Web.Features.Notifications;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -15,11 +17,13 @@ public sealed class NotificationsController : BaseController
 {
     private readonly NotificationsFacade _notifications;
     private readonly ProfileFacade _profile;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public NotificationsController(NotificationsFacade notifications, ProfileFacade profile)
+    public NotificationsController(NotificationsFacade notifications, ProfileFacade profile, IStringLocalizer<SharedResource> localizer)
     {
         _notifications = notifications;
         _profile = profile;
+        _localizer = localizer;
     }
 
     [HttpGet("accounts/notifications")]
@@ -72,9 +76,9 @@ public sealed class NotificationsController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Notification deleted.");
+            SetSuccess(_localizer["Accounts.Msg.NotificationDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the notification.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.NotificationDeleteFailed"].Value);
 
         // Preserve the active filters when returning to the inbox.
         return RedirectToAction(nameof(Index), new { status, type, fromDate, toDate });

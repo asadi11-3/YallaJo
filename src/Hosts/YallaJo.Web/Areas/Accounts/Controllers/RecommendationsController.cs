@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.Recommendations;
 using YallaJo.Web.Areas.Accounts.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -15,11 +17,13 @@ public sealed class RecommendationsController : BaseController
 {
     private readonly RecommendationsFacade _recommendations;
     private readonly ProfileFacade _profile;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public RecommendationsController(RecommendationsFacade recommendations, ProfileFacade profile)
+    public RecommendationsController(RecommendationsFacade recommendations, ProfileFacade profile, IStringLocalizer<SharedResource> localizer)
     {
         _recommendations = recommendations;
         _profile = profile;
+        _localizer = localizer;
     }
 
     [HttpGet("accounts/recommendations")]
@@ -47,7 +51,7 @@ public sealed class RecommendationsController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please correct the highlighted fields and try again.");
+            SetError(_localizer["Accounts.Msg.FormError"]);
             return RedirectToAction(nameof(Index));
         }
 
@@ -55,9 +59,9 @@ public sealed class RecommendationsController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Your preferences have been saved.");
+            SetSuccess(_localizer["Accounts.Msg.PreferencesSaved"]);
         else
-            SetError(result.Error ?? "Could not save your preferences.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.PreferencesSaveFailed"].Value);
 
         return RedirectToAction(nameof(Index));
     }
@@ -74,12 +78,12 @@ public sealed class RecommendationsController : BaseController
         if (WantsAjax())
             return result.IsSuccess
                 ? Ok(new { dismissed = true })
-                : BadRequest(new { error = result.Error ?? "Could not update this recommendation." });
+                : BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.RecommendationUpdateFailed"].Value });
 
         if (result.IsSuccess)
-            SetSuccess("We won't show that again.");
+            SetSuccess(_localizer["Accounts.Msg.NotInterestedDone"]);
         else
-            SetError(result.Error ?? "Could not update this recommendation.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.RecommendationUpdateFailed"].Value);
 
         return RedirectToAction(nameof(Index));
     }
@@ -91,7 +95,7 @@ public sealed class RecommendationsController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please pick at least one option (up to 20) and try again.");
+            SetError(_localizer["Accounts.Msg.OnboardingPickError"]);
             return RedirectToAction(nameof(Index));
         }
 
@@ -99,9 +103,9 @@ public sealed class RecommendationsController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Thanks! We've personalised your recommendations.");
+            SetSuccess(_localizer["Accounts.Msg.OnboardingSaved"]);
         else
-            SetError(result.Error ?? "Could not save your onboarding answers.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.OnboardingFailed"].Value);
 
         return RedirectToAction(nameof(Index));
     }

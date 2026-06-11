@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Models.Profile;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -11,7 +13,13 @@ namespace YallaJo.Web.Areas.Accounts.Controllers;
 public sealed class ProfileController : BaseController
 {
     private readonly ProfileFacade _facade;
-    public ProfileController(ProfileFacade facade) => _facade = facade;
+    private readonly IStringLocalizer<SharedResource> _localizer;
+
+    public ProfileController(ProfileFacade facade, IStringLocalizer<SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
@@ -44,7 +52,7 @@ public sealed class ProfileController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Profile updated.");
+            SetSuccess(_localizer["Accounts.Msg.ProfileUpdated"]);
             return RedirectToAction(nameof(Index));
         }
 
@@ -60,7 +68,7 @@ public sealed class ProfileController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please choose an image file.");
+            SetError(_localizer["Accounts.Msg.ChooseImage"]);
             return RedirectToAction(nameof(Index));
         }
 
@@ -69,7 +77,7 @@ public sealed class ProfileController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Avatar updated.");
+            SetSuccess(_localizer["Accounts.Msg.AvatarUpdated"]);
             return RedirectToAction(nameof(Index));
         }
 
@@ -77,7 +85,7 @@ public sealed class ProfileController : BaseController
             .SelectMany(messages => messages)
             .FirstOrDefault();
 
-        SetError(firstMessage ?? result.Error ?? "Could not upload avatar.");
+        SetError(firstMessage ?? result.Error ?? _localizer["Accounts.Msg.AvatarUploadFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -101,11 +109,11 @@ public sealed class ProfileController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Your profile has been deleted.");
+            SetSuccess(_localizer["Accounts.Msg.ProfileDeleted"]);
             return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
         }
 
-        SetError(result.Error ?? "Could not delete profile.");
+        SetError(result.Error ?? _localizer["Accounts.Msg.ProfileDeleteFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 

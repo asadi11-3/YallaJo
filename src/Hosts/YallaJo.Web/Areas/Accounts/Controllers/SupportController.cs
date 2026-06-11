@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
@@ -19,11 +21,13 @@ public sealed class SupportController : BaseController
 {
     private readonly SupportFacade _support;
     private readonly ProfileFacade _profile;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public SupportController(SupportFacade support, ProfileFacade profile)
+    public SupportController(SupportFacade support, ProfileFacade profile, IStringLocalizer<SharedResource> localizer)
     {
         _support = support;
         _profile = profile;
+        _localizer = localizer;
     }
 
     [HttpGet("accounts/support")]
@@ -64,8 +68,8 @@ public sealed class SupportController : BaseController
         if (string.IsNullOrWhiteSpace(body))
         {
             // Phase 4d: AJAX callers get a JSON error; no-JS callers get the PRG flash.
-            if (WantsAjax()) return BadRequest(new { error = "Please type a message before sending." });
-            SetError("Please type a message before sending.");
+            if (WantsAjax()) return BadRequest(new { error = _localizer["Accounts.Msg.ReplyEmpty"].Value });
+            SetError(_localizer["Accounts.Msg.ReplyEmpty"]);
             return RedirectToAction(nameof(Details), new { id });
         }
 
@@ -76,18 +80,18 @@ public sealed class SupportController : BaseController
         if (WantsAjax())
         {
             if (!result.IsSuccess)
-                return BadRequest(new { error = result.Error ?? "Could not post your reply." });
+                return BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.ReplyFailed"].Value });
 
             var refreshed = await _support.GetDetailAsync(id, ct);
             return refreshed is { IsSuccess: true, Data: { } detail }
                 ? PartialView("_SupportThread", detail)
-                : BadRequest(new { error = refreshed.Error ?? "Could not load the updated thread." });
+                : BadRequest(new { error = refreshed.Error ?? _localizer["Accounts.Msg.ReplyFailed"].Value });
         }
 
         if (result.IsSuccess)
-            SetSuccess("Your reply was sent.");
+            SetSuccess(_localizer["Accounts.Msg.ReplySent"]);
         else
-            SetError(result.Error ?? "Could not post your reply.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.ReplyFailed"].Value);
 
         return RedirectToAction(nameof(Details), new { id });
     }
@@ -101,9 +105,9 @@ public sealed class SupportController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Ticket closed.");
+            SetSuccess(_localizer["Accounts.Msg.TicketClosed"]);
         else
-            SetError(result.Error ?? "Could not close the ticket.");
+            SetError(result.Error ?? _localizer["Accounts.Msg.TicketCloseFailed"].Value);
 
         return RedirectToAction(nameof(Details), new { id });
     }
