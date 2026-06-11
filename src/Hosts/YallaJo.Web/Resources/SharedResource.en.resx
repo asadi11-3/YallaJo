@@ -14044,4 +14044,16 @@
   <data name="Creator.Articles.Flash.ReorderFailed" xml:space="preserve">
     <value>Could not reorder the images.</value>
   </data>
+  <data name="Creator.Status.PendingReview" xml:space="preserve">
+    <value>In review</value>
+  </data>
+  <data name="Creator.Status.Archived" xml:space="preserve">
+    <value>Archived</value>
+  </data>
+  <data name="Creator.Status.Hidden" xml:space="preserve">
+    <value>Hidden</value>
+  </data>
+  <data name="Creator.Status.Removed" xml:space="preserve">
+    <value>Removed</value>
+  </data>
 </root>

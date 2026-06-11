@@ -6,7 +6,6 @@
     var sidebar = ViewBag.Sidebar as YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
                   ?? new YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm();
     var postAction = Model.IsNew ? "New" : "Edit";
-    string StatusLabel(string? s) => Localizer["Creator.Status." + (string.IsNullOrWhiteSpace(s) ? "Draft" : s)].Value;
 }
 
 <partial name="_CreatorSidebar" model="sidebar" />
@@ -18,7 +17,7 @@
             <div class="mt-2 mt-sm-0 d-flex gap-2 align-items-center">
                 @if (!Model.IsNew && !string.IsNullOrWhiteSpace(Model.Status))
                 {
-                    <span class="badge bg-secondary bg-opacity-10 text-secondary">@StatusLabel(Model.Status)</span>
+                    <partial name="_StatusBadge" model="@Model.Status" />
                 }
                 <a asp-area="Creator" asp-controller="Articles" asp-action="Index" class="btn btn-sm btn-secondary-soft">
                     @Localizer["Creator.Editor.BackToList"]

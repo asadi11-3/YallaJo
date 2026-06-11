@@ -58,13 +58,13 @@
         <div class="btn-group">
             @if (Model.Pager.HasPreviousPage)
             {
-                <a class="btn btn-sm btn-secondary-soft"
+                <a class="btn btn-sm btn-secondary-soft tap-target"
                    asp-area="Creator" asp-controller="Preview" asp-action="Index"
                    asp-route-page="@(Model.Pager.PageNumber - 1)">@Localizer["Creator.Preview.Previous"]</a>
             }
             @if (Model.Pager.HasNextPage)
             {
-                <a class="btn btn-sm btn-secondary-soft"
+                <a class="btn btn-sm btn-secondary-soft tap-target"
                    asp-area="Creator" asp-controller="Preview" asp-action="Index"
                    asp-route-page="@(Model.Pager.PageNumber + 1)">@Localizer["Creator.Preview.Next"]</a>
             }

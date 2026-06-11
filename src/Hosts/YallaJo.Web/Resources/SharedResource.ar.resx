@@ -14041,6 +14041,18 @@
 <data name="Creator.Articles.Flash.ImagesReordered" xml:space="preserve">
 <value>تم تحديث ترتيب الصور.</value>
 </data>
+<data name="Creator.Status.PendingReview" xml:space="preserve">
+<value>قيد المراجعة</value>
+</data>
+<data name="Creator.Status.Archived" xml:space="preserve">
+<value>مؤرشَف</value>
+</data>
+<data name="Creator.Status.Hidden" xml:space="preserve">
+<value>مخفي</value>
+</data>
+<data name="Creator.Status.Removed" xml:space="preserve">
+<value>محذوف</value>
+</data>
 <data name="Creator.Articles.Flash.ReorderFailed" xml:space="preserve">
 <value>تعذّر إعادة ترتيب الصور.</value>
 </data>

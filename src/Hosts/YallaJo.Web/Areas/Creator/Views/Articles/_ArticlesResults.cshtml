@@ -83,7 +83,7 @@ else
                             <td>
                                 @if (!string.IsNullOrWhiteSpace(a.Status))
                                 {
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">@StatusLabel(a.Status)</span>
+                                    <partial name="_StatusBadge" model="@a.Status" />
                                 }
                                 else
                                 {
@@ -143,13 +143,13 @@ else
             <div class="btn-group">
                 @if (Model.Pager.HasPreviousPage)
                 {
-                    <a class="btn btn-sm btn-secondary-soft"
+                    <a class="btn btn-sm btn-secondary-soft tap-target"
                        asp-area="Creator" asp-controller="Articles" asp-action="Index"
                        asp-route-page="@(Model.Pager.PageNumber - 1)" asp-route-status="@Model.StatusFilter">@Localizer["Creator.Articles.Previous"]</a>
                 }
                 @if (Model.Pager.HasNextPage)
                 {
-                    <a class="btn btn-sm btn-secondary-soft"
+                    <a class="btn btn-sm btn-secondary-soft tap-target"
                        asp-area="Creator" asp-controller="Articles" asp-action="Index"
                        asp-route-page="@(Model.Pager.PageNumber + 1)" asp-route-status="@Model.StatusFilter">@Localizer["Creator.Articles.Next"]</a>
                 }

@@ -20,7 +20,7 @@
                           data-confirm-cancel="@Localizer["Creator.Editor.Cancel"]">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
-                        <button type="submit" class="btn btn-sm btn-link text-danger p-0 lh-1"
+                        <button type="submit" class="btn btn-sm btn-link text-danger p-0 lh-1 tap-target"
                                 aria-label="@Localizer["Creator.Editor.UnlinkTourNamed", chip.DisplayName]">
                             <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                         </button>

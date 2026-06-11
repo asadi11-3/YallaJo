@@ -1,0 +1,26 @@
+@model string
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Shared article-status badge. A11Y5: status is conveyed by color + icon + text
+    together (never color alone). Distinct Bootstrap color tokens per status keep
+    light/dark legible (T3); the icon is decorative (aria-hidden) since the text
+    label carries the meaning.
+*@
+@{
+    var status = string.IsNullOrWhiteSpace(Model) ? "Draft" : Model;
+    var (color, icon) = status switch
+    {
+        "Published" => ("success", "fa-circle-check"),
+        "PendingReview" => ("info", "fa-hourglass-half"),
+        "Rejected" => ("danger", "fa-circle-xmark"),
+        "Archived" => ("secondary", "fa-box-archive"),
+        "Hidden" => ("secondary", "fa-eye-slash"),
+        "Removed" => ("danger", "fa-trash-can"),
+        _ => ("warning", "fa-pen-to-square"), // Draft and any unknown
+    };
+    var label = Localizer["Creator.Status." + status].Value;
+}
+<span class="badge bg-@color bg-opacity-10 text-@color d-inline-flex align-items-center gap-1">
+    <i class="fa-solid @icon" aria-hidden="true"></i>@label
+</span>

@@ -59,7 +59,7 @@ else
                                         {
                                             <input type="hidden" name="orderedAttachmentIds" value="@oid" />
                                         }
-                                        <button type="submit" class="btn btn-outline-secondary" title="@Localizer["Creator.Images.MoveUp"]" aria-label="@Localizer["Creator.Images.MoveUp"]">
+                                        <button type="submit" class="btn btn-outline-secondary tap-target" title="@Localizer["Creator.Images.MoveUp"]" aria-label="@Localizer["Creator.Images.MoveUp"]">
                                             <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
                                         </button>
                                     </form>
@@ -74,7 +74,7 @@ else
                                         {
                                             <input type="hidden" name="orderedAttachmentIds" value="@oid" />
                                         }
-                                        <button type="submit" class="btn btn-outline-secondary" title="@Localizer["Creator.Images.MoveDown"]" aria-label="@Localizer["Creator.Images.MoveDown"]">
+                                        <button type="submit" class="btn btn-outline-secondary tap-target" title="@Localizer["Creator.Images.MoveDown"]" aria-label="@Localizer["Creator.Images.MoveDown"]">
                                             <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
                                         </button>
                                     </form>
@@ -85,7 +85,7 @@ else
                             <permission require="@WebPermission.EntityImage.Update">
                                 @if (img.IsPrimary)
                                 {
-                                    <button type="button" class="btn btn-primary" title="@Localizer["Creator.Images.Primary"]" aria-label="@Localizer["Creator.Images.Primary"]" disabled>
+                                    <button type="button" class="btn btn-primary tap-target" title="@Localizer["Creator.Images.Primary"]" aria-label="@Localizer["Creator.Images.Primary"]" disabled>
                                         <i class="fa-solid fa-star" aria-hidden="true"></i>
                                     </button>
                                 }
@@ -93,7 +93,7 @@ else
                                 {
                                     <form asp-area="Creator" asp-controller="Articles" asp-action="SetPrimaryImage"
                                           asp-route-id="@Model.BlogId" asp-route-attachmentId="@img.Id" method="post" class="d-inline">
-                                        <button type="submit" class="btn btn-outline-primary" title="@Localizer["Creator.Images.SetPrimary"]" aria-label="@Localizer["Creator.Images.SetPrimary"]">
+                                        <button type="submit" class="btn btn-outline-primary tap-target" title="@Localizer["Creator.Images.SetPrimary"]" aria-label="@Localizer["Creator.Images.SetPrimary"]">
                                             <i class="fa-regular fa-star" aria-hidden="true"></i>
                                         </button>
                                     </form>
@@ -106,7 +106,7 @@ else
                                       data-confirm-title="@Localizer["Creator.Images.DeleteTitle"]"
                                       data-confirm-action="@Localizer["Creator.Images.DeleteConfirm"]"
                                       data-confirm-cancel="@Localizer["Creator.Images.Cancel"]">
-                                    <button type="submit" class="btn btn-outline-danger" title="@Localizer["Creator.Images.Delete"]" aria-label="@Localizer["Creator.Images.Delete"]">
+                                    <button type="submit" class="btn btn-outline-danger tap-target" title="@Localizer["Creator.Images.Delete"]" aria-label="@Localizer["Creator.Images.Delete"]">
                                         <i class="fa-solid fa-trash" aria-hidden="true"></i>
                                     </button>
                                 </form>

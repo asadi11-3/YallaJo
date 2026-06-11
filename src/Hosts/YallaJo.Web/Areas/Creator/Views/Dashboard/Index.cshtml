@@ -9,7 +9,6 @@
     var culture = CultureInfo.CurrentUICulture;
     string Date(DateTime d) => d.ToString("d MMM yyyy", culture);
     string Count(long n) => n.ToString("N0", culture);
-    string StatusLabel(string? s) => Localizer["Creator.Status." + (string.IsNullOrEmpty(s) ? "Draft" : s)].Value;
 }
 
 <partial name="_CreatorSidebar" model="sidebar" />
@@ -150,7 +149,7 @@
                                                 }
                                             </span>
                                         </div>
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">@StatusLabel(article.Status)</span>
+                                        <partial name="_StatusBadge" model="@article.Status" />
                                     </li>
                                 }
                             </ul>
