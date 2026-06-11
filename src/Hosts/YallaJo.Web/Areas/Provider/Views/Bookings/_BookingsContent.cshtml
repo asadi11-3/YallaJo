@@ -1,0 +1,302 @@
+@using YallaJo.Web.Areas.Provider.Models.Bookings
+@model BookingsVm
+@{
+    // AJAX fragment contract (PE1): this partial is the full swappable region for
+    // provider-actions.js — BookingsController returns it from WantsAjax() branches.
+    // The root element carries data-yj-swap so the client can replace it wholesale.
+    // Localized status label with raw-value fallback (CON1); keys Provider.Status.{s}.
+    string StatusText(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status)) { return "—"; }
+        var s = Localizer["Provider.Status." + status];
+        return s.ResourceNotFound ? status : s.Value;
+    }
+    (string Color, string Icon) JoinBadge(string status) => status?.ToLowerInvariant() switch
+    {
+        "pending" => ("warning", "clock"),
+        "approved" => ("success", "circle-check"),
+        "rejected" or "declined" => ("danger", "circle-xmark"),
+        "expired" => ("secondary", "hourglass-end"),
+        _ => ("secondary", "circle-info"),
+    };
+    (string Color, string Icon) BookingBadge(string status) => status?.ToLowerInvariant() switch
+    {
+        "confirmed" or "completed" => ("success", "circle-check"),
+        "pendingconfirmation" or "awaitingpayment" => ("warning", "clock"),
+        "cancelled" or "rejected" => ("danger", "circle-xmark"),
+        _ => ("secondary", "circle-info"),
+    };
+}
+<div class="vstack gap-4" data-yj-swap="bookings">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h1 class="fs-4 mb-0"><i class="fa-solid fa-bookmark me-2" aria-hidden="true"></i>@Localizer["Provider.Bookings.Heading"]</h1>
+        <div class="d-flex align-items-center gap-2">
+            @if (Model.PendingCount > 0)
+            {
+                <span class="badge bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-clock fa-fw" aria-hidden="true"></i> @Localizer["Provider.Bookings.PendingCount", Count(Model.PendingCount)]</span>
+            }
+            <a asp-area="Provider" asp-controller="ProviderBookings" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                <i class="fa-solid fa-list-check me-1" aria-hidden="true"></i>@Localizer["Provider.Bookings.ManageBookings"]
+            </a>
+        </div>
+    </div>
+
+    @* ---- Join requests queue ---- *@
+    <div class="card border">
+        <div class="card-header border-bottom">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Provider.Bookings.JoinRequests"]</h2>
+            <small class="text-body-secondary">@Localizer["Provider.Bookings.JoinRequestsSubtitle"]</small>
+        </div>
+        <div class="card-body">
+            @if (!Model.HasJoinRequests)
+            {
+                <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.Bookings.NoJoinRequestsTitle"].Value, ["message"] = Localizer["Provider.Bookings.NoJoinRequestsMsg"].Value })" />
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">@Localizer["Provider.Bookings.ColStatus"]</th>
+                                <th scope="col">@Localizer["Provider.Bookings.ColGuests"]</th>
+                                <th scope="col">@Localizer["Provider.Bookings.ColMessage"]</th>
+                                <th scope="col">@Localizer["Provider.Bookings.ColRequested"]</th>
+                                <th scope="col" class="text-end">@Localizer["Provider.Bookings.ColAction"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var jr in Model.JoinRequests)
+                            {
+                                var jb = JoinBadge(jr.Status);
+                                <tr>
+                                    <td><span class="badge bg-@jb.Color bg-opacity-10 text-@jb.Color"><i class="fa-solid fa-@jb.Icon fa-fw" aria-hidden="true"></i> @StatusText(jr.Status)</span></td>
+                                    <td><bdi dir="ltr" class="font-data">@Count(jr.ParticipantCount)</bdi></td>
+                                    <td class="text-truncate yj-cell-max-260">
+                                        @if (string.IsNullOrWhiteSpace(jr.Message))
+                                        {
+                                            <span class="text-body-secondary">&mdash;</span>
+                                        }
+                                        else
+                                        {
+                                            <text>@jr.Message</text>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(jr.ResponseMessage))
+                                        {
+                                            <div class="small text-body-secondary">@Localizer["Provider.Bookings.Reply"]: @jr.ResponseMessage</div>
+                                        }
+                                    </td>
+                                    <td class="small"><bdi dir="ltr">@Date(jr.CreatedAt)</bdi></td>
+                                    <td class="text-end">
+                                        @if (jr.IsPending)
+                                        {
+                                            <div class="d-inline-flex gap-2">
+                                                <form asp-action="ApproveJoin" asp-route-id="@jr.Id" method="post" data-loading class="d-inline"
+                                                      data-yj-ajax data-yj-swap-target="bookings"
+                                                      data-success-message="@Localizer["Provider.Bookings.JoinApprovedToast"]"
+                                                      data-error-text="@Localizer["Provider.Common.ActionFailed"]"
+                                                      data-confirm="@Localizer["Provider.Bookings.ApproveBody"]"
+                                                      data-confirm-title="@Localizer["Provider.Bookings.ApproveTitle"]"
+                                                      data-confirm-action="@Localizer["Provider.Bookings.Approve"]"
+                                                      data-confirm-cancel="@Localizer["Provider.Common.Cancel"]">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-success-soft">
+                                                        <i class="fa-solid fa-check me-1" aria-hidden="true"></i>@Localizer["Provider.Bookings.Approve"]
+                                                    </button>
+                                                </form>
+                                                <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#declineJoin-@jr.Id.ToString("N")">
+                                                    <i class="fa-solid fa-xmark me-1" aria-hidden="true"></i>@Localizer["Provider.Bookings.Decline"]
+                                                </button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-body-secondary small">@Localizer["Provider.Bookings.Resolved"]</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* ---- Booking lookup (operator field — F10: id is a reference token, not displayed/guessed) ---- *@
+    <div class="card border">
+        <div class="card-header border-bottom">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Provider.Bookings.LookupHeading"]</h2>
+            <small class="text-body-secondary">@Localizer["Provider.Bookings.LookupSubtitle"]</small>
+        </div>
+        <div class="card-body">
+            <form asp-action="Lookup" method="post" data-loading class="row g-2 align-items-end mb-0">
+                @Html.AntiForgeryToken()
+                <div class="col-sm-8 col-md-9">
+                    <label class="form-label" for="lookupId">@Localizer["Provider.Bookings.LookupLabel"]</label>
+                    <input type="text" class="form-control font-data" id="lookupId" name="lookupId" dir="ltr"
+                           autocomplete="off" aria-describedby="lookupId-help"
+                           value="@(Model.LookupId?.ToString())" />
+                    <small id="lookupId-help" class="form-text">@Localizer["Provider.Bookings.LookupHelp"]</small>
+                </div>
+                <div class="col-sm-4 col-md-3 d-grid">
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass me-1" aria-hidden="true"></i>@Localizer["Provider.Bookings.LookUp"]</button>
+                </div>
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.LookupError))
+            {
+                <div class="alert alert-warning mt-3 mb-0" role="alert">@Model.LookupError</div>
+            }
+
+            @if (Model.LookupResult is not null)
+            {
+                var b = Model.LookupResult;
+                var bb = BookingBadge(b.Status);
+                <hr class="my-4" />
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div>
+                        <h2 class="h5 mb-1">@Localizer["Provider.Bookings.BookingRef"] <bdi dir="ltr" class="font-data">@b.Reference</bdi></h2>
+                        <span class="badge bg-@bb.Color bg-opacity-10 text-@bb.Color"><i class="fa-solid fa-@bb.Icon fa-fw" aria-hidden="true"></i> @StatusText(b.Status)</span>
+                        <span class="text-body-secondary small ms-2">@Localizer["Provider.Bookings.GuestsCount", Count(b.ParticipantCount)] · <bdi dir="ltr">@Date(b.CreatedAt)</bdi></span>
+                    </div>
+                </div>
+
+                @if (b.LineItems.Count > 0)
+                {
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm align-middle mb-2">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">@Localizer["Provider.Bookings.ColTier"]</th>
+                                    <th scope="col" class="text-center">@Localizer["Provider.Bookings.ColQty"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Provider.Bookings.ColUnit"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Provider.Bookings.ColTotal"]</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var li in b.LineItems)
+                                {
+                                    <tr>
+                                        <td>@(li.TierType ?? "—")</td>
+                                        <td class="text-center"><bdi dir="ltr">@Count(li.Count)</bdi></td>
+                                        <td class="text-end"><bdi dir="ltr">@Money(li.UnitPrice, b.Currency)</bdi></td>
+                                        <td class="text-end"><bdi dir="ltr">@Money(li.LineTotal, b.Currency)</bdi></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                <ul class="list-group list-group-borderless small mb-3">
+                    <li class="list-group-item d-flex justify-content-between px-0"><span>@Localizer["Provider.Bookings.Subtotal"]</span><bdi dir="ltr">@Money(b.Subtotal, b.Currency)</bdi></li>
+                    @if (b.DiscountAmount > 0)
+                    {
+                        <li class="list-group-item d-flex justify-content-between px-0 text-success"><span>@Localizer["Provider.Bookings.Discount"]</span><bdi dir="ltr">-@Money(b.DiscountAmount, b.Currency)</bdi></li>
+                    }
+                    @if (b.LoyaltyAmount > 0)
+                    {
+                        <li class="list-group-item d-flex justify-content-between px-0 text-success"><span>@Localizer["Provider.Bookings.Loyalty"]</span><bdi dir="ltr">-@Money(b.LoyaltyAmount, b.Currency)</bdi></li>
+                    }
+                    <li class="list-group-item d-flex justify-content-between px-0 fw-bold border-top"><span>@Localizer["Provider.Bookings.Total"]</span><bdi dir="ltr">@Money(b.TotalAmount, b.Currency)</bdi></li>
+                </ul>
+
+                @if (!string.IsNullOrWhiteSpace(b.SpecialRequests))
+                {
+                    <p class="small"><span class="fw-semibold">@Localizer["Provider.Bookings.SpecialRequests"]:</span> @b.SpecialRequests</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(b.RejectionReason))
+                {
+                    <div class="alert alert-danger mb-0" role="alert">@Localizer["Provider.Bookings.RejectedPrefix"]: @b.RejectionReason</div>
+                }
+                else if (b.CancelledAt is not null)
+                {
+                    <div class="alert alert-secondary mb-0" role="alert">@Localizer["Provider.Bookings.CancelledOn", Date(b.CancelledAt.Value)]@(string.IsNullOrWhiteSpace(b.CancelledReason) ? "" : " — " + b.CancelledReason)</div>
+                }
+                else if (b.IsConfirmable || b.IsRejectable)
+                {
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (b.IsConfirmable)
+                        {
+                            <form asp-action="ConfirmBooking" asp-route-id="@b.Id" method="post" data-loading class="d-inline"
+                                  data-yj-ajax data-yj-swap-target="bookings"
+                                  data-success-message="@Localizer["Provider.Bookings.ConfirmedToast"]"
+                                  data-error-text="@Localizer["Provider.Common.ActionFailed"]"
+                                  data-confirm="@Localizer["Provider.Bookings.ConfirmBody"]"
+                                  data-confirm-title="@Localizer["Provider.Bookings.ConfirmTitle"]"
+                                  data-confirm-action="@Localizer["Provider.Bookings.ConfirmBooking"]"
+                                  data-confirm-cancel="@Localizer["Provider.Common.Cancel"]">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success"><i class="fa-solid fa-check me-1" aria-hidden="true"></i>@Localizer["Provider.Bookings.ConfirmBooking"]</button>
+                            </form>
+                        }
+                        @if (b.IsRejectable)
+                        {
+                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectBookingModal">
+                                <i class="fa-solid fa-xmark me-1" aria-hidden="true"></i>@Localizer["Provider.Bookings.RejectBooking"]
+                            </button>
+                        }
+                    </div>
+
+                    @if (b.IsRejectable)
+                    {
+                        <div class="modal fade" id="rejectBookingModal" tabindex="-1" aria-labelledby="rejectBookingTitle" aria-describedby="rejectBookingBody" data-bs-backdrop="static" data-bs-keyboard="false">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <form asp-action="RejectBooking" asp-route-id="@b.Id" method="post" data-loading class="modal-content"
+                                      data-yj-ajax data-yj-swap-target="bookings"
+                                      data-success-message="@Localizer["Provider.Bookings.RejectedToast"]"
+                                      data-error-text="@Localizer["Provider.Common.ActionFailed"]">
+                                    @Html.AntiForgeryToken()
+                                    <div class="modal-header">
+                                        <h2 class="modal-title h5" id="rejectBookingTitle">@Localizer["Provider.Bookings.RejectModalTitle"]</h2>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.Common.Close"]"></button>
+                                    </div>
+                                    <div class="modal-body" id="rejectBookingBody">
+                                        <label class="form-label" for="reject-reason">@Localizer["Provider.Bookings.RejectReasonLabel"]</label>
+                                        <textarea class="form-control" id="reject-reason" name="reason" rows="3" maxlength="1000" required aria-describedby="reject-reason-help"></textarea>
+                                        <small id="reject-reason-help" class="form-text">@Localizer["Provider.Bookings.RejectReasonHelp"]</small>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.Common.Cancel"]</button>
+                                        <button type="submit" class="btn btn-danger">@Localizer["Provider.Bookings.RejectSubmit"]</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                }
+            }
+        </div>
+    </div>
+
+    @* Decline-join confirmation modals (one per pending request) — inside the fragment so they re-render with the queue *@
+    @foreach (var jr in Model.JoinRequests.Where(r => r.IsPending))
+    {
+        <div class="modal fade" id="declineJoin-@jr.Id.ToString("N")" tabindex="-1" aria-labelledby="declineJoinTitle-@jr.Id.ToString("N")" aria-describedby="declineJoinBody-@jr.Id.ToString("N")" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-action="RejectJoin" asp-route-id="@jr.Id" method="post" data-loading class="modal-content"
+                      data-yj-ajax data-yj-swap-target="bookings"
+                      data-success-message="@Localizer["Provider.Bookings.JoinDeclinedToast"]"
+                      data-error-text="@Localizer["Provider.Common.ActionFailed"]">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="declineJoinTitle-@jr.Id.ToString("N")">@Localizer["Provider.Bookings.DeclineModalTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.Common.Close"]"></button>
+                    </div>
+                    <div class="modal-body" id="declineJoinBody-@jr.Id.ToString("N")">
+                        <p>@Localizer["Provider.Bookings.DeclineModalBody"]</p>
+                        <label class="form-label" for="decline-msg-@jr.Id.ToString("N")">@Localizer["Provider.Bookings.DeclineMsgLabel"]</label>
+                        <textarea class="form-control" id="decline-msg-@jr.Id.ToString("N")" name="responseMessage" rows="2" maxlength="500" aria-describedby="decline-msg-help-@jr.Id.ToString("N")"></textarea>
+                        <small id="decline-msg-help-@jr.Id.ToString("N")" class="form-text">@Localizer["Provider.Bookings.DeclineMsgHelp"]</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.Common.Cancel"]</button>
+                        <button type="submit" class="btn btn-danger">@Localizer["Provider.Bookings.DeclineSubmit"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</div>

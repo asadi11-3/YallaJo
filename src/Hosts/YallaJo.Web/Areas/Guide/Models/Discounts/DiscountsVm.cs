@@ -8,8 +8,20 @@ public sealed class DiscountsVm
 
     public CreateDiscountFormVm Form { get; set; } = new();
 
+    /// <summary>When an edit POST fails validation, holds the user's submitted values so the row re-renders with input preserved (no data loss).</summary>
+    public EditDiscountFormVm? EditForm { get; set; }
+
+    /// <summary>Id of the discount whose edit row should render expanded (set on failed edit re-render).</summary>
+    public Guid? OpenEditId { get; set; }
+
+    /// <summary>F10: the guide's own tours, feeding the create-form tour picker (best-effort; may be empty).</summary>
+    public IReadOnlyList<TourOptionVm> TourOptions { get; init; } = [];
+
     public bool HasDiscounts => Discounts.Count > 0;
 }
+
+/// <summary>F10 picker option — the guide's own tour shown by name, submitting the id.</summary>
+public sealed record TourOptionVm(Guid TourId, string Title);
 
 public sealed record DiscountRowVm(
     Guid Id,

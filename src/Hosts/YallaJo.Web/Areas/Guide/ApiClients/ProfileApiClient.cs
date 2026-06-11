@@ -44,6 +44,11 @@ public sealed class ProfileApiClient
         Guid guideId, AddTourGuideSpecializationRequest request, CancellationToken ct = default)
         => _api.PostAsync($"{GuidesBase}/{guideId}/specializations", request, ct);
 
+    // DELETE /api/v1/guides/{guideId}/specializations/{specializationId}
+    public Task<ApiResult> RemoveSpecializationAsync(
+        Guid guideId, Guid specializationId, CancellationToken ct = default)
+        => _api.DeleteAsync($"{GuidesBase}/{guideId}/specializations/{specializationId}", ct);
+
     // DELETE /api/v1/guides/me (self-deactivate the tour-guide profile)
     public Task<ApiResult> DeactivateAsync(CancellationToken ct = default)
         => _api.DeleteAsync($"{GuidesBase}/me", ct);

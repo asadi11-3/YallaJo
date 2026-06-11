@@ -111,3 +111,23 @@ public sealed class BulkAvailabilitySlotFormVm
         ("Friday", "Fri"), ("Saturday", "Sat"), ("Sunday", "Sun"),
     ];
 }
+
+/// <summary>[Backend] B3 — month-grid calendar VM (CAL1).</summary>
+public sealed class AvailabilityCalendarVm
+{
+    public Guid TourId { get; init; }
+    public int Year { get; init; }
+    public int Month { get; init; }
+    public IReadOnlyList<AvailabilityCalendarDayVm> Days { get; init; } = [];
+
+    public AvailabilityCalendarDayVm? For(DateOnly date) => Days.FirstOrDefault(d => d.Date == date);
+}
+
+public sealed class AvailabilityCalendarDayVm
+{
+    public DateOnly Date { get; init; }
+    public int SlotCount { get; init; }
+    public int TotalCapacity { get; init; }
+    public int BookedSeats { get; init; }
+    public bool HasOpenSlots { get; init; }
+}

@@ -42,7 +42,7 @@
                                 <div asp-validation-summary="All" class="text-danger mt-4"></div>
 
                                 <!-- Form START -->
-                                <form asp-area="Auth" asp-controller="Auth" asp-action="SignIn" method="post" class="mt-4 text-start">
+                                <form asp-area="Auth" asp-controller="Auth" asp-action="SignIn" method="post" class="mt-4 text-start" data-loading>
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" asp-for="ReturnUrl" />
 
@@ -92,37 +92,8 @@
                                 </form>
                                 <!-- Form END -->
 
-                                @if (ProviderAvailability.IsGoogleAvailable || ProviderAvailability.IsFacebookAvailable)
-                                {
-                                    <!-- Social buttons -->
-                                    <div class="vstack gap-3">
-                                        @if (ProviderAvailability.IsGoogleAvailable)
-                                        {
-                                            <form asp-area="Auth" asp-controller="ExternalAuth" asp-action="Challenge" method="post">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="provider" value="google" />
-                                                <input type="hidden" name="mode" value="login" />
-                                                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-                                                <button type="submit" class="btn btn-light w-100 mb-0">
-                                                    <i class="fab fa-fw fa-google text-google-icon me-2" aria-hidden="true"></i>@Localizer["Auth.Social.Google"]
-                                                </button>
-                                            </form>
-                                        }
-
-                                        @if (ProviderAvailability.IsFacebookAvailable)
-                                        {
-                                            <form asp-area="Auth" asp-controller="ExternalAuth" asp-action="Challenge" method="post">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="provider" value="facebook" />
-                                                <input type="hidden" name="mode" value="login" />
-                                                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-                                                <button type="submit" class="btn btn-light w-100 mb-0">
-                                                    <i class="fab fa-fw fa-facebook-f text-facebook me-2" aria-hidden="true"></i>@Localizer["Auth.Social.Facebook"]
-                                                </button>
-                                            </form>
-                                        }
-                                    </div>
-                                }
+                                <!-- Social buttons (shared partial) -->
+                                <partial name="_SocialAuthButtons" view-data='new ViewDataDictionary(ViewData) { ["ReturnUrl"] = Model.ReturnUrl, ["Mode"] = "login", ["GoogleLabelKey"] = "Auth.Social.Google", ["FacebookLabelKey"] = "Auth.Social.Facebook" }' />
                             </div>
                         </div>
                     </div>

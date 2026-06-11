@@ -10,7 +10,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
 [Authorize]
-public sealed class TourPricingController : BaseController
+public sealed class TourPricingController : ProviderTourResourceController
 {
     private readonly ProviderTourPricingFacade _facade;
     private readonly ICurrentUser _currentUser;
@@ -48,7 +48,7 @@ public sealed class TourPricingController : BaseController
         var result = await _facade.GetCreateAsync(id, ct);
         return result.Outcome switch
         {
-            TourPricingOutcome.Ok => View(result.Form),
+            TourPricingOutcome.Ok => View("Upsert", result.Form),
             TourPricingOutcome.ForceSignOut => RedirectToLogin(),
             TourPricingOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error),
@@ -65,13 +65,13 @@ public sealed class TourPricingController : BaseController
 
         vm.TourId = id;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.CreateAsync(id, vm, ct);
         switch (result.Outcome)
         {
             case TourPricingOutcome.Ok:
-                SetSuccess("Pricing tier created.");
+                SetSuccess(L["Provider.Flash.TierCreated"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourPricingOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -82,8 +82,8 @@ public sealed class TourPricingController : BaseController
                 SetError(result.Error);
                 return RedirectToAction(nameof(Index), new { id });
             default:
-                ApplyPricingValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                ApplyFacadeValidation(result.ValidationErrors, result.Error);
+                return View("Upsert", vm);
         }
     }
 
@@ -97,7 +97,7 @@ public sealed class TourPricingController : BaseController
         var result = await _facade.GetEditAsync(id, tierId, ct);
         return result.Outcome switch
         {
-            TourPricingOutcome.Ok => View(result.Form),
+            TourPricingOutcome.Ok => View("Upsert", result.Form),
             TourPricingOutcome.ForceSignOut => RedirectToLogin(),
             TourPricingOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error, id),
@@ -115,13 +115,13 @@ public sealed class TourPricingController : BaseController
         vm.TourId = id;
         vm.TierId = tierId;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.UpdateAsync(id, tierId, vm, ct);
         switch (result.Outcome)
         {
             case TourPricingOutcome.Ok:
-                SetSuccess("Pricing tier saved.");
+                SetSuccess(L["Provider.Flash.TierSaved"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourPricingOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -134,10 +134,10 @@ public sealed class TourPricingController : BaseController
             case TourPricingOutcome.Conflict:
                 // e.g. deactivating the last active Adult tier — keep the user on the form.
                 SetError(result.Error);
-                return View(vm);
+                return View("Upsert", vm);
             default:
-                ApplyPricingValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                ApplyFacadeValidation(result.ValidationErrors, result.Error);
+                return View("Upsert", vm);
         }
     }
 
@@ -153,48 +153,10 @@ public sealed class TourPricingController : BaseController
         if (result.Outcome == TourPricingOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourPricingOutcome.Ok)
-            SetSuccess("Pricing tier deleted.");
+            SetSuccess(L["Provider.Flash.TierDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the pricing tier.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDeleteTier"].Value);
 
         return RedirectToAction(nameof(Index), new { id });
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────────
-
-    private void ApplyPricingValidation(IReadOnlyDictionary<string, string[]>? errors, string? fallback)
-    {
-        var applied = false;
-        if (errors is { Count: > 0 })
-        {
-            foreach (var (field, messages) in errors)
-            {
-                foreach (var message in messages)
-                    ModelState.AddModelError(field, message);
-                applied = true;
-            }
-        }
-
-        if (!applied)
-            ModelState.AddModelError(string.Empty, fallback ?? "Please correct the highlighted fields and try again.");
-        else if (!string.IsNullOrWhiteSpace(fallback))
-            SetError(fallback);
-    }
-
-    private IActionResult Denied(string? message)
-    {
-        SetError(message ?? "You don't have access to this listing.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult NotFoundRedirect(string? message, Guid? tourId = null)
-    {
-        SetError(message ?? "Not found.");
-        return tourId.HasValue
-            ? RedirectToAction(nameof(Index), new { id = tourId.Value })
-            : RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
 }

@@ -7,6 +7,13 @@ public sealed class MyBusinessesVm
 {
     public IReadOnlyList<BusinessRowVm> Businesses { get; set; } = [];
     public bool HasBusinesses => Businesses.Count > 0;
+
+    // D-15/D1: simple page-shape paging (no TotalPages). HasNext is a heuristic
+    // because the API returns a plain list with no total count.
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; }
+    public bool HasPrev { get; set; }
+    public bool HasNext { get; set; }
 }
 
 /// <summary>

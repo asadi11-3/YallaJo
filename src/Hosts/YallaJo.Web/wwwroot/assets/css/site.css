@@ -267,6 +267,57 @@ details.card > summary { cursor: pointer; list-style-position: inside; }
     justify-content: center;
 }
 
+/* Provider Phase 5 — sticky bottom action bar (D5, mobile <=768px).
+   Logical properties only so the bar survives RTL without overrides (RTL1). */
+@media (max-width: 768px) {
+    .yj-sticky-actions {
+        position: sticky;
+        inset-block-end: 0;
+        z-index: 1020;
+        background-color: var(--bs-body-bg);
+        border-block-start: 1px solid var(--bs-border-color);
+        padding-block: .5rem;
+        padding-inline: .75rem;
+        margin-inline: calc(-1 * var(--bs-gutter-x, .75rem));
+    }
+}
+
+/* Provider Phase 8 — utilities replacing legacy inline styles (X6).
+   Width caps are direction-neutral, so no RTL override needed (RTL1). */
+.yj-cell-max-260 {
+    max-width: 260px;
+}
+
+.yj-min-w-14r {
+    min-width: 14rem;
+}
+
+/* Guide Phase 2 — utilities replacing legacy inline styles (X6).
+   Direction-neutral sizes; no physical left/right involved (RTL1). */
+.yj-progress-thin {
+    height: .375rem;
+}
+
+.yj-cell-truncate {
+    max-width: 16rem;
+}
+
+.yj-avatar-96 {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+}
+
+/* Business Phase 5 — minimum touch target for icon-only action buttons (D2, 44px).
+   Direction-neutral box sizing; flex centering keeps the icon balanced in RTL (RTL1). */
+.btn-icon-touch {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 /* ---- Admin Phase 9 chart regions (contract §4.8 — L1/X13/M3) ---- */
 /* Reserve the final ApexCharts height on the host so the shimmer skeleton
    swaps to the rendered chart with zero layout shift (L1). The Bootstrap

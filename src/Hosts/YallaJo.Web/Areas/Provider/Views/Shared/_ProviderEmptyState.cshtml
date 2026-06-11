@@ -1,0 +1,56 @@
+@*
+    Shared Provider empty-state block (UI-UX-Design L6).
+    Replaces the ~18 hand-rolled element/17.svg blocks across the area.
+
+    ViewData knobs:
+      - title          (string, optional)  heading text; omitted when null/empty.
+      - message        (string, required)  supporting copy.
+      - imageUrl       (string, optional)  defaults to ~/assets/images/element/17.svg.
+      - ctaText        (string, optional)  CTA label; rendered only with ctaUrl.
+      - ctaUrl         (string, optional)  CTA target; rendered only with ctaText.
+      - ctaPermission  (string, optional)  WebPermission constant gating the CTA
+                                           (the whole CTA is suppressed without it).
+      - ctaClass       (string, optional)  CTA button classes, default "btn btn-primary".
+      - headingTag     (string, optional)  heading element for the title, default "h2"
+                                           (callers pick h2/h3 to keep A11Y6 hierarchy).
+*@
+@{
+    var title = ViewData["title"] as string;
+    var message = ViewData["message"] as string ?? string.Empty;
+    var imageUrl = ViewData["imageUrl"] as string ?? Url.Content("~/assets/images/element/17.svg");
+    var ctaText = ViewData["ctaText"] as string;
+    var ctaUrl = ViewData["ctaUrl"] as string;
+    var ctaPermission = ViewData["ctaPermission"] as string;
+    var ctaClass = ViewData["ctaClass"] as string ?? "btn btn-primary";
+    var headingTag = ViewData["headingTag"] as string ?? "h2";
+    var hasCta = !string.IsNullOrWhiteSpace(ctaText) && !string.IsNullOrWhiteSpace(ctaUrl);
+}
+<div class="text-center py-5">
+    <img src="@imageUrl" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+    @if (!string.IsNullOrWhiteSpace(title))
+    {
+        @* Razor cannot emit dynamic element names; branch on the requested heading level. *@
+        if (headingTag == "h3")
+        {
+            <h3 class="h5 mb-1">@title</h3>
+        }
+        else
+        {
+            <h2 class="h5 mb-1">@title</h2>
+        }
+    }
+    <p class="text-body-secondary mb-3">@message</p>
+    @if (hasCta)
+    {
+        @if (!string.IsNullOrWhiteSpace(ctaPermission))
+        {
+            <permission require="@ctaPermission">
+                <a class="@ctaClass" href="@ctaUrl">@ctaText</a>
+            </permission>
+        }
+        else
+        {
+            <a class="@ctaClass" href="@ctaUrl">@ctaText</a>
+        }
+    }
+</div>

@@ -17,7 +17,35 @@ public sealed class DashboardVm
     public IReadOnlyList<PendingActionVm> PendingActions { get; init; } = [];
     public IReadOnlyList<DashboardNotificationVm> Notifications { get; init; } = [];
 
+    // [Backend] B4 — from GET /api/v1/finance/provider/summary (null when unavailable, ERR3 soft-degrade)
+    public ProviderEarningsKpisVm? EarningsKpis { get; init; }
+
+    // [Backend] B5 — from GET /api/v1/booking/provider/bookings/stats (null when unavailable)
+    public BookingStatsVm? BookingStats { get; init; }
+
     public bool HasActivity => RecentListings.Count > 0 || RecentJoinRequests.Count > 0;
+}
+
+/// <summary>[Backend] B4 — richer earnings KPIs for the dashboard.</summary>
+public sealed class ProviderEarningsKpisVm
+{
+    public decimal GrossTotal { get; init; }
+    public decimal NetEarnings { get; init; }
+    public decimal ThisMonth { get; init; }
+    public decimal PendingPayout { get; init; }
+    public decimal TotalCommission { get; init; }
+    public string Currency { get; init; } = string.Empty;
+}
+
+/// <summary>[Backend] B5 — booking per-status counts (drives the dashboard donut chart, X14).</summary>
+public sealed class BookingStatsVm
+{
+    public int Total { get; init; }
+    public int Pending { get; init; }
+    public int Confirmed { get; init; }
+    public int Completed { get; init; }
+    public int Cancelled { get; init; }
+    public int Rejected { get; init; }
 }
 
 public sealed class ProviderOverviewVm

@@ -10,7 +10,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
 [Authorize]
-public sealed class TourWaypointsController : BaseController
+public sealed class TourWaypointsController : ProviderTourResourceController
 {
     private readonly ProviderTourWaypointsFacade _facade;
     private readonly ICurrentUser _currentUser;
@@ -48,7 +48,7 @@ public sealed class TourWaypointsController : BaseController
         var result = await _facade.GetCreateAsync(id, ct);
         return result.Outcome switch
         {
-            TourWaypointOutcome.Ok => View(result.Form),
+            TourWaypointOutcome.Ok => View("Upsert", result.Form),
             TourWaypointOutcome.ForceSignOut => RedirectToLogin(),
             TourWaypointOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error),
@@ -65,13 +65,13 @@ public sealed class TourWaypointsController : BaseController
 
         vm.TourId = id;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.CreateAsync(id, vm, ct);
         switch (result.Outcome)
         {
             case TourWaypointOutcome.Ok:
-                SetSuccess("Waypoint added.");
+                SetSuccess(L["Provider.Flash.WaypointAdded"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourWaypointOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -82,8 +82,8 @@ public sealed class TourWaypointsController : BaseController
                 SetError(result.Error);
                 return RedirectToAction(nameof(Index), new { id });
             default:
-                ApplyValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                ApplyFacadeValidation(result.ValidationErrors, result.Error);
+                return View("Upsert", vm);
         }
     }
 
@@ -97,7 +97,7 @@ public sealed class TourWaypointsController : BaseController
         var result = await _facade.GetEditAsync(id, waypointId, ct);
         return result.Outcome switch
         {
-            TourWaypointOutcome.Ok => View(result.Form),
+            TourWaypointOutcome.Ok => View("Upsert", result.Form),
             TourWaypointOutcome.ForceSignOut => RedirectToLogin(),
             TourWaypointOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error, id),
@@ -115,13 +115,13 @@ public sealed class TourWaypointsController : BaseController
         vm.TourId = id;
         vm.WaypointId = waypointId;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.UpdateAsync(id, waypointId, vm, ct);
         switch (result.Outcome)
         {
             case TourWaypointOutcome.Ok:
-                SetSuccess("Waypoint saved.");
+                SetSuccess(L["Provider.Flash.WaypointSaved"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourWaypointOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -132,8 +132,8 @@ public sealed class TourWaypointsController : BaseController
                 SetError(result.Error);
                 return RedirectToAction(nameof(Index), new { id });
             default:
-                ApplyValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                ApplyFacadeValidation(result.ValidationErrors, result.Error);
+                return View("Upsert", vm);
         }
     }
 
@@ -149,9 +149,9 @@ public sealed class TourWaypointsController : BaseController
         if (result.Outcome == TourWaypointOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourWaypointOutcome.Ok)
-            SetSuccess("Waypoint deleted.");
+            SetSuccess(L["Provider.Flash.WaypointDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the waypoint.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDeleteWaypoint"].Value);
 
         return RedirectToAction(nameof(Index), new { id });
     }
@@ -166,56 +166,27 @@ public sealed class TourWaypointsController : BaseController
 
         if (waypointIds is not { Count: > 0 })
         {
-            SetError("No waypoint order was submitted.");
+            SetError(L["Provider.Flash.NoOrderSubmitted"]);
             return RedirectToAction(nameof(Index), new { id });
         }
 
         var result = await _facade.ReorderAsync(id, waypointIds, ct);
         if (result.Outcome == TourWaypointOutcome.ForceSignOut) return RedirectToLogin();
 
+        // NF6: drag-and-drop posts via AJAX and only needs a status — the client
+        // already moved the row optimistically and rolls back on failure.
+        if (WantsAjax())
+        {
+            return result.Outcome == TourWaypointOutcome.Ok
+                ? Ok()
+                : BadRequest(new { error = result.Error ?? L["Provider.Flash.CouldNotReorder"].Value });
+        }
+
         if (result.Outcome == TourWaypointOutcome.Ok)
-            SetSuccess("Route order updated.");
+            SetSuccess(L["Provider.Flash.OrderUpdated"]);
         else
-            SetError(result.Error ?? "Could not reorder the waypoints.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotReorder"].Value);
 
         return RedirectToAction(nameof(Index), new { id });
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────────
-
-    private void ApplyValidation(IReadOnlyDictionary<string, string[]>? errors, string? fallback)
-    {
-        var applied = false;
-        if (errors is { Count: > 0 })
-        {
-            foreach (var (field, messages) in errors)
-            {
-                foreach (var message in messages)
-                    ModelState.AddModelError(field, message);
-                applied = true;
-            }
-        }
-
-        if (!applied)
-            ModelState.AddModelError(string.Empty, fallback ?? "Please correct the highlighted fields and try again.");
-        else if (!string.IsNullOrWhiteSpace(fallback))
-            SetError(fallback);
-    }
-
-    private IActionResult Denied(string? message)
-    {
-        SetError(message ?? "You don't have access to this listing.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult NotFoundRedirect(string? message, Guid? tourId = null)
-    {
-        SetError(message ?? "Not found.");
-        return tourId.HasValue
-            ? RedirectToAction(nameof(Index), new { id = tourId.Value })
-            : RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
 }

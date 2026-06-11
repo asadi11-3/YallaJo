@@ -1,15 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Proposals;
-using YallaJo.Web.Areas.Guide.Shared;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class ProposalsController : BaseController
+public sealed class ProposalsController : GuideBaseController
 {
     private readonly GuideProposalsFacade _proposals;
 
@@ -18,7 +13,7 @@ public sealed class ProposalsController : BaseController
     [HttpGet("guide/proposals")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Proposals");
         var result = await _proposals.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
@@ -30,11 +25,25 @@ public sealed class ProposalsController : BaseController
         return View(result.Data);
     }
 
+    /// <summary>
+    /// [Backend] B2 Web proxy — JSON options for the async place picker (F10/JS5).
+    /// The browser never calls the API host directly; no-JS users keep the SSR select (PE1/PE2).
+    /// </summary>
+    [HttpGet("guide/proposals/places")]
+    public async Task<IActionResult> PlaceLookup(string? term, CancellationToken ct = default)
+    {
+        var result = await _proposals.GetPlaceOptionsAsync(term, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        var items = result.Data ?? [];
+        return Json(items.Select(p => new { id = p.Id, label = p.Label }));
+    }
+
     [HttpPost("guide/proposals/create")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateProposalFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Proposals");
         if (!ModelState.IsValid)
         {
             return await ReloadAsync(form, ct);
@@ -52,7 +61,7 @@ public sealed class ProposalsController : BaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Proposal created. You can review and submit it for approval.");
+        SetSuccess(L["Guide.Flash.ProposalCreated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -62,21 +71,20 @@ public sealed class ProposalsController : BaseController
     {
         var result = await _proposals.SubmitAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Proposal submitted for review.");
+        SetFlash(result, L["Guide.Flash.ProposalSubmitted"]);
         return RedirectToAction(nameof(Index));
     }
 
     private async Task<IActionResult> ReloadAsync(CreateProposalFormVm form, CancellationToken ct)
     {
         var result = await _proposals.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
         var vm = result.IsSuccess && result.Data is not null ? result.Data : new ProposalsVm();
         vm.Form = form;
         return View(nameof(Index), vm);
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "Proposals";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

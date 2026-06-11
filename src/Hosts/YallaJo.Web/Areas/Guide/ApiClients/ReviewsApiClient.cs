@@ -26,4 +26,7 @@ public sealed class ReviewsApiClient
     public Task<ApiResult<RatingSummaryResponse>> GetRatingSummaryAsync(Guid guideId, CancellationToken ct = default) =>
         _api.GetAsync<RatingSummaryResponse>(
             $"{ReviewsBase}/ratings?entityType={GuideTargetType}&entityId={guideId}", ct);
+
+    public Task<ApiResult> AddReplyAsync(Guid reviewId, string content, CancellationToken ct = default) =>
+        _api.PostAsync($"{ReviewsBase}/{reviewId}/reply", new AddReviewReplyRequest(content), ct);
 }

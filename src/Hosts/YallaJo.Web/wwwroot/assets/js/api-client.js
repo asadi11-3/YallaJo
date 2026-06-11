@@ -65,7 +65,8 @@
                 data = await response.json();
                 if (data) { message = data.error || data.message || ""; }
             } catch (_) { /* non-JSON error body */ }
-            throw { status: response.status, message: message };
+            // errors: optional field->messages dictionary (server validation), additive for callers.
+            throw { status: response.status, message: message, errors: data && data.errors ? data.errors : null };
         }
 
         return response;

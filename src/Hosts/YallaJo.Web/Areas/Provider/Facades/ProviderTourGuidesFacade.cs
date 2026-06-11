@@ -57,6 +57,17 @@ public sealed class ProviderTourGuidesFacade
         return new(TourGuideOutcome.Ok, vm);
     }
 
+    /// <summary>
+    /// [Backend] B7 — assignable-guide typeahead (F10). Empty list on any failure:
+    /// the combobox shows no suggestions and the manual flow remains usable (PE1).
+    /// </summary>
+    public async Task<IReadOnlyList<GuideLookupItemResponse>> LookupAsync(
+        Guid tourId, string? term, CancellationToken ct = default)
+    {
+        var result = await _guidesApi.LookupAsync(tourId, term, pageSize: 10, ct);
+        return result.IsSuccess && result.Data is not null ? result.Data : [];
+    }
+
     public async Task<TourGuideActionResult> AssignAsync(Guid tourId, AssignTourGuideFormVm vm, CancellationToken ct = default)
     {
         var result = await _guidesApi.AssignAsync(tourId, TourGuidesMapper.ToAssignRequest(vm), ct);

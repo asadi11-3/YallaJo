@@ -10,16 +10,13 @@
     ViewData["BusinessNav"] = "Services";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
-    var culture = CultureInfo.CurrentUICulture;
-    string Money(decimal amount, string? currency) => amount.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(currency) ? "JOD" : currency);
-    string Count(int n) => n.ToString("N0", culture);
 }
-
-<partial name="_BusinessSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container">
         <div class="row g-4">
+            <partial name="_BusinessSidebar" model="sidebar" />
+
             <div class="col-lg-8 col-xl-9">
                 @if (ViewBag.Error is string err)
                 {
@@ -38,7 +35,19 @@
 
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                <div class="row g-4">
+                @if (Model.EditForm is not null)
+                {
+                    <div class="card shadow mb-4">
+                        <div class="card-header border-bottom">
+                            <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-pen-to-square me-2" aria-hidden="true"></i>@Localizer["Business.Services.EditHeading"]</h2>
+                        </div>
+                        <div class="card-body">
+                            <partial name="_ServiceForm" model="Model.EditForm" />
+                        </div>
+                    </div>
+                }
+
+                <div class="row g-4" data-yj-component="business-crud" data-crud-list="#services-list">
                     <permission require="@WebPermission.ServiceItem.Create">
                         <div class="col-lg-5">
                             <div class="card shadow">
@@ -46,7 +55,7 @@
                                     <h2 class="card-header-title h5 mb-0">@Localizer["Business.Services.AddHeading"]</h2>
                                 </div>
                                 <div class="card-body">
-                                    <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post">
+                                    <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post" data-loading data-crud-success="@Localizer["Business.Services.Added"]">
                                         @Html.AntiForgeryToken()
                                         <div class="mb-3">
                                             <label asp-for="Form.Name" class="form-label">@Localizer["Business.Services.Name"]</label>
@@ -107,59 +116,8 @@
                     </permission>
 
                     <div class="col-lg-7">
-                        <div class="card shadow">
-                            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                                <h2 class="card-header-title h5 mb-0">@Localizer["Business.Services.CurrentHeading"]</h2>
-                                <span class="badge bg-primary bg-opacity-10 text-primary"><bdi dir="ltr" class="font-data">@Count(Model.Services.Count)</bdi></span>
-                            </div>
-                            <div class="card-body">
-                                @if (!Model.HasServices)
-                                {
-                                    <div class="text-center py-5">
-                                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                        <p class="mb-0 text-body-secondary">@Localizer["Business.Services.EmptyMsg"]</p>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="table-responsive">
-                                        <table class="table table-hover align-middle mb-0">
-                                            <caption class="visually-hidden">@Localizer["Business.Services.CurrentHeading"]</caption>
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">@Localizer["Business.Services.ColService"]</th>
-                                                    <th scope="col" class="text-end">@Localizer["Business.Services.ColPrice"]</th>
-                                                    <th scope="col" class="text-end">@Localizer["Business.Services.ColDuration"]</th>
-                                                    <th scope="col" class="text-end">@Localizer["Business.Services.ColActions"]</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (var s in Model.Services)
-                                                {
-                                                    <tr>
-                                                        <td class="fw-semibold">@s.Name</td>
-                                                        <td class="text-end"><bdi dir="ltr" class="font-data">@Money(s.Price, s.Currency)</bdi></td>
-                                                        <td class="text-end"><bdi dir="ltr">@Localizer["Business.Services.Minutes", Count(s.DurationMinutes)]</bdi></td>
-                                                        <td class="text-end">
-                                                            <permission require="@WebPermission.ServiceItem.Update">
-                                                                <a asp-action="Edit" asp-route-id="@Model.BusinessId" asp-route-serviceId="@s.Id"
-                                                                   class="btn btn-sm btn-outline-secondary" aria-label="@Localizer["Business.Services.Edit", s.Name]">
-                                                                    <i class="fa-solid fa-pen" aria-hidden="true"></i>
-                                                                </a>
-                                                            </permission>
-                                                            <permission require="@WebPermission.ServiceItem.SoftDelete">
-                                                                <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#remove-service-@s.Id" aria-label="@Localizer["Business.Services.Remove", s.Name]">
-                                                                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
-                                                                </button>
-                                                            </permission>
-                                                        </td>
-                                                    </tr>
-                                                }
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                }
-                            </div>
+                        <div id="services-list">
+                            <partial name="_ServicesList" model="Model" />
                         </div>
                     </div>
                 </div>
@@ -168,28 +126,18 @@
     </div>
 </section>
 
-<permission require="@WebPermission.ServiceItem.SoftDelete">
-    @foreach (var s in Model.Services)
-    {
-        <div class="modal fade" id="remove-service-@s.Id" tabindex="-1" aria-labelledby="remove-service-title-@s.Id" aria-describedby="remove-service-body-@s.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" role="dialog" aria-modal="true" asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-serviceId="@s.Id" method="post">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="remove-service-title-@s.Id">@Localizer["Business.Services.RemoveTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Business.Services.Close"]"></button>
-                    </div>
-                    <div class="modal-body" id="remove-service-body-@s.Id">@Localizer["Business.Services.RemoveBody", s.Name]</div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Business.Services.Cancel"]</button>
-                        <button type="submit" class="btn btn-danger">@Localizer["Business.Services.RemoveConfirm"]</button>
-                    </div>
-                </form>
-            </div>
+<permission require="@WebPermission.ServiceItem.Update">
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="service-edit-offcanvas" aria-labelledby="service-edit-offcanvas-title">
+        <div class="offcanvas-header border-bottom">
+            <h2 class="offcanvas-title h5" id="service-edit-offcanvas-title">@Localizer["Business.Services.EditHeading"]</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="@Localizer["Business.Services.Close"]"></button>
         </div>
-    }
+        <div class="offcanvas-body" id="service-edit-offcanvas-body" data-yj-component="business-services"></div>
+    </div>
 </permission>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/business-services.js" asp-append-version="true" defer></script>
+    <script src="~/assets/js/business-crud.js" asp-append-version="true" defer></script>
 }

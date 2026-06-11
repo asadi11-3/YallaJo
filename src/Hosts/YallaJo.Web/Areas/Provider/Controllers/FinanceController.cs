@@ -5,7 +5,6 @@ using YallaJo.Web.Areas.Provider.Models.Earnings;
 using YallaJo.Web.Areas.Provider.Models.Finance;
 using YallaJo.Web.Areas.Provider.Models.Invoices;
 using YallaJo.Web.Areas.Provider.Models.PaymentMethods;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
@@ -16,7 +15,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 /// the standalone Earnings/Invoices/PaymentMethods controllers still own the write actions the tabs post to.
 /// </summary>
 [Area("Provider")]
-[Authorize(Policy = "Provider")]
+[Authorize]
 public sealed class FinanceController : BaseController
 {
     private readonly EarningsFacade _earnings;
@@ -37,9 +36,6 @@ public sealed class FinanceController : BaseController
     [HttpGet("provider/finance")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        ViewData["ProviderNav"] = "Finance";
-        ViewBag.Sidebar = new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
-
         // API1: gather the three independent reads concurrently, then GuardSignOut each.
         var earningsTask = _earnings.GetEarningsAsync(ct);
         var invoicesTask = _invoices.GetAsync(ct);
@@ -65,5 +61,37 @@ public sealed class FinanceController : BaseController
             SetError(earnings.Error ?? invoices.Error ?? methods.Error);
 
         return View(vm);
+    }
+
+    // ── Tab fragments ─────────────────────────────────────────────────────────────
+    // Index SSRs all three panes so the page works without JS (PE1); these endpoints
+    // return the same fragments standalone so scripts can refresh a single tab via
+    // window.YallaJo.api.loadPartial without re-rendering the whole page (MOD8/JS5).
+
+    [HttpGet("provider/finance/tabs/payouts")]
+    public async Task<IActionResult> PayoutsTab(CancellationToken ct = default)
+    {
+        var result = await _earnings.GetEarningsAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess) return BadRequest(new { error = result.Error });
+        return PartialView("_FinancePayoutsTab", result.Data ?? new EarningsVm());
+    }
+
+    [HttpGet("provider/finance/tabs/invoices")]
+    public async Task<IActionResult> InvoicesTab(CancellationToken ct = default)
+    {
+        var result = await _invoices.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess) return BadRequest(new { error = result.Error });
+        return PartialView("_FinanceInvoicesTab", result.Data ?? new ProviderInvoicesVm());
+    }
+
+    [HttpGet("provider/finance/tabs/methods")]
+    public async Task<IActionResult> MethodsTab(CancellationToken ct = default)
+    {
+        var result = await _methods.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess) return BadRequest(new { error = result.Error });
+        return PartialView("_FinanceMethodsTab", result.Data ?? new PaymentMethodsVm());
     }
 }

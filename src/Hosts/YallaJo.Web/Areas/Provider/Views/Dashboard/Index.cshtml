@@ -1,22 +1,13 @@
 @model YallaJo.Web.Areas.Provider.Models.Dashboard.DashboardVm
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Areas.Provider.Shared
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.Dashboard.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+    ViewData["ProviderNav"] = "Dashboard";
 
     var culture = CultureInfo.CurrentUICulture;
-    string Money(decimal amount, string? currency) =>
-        amount.ToString("N0", culture) + (string.IsNullOrWhiteSpace(currency) ? "" : " " + currency);
-    string Count(int n) => n.ToString("N0", culture);
-    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
     string StatusLabel(string? s) => Localizer["Provider.Status." + (string.IsNullOrWhiteSpace(s) ? "Draft" : s)];
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">
@@ -64,58 +55,68 @@
 
         <div class="row g-4">
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex align-items-center">
-                        <div class="icon-xl bg-success bg-opacity-10 rounded-3 text-success">
-                            <i class="fa-solid fa-map fs-5" aria-hidden="true"></i>
-                        </div>
-                        <div class="ms-3">
-                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Count(Model.TotalListings)</bdi></p>
-                            <span class="small text-body-secondary">@Localizer["Provider.Dashboard.TotalListings"]</span>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-map", ["color"] = "success", ["value"] = Count(Model.TotalListings), ["label"] = Localizer["Provider.Dashboard.TotalListings"].Value, ["cardClass"] = "h-100" })" />
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex align-items-center">
-                        <div class="icon-xl bg-info bg-opacity-10 rounded-3 text-info">
-                            <i class="fa-solid fa-arrow-trend-up fs-5" aria-hidden="true"></i>
-                        </div>
-                        <div class="ms-3">
-                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Money(Model.NetEarnings, Model.EarningsCurrency)</bdi></p>
-                            <span class="small text-body-secondary">@Localizer["Provider.Dashboard.NetEarnings"]</span>
-                        </div>
-                    </div>
-                </div>
+                @* [Backend] B4 — prefer the richer provider summary when available (ERR3 soft-degrade to legacy value). *@
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-arrow-trend-up", ["color"] = "info", ["value"] = Money(Model.EarningsKpis?.NetEarnings ?? Model.NetEarnings, Model.EarningsKpis?.Currency ?? Model.EarningsCurrency), ["label"] = Localizer["Provider.Dashboard.NetEarnings"].Value, ["cardClass"] = "h-100" })" />
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex align-items-center">
-                        <div class="icon-xl bg-warning bg-opacity-10 rounded-3 text-warning">
-                            <i class="fa-solid fa-bookmark fs-5" aria-hidden="true"></i>
-                        </div>
-                        <div class="ms-3">
-                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Count(Model.PaymentCount)</bdi></p>
-                            <span class="small text-body-secondary">@Localizer["Provider.Dashboard.PaidBookings"]</span>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-bookmark", ["color"] = "warning", ["value"] = Count(Model.PaymentCount), ["label"] = Localizer["Provider.Dashboard.PaidBookings"].Value, ["cardClass"] = "h-100" })" />
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex align-items-center">
-                        <div class="icon-xl bg-primary bg-opacity-10 rounded-3 text-primary">
-                            <i class="fa-solid fa-users fs-5" aria-hidden="true"></i>
-                        </div>
-                        <div class="ms-3">
-                            <p class="h4 font-data mb-0"><bdi dir="ltr">@Count(Model.PendingJoinRequests)</bdi></p>
-                            <span class="small text-body-secondary">@Localizer["Provider.Dashboard.PendingJoinRequests"]</span>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-users", ["color"] = "primary", ["value"] = Count(Model.PendingJoinRequests), ["label"] = Localizer["Provider.Dashboard.PendingJoinRequests"].Value, ["cardClass"] = "h-100" })" />
             </div>
         </div>
+
+        @* [Backend] B4 — richer earnings KPIs; section renders only when the summary loaded (ERR3). *@
+        @if (Model.EarningsKpis is not null)
+        {
+            var kpis = Model.EarningsKpis;
+            <div class="row g-4">
+                <div class="col-sm-6 col-xl-3">
+                    <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-calendar-day", ["color"] = "primary", ["value"] = Money(kpis.ThisMonth, kpis.Currency), ["label"] = Localizer["Provider.Dashboard.ThisMonth"].Value, ["cardClass"] = "h-100" })" />
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-hourglass-half", ["color"] = "warning", ["value"] = Money(kpis.PendingPayout, kpis.Currency), ["label"] = Localizer["Provider.Dashboard.PendingPayout"].Value, ["cardClass"] = "h-100" })" />
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-money-bill-wave", ["color"] = "success", ["value"] = Money(kpis.GrossTotal, kpis.Currency), ["label"] = Localizer["Provider.Dashboard.GrossTotal"].Value, ["cardClass"] = "h-100" })" />
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <partial name="_KpiCard" view-data="@(new ViewDataDictionary(ViewData) { ["icon"] = "fa-solid fa-percent", ["color"] = "secondary", ["value"] = Money(kpis.TotalCommission, kpis.Currency), ["label"] = Localizer["Provider.Dashboard.TotalCommission"].Value, ["cardClass"] = "h-100" })" />
+                </div>
+            </div>
+        }
+
+        @* [Backend] B5 — bookings-by-status donut (ApexCharts allowed on dashboards, X14). SSR list = no-JS path (PE1). *@
+        @if (Model.BookingStats is not null && Model.BookingStats.Total > 0)
+        {
+            var stats = Model.BookingStats;
+            <div class="card border">
+                <div class="card-header border-bottom">
+                    <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-chart-pie me-2" aria-hidden="true"></i>@Localizer["Provider.Dashboard.BookingsByStatus"]</h2>
+                </div>
+                <div class="card-body row g-4 align-items-center">
+                    <div class="col-md-6">
+                        <div data-yj-component="bookings-donut"
+                             data-labels='["@Localizer["Provider.Status.Pending"]","@Localizer["Provider.Status.Confirmed"]","@Localizer["Provider.Status.Completed"]","@Localizer["Provider.Status.Cancelled"]","@Localizer["Provider.Status.Rejected"]"]'
+                             data-values="[@stats.Pending,@stats.Confirmed,@stats.Completed,@stats.Cancelled,@stats.Rejected]"
+                             aria-hidden="true"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-borderless mb-0">
+                            <li class="list-group-item px-0 d-flex justify-content-between"><span><i class="fa-solid fa-clock text-warning me-2" aria-hidden="true"></i>@Localizer["Provider.Status.Pending"]</span><bdi dir="ltr" class="font-data">@Count(stats.Pending)</bdi></li>
+                            <li class="list-group-item px-0 d-flex justify-content-between"><span><i class="fa-solid fa-circle-check text-success me-2" aria-hidden="true"></i>@Localizer["Provider.Status.Confirmed"]</span><bdi dir="ltr" class="font-data">@Count(stats.Confirmed)</bdi></li>
+                            <li class="list-group-item px-0 d-flex justify-content-between"><span><i class="fa-solid fa-flag-checkered text-primary me-2" aria-hidden="true"></i>@Localizer["Provider.Status.Completed"]</span><bdi dir="ltr" class="font-data">@Count(stats.Completed)</bdi></li>
+                            <li class="list-group-item px-0 d-flex justify-content-between"><span><i class="fa-solid fa-ban text-secondary me-2" aria-hidden="true"></i>@Localizer["Provider.Status.Cancelled"]</span><bdi dir="ltr" class="font-data">@Count(stats.Cancelled)</bdi></li>
+                            <li class="list-group-item px-0 d-flex justify-content-between"><span><i class="fa-solid fa-circle-xmark text-danger me-2" aria-hidden="true"></i>@Localizer["Provider.Status.Rejected"]</span><bdi dir="ltr" class="font-data">@Count(stats.Rejected)</bdi></li>
+                            <li class="list-group-item px-0 d-flex justify-content-between fw-semibold"><span>@Localizer["Provider.Dashboard.TotalBookings"]</span><bdi dir="ltr" class="font-data">@Count(stats.Total)</bdi></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        }
 
         @if (Model.HasActivity)
         {
@@ -190,13 +191,8 @@
         else
         {
             <div class="card border">
-                <div class="card-body text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                    <h2 class="h5">@Localizer["Provider.Dashboard.EmptyTitle"]</h2>
-                    <p class="text-body-secondary mb-3">@Localizer["Provider.Dashboard.EmptyMsg"]</p>
-                    <a asp-area="Provider" asp-controller="Tours" asp-action="Create" class="btn btn-primary">
-                        <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.Dashboard.AddListing"]
-                    </a>
+                <div class="card-body">
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.Dashboard.EmptyTitle"].Value, ["message"] = Localizer["Provider.Dashboard.EmptyMsg"].Value, ["ctaText"] = Localizer["Provider.Dashboard.AddListing"].Value, ["ctaUrl"] = Url.Action("Create", "Tours", new { area = "Provider" }) })" />
                 </div>
             </div>
         }
@@ -258,3 +254,9 @@
         }
     </div>
 </section>
+
+@section Scripts {
+    @* X14: ApexCharts is allowed on dashboards; vendored bundle only (no CDN). *@
+    <script src="~/assets/vendor/apexcharts/js/apexcharts.min.js" asp-append-version="true"></script>
+    <script src="~/assets/js/provider-dashboard.js" asp-append-version="true"></script>
+}

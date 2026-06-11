@@ -1,17 +1,12 @@
-@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Accounts.Models.Profile
-@using YallaJo.Web.Areas.Provider.Shared
 @model YallaJo.Web.Areas.Provider.Models.Settings.ProviderSettingsVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.Settings.Title"].Value;
     ViewData["ProviderNav"] = "Settings";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
     var avatar = string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl;
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">
@@ -80,7 +75,7 @@
                         <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-user me-2" aria-hidden="true"></i>@Localizer["Provider.Settings.PersonalHeading"]</h2>
                     </div>
                     <div class="card-body">
-                        <form method="post" asp-area="Provider" asp-controller="Settings" asp-action="UpdateProfile" class="row g-3">
+                        <form method="post" data-loading asp-area="Provider" asp-controller="Settings" asp-action="UpdateProfile" class="row g-3">
                             @Html.AntiForgeryToken()
                             <div class="col-md-6">
                                 <label asp-for="Profile.FirstName" class="form-label"></label>
@@ -138,7 +133,7 @@
                         <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-phone me-2" aria-hidden="true"></i>@Localizer["Provider.Settings.PhoneHeading"]</h2>
                     </div>
                     <div class="card-body">
-                        <form method="post" asp-area="Provider" asp-controller="Settings" asp-action="UpdatePhone" class="vstack gap-3">
+                        <form method="post" data-loading asp-area="Provider" asp-controller="Settings" asp-action="UpdatePhone" class="vstack gap-3">
                             @Html.AntiForgeryToken()
                             <div>
                                 <label asp-for="Phone.PhoneNumber" class="form-label"></label>
@@ -160,7 +155,7 @@
                         <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-shield-halved me-2" aria-hidden="true"></i>@Localizer["Provider.Settings.PasswordHeading"]</h2>
                     </div>
                     <div class="card-body">
-                        <form method="post" asp-area="Provider" asp-controller="Settings" asp-action="ChangePassword" class="vstack gap-3">
+                        <form method="post" data-loading asp-area="Provider" asp-controller="Settings" asp-action="ChangePassword" class="vstack gap-3">
                             @Html.AntiForgeryToken()
                             <div>
                                 <label asp-for="Password.CurrentPassword" class="form-label"></label>

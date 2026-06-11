@@ -10,7 +10,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
 [Authorize]
-public sealed class TourSchedulesController : BaseController
+public sealed class TourSchedulesController : ProviderTourResourceController
 {
     private readonly ProviderTourSchedulesFacade _facade;
     private readonly ICurrentUser _currentUser;
@@ -48,7 +48,7 @@ public sealed class TourSchedulesController : BaseController
         var result = await _facade.GetCreateAsync(id, ct);
         return result.Outcome switch
         {
-            TourScheduleOutcome.Ok => View(result.Form),
+            TourScheduleOutcome.Ok => View("Upsert", result.Form),
             TourScheduleOutcome.ForceSignOut => RedirectToLogin(),
             TourScheduleOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error),
@@ -65,13 +65,13 @@ public sealed class TourSchedulesController : BaseController
 
         vm.TourId = id;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.CreateAsync(id, vm, ct);
         switch (result.Outcome)
         {
             case TourScheduleOutcome.Ok:
-                SetSuccess("Schedule created.");
+                SetSuccess(L["Provider.Flash.ScheduleCreated"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourScheduleOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -82,11 +82,11 @@ public sealed class TourSchedulesController : BaseController
                 SetError(result.Error);
                 return RedirectToAction(nameof(Index), new { id });
             case TourScheduleOutcome.NothingCreated:
-                ModelState.AddModelError(string.Empty, result.Error ?? "No schedule was added.");
-                return View(vm);
+                ModelState.AddModelError(string.Empty, result.Error ?? L["Provider.Flash.NoScheduleAdded"].Value);
+                return View("Upsert", vm);
             default:
-                ApplyScheduleValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                ApplyFacadeValidation(result.ValidationErrors, result.Error);
+                return View("Upsert", vm);
         }
     }
 
@@ -100,7 +100,7 @@ public sealed class TourSchedulesController : BaseController
         var result = await _facade.GetEditAsync(id, scheduleId, ct);
         return result.Outcome switch
         {
-            TourScheduleOutcome.Ok => View(result.Form),
+            TourScheduleOutcome.Ok => View("Upsert", result.Form),
             TourScheduleOutcome.ForceSignOut => RedirectToLogin(),
             TourScheduleOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error, id),
@@ -118,13 +118,13 @@ public sealed class TourSchedulesController : BaseController
         vm.TourId = id;
         vm.ScheduleId = scheduleId;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.UpdateAsync(id, scheduleId, vm, ct);
         switch (result.Outcome)
         {
             case TourScheduleOutcome.Ok:
-                SetSuccess("Schedule saved.");
+                SetSuccess(L["Provider.Flash.ScheduleSaved"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourScheduleOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -136,10 +136,10 @@ public sealed class TourSchedulesController : BaseController
                 return RedirectToAction(nameof(Index), new { id });
             case TourScheduleOutcome.Conflict:
                 SetError(result.Error);
-                return View(vm);
+                return View("Upsert", vm);
             default:
-                ApplyScheduleValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                ApplyFacadeValidation(result.ValidationErrors, result.Error);
+                return View("Upsert", vm);
         }
     }
 
@@ -155,48 +155,10 @@ public sealed class TourSchedulesController : BaseController
         if (result.Outcome == TourScheduleOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourScheduleOutcome.Ok)
-            SetSuccess("Schedule deleted.");
+            SetSuccess(L["Provider.Flash.ScheduleDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the schedule.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDeleteSchedule"].Value);
 
         return RedirectToAction(nameof(Index), new { id });
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────────
-
-    private void ApplyScheduleValidation(IReadOnlyDictionary<string, string[]>? errors, string? fallback)
-    {
-        var applied = false;
-        if (errors is { Count: > 0 })
-        {
-            foreach (var (field, messages) in errors)
-            {
-                foreach (var message in messages)
-                    ModelState.AddModelError(field, message);
-                applied = true;
-            }
-        }
-
-        if (!applied)
-            ModelState.AddModelError(string.Empty, fallback ?? "Please correct the highlighted fields and try again.");
-        else if (!string.IsNullOrWhiteSpace(fallback))
-            SetError(fallback);
-    }
-
-    private IActionResult Denied(string? message)
-    {
-        SetError(message ?? "You don't have access to this listing.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult NotFoundRedirect(string? message, Guid? tourId = null)
-    {
-        SetError(message ?? "Not found.");
-        return tourId.HasValue
-            ? RedirectToAction(nameof(Index), new { id = tourId.Value })
-            : RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
 }

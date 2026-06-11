@@ -1,0 +1,51 @@
+@*
+    Shared social sign-in buttons — extracted from the ~30 duplicated lines in
+    SignIn.cshtml / SignUp.cshtml. Renders one native POST form per available
+    external provider (PE1: works without JS; full-navigation OAuth challenge).
+    Renders nothing when no provider is configured — callers gate their divider
+    on IExternalProviderAvailability themselves (placement differs per page).
+
+    ViewData parameters:
+      ReturnUrl        — optional return URL forwarded to the challenge
+      Mode             — challenge mode, default "login" ("link" on ExternalProviders page)
+      GoogleLabelKey   — resx key for the Google button (default "Auth.Social.Google")
+      FacebookLabelKey — resx key for the Facebook button (default "Auth.Social.Facebook")
+*@
+@using YallaJo.Web.Infrastructure.Authentication.ExternalAuth
+@inject IExternalProviderAvailability ProviderAvailability
+@{
+    var returnUrl = ViewData["ReturnUrl"] as string;
+    var mode = ViewData["Mode"] as string ?? "login";
+    var googleLabelKey = ViewData["GoogleLabelKey"] as string ?? "Auth.Social.Google";
+    var facebookLabelKey = ViewData["FacebookLabelKey"] as string ?? "Auth.Social.Facebook";
+}
+@if (ProviderAvailability.IsGoogleAvailable || ProviderAvailability.IsFacebookAvailable)
+{
+    <div class="vstack gap-3">
+        @if (ProviderAvailability.IsGoogleAvailable)
+        {
+            <form asp-area="Auth" asp-controller="ExternalAuth" asp-action="Challenge" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="provider" value="google" />
+                <input type="hidden" name="mode" value="@mode" />
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                <button type="submit" class="btn btn-light w-100 mb-0">
+                    <i class="fab fa-fw fa-google text-google-icon me-2" aria-hidden="true"></i>@Localizer[googleLabelKey]
+                </button>
+            </form>
+        }
+
+        @if (ProviderAvailability.IsFacebookAvailable)
+        {
+            <form asp-area="Auth" asp-controller="ExternalAuth" asp-action="Challenge" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="provider" value="facebook" />
+                <input type="hidden" name="mode" value="@mode" />
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                <button type="submit" class="btn btn-light w-100 mb-0">
+                    <i class="fab fa-fw fa-facebook-f text-facebook me-2" aria-hidden="true"></i>@Localizer[facebookLabelKey]
+                </button>
+            </form>
+        }
+    </div>
+}

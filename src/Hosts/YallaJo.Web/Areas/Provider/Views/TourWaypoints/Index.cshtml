@@ -1,21 +1,14 @@
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Infrastructure.Authorization
-@using YallaJo.Web.Areas.Provider.Shared
 @model YallaJo.Web.Areas.Provider.Models.TourWaypoints.TourWaypointsIndexVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.TourWaypoints.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
     var ids = Model.Waypoints.Select(w => w.Id).ToList();
     var culture = CultureInfo.CurrentUICulture;
     string Coord(double lat, double lng) => lat.ToString("0.#####", culture) + ", " + lng.ToString("0.#####", culture);
     string StopTime(int? m) => m is > 0 ? Localizer["Provider.TourWaypoints.Minutes", m.Value.ToString("N0", culture)].Value : "—";
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">
@@ -37,14 +30,8 @@
         @if (!Model.HasWaypoints)
         {
             <div class="card border">
-                <div class="card-body text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                    <h2 class="h5 mb-1">@Localizer["Provider.TourWaypoints.EmptyTitle"]</h2>
-                    <p class="text-body-secondary mb-3">@Localizer["Provider.TourWaypoints.EmptyMsg"]</p>
-                    <permission require="@WebPermission.TourWaypoint.Create">
-                        <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Create" asp-route-id="@Model.TourId"
-                           class="btn btn-sm btn-primary"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.TourWaypoints.AddFirst"]</a>
-                    </permission>
+                <div class="card-body">
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.TourWaypoints.EmptyTitle"].Value, ["message"] = Localizer["Provider.TourWaypoints.EmptyMsg"].Value, ["ctaText"] = Localizer["Provider.TourWaypoints.AddFirst"].Value, ["ctaUrl"] = Url.Action("Create", "TourWaypoints", new { area = "Provider", id = Model.TourId }), ["ctaClass"] = "btn btn-sm btn-primary", ["ctaPermission"] = WebPermission.TourWaypoint.Create })" />
                 </div>
             </div>
         }
@@ -63,12 +50,25 @@
                                 <th scope="col" class="text-end">@Localizer["Provider.TourWaypoints.ColActions"]</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        @* NF6: provider-waypoints.js enables drag-handle reorder (optimistic, rollback on failure).
+                           The move up/down forms below remain the no-JS path (PE1). *@
+                        <tbody data-yj-waypoints
+                               data-yj-reorder-url="@Url.Action("Reorder", "TourWaypoints", new { area = "Provider", id = Model.TourId })"
+                               data-yj-saved-text="@Localizer["Provider.TourWaypoints.ReorderSavedToast"]"
+                               data-yj-failed-text="@Localizer["Provider.TourWaypoints.ReorderFailedToast"]">
                             @for (var i = 0; i < Model.Waypoints.Count; i++)
                             {
                                 var w = Model.Waypoints[i];
-                                <tr>
-                                    <td><bdi class="font-data">@((i + 1).ToString("N0", culture))</bdi></td>
+                                <tr data-yj-waypoint-id="@w.Id">
+                                    <td>
+                                        <permission require="@WebPermission.TourWaypoint.Update">
+                                            <button type="button" class="btn btn-sm btn-light d-none me-1" data-yj-drag-handle
+                                                    aria-label="@Localizer["Provider.TourWaypoints.DragHandleAria", w.Name]">
+                                                <i class="fa-solid fa-grip-vertical" aria-hidden="true"></i>
+                                            </button>
+                                        </permission>
+                                        <bdi class="font-data">@((i + 1).ToString("N0", culture))</bdi>
+                                    </td>
                                     <td>
                                         <span class="fw-semibold"><bdi dir="ltr">@w.Name</bdi></span>
                                         @if (w.IsMeetingPoint)
@@ -89,7 +89,7 @@
                                                 {
                                                     var up = ids.ToList();
                                                     (up[i - 1], up[i]) = (up[i], up[i - 1]);
-                                                    <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Reorder" asp-route-id="@Model.TourId" method="post" class="d-inline">
+                                                    <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Reorder" asp-route-id="@Model.TourId" method="post" data-loading class="d-inline">
                                                         @Html.AntiForgeryToken()
                                                         @foreach (var wid in up)
                                                         {
@@ -102,7 +102,7 @@
                                                 {
                                                     var down = ids.ToList();
                                                     (down[i + 1], down[i]) = (down[i], down[i + 1]);
-                                                    <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Reorder" asp-route-id="@Model.TourId" method="post" class="d-inline">
+                                                    <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Reorder" asp-route-id="@Model.TourId" method="post" data-loading class="d-inline">
                                                         @Html.AntiForgeryToken()
                                                         @foreach (var wid in down)
                                                         {
@@ -115,8 +115,14 @@
                                                    class="btn btn-sm btn-light" aria-label="@Localizer["Provider.TourWaypoints.Edit", w.Name]"><i class="fa-solid fa-pen" aria-hidden="true"></i></a>
                                             </permission>
                                             <permission require="@WebPermission.TourWaypoint.Delete">
-                                                <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#delete-waypoint-@w.Id"
-                                                        aria-label="@Localizer["Provider.TourWaypoints.Delete", w.Name]"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                                                <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-waypointId="@w.Id" method="post" data-loading class="d-inline"
+                                                      data-confirm="@Localizer["Provider.TourWaypoints.DeleteBody", w.Name]"
+                                                      data-confirm-title="@Localizer["Provider.TourWaypoints.DeleteTitle"]"
+                                                      data-confirm-action="@Localizer["Provider.TourWaypoints.DeleteConfirm"]"
+                                                      data-confirm-cancel="@Localizer["Provider.TourWaypoints.Cancel"]">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="@Localizer["Provider.TourWaypoints.Delete", w.Name]"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                                                </form>
                                             </permission>
                                         </div>
                                     </td>
@@ -130,26 +136,7 @@
     </div>
 </section>
 
-<permission require="@WebPermission.TourWaypoint.Delete">
-    @foreach (var w in Model.Waypoints)
-    {
-        <div class="modal fade" id="delete-waypoint-@w.Id" tabindex="-1" aria-labelledby="delete-waypoint-title-@w.Id" aria-describedby="delete-waypoint-body-@w.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-waypointId="@w.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h2 class="modal-title h5" id="delete-waypoint-title-@w.Id">@Localizer["Provider.TourWaypoints.DeleteTitle"]</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourWaypoints.Close"]"></button>
-                    </div>
-                    <div class="modal-body" id="delete-waypoint-body-@w.Id">
-                        <p class="mb-0">@Localizer["Provider.TourWaypoints.DeleteBody", w.Name]</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary-soft" data-bs-dismiss="modal">@Localizer["Provider.TourWaypoints.Cancel"]</button>
-                        <button type="submit" class="btn btn-danger">@Localizer["Provider.TourWaypoints.DeleteConfirm"]</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    }
-</permission>
+@section Scripts {
+    @* NF6: drag-handle reorder, optimistic with rollback toast; up/down forms = no-JS path (PE1). *@
+    <script src="~/assets/js/provider-waypoints.js" asp-append-version="true"></script>
+}

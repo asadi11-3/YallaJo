@@ -7,10 +7,19 @@ public static class ProviderBookingsMapper
     public static ProviderBookingsIndexVm ToIndexVm(
         ProviderBookingsPageResponse page,
         string? status,
-        IReadOnlyDictionary<Guid, string> tourNames) => new()
+        IReadOnlyDictionary<Guid, string> tourNames,
+        string? fromDate = null,
+        string? toDate = null,
+        Guid? tourId = null,
+        IReadOnlyList<BookingTourFilterOptionVm>? tourOptions = null) => new()
     {
         Status = status,
+        FromDate = fromDate,
+        ToDate = toDate,
+        TourId = tourId,
+        TourOptions = tourOptions ?? [],
         Items = page.Items.Select(i => ToRowVm(i, Lookup(tourNames, i.TourId))).ToList(),
+        NextCursor = page.NextCursor,
     };
 
     public static ProviderBookingRowVm ToRowVm(ProviderBookingItemResponse i, string tourName) => new()

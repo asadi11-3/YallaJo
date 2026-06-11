@@ -1,40 +1,16 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using YallaJo.Web.Areas.Guide.Facades;
-using YallaJo.Web.Areas.Guide.Models.Dashboard;
-using YallaJo.Web.Areas.Guide.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
+/// <summary>
+/// Phase 3 view reduction: the Tier page was merged into the Dashboard
+/// (rendered by the shared _TierProgress partial at the #tier anchor).
+/// The route is kept so existing bookmarks/deep links 301 to the new home.
+/// </summary>
 [RequirePermission(WebPermission.GuideDashboard.Read)]
-public sealed class TierController : BaseController
+public sealed class TierController : GuideBaseController
 {
-    private readonly GuideTierFacade _tier;
-
-    public TierController(GuideTierFacade tier) => _tier = tier;
-
     [HttpGet("guide/tier")]
-    public async Task<IActionResult> Index(CancellationToken ct = default)
-    {
-        ViewData["GuideNav"] = "Tier";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
-
-        var result = await _tier.GetAsync(ct);
-        if (GuardSignOut(result) is { } signOut)
-        {
-            return signOut;
-        }
-
-        if (!result.IsSuccess || result.Data is null)
-        {
-            SetError(result.Error);
-            return View(new TierProgressVm());
-        }
-
-        return View(result.Data);
-    }
+    public IActionResult Index() => RedirectPermanent("/guide/dashboard#tier");
 }

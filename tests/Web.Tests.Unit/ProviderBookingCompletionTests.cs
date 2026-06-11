@@ -47,7 +47,7 @@ public sealed class ProviderBookingCompletionTests
         var handler = new StubHandler(status, body);
         var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.test/") };
         var api = new ApiClient(http, NullLogger<ApiClient>.Instance);
-        return new ProviderBookingsFacade(new ProviderBookingsApiClient(api));
+        return new ProviderBookingsFacade(new ProviderBookingsApiClient(api), new ProviderToursApiClient(api));
     }
 
     // ── ApiClient route / body ────────────────────────────────────────────────

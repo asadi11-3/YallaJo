@@ -2,17 +2,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Business.Facades;
 using YallaJo.Web.Areas.Business.Models.Services;
-using YallaJo.Web.Areas.Business.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Business.Controllers;
 
 [Area("Business")]
 [Authorize]
 [RequirePermission(WebPermission.Business.Read)]
-public sealed class ServicesController : BaseController
+public sealed class ServicesController : BusinessControllerBase
 {
+    private const string ListPartial = "_ServicesList";
+
     private readonly BusinessServicesFacade _facade;
 
     public ServicesController(BusinessServicesFacade facade) => _facade = facade;
@@ -20,7 +20,7 @@ public sealed class ServicesController : BaseController
     [HttpGet("business/businesses/{id:guid}/services")]
     public async Task<IActionResult> Index(Guid id, CancellationToken ct)
     {
-        SetSidebar(id);
+        SetSidebar("Services", id);
         var result = await _facade.GetAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
@@ -38,13 +38,36 @@ public sealed class ServicesController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            SetError("Please provide a valid service name, price, and category.");
-            return RedirectToAction(nameof(Index), new { id });
+            if (WantsAjax())
+            {
+                return AjaxValidationProblem(L["Business.Flash.ServiceInvalid"].Value);
+            }
+
+            // No-JS validation failure: re-render the page with the submitted form so input is preserved (D-6, F1-F4).
+            return await ReloadIndexAsync(id, form, ct);
         }
 
         var result = await _facade.AddAsync(id, form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Service added.", "Could not add the service.");
+
+        if (!result.IsSuccess)
+        {
+            if (WantsAjax())
+            {
+                return AjaxFailure(result, L["Business.Error.AddServiceFailed"].Value);
+            }
+
+            ApplyValidationErrors(result);
+            SetError(result.Error ?? L["Business.Error.AddServiceFailed"].Value);
+            return await ReloadIndexAsync(id, form, ct);
+        }
+
+        if (WantsAjax())
+        {
+            return await ListPartialAsync(id, L["Business.Flash.ServiceAdded"].Value, ct);
+        }
+
+        SetSuccess(L["Business.Flash.ServiceAdded"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 
@@ -52,7 +75,7 @@ public sealed class ServicesController : BaseController
     [RequirePermission(WebPermission.ServiceItem.Update)]
     public async Task<IActionResult> Edit(Guid id, Guid serviceId, CancellationToken ct)
     {
-        SetSidebar(id);
+        SetSidebar("Services", id);
         var result = await _facade.GetEditAsync(id, serviceId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
@@ -60,7 +83,13 @@ public sealed class ServicesController : BaseController
             SetError(result.Error);
             return RedirectToAction(nameof(Index), new { id });
         }
-        return View(result.Data);
+
+        // AJAX: serve only the form partial for the edit offcanvas (PE1 enhancement).
+        if (WantsAjax())
+            return PartialView("_ServiceForm", result.Data);
+
+        // No-JS: render the full Services page with the inline edit panel.
+        return await IndexWithEditAsync(id, result.Data, ct);
     }
 
     [HttpPost("business/businesses/{id:guid}/services/{serviceId:guid}/edit")]
@@ -68,24 +97,41 @@ public sealed class ServicesController : BaseController
     [RequirePermission(WebPermission.ServiceItem.Update)]
     public async Task<IActionResult> Edit(Guid id, Guid serviceId, EditServiceFormVm form, CancellationToken ct)
     {
-        SetSidebar(id);
+        SetSidebar("Services", id);
         form.ServiceId = serviceId;
         form.BusinessId = id;
 
         if (!ModelState.IsValid)
-            return View(form);
+        {
+            if (WantsAjax())
+            {
+                return AjaxValidationProblem(L["Business.Flash.ServiceInvalid"].Value);
+            }
+
+            return await IndexWithEditAsync(id, form, ct);
+        }
 
         var result = await _facade.UpdateAsync(id, serviceId, form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (!result.IsSuccess)
         {
+            if (WantsAjax())
+            {
+                return AjaxFailure(result, L["Business.Error.UpdateServiceFailed"].Value);
+            }
+
             if (!ApplyValidationErrors(result))
                 SetError(result.Error);
-            return View(form);
+            return await IndexWithEditAsync(id, form, ct);
         }
 
-        SetSuccess("Service updated.");
+        if (WantsAjax())
+        {
+            return await ListPartialAsync(id, L["Business.Flash.ServiceUpdated"].Value, ct);
+        }
+
+        SetSuccess(L["Business.Flash.ServiceUpdated"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 
@@ -96,17 +142,58 @@ public sealed class ServicesController : BaseController
     {
         var result = await _facade.RemoveAsync(id, serviceId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Service removed.", "Could not remove the service.");
+
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+            {
+                return AjaxFailure(result, L["Business.Error.RemoveServiceFailed"].Value);
+            }
+
+            return await ListPartialAsync(id, L["Business.Flash.ServiceRemoved"].Value, ct);
+        }
+
+        SetFlash(result, L["Business.Flash.ServiceRemoved"].Value, L["Business.Error.RemoveServiceFailed"].Value);
         return RedirectToAction(nameof(Index), new { id });
     }
 
-    private void SetSidebar(Guid businessId)
+    /// <summary>Returns the refreshed list partial after a successful AJAX mutation; falls back to PRG when reload fails.</summary>
+    private async Task<IActionResult> ListPartialAsync(Guid id, string toast, CancellationToken ct)
     {
-        ViewData["BusinessNav"] = "Services";
-        ViewBag.Sidebar = new BusinessSidebarVm
+        var reload = await _facade.GetAsync(id, ct);
+        if (!reload.IsSuccess || reload.Data is null)
         {
-            DisplayName = User.Identity?.Name ?? "Business",
-            BusinessId = businessId,
-        };
+            SetSuccess(toast);
+            return RedirectToAction(nameof(Index), new { id });
+        }
+
+        SetAjaxToast(toast);
+        return PartialView(ListPartial, reload.Data);
+    }
+
+    /// <summary>No-JS fallback: re-renders Index with the submitted add form preserved (D-6).</summary>
+    private async Task<IActionResult> ReloadIndexAsync(Guid id, AddServiceFormVm form, CancellationToken ct)
+    {
+        SetSidebar("Services", id);
+        var reload = await _facade.GetAsync(id, ct);
+        var vm = reload.IsSuccess && reload.Data is not null
+            ? reload.Data
+            : new ServicesVm { BusinessId = id };
+        vm.Form = form;
+        return View(nameof(Index), vm);
+    }
+
+    /// <summary>
+    /// Renders Services/Index with the inline edit panel populated — the no-JS
+    /// surface that replaced the retired Services/Edit view.
+    /// </summary>
+    private async Task<IActionResult> IndexWithEditAsync(Guid id, EditServiceFormVm form, CancellationToken ct)
+    {
+        var listResult = await _facade.GetAsync(id, ct);
+        var vm = listResult is { IsSuccess: true, Data: not null }
+            ? listResult.Data
+            : new ServicesVm { BusinessId = id, BusinessName = form.BusinessName };
+        vm.EditForm = form;
+        return View(nameof(Index), vm);
     }
 }

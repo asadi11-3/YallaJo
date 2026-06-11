@@ -11,6 +11,8 @@ public static class ContentToursCacheKeys
 
     public const string TagToursSuggest = "tours:suggest";
 
+    public const string TagToursOpenForApplications = "tours:open-for-applications";
+
     public static string TagForTour(Guid tourId) => $"tour:{tourId}";
 
     public static string TagForMyTours(Guid userId) => $"my-tours:{userId}";
@@ -66,6 +68,9 @@ public static class ContentToursCacheKeys
         bool? isFeatured,
         string? acceptLanguage) =>
         $"ct:tours:p{page}:s{pageSize}:sort:{sort}:status:{status}:place:{placeId}:feat:{isFeatured}:lang:{NormalizeLanguage(acceptLanguage)}:pub";
+
+    public static string OpenForApplicationTours(int page, int pageSize, string? q) =>
+        $"ct:tours:open-for-applications:p{page}:s{pageSize}:q:{(q ?? string.Empty).Trim().ToLowerInvariant()}";
 
     public static string NormalizeLanguage(string? acceptLanguage)
     {

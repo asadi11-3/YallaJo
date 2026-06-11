@@ -1,20 +1,11 @@
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Provider.Models.TourAvailability
-@using YallaJo.Web.Areas.Provider.Shared
 @model TourAvailabilityIndexVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.TourAvailability.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
-    var culture = CultureInfo.CurrentUICulture;
-    string Count(int n) => n.ToString("N0", culture);
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">
@@ -39,12 +30,22 @@
             <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>@Localizer["Provider.TourAvailability.Intro"]
         </div>
 
+        @* [Backend] B3 / CAL1: month grid lazily loaded per month by provider-availability.js
+           via api.loadPartial. Hidden without JS — the slot table below is the no-JS path (PE1). *@
+        <div class="card border d-none" data-yj-component="availability-calendar"
+             data-yj-calendar-url="@Url.Action("Calendar", "TourAvailability", new { area = "Provider", id = Model.TourId })"
+             data-error-text="@Localizer["Provider.Common.ResultsError"]"
+             data-retry-text="@Localizer["Provider.Common.Retry"]">
+            <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.TourAvailability.CalendarHeading"]</h2></div>
+            <div class="card-body" data-yj-calendar-host aria-live="polite" aria-busy="false"></div>
+        </div>
+
         <permission require="@WebPermission.AvailabilitySlot.Create">
             <div class="collapse" id="bulk-slots">
                 <div class="card border">
                     <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.TourAvailability.BulkHeading"]</h2></div>
                     <div class="card-body">
-                        <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Bulk" asp-route-id="@Model.TourId" method="post" class="row g-3">
+                        <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Bulk" asp-route-id="@Model.TourId" method="post" data-loading class="row g-3">
                             @Html.AntiForgeryToken()
                             <div class="col-md-3">
                                 <label class="form-label" for="bulk-start">@Localizer["Provider.TourAvailability.StartDate"]</label>
@@ -106,10 +107,8 @@
         @if (!Model.HasSlots)
         {
             <div class="card border">
-                <div class="card-body text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                    <h2 class="h5 mb-1">@Localizer["Provider.TourAvailability.EmptyTitle"]</h2>
-                    <p class="text-body-secondary mb-0">@Localizer["Provider.TourAvailability.EmptyMsg"]</p>
+                <div class="card-body">
+                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.TourAvailability.EmptyTitle"].Value, ["message"] = Localizer["Provider.TourAvailability.EmptyMsg"].Value, ["ctaText"] = Localizer["Provider.TourAvailability.AddSlot"].Value, ["ctaUrl"] = Url.Action("Create", "TourAvailability", new { area = "Provider", id = Model.TourId }), ["ctaPermission"] = WebPermission.AvailabilitySlot.Create })" />
                 </div>
             </div>
         }
@@ -155,8 +154,18 @@
                                                    class="btn btn-sm btn-outline-secondary" aria-label="@Localizer["Provider.TourAvailability.EditSlot"]"><i class="fa-solid fa-pen" aria-hidden="true"></i></a>
                                             </permission>
                                             <permission require="@WebPermission.AvailabilitySlot.Delete">
-                                                <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#delete-slot-@s.Id"
-                                                        aria-label="@Localizer["Provider.TourAvailability.RemoveSlot"]"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                                                @{
+                                                    var deleteBody = Localizer["Provider.TourAvailability.DeleteBody", s.DateLabel].Value
+                                                        + (s.HasHeldSeats ? " " + Localizer["Provider.TourAvailability.DeleteHeldWarning"].Value : "");
+                                                }
+                                                <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-slotId="@s.Id" method="post" data-loading class="d-inline"
+                                                      data-confirm="@deleteBody"
+                                                      data-confirm-title="@Localizer["Provider.TourAvailability.DeleteTitle"]"
+                                                      data-confirm-action="@Localizer["Provider.TourAvailability.DeleteConfirm"]"
+                                                      data-confirm-cancel="@Localizer["Provider.TourAvailability.Cancel"]">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="@Localizer["Provider.TourAvailability.RemoveSlot"]"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                                                </form>
                                             </permission>
                                         </div>
                                     </td>
@@ -170,35 +179,7 @@
     </div>
 </section>
 
-@if (Model.HasSlots)
-{
-    <permission require="@WebPermission.AvailabilitySlot.Delete">
-        @foreach (var s in Model.Slots)
-        {
-            <div class="modal fade" id="delete-slot-@s.Id" tabindex="-1" aria-labelledby="delete-slot-title-@s.Id" aria-describedby="delete-slot-body-@s.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-slotId="@s.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
-                        @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="delete-slot-title-@s.Id">@Localizer["Provider.TourAvailability.DeleteTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.TourAvailability.Close"]"></button>
-                        </div>
-                        <div class="modal-body" id="delete-slot-body-@s.Id">
-                            <p class="mb-0">@Localizer["Provider.TourAvailability.DeleteBody", s.DateLabel]</p>
-                            @if (s.HasHeldSeats)
-                            {
-                                <div class="alert alert-warning mt-3 mb-0" role="alert">
-                                    <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>@Localizer["Provider.TourAvailability.DeleteHeldWarning"]
-                                </div>
-                            }
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary-soft" data-bs-dismiss="modal">@Localizer["Provider.TourAvailability.Cancel"]</button>
-                            <button type="submit" class="btn btn-danger">@Localizer["Provider.TourAvailability.DeleteConfirm"]</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        }
-    </permission>
+@section Scripts {
+    <script src="~/assets/js/provider-availability.js" asp-append-version="true"></script>
 }
+

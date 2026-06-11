@@ -1,10 +1,13 @@
 using System.Net;
 using FluentAssertions;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using YallaJo.Web.Areas.Guide.ApiClients;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.MyTours;
+using YallaJo.Web.Areas.Guide.Services;
+using YallaJo.Web.Infrastructure.Identity;
 using YallaJo.Web.Services;
 
 namespace Web.Tests.Unit;
@@ -58,6 +61,20 @@ public sealed class GuideMyToursFacadeCacheEvictionTests
     private static HttpResponseMessage Json(HttpStatusCode code, string body)
         => new(code) { Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json") };
 
+    private sealed class StubCurrentUser : ICurrentUser
+    {
+        public bool IsAuthenticated => true;
+        public Guid? UserId => Guid.Parse("55555555-5555-5555-5555-555555555555");
+        public bool HasPermission(string permission) => true;
+        public bool IsInRole(string role) => true;
+    }
+
+    private static GuideIdAccessor CreateAccessor(ApiClient api) => new(
+        new DashboardApiClient(api),
+        new MemoryCache(new MemoryCacheOptions()),
+        new StubCurrentUser(),
+        NullLogger<GuideIdAccessor>.Instance);
+
     private static (GuideMyToursFacade Facade, CapturingCacheStore Cache) BuildFacade(
         Func<HttpRequestMessage, HttpResponseMessage> writeRoute)
     {
@@ -76,8 +93,10 @@ public sealed class GuideMyToursFacadeCacheEvictionTests
 
         var http = new HttpClient(new StubHandler(Route)) { BaseAddress = new Uri("https://api.test/") };
         var cache = new CapturingCacheStore();
+        var api = new ApiClient(http, NullLogger<ApiClient>.Instance);
         var facade = new GuideMyToursFacade(
-            new MyToursApiClient(new ApiClient(http, NullLogger<ApiClient>.Instance)),
+            new MyToursApiClient(api),
+            CreateAccessor(api),
             cache,
             NullLogger<GuideMyToursFacade>.Instance);
         return (facade, cache);
@@ -157,8 +176,10 @@ public sealed class GuideMyToursFacadeCacheEvictionTests
             BaseAddress = new Uri("https://api.test/"),
         };
         var cache = new CapturingCacheStore();
+        var api = new ApiClient(http, NullLogger<ApiClient>.Instance);
         var facade = new GuideMyToursFacade(
-            new MyToursApiClient(new ApiClient(http, NullLogger<ApiClient>.Instance)),
+            new MyToursApiClient(api),
+            CreateAccessor(api),
             cache,
             NullLogger<GuideMyToursFacade>.Instance);
 

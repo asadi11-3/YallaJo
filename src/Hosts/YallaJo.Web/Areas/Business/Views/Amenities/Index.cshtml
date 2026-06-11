@@ -1,4 +1,5 @@
 @using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Business.Models.Amenities
 @using YallaJo.Web.Areas.Business.Shared
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Business.Models.Amenities.AmenitiesVm
@@ -10,11 +11,11 @@
     var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
 }
 
-<partial name="_BusinessSidebar" model="sidebar" />
-
 <section class="pt-0">
     <div class="container">
         <div class="row g-4">
+            <partial name="_BusinessSidebar" model="sidebar" />
+
             <div class="col-lg-8 col-xl-9">
                 @if (ViewBag.Error is string err)
                 {
@@ -35,7 +36,7 @@
 
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                <div class="row g-4">
+                <div class="row g-4" data-yj-component="business-crud" data-crud-list="#amenities-list">
                     <permission require="@WebPermission.BusinessAmenity.Create">
                         <div class="col-lg-5">
                             <div class="card shadow h-100">
@@ -43,7 +44,8 @@
                                     <h2 class="card-header-title h5 mb-0">@Localizer["Business.Amenities.AddHeading"]</h2>
                                 </div>
                                 <div class="card-body">
-                                    <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post">
+                                    <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post" data-loading
+                                          data-crud-success="@Localizer["Business.Amenities.Added"]">
                                         @Html.AntiForgeryToken()
                                         <div class="mb-3">
                                             <label asp-for="Form.Name" class="form-label">@Localizer["Business.Amenities.Name"]</label>
@@ -52,7 +54,14 @@
                                         </div>
                                         <div class="mb-3">
                                             <label asp-for="Form.Icon" class="form-label">@Localizer["Business.Amenities.Icon"]</label>
-                                            <input asp-for="Form.Icon" class="form-control" dir="ltr" placeholder="fa-wifi" aria-describedby="amenity-icon-help" />
+                                            @* D-13: curated icon choices instead of free-text Font Awesome class entry. *@
+                                            <select asp-for="Form.Icon" class="form-select" aria-describedby="amenity-icon-help">
+                                                <option value="">@Localizer["Business.Amenities.IconNone"]</option>
+                                                @foreach (var (value, suffix) in AmenitiesMapper.IconOptions)
+                                                {
+                                                    <option value="@value">@Localizer["Business.Amenities.Icon." + suffix]</option>
+                                                }
+                                            </select>
                                             <div id="amenity-icon-help" class="form-text">@Localizer["Business.Amenities.IconHelp"]</div>
                                             <span asp-validation-for="Form.Icon" class="text-danger small" role="alert"></span>
                                         </div>
@@ -71,58 +80,8 @@
                     </permission>
 
                     <div class="col-lg-7">
-                        <div class="card shadow h-100">
-                            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                                <h2 class="card-header-title h5 mb-0">@Localizer["Business.Amenities.CurrentHeading"]</h2>
-                                <span class="badge bg-primary bg-opacity-10 text-primary"><bdi dir="ltr">@Model.Amenities.Count</bdi></span>
-                            </div>
-                            <div class="card-body">
-                                @if (!Model.HasAmenities)
-                                {
-                                    <div class="text-center py-5">
-                                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                        <p class="mb-0 text-body-secondary">@Localizer["Business.Amenities.EmptyMsg"]</p>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="table-responsive">
-                                        <table class="table table-hover align-middle mb-0">
-                                            <caption class="visually-hidden">@Localizer["Business.Amenities.CurrentHeading"]</caption>
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">@Localizer["Business.Amenities.ColAmenity"]</th>
-                                                    <th scope="col" class="text-end">@Localizer["Business.Amenities.ColOrder"]</th>
-                                                    <th scope="col" class="text-end">@Localizer["Business.Amenities.ColActions"]</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (var item in Model.Amenities)
-                                                {
-                                                    <tr>
-                                                        <td>
-                                                            @if (!string.IsNullOrWhiteSpace(item.Icon))
-                                                            {
-                                                                <i class="fa-solid @item.Icon me-2" aria-hidden="true"></i>
-                                                            }
-                                                            <span class="fw-semibold">@item.Name</span>
-                                                        </td>
-                                                        <td class="text-end"><bdi dir="ltr" class="font-data">@item.SortOrder</bdi></td>
-                                                        <td class="text-end">
-                                                            <permission require="@WebPermission.BusinessAmenity.Delete">
-                                                                <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#remove-amenity-@item.Id">
-                                                                    <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
-                                                                    <span class="visually-hidden">@Localizer["Business.Amenities.Remove", item.Name]</span>
-                                                                </button>
-                                                            </permission>
-                                                        </td>
-                                                    </tr>
-                                                }
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                }
-                            </div>
+                        <div id="amenities-list">
+                            <partial name="_AmenitiesList" model="Model" />
                         </div>
                     </div>
                 </div>
@@ -131,33 +90,7 @@
     </div>
 </section>
 
-@if (Model.HasAmenities)
-{
-    <permission require="@WebPermission.BusinessAmenity.Delete">
-        @foreach (var item in Model.Amenities)
-        {
-            <div class="modal fade" id="remove-amenity-@item.Id" tabindex="-1" aria-labelledby="remove-amenity-title-@item.Id" aria-describedby="remove-amenity-body-@item.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-amenityId="@item.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
-                        @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="remove-amenity-title-@item.Id">@Localizer["Business.Amenities.RemoveTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Business.Amenities.Close"]"></button>
-                        </div>
-                        <div class="modal-body" id="remove-amenity-body-@item.Id">
-                            @Localizer["Business.Amenities.RemoveBody", item.Name]
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Business.Amenities.Cancel"]</button>
-                            <button type="submit" class="btn btn-danger">@Localizer["Business.Amenities.RemoveConfirm"]</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        }
-    </permission>
-}
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/business-crud.js" asp-append-version="true" defer></script>
 }

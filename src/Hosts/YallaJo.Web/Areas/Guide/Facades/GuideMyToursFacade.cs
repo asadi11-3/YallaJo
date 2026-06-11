@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Guide.ApiClients;
 using YallaJo.Web.Areas.Guide.Models.MyTours;
+using YallaJo.Web.Areas.Guide.Services;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Areas.Guide.Facades;
@@ -11,30 +12,29 @@ public sealed class GuideMyToursFacade
     private const string TimeFormat = "HH:mm";
 
     private readonly MyToursApiClient _api;
+    private readonly GuideIdAccessor _guideId;
     private readonly IOutputCacheStore _cache;
     private readonly ILogger<GuideMyToursFacade> _logger;
 
-    public GuideMyToursFacade(MyToursApiClient api, IOutputCacheStore cache, ILogger<GuideMyToursFacade> logger)
+    public GuideMyToursFacade(MyToursApiClient api, GuideIdAccessor guideId, IOutputCacheStore cache, ILogger<GuideMyToursFacade> logger)
     {
         _api = api;
+        _guideId = guideId;
         _cache = cache;
         _logger = logger;
     }
 
     public async Task<ApiResult<MyToursVm>> GetMyToursAsync(int page, int pageSize, CancellationToken ct = default)
     {
-        var profile = await _api.GetMyProfileAsync(ct);
-        if (profile.RequireSignOut)
+        // Resolve the guide id through the request-scoped accessor so a page render
+        // shares the single memoized GET /guides/me call (kills the duplicate round-trip).
+        var guideId = await _guideId.GetGuideIdAsync(ct);
+        if (guideId is null)
         {
-            return ApiResult<MyToursVm>.ForceSignOut();
+            return ApiResult<MyToursVm>.CreateFailure("Unable to resolve your guide profile.");
         }
 
-        if (!profile.IsSuccess || profile.Data is null)
-        {
-            return ApiResult<MyToursVm>.Fail(profile.StatusCode, profile.Error);
-        }
-
-        var toursResult = await _api.GetMyToursAsync(profile.Data.Id, page, pageSize, ct);
+        var toursResult = await _api.GetMyToursAsync(guideId.Value, page, pageSize, ct);
         if (toursResult.RequireSignOut)
         {
             return ApiResult<MyToursVm>.ForceSignOut();
@@ -169,8 +169,8 @@ public sealed class GuideMyToursFacade
     {
         try
         {
-            var profile = await _api.GetMyProfileAsync(ct);
-            return profile is { IsSuccess: true, Data: not null } ? profile.Data.Id : null;
+            // Delegates to the per-request memoized accessor (kills the GET /guides/me N+1 before every mutation).
+            return await _guideId.GetGuideIdAsync(ct);
         }
         catch (Exception ex)
         {

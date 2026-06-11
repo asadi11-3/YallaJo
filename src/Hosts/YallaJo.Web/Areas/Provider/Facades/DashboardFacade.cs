@@ -18,8 +18,11 @@ public sealed class DashboardFacade
         var overviewTask = SafeOverviewAsync(ct);
         var pendingActionsTask = SafePendingActionsAsync(ct);
         var notificationsTask = SafeNotificationsAsync(ct);
+        // [Backend] B4/B5 — joined into the existing WhenAll fan-out (UI-PERF-API1).
+        var earningsKpisTask = SafeEarningsKpisAsync(ct);
+        var bookingStatsTask = SafeBookingStatsAsync(ct);
 
-        await Task.WhenAll(toursTask, earningsTask, joinTask, overviewTask, pendingActionsTask, notificationsTask);
+        await Task.WhenAll(toursTask, earningsTask, joinTask, overviewTask, pendingActionsTask, notificationsTask, earningsKpisTask, bookingStatsTask);
 
         // UI-PERF-R1: never read .Result — await the already-completed tasks (no sync-over-async).
         var tours = await toursTask;
@@ -28,6 +31,8 @@ public sealed class DashboardFacade
         var overview = await overviewTask;
         var pendingActions = await pendingActionsTask;
         var notifications = await notificationsTask;
+        var earningsKpis = await earningsKpisTask;
+        var bookingStats = await bookingStatsTask;
 
         var recentListings = tours.Items
             .OrderByDescending(t => t.CreatedAt)
@@ -105,6 +110,8 @@ public sealed class DashboardFacade
             Overview = overviewVm,
             PendingActions = pendingActionVms,
             Notifications = notificationVms,
+            EarningsKpis = earningsKpis,
+            BookingStats = bookingStats,
         };
 
         return ApiResult<DashboardVm>.Ok(vm);
@@ -168,6 +175,62 @@ public sealed class DashboardFacade
         {
             var result = await _api.GetEarningsSummaryAsync(ct);
             return result is { IsSuccess: true, Data: not null } ? result.Data : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    // [Backend] B4 — null on failure so the dashboard soft-degrades (ERR3).
+    private async Task<ProviderEarningsKpisVm?> SafeEarningsKpisAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetProviderEarningsSummaryAsync(ct);
+            if (result is not { IsSuccess: true, Data: not null })
+            {
+                return null;
+            }
+
+            var d = result.Data;
+            return new ProviderEarningsKpisVm
+            {
+                GrossTotal = d.GrossTotal,
+                NetEarnings = d.NetEarnings,
+                ThisMonth = d.ThisMonth,
+                PendingPayout = d.PendingPayout,
+                TotalCommission = d.TotalCommission,
+                Currency = d.Currency,
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    // [Backend] B5 — null on failure so the dashboard soft-degrades (ERR3).
+    private async Task<BookingStatsVm?> SafeBookingStatsAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetBookingStatsAsync(ct);
+            if (result is not { IsSuccess: true, Data: not null })
+            {
+                return null;
+            }
+
+            var d = result.Data;
+            return new BookingStatsVm
+            {
+                Total = d.Total,
+                Pending = d.Pending,
+                Confirmed = d.Confirmed,
+                Completed = d.Completed,
+                Cancelled = d.Cancelled,
+                Rejected = d.Rejected,
+            };
         }
         catch
         {

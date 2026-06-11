@@ -5,12 +5,31 @@ namespace YallaJo.Web.Areas.Provider.Models.Bookings;
 public sealed class ProviderBookingsIndexVm
 {
     public string? Status { get; init; }
+
+    /// <summary>Phase 5 filters (round-trip in querystring; YYYY-MM-DD).</summary>
+    public string? FromDate { get; init; }
+    public string? ToDate { get; init; }
+    public Guid? TourId { get; init; }
+
+    /// <summary>Provider's tours for the filter dropdown (empty = degrade gracefully).</summary>
+    public IReadOnlyList<BookingTourFilterOptionVm> TourOptions { get; init; } = [];
+
     public IReadOnlyList<ProviderBookingRowVm> Items { get; init; } = [];
+
+    /// <summary>Opaque cursor for the next page; null when there are no more results.</summary>
+    public string? NextCursor { get; init; }
     public bool HasItems => Items.Count > 0;
 
     /// <summary>Status values offered in the filter dropdown.</summary>
     public static readonly IReadOnlyList<string> StatusFilters =
         ["AwaitingPayment", "PendingConfirmation", "Confirmed", "Completed", "Cancelled", "Rejected"];
+}
+
+/// <summary>Tour option for the bookings filter (Phase 5).</summary>
+public sealed class BookingTourFilterOptionVm
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = "";
 }
 
 public sealed class ProviderBookingRowVm

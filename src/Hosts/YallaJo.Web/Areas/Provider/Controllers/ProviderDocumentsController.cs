@@ -3,14 +3,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Provider.Facades;
 using YallaJo.Web.Areas.Provider.Models.ProviderDocuments;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
-[Authorize(Policy = "Provider")]
+[Authorize]
 [RequirePermission(WebPermission.ProviderDocument.Read)]
 public sealed class ProviderDocumentsController : BaseController
 {
@@ -22,7 +21,6 @@ public sealed class ProviderDocumentsController : BaseController
     [HttpGet("provider/documents")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
 
         var result = await _facade.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -42,7 +40,6 @@ public sealed class ProviderDocumentsController : BaseController
     [RequirePermission(WebPermission.ProviderDocument.Create)]
     public async Task<IActionResult> Upload(UploadProviderDocumentFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
 
         if (!ModelState.IsValid)
             return await ReloadAsync(form, ct);
@@ -57,7 +54,7 @@ public sealed class ProviderDocumentsController : BaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Document uploaded.");
+        SetSuccess(L["Provider.Flash.DocumentUploaded"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -71,7 +68,7 @@ public sealed class ProviderDocumentsController : BaseController
         var result = await _facade.ReplaceAsync(id, file, expiresAt, rowVersion ?? string.Empty, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Document replaced.", "Could not replace the document.");
+        SetFlash(result, L["Provider.Flash.DocumentReplaced"], L["Provider.Flash.CouldNotReplaceDocument"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -83,9 +80,4 @@ public sealed class ProviderDocumentsController : BaseController
         return View(nameof(Index), vm);
     }
 
-    private void SetSidebar()
-    {
-        ViewData["ProviderNav"] = "Documents";
-        ViewBag.Sidebar = new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
-    }
 }

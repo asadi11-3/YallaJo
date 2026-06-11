@@ -21,6 +21,12 @@ public sealed class TourOptionVm
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
+
+    /// <summary>[Backend] B6 — batch-fetched rating; null when the batch call failed (ERR3).</summary>
+    public decimal? AverageRating { get; set; }
+
+    /// <summary>[Backend] B6 — batch-fetched review count; null when unavailable.</summary>
+    public int? ReviewCount { get; set; }
 }
 
 public sealed class ReviewRowVm

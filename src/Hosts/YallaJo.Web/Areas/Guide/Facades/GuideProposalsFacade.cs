@@ -22,6 +22,9 @@ public sealed class GuideProposalsFacade
     {
         var rows = new List<ProposalRowVm>();
 
+        // UI-PERF-API1: fetch proposals and the place options (F10 picker prefill) in parallel.
+        var placesTask = FetchPlaceOptionsAsync(ct);
+
         try
         {
             var result = await _api.GetMyProposalsAsync(ct);
@@ -47,11 +50,57 @@ public sealed class GuideProposalsFacade
         }
         catch (Exception ex)
         {
-            // The list endpoint is a stub; never block the page on it.
+            // Degrade gracefully (UI-ERR3): never block the page on the list call.
             _logger.LogWarning(ex, "Failed to load tour proposals list");
         }
 
-        return ApiResult<ProposalsVm>.Ok(new ProposalsVm { Proposals = rows });
+        var places = await placesTask;
+        return ApiResult<ProposalsVm>.Ok(new ProposalsVm { Proposals = rows, Places = places });
+    }
+
+    /// <summary>Place lookup mapped to picker options (F10) — serves both the SSR prefill and the async combobox proxy.</summary>
+    public async Task<ApiResult<IReadOnlyList<PlaceOptionVm>>> GetPlaceOptionsAsync(string? term, CancellationToken ct = default)
+    {
+        try
+        {
+            var result = await _api.LookupPlacesAsync(term, ct);
+            if (result.RequireSignOut)
+            {
+                return ApiResult<IReadOnlyList<PlaceOptionVm>>.ForceSignOut();
+            }
+
+            if (!result.IsSuccess || result.Data is null)
+            {
+                return ApiResult<IReadOnlyList<PlaceOptionVm>>.Fail(result.StatusCode, result.Error);
+            }
+
+            var options = result.Data
+                .Select(p => new PlaceOptionVm(
+                    p.Id,
+                    string.IsNullOrWhiteSpace(p.City) ? p.Name : $"{p.Name} — {p.City}"))
+                .ToList();
+            return ApiResult<IReadOnlyList<PlaceOptionVm>>.Ok(options);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Failed to look up places (term='{Term}').", term);
+            return ApiResult<IReadOnlyList<PlaceOptionVm>>.Fail(500, "Unable to load places.");
+        }
+    }
+
+    private async Task<IReadOnlyList<PlaceOptionVm>> FetchPlaceOptionsAsync(CancellationToken ct)
+    {
+        // UI-ERR3: picker options are an enhancement — degrade to an empty list on failure.
+        // Never throws (the task may be abandoned on the sign-out early-return path).
+        try
+        {
+            var result = await GetPlaceOptionsAsync(term: null, ct);
+            return result is { IsSuccess: true, Data: not null } ? result.Data : [];
+        }
+        catch (OperationCanceledException)
+        {
+            return [];
+        }
     }
 
     public async Task<ApiResult<Guid>> CreateAsync(CreateProposalFormVm form, CancellationToken ct = default)

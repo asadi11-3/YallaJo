@@ -1,16 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Profile;
-using YallaJo.Web.Areas.Guide.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class ProfileController : BaseController
+public sealed class ProfileController : GuideBaseController
 {
     private const long MaxImageBytes = 5 * 1024 * 1024; // 5 MB
 
@@ -21,7 +16,7 @@ public sealed class ProfileController : BaseController
     [HttpGet("guide/profile")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Profile");
         var result = await _profile.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut)
         {
@@ -41,7 +36,7 @@ public sealed class ProfileController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(ProfileFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Profile");
         if (!ModelState.IsValid)
         {
             return await ReloadAsync(form, ct);
@@ -63,7 +58,7 @@ public sealed class ProfileController : BaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Profile updated.");
+        SetSuccess(L["Guide.Flash.ProfileUpdated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -72,7 +67,7 @@ public sealed class ProfileController : BaseController
     public async Task<IActionResult> AddLanguage(Guid languageId, string proficiency, CancellationToken ct = default)
     {
         var result = await _profile.AddLanguageAsync(languageId, proficiency, ct);
-        return HandleMutation(result, "Language added.");
+        return HandleMutation(result, L["Guide.Flash.LanguageAdded"]);
     }
 
     [HttpPost("guide/profile/languages/delete")]
@@ -80,7 +75,7 @@ public sealed class ProfileController : BaseController
     public async Task<IActionResult> RemoveLanguage(Guid languageId, CancellationToken ct = default)
     {
         var result = await _profile.RemoveLanguageAsync(languageId, ct);
-        return HandleMutation(result, "Language removed.");
+        return HandleMutation(result, L["Guide.Flash.LanguageRemoved"]);
     }
 
     [HttpPost("guide/profile/specializations")]
@@ -88,7 +83,15 @@ public sealed class ProfileController : BaseController
     public async Task<IActionResult> AddSpecialization(Guid specializationId, CancellationToken ct = default)
     {
         var result = await _profile.AddSpecializationAsync(specializationId, ct);
-        return HandleMutation(result, "Specialization added.");
+        return HandleMutation(result, L["Guide.Flash.SpecializationAdded"]);
+    }
+
+    [HttpPost("guide/profile/specializations/delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveSpecialization(Guid specializationId, CancellationToken ct = default)
+    {
+        var result = await _profile.RemoveSpecializationAsync(specializationId, ct);
+        return HandleMutation(result, L["Guide.Flash.SpecializationRemoved"]);
     }
 
     [HttpPost("guide/profile/avatar")]
@@ -103,7 +106,7 @@ public sealed class ProfileController : BaseController
 
         await using var stream = file!.OpenReadStream();
         var result = await _profile.UploadAvatarAsync(stream, file.FileName, file.ContentType, ct);
-        return HandleMutation(result, "Avatar updated.");
+        return HandleMutation(result, L["Guide.Flash.AvatarUpdated"]);
     }
 
     [HttpPost("guide/profile/cover")]
@@ -118,7 +121,7 @@ public sealed class ProfileController : BaseController
 
         await using var stream = file!.OpenReadStream();
         var result = await _profile.UploadCoverAsync(stream, file.FileName, file.ContentType, ct);
-        return HandleMutation(result, "Cover image updated.");
+        return HandleMutation(result, L["Guide.Flash.CoverUpdated"]);
     }
 
     // POST /guide/profile/deactivate — self-deactivate the guide profile (DELETE /guides/me).
@@ -135,17 +138,17 @@ public sealed class ProfileController : BaseController
 
         if (!result.IsSuccess)
         {
-            SetError(result.Error ?? "Could not deactivate your guide profile.");
+            SetError(result.Error ?? L["Guide.Flash.DeactivateFailed"].Value);
             return RedirectToAction(nameof(Index));
         }
 
         // Profile deactivated — the user is no longer an active guide; leave the dashboard.
-        SetSuccess("Your guide profile has been deactivated.");
+        SetSuccess(L["Guide.Flash.ProfileDeactivated"]);
         return Redirect("~/accounts");
     }
 
     private IActionResult HandleMutation(
-        Infrastructure.Api.Contracts.ApiResult result, string successMessage)
+        YallaJo.Web.Infrastructure.Api.Contracts.ApiResult result, string successMessage)
     {
         if (GuardSignOut(result) is { } signOut)
         {
@@ -159,6 +162,11 @@ public sealed class ProfileController : BaseController
     private async Task<IActionResult> ReloadAsync(ProfileFormVm form, CancellationToken ct)
     {
         var result = await _profile.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
         if (result is { IsSuccess: true, Data: not null })
         {
             var vm = result.Data;
@@ -169,33 +177,27 @@ public sealed class ProfileController : BaseController
         return View(nameof(Index), new ProfileVm { Form = form });
     }
 
-    private static bool TryValidateImage(IFormFile? file, out string error)
+    private bool TryValidateImage(IFormFile? file, out string error)
     {
         if (file is null || file.Length == 0)
         {
-            error = "Please choose an image to upload.";
+            error = L["Guide.Validation.ImageRequired"].Value;
             return false;
         }
 
         if (file.Length > MaxImageBytes)
         {
-            error = "Image must be 5 MB or smaller.";
+            error = L["Guide.Validation.ImageTooLarge"].Value;
             return false;
         }
 
         if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
         {
-            error = "Only image files are allowed.";
+            error = L["Guide.Validation.ImageInvalid"].Value;
             return false;
         }
 
         error = string.Empty;
         return true;
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "Profile";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

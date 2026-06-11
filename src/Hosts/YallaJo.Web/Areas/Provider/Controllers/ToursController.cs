@@ -10,7 +10,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
 [Authorize]
-public sealed class ToursController : BaseController
+public sealed class ToursController : ProviderTourResourceController
 {
     private readonly ProviderToursFacade _facade;
     private readonly ProviderPlacesFacade _placesFacade;
@@ -36,7 +36,8 @@ public sealed class ToursController : BaseController
         var result = await _facade.GetIndexAsync(status, page, ct);
         return result.Outcome switch
         {
-            ProviderTourOutcome.Ok => View(result.Data),
+            // AJAX listing swap (PE1: PRG/full-view fallback preserved without JS).
+            ProviderTourOutcome.Ok => WantsAjax() ? PartialView("_ToursResults", result.Data) : View(result.Data),
             ProviderTourOutcome.ForceSignOut => RedirectToLogin(),
             ProviderTourOutcome.Forbidden => RedirectToStatus(),
             _ => IndexError(result.Error, status, page),
@@ -54,7 +55,7 @@ public sealed class ToursController : BaseController
         if (await PopulatePlaceOptionsAsync(vm, ct) is { } signOut)
             return signOut;
 
-        return View(vm);
+        return View("Upsert", vm);
     }
 
     // ── POST /provider/tours/create ───────────────────────────────────────────────
@@ -68,14 +69,14 @@ public sealed class ToursController : BaseController
         if (!ModelState.IsValid)
         {
             if (await PopulatePlaceOptionsAsync(vm, ct) is { } signOut) return signOut;
-            return View(vm);
+            return View("Upsert", vm);
         }
 
         var result = await _facade.CreateAsync(vm, ct);
         switch (result.Outcome)
         {
             case ProviderTourOutcome.Ok:
-                SetSuccess("Listing created as a draft.");
+                SetSuccess(L["Provider.Flash.ListingCreated"]);
                 return RedirectToAction(nameof(Edit), new { id = result.TourId });
             case ProviderTourOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -85,7 +86,7 @@ public sealed class ToursController : BaseController
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
                 if (await PopulatePlaceOptionsAsync(vm, ct) is { } so) return so;
-                return View(vm);
+                return View("Upsert", vm);
         }
     }
 
@@ -101,13 +102,13 @@ public sealed class ToursController : BaseController
         {
             case ProviderTourOutcome.Ok:
                 if (await PopulatePlaceOptionsAsync(result.Form!, ct) is { } signOut) return signOut;
-                return View(result.Form);
+                return View("Upsert", result.Form);
             case ProviderTourOutcome.ForceSignOut:
                 return RedirectToLogin();
             case ProviderTourOutcome.Forbidden:
                 return RedirectToStatus();
             default:
-                return NotFoundRedirect(result.Error);
+                return NotFoundRedirect(result.Error, notFoundFallback: L["Provider.Flash.ListingNotFound"].Value);
         }
     }
 
@@ -123,14 +124,14 @@ public sealed class ToursController : BaseController
         if (!ModelState.IsValid)
         {
             if (await PopulatePlaceOptionsAsync(vm, ct) is { } signOut) return signOut;
-            return View(vm);
+            return View("Upsert", vm);
         }
 
         var result = await _facade.UpdateAsync(id, vm, ct);
         switch (result.Outcome)
         {
             case ProviderTourOutcome.Ok:
-                SetSuccess("Listing saved.");
+                SetSuccess(L["Provider.Flash.ListingSaved"]);
                 return RedirectToAction(nameof(Edit), new { id });
             case ProviderTourOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -146,7 +147,7 @@ public sealed class ToursController : BaseController
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
                 if (await PopulatePlaceOptionsAsync(vm, ct) is { } so) return so;
-                return View(vm);
+                return View("Upsert", vm);
         }
     }
 
@@ -162,9 +163,9 @@ public sealed class ToursController : BaseController
         if (result.Outcome == ProviderTourOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == ProviderTourOutcome.Ok)
-            SetSuccess("Listing submitted for review.");
+            SetSuccess(L["Provider.Flash.ListingSubmitted"]);
         else
-            SetError(result.Error ?? "Could not submit the listing.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotSubmitListing"].Value);
 
         return RedirectToAction(nameof(Index));
     }
@@ -181,9 +182,9 @@ public sealed class ToursController : BaseController
         if (result.Outcome == ProviderTourOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == ProviderTourOutcome.Ok)
-            SetSuccess("Listing archived.");
+            SetSuccess(L["Provider.Flash.ListingArchived"]);
         else
-            SetError(result.Error ?? "Could not archive the listing.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotArchiveListing"].Value);
 
         return RedirectToAction(nameof(Index));
     }
@@ -200,14 +201,27 @@ public sealed class ToursController : BaseController
         if (result.Outcome == ProviderTourOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == ProviderTourOutcome.Ok)
-            SetSuccess("Listing deleted.");
+            SetSuccess(L["Provider.Flash.ListingDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the listing.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDeleteListing"].Value);
 
         return RedirectToAction(nameof(Index));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// [Backend] B2 Web proxy — JSON suggestions for the async place combobox (F10/JS5).
+    /// The browser never calls the API host directly; no-JS users keep the SSR select (PE1).
+    /// </summary>
+    [HttpGet("provider/tours/places-lookup")]
+    public async Task<IActionResult> PlacesLookup(string? term, CancellationToken ct)
+    {
+        if (!_currentUser.HasPermission(WebPermission.Tour.ReadOwn)) return Forbid();
+
+        var items = await _placesFacade.LookupAsync(term, ct);
+        return Json(items.Select(p => new { id = p.Id, name = p.Name, city = p.City }));
+    }
 
     private async Task<IActionResult?> PopulatePlaceOptionsAsync(ProviderTourFormVm vm, CancellationToken ct)
     {
@@ -220,43 +234,10 @@ public sealed class ToursController : BaseController
         return null;
     }
 
-    // Applies API validation errors to ModelState where field keys are safe (create/update
-    // field keys mirror the VM property names); otherwise surfaces a general error.
-    private void ApplyFacadeValidation(IReadOnlyDictionary<string, string[]>? errors, string? fallback)
-    {
-        var applied = false;
-        if (errors is { Count: > 0 })
-        {
-            foreach (var (field, messages) in errors)
-            {
-                var key = NormalizeFieldKey(field);
-                foreach (var message in messages)
-                    ModelState.AddModelError(key, message);
-                applied = true;
-            }
-        }
-
-        if (!applied)
-            ModelState.AddModelError(string.Empty, fallback ?? "Please correct the highlighted fields and try again.");
-        else if (!string.IsNullOrWhiteSpace(fallback))
-            SetError(fallback);
-    }
-
-    private static string NormalizeFieldKey(string field)
-        => string.IsNullOrWhiteSpace(field) ? string.Empty : field;
-
     private IActionResult IndexError(string? message, string? status, int page)
     {
         SetError(message);
-        return View(ProviderToursMapper.EmptyIndex(status, page < 1 ? 1 : page, 20));
+        var vm = ProviderToursMapper.EmptyIndex(status, page < 1 ? 1 : page, 20);
+        return WantsAjax() ? PartialView("_ToursResults", vm) : View(vm);
     }
-
-    private IActionResult NotFoundRedirect(string? message)
-    {
-        SetError(message ?? "Listing not found.");
-        return RedirectToAction(nameof(Index));
-    }
-
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
 }

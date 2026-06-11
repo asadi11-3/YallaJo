@@ -10,8 +10,14 @@ public sealed class AgencyVm
 
     public int PendingCount { get; init; }
 
+    /// <summary>F10: approved agencies feeding the apply-form picker (best-effort; may be empty).</summary>
+    public IReadOnlyList<AgencyOptionVm> AgencyOptions { get; init; } = [];
+
     public bool HasInvitations => Invitations.Count > 0;
 }
+
+/// <summary>F10 picker option — agency shown by business name, submitting the agency user id.</summary>
+public sealed record AgencyOptionVm(Guid UserId, string BusinessName);
 
 public sealed record AgencyInvitationRowVm(
     Guid Id,

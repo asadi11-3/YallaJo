@@ -1,0 +1,68 @@
+@model YallaJo.Web.Areas.Guide.Models.Applications.ApplicationsVm
+@{
+    // Results fragment for /guide/applications — returned standalone when WantsAjax()
+    // (listing.js swap); rendered inline by Index for the full-page/no-JS path (PE1).
+    var culture = CultureInfo.CurrentUICulture;
+
+    // Kept local: nullable input with "—" fallback and N2 precision differ from GuideFormat.Money (N3).
+    string Money(decimal? amount, string currency = "JOD")
+        => amount is null ? "—" : amount.Value.ToString("N2", culture) + " " + currency;
+
+    // Kept local: "dd MMM yyyy" output differs from GuideFormat.Date (yyyy-MM-dd).
+    string Date(DateTime d) => d.ToString("dd MMM yyyy", culture);
+}
+<div>
+    @if (!Model.HasApplications)
+    {
+        <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Applications.NoApplications"].Value)' />
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">@Localizer["Guide.Applications.ColTour"]</th>
+                        <th scope="col">@Localizer["Guide.Applications.ColStatus"]</th>
+                        <th scope="col">@Localizer["Guide.Applications.ColPrice"]</th>
+                        <th scope="col">@Localizer["Guide.Applications.ColApplied"]</th>
+                        <th scope="col">@Localizer["Guide.Applications.ColReviewed"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var app in Model.Applications)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@app.TourTitle</div>
+                                @if (!string.IsNullOrWhiteSpace(app.Message))
+                                {
+                                    <div class="small text-body-secondary text-truncate yj-cell-truncate" title="@app.Message">@app.Message</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(app.RejectionReason))
+                                {
+                                    <div class="small text-danger"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i>@app.RejectionReason</div>
+                                }
+                            </td>
+                            <td><partial name="_GuideStatusBadge" model="new StatusBadgeVm(app.Status)" /></td>
+                            <td><bdi dir="ltr" class="font-data">@Money(app.ProposedBasePrice)</bdi></td>
+                            <td><bdi dir="ltr" class="font-data">@Date(app.CreatedAt)</bdi></td>
+                            <td>
+                                @if (app.ReviewedAt.HasValue)
+                                {
+                                    <bdi dir="ltr" class="font-data">@Date(app.ReviewedAt.Value)</bdi>
+                                }
+                                else
+                                {
+                                    <span class="text-body-secondary">&mdash;</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <partial name="_GuidePagination" model='new PaginationVm(Model.Page, Model.TotalPages, Model.HasPreviousPage, Model.HasNextPage, "Applications", Localizer["Guide.Applications.Pagination"].Value)' />
+    }
+</div>

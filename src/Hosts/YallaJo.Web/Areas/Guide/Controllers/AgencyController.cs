@@ -1,16 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Agency;
-using YallaJo.Web.Areas.Guide.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class AgencyController : BaseController
+public sealed class AgencyController : GuideBaseController
 {
     private readonly GuideAgencyFacade _facade;
 
@@ -20,7 +15,7 @@ public sealed class AgencyController : BaseController
     [RequirePermission(WebPermission.GuideAgency.Read)]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Agency");
         var result = await _facade.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
@@ -35,9 +30,11 @@ public sealed class AgencyController : BaseController
     [HttpPost("guide/agency/apply")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.GuideAgency.Create)]
-    public async Task<IActionResult> Apply(ApplyToAgencyFormVm form, CancellationToken ct = default)
+    // Bind prefix matches the view's asp-for="ApplyForm.*" field names (the bare
+    // parameter name "form" wouldn't match the posted "ApplyForm." prefix).
+    public async Task<IActionResult> Apply([Bind(Prefix = "ApplyForm")] ApplyToAgencyFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Agency");
         if (!ModelState.IsValid) return await ReloadAsync(form, ct);
 
         var result = await _facade.ApplyAsync(form, ct);
@@ -48,7 +45,7 @@ public sealed class AgencyController : BaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Application submitted to the agency.");
+        SetSuccess(L["Guide.Flash.AgencyApplicationSubmitted"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -59,7 +56,7 @@ public sealed class AgencyController : BaseController
     {
         var result = await _facade.AcceptAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Invitation accepted.");
+        SetFlash(result, L["Guide.Flash.InvitationAccepted"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -70,7 +67,7 @@ public sealed class AgencyController : BaseController
     {
         var result = await _facade.DeclineAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Invitation declined.");
+        SetFlash(result, L["Guide.Flash.InvitationDeclined"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -81,21 +78,20 @@ public sealed class AgencyController : BaseController
     {
         var result = await _facade.LeaveAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "You have left the agency.");
+        SetFlash(result, L["Guide.Flash.LeftAgency"]);
         return RedirectToAction(nameof(Index));
     }
 
     private async Task<IActionResult> ReloadAsync(ApplyToAgencyFormVm form, CancellationToken ct)
     {
         var result = await _facade.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
         var vm = result.IsSuccess && result.Data is not null ? result.Data : new AgencyVm();
         vm.ApplyForm = form;
         return View(nameof(Index), vm);
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "Agency";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

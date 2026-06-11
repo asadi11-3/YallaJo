@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 using YallaJo.Web.Areas.Guide.ApiClients;
 using YallaJo.Web.Areas.Guide.Models.Analytics;
@@ -41,6 +42,10 @@ public sealed class GuideAnalyticsFacade
 
         await Task.WhenAll(trendsTask, popularTask, peakTask);
 
+        var trends = await trendsTask; // UI-PERF-R1: no .Result
+        var popular = await popularTask;
+        var peak = await peakTask;
+
         var vm = new AnalyticsVm
         {
             TotalBookings = overview.TotalBookings,
@@ -48,19 +53,25 @@ public sealed class GuideAnalyticsFacade
             CompletedBookings = overview.CompletedBookings,
             CancellationRate = overview.CancellationRate,
             AverageRating = overview.AverageRating,
-            BookingTrends = trendsTask.Result
+            BookingTrends = trends
                 .Select(t => new BookingTrendRowVm(t.Period, t.BookingCount))
                 .ToList(),
-            PopularTours = popularTask.Result
+            PopularTours = popular
                 .Select(p => new PopularTourRowVm(p.TourId, p.TourName, p.BookingCount))
                 .ToList(),
-            PeakDays = peakTask.Result
-                .Select(d => new PeakDayRowVm(d.DayOfWeek, d.BookingCount))
+            PeakDays = peak
+                .Select(d => new PeakDayRowVm(LocalizeDay(d.DayOfWeek), d.BookingCount))
                 .ToList(),
         };
 
         return ApiResult<AnalyticsVm>.Ok(vm);
     }
+
+    // CON3: localize the API's English day name for the current UI culture.
+    private static string LocalizeDay(string raw) =>
+        Enum.TryParse<DayOfWeek>(raw, ignoreCase: true, out var dow)
+            ? CultureInfo.CurrentUICulture.DateTimeFormat.GetDayName(dow)
+            : raw;
 
     private async Task<List<BookingTrendResponse>> SafeBookingTrendsAsync(CancellationToken ct)
     {

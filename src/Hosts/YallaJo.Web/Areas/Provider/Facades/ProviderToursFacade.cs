@@ -55,7 +55,12 @@ public sealed class ProviderToursFacade
     {
         if (page < 1) page = 1;
 
-        var result = await _api.GetMyToursAsync(page, DefaultPageSize, status, sort: null, ct);
+        // List + status counts fetched in parallel (API1); counts are a soft dependency (ERR3).
+        var listTask = _api.GetMyToursAsync(page, DefaultPageSize, status, sort: null, ct);
+        var countsTask = _api.GetStatusCountsAsync(ct);
+        await Task.WhenAll(listTask, countsTask);
+
+        var result = listTask.Result;
 
         if (result.IsUnauthorized) return new(ProviderTourOutcome.ForceSignOut);
         if (result.IsForbidden) return new(ProviderTourOutcome.Forbidden);
@@ -63,7 +68,34 @@ public sealed class ProviderToursFacade
             return new(ProviderTourOutcome.ValidationError,
                 Error: result.Error ?? "Could not load your listings.");
 
-        return new(ProviderTourOutcome.Ok, ProviderToursMapper.ToIndexVm(result.Data, status));
+        var vm = ProviderToursMapper.ToIndexVm(result.Data, status);
+
+        var counts = countsTask.Result;
+        if (counts.IsSuccess && counts.Data is not null)
+        {
+            vm = new ProviderToursIndexVm
+            {
+                Items = vm.Items,
+                Status = vm.Status,
+                Page = vm.Page,
+                PageSize = vm.PageSize,
+                Total = vm.Total,
+                TotalPages = vm.TotalPages,
+                StatusOptions = vm.StatusOptions,
+                StatusCounts = new TourStatusCountsVm
+                {
+                    Draft = counts.Data.Draft,
+                    Pending = counts.Data.Pending,
+                    Approved = counts.Data.Approved,
+                    Rejected = counts.Data.Rejected,
+                    Suspended = counts.Data.Suspended,
+                    Archived = counts.Data.Archived,
+                    Total = counts.Data.Total,
+                },
+            };
+        }
+
+        return new(ProviderTourOutcome.Ok, vm);
     }
 
     public async Task<ProviderTourDetailResult> GetEditAsync(Guid id, CancellationToken ct = default)

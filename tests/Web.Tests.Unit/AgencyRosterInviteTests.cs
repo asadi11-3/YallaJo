@@ -82,17 +82,17 @@ public sealed class AgencyRosterInviteTests
     }
 
     [Fact]
-    public async Task GetInviteFormAsync_PopulatesAvailableGuides()
+    public async Task GetRosterAsync_PopulatesInviteFormAvailableGuides()
     {
         var facade = CreateFacade(HttpStatusCode.OK, """
             [{"userId":"33333333-3333-3333-3333-333333333333","businessName":"Petra Tours","contactEmail":"p@x.test","createdAt":"2026-01-01T00:00:00Z"}]
             """);
 
-        var result = await facade.GetInviteFormAsync();
+        var result = await facade.GetRosterAsync();
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.HasAvailableGuides.Should().BeTrue();
-        result.Data.AvailableGuides[0].BusinessName.Should().Be("Petra Tours");
+        result.Data!.InviteForm.HasAvailableGuides.Should().BeTrue();
+        result.Data.InviteForm.AvailableGuides[0].BusinessName.Should().Be("Petra Tours");
     }
 
     [Fact]

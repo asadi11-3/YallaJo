@@ -1,0 +1,56 @@
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Business.Models.Accessibility
+@using YallaJo.Web.Infrastructure.Authorization
+@model AccessibilityVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+<div class="card shadow">
+    <div class="card-header border-bottom">
+        <h2 class="h5 mb-0">@Localizer["Business.Accessibility.FeaturesHeading"]</h2>
+        <small class="text-body-secondary">@Localizer["Business.Accessibility.FeaturesHint"]</small>
+    </div>
+    <div class="card-body">
+        <form asp-area="Business" asp-controller="Accessibility" asp-action="Save" asp-route-id="@Model.BusinessId" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <div class="vstack gap-3">
+                @for (var i = 0; i < Model.Features.Count; i++)
+                {
+                    var feature = Model.Features[i];
+                    <div class="border rounded-3 p-3">
+                        <input type="hidden" asp-for="Features[i].FeatureType" />
+                        <input type="hidden" asp-for="Features[i].FeatureLabel" />
+                        <div class="row g-3 align-items-start">
+                            <div class="col-md-4">
+                                <p class="fw-semibold mb-1">@feature.FeatureLabel</p>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" asp-for="Features[i].IsAvailable" />
+                                    <label class="form-check-label" asp-for="Features[i].IsAvailable">
+                                        @Localizer["Business.Accessibility.Available"]
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" asp-for="Features[i].Name">@Localizer["Business.Accessibility.Name"]</label>
+                                <input class="form-control" asp-for="Features[i].Name" />
+                                <span asp-validation-for="Features[i].Name" class="text-danger small" role="alert"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" asp-for="Features[i].Description">@Localizer["Business.Accessibility.Description"]</label>
+                                <input class="form-control" asp-for="Features[i].Description" />
+                                <span asp-validation-for="Features[i].Description" class="text-danger small" role="alert"></span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <permission require="@WebPermission.AccessibilityFeature.Update">
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>
+                        @Localizer["Business.Accessibility.Save"]
+                    </button>
+                </div>
+            </permission>
+        </form>
+    </div>
+</div>

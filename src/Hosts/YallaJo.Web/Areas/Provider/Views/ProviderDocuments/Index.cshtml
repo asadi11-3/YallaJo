@@ -1,18 +1,9 @@
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Infrastructure.Authorization
-@using YallaJo.Web.Areas.Provider.Shared
 @using YallaJo.Web.Areas.Provider.Models.ProviderDocuments
 @model ProviderDocumentsIndexVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.Documents.Title"].Value;
     ViewData["ProviderNav"] = "Documents";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
 
-    var culture = CultureInfo.CurrentUICulture;
-    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
     string DocLabel(DocumentType t) => Localizer["Provider.Documents.Type." + t.ToString()];
 
     (string Color, string Icon) StatusBadge(DocumentStatus s) => s switch
@@ -24,7 +15,7 @@
     };
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">
@@ -36,7 +27,7 @@
                     <div class="card shadow-sm h-100">
                         <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.Documents.UploadHeading"]</h2></div>
                         <div class="card-body">
-                            <form asp-action="Upload" method="post" enctype="multipart/form-data" class="vstack gap-3">
+                            <form asp-action="Upload" method="post" data-loading enctype="multipart/form-data" class="vstack gap-3">
                                 @Html.AntiForgeryToken()
                                 <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
                                 <div>
@@ -76,11 +67,7 @@
                     <div class="card-body">
                         @if (!Model.HasDocuments)
                         {
-                            <div class="text-center py-5">
-                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                <p class="mb-1 fw-semibold">@Localizer["Provider.Documents.EmptyTitle"]</p>
-                                <p class="mb-0 text-secondary">@Localizer["Provider.Documents.EmptyMessage"]</p>
-                            </div>
+                            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.Documents.EmptyTitle"].Value, ["message"] = Localizer["Provider.Documents.EmptyMessage"].Value })" />
                         }
                         else
                         {
@@ -119,12 +106,12 @@
                                                 <a class="small" href="@d.DocumentUrl" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square me-1" aria-hidden="true"></i>@Localizer["Provider.Documents.ViewFile"]</a>
                                             }
                                             <permission require="@WebPermission.ProviderDocument.Update">
-                                                <a class="small text-primary" data-bs-toggle="collapse" href="#replace-@d.Id" role="button"><i class="fa-solid fa-rotate me-1" aria-hidden="true"></i>@Localizer["Provider.Documents.Replace"]</a>
+                                                <button type="button" class="btn btn-link btn-sm p-0 small text-primary" data-bs-toggle="collapse" data-bs-target="#replace-@d.Id" aria-expanded="false" aria-controls="replace-@d.Id"><i class="fa-solid fa-rotate me-1" aria-hidden="true"></i>@Localizer["Provider.Documents.Replace"]</button>
                                             </permission>
                                         </div>
                                         <permission require="@WebPermission.ProviderDocument.Update">
                                             <div class="collapse mt-2" id="replace-@d.Id">
-                                                <form asp-action="Replace" asp-route-id="@d.Id" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
+                                                <form asp-action="Replace" asp-route-id="@d.Id" method="post" data-loading enctype="multipart/form-data" class="row g-2 align-items-end">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="rowVersion" value="@d.RowVersion" />
                                                     <div class="col-md-6">

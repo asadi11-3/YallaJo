@@ -5,13 +5,20 @@ namespace YallaJo.Web.Infrastructure.Mvc;
 
 public sealed class AdminNoStoreCacheFilter : IAsyncResultFilter
 {
+    // Auth-gated areas whose responses must never be stored by any cache (UI-PERF-C2).
+    // Provider added by the Provider-area modernization (Phase 8): every Provider page
+    // is authenticated/personalised, so browsers and proxies must revalidate always.
+    // Business added by the Business-area modernization (Phase 0): the whole area is
+    // [Authorize]-gated owner self-service, so responses must never be cached.
+    private static readonly string[] NoStoreAreas = ["Admin", "Provider", "Business"];
+
     public Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
     {
         var area = context.RouteData.Values.TryGetValue("area", out var value)
             ? value as string
             : null;
 
-        if (string.Equals(area, "Admin", StringComparison.OrdinalIgnoreCase))
+        if (area is not null && NoStoreAreas.Contains(area, StringComparer.OrdinalIgnoreCase))
         {
             var headers = context.HttpContext.Response.Headers;
             headers[HeaderNames.CacheControl] = "no-store, no-cache, must-revalidate";

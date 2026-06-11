@@ -1,15 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Applications;
-using YallaJo.Web.Areas.Guide.Shared;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class ApplicationsController : BaseController
+public sealed class ApplicationsController : GuideBaseController
 {
     private const int DefaultPageSize = 20;
 
@@ -25,7 +20,7 @@ public sealed class ApplicationsController : BaseController
             page = 1;
         }
 
-        SetSidebar();
+        SetNav("Applications");
 
         var result = await _applications.GetAsync(page, DefaultPageSize, ct);
         if (GuardSignOut(result) is { } signOut)
@@ -33,20 +28,47 @@ public sealed class ApplicationsController : BaseController
             return signOut;
         }
 
+        ApplicationsVm vm;
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new ApplicationsVm());
+            vm = new ApplicationsVm();
+        }
+        else
+        {
+            vm = result.Data;
         }
 
-        return View(result.Data);
+        if (WantsAjax())
+        {
+            return PartialView("_ApplicationsResults", vm);
+        }
+
+        return View(vm);
+    }
+
+    /// <summary>
+    /// [Backend] B2 Web proxy — JSON options for the async open-tour picker (F10/JS5).
+    /// The browser never calls the API host directly; no-JS users keep the SSR select (PE1).
+    /// </summary>
+    [HttpGet("guide/applications/open-tours")]
+    public async Task<IActionResult> OpenTours(string? q, CancellationToken ct = default)
+    {
+        var result = await _applications.GetOpenToursAsync(q, ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        var items = result.Data ?? [];
+        return Json(items.Select(t => new { tourId = t.TourId, label = t.Label }));
     }
 
     [HttpPost("guide/applications/apply")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Apply(ApplyForTourFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Applications");
 
         if (!ModelState.IsValid)
         {
@@ -69,7 +91,7 @@ public sealed class ApplicationsController : BaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Application submitted.");
+        SetSuccess(L["Guide.Flash.ApplicationSubmitted"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -84,11 +106,5 @@ public sealed class ApplicationsController : BaseController
         var vm = result is { IsSuccess: true, Data: not null } ? result.Data : new ApplicationsVm();
         vm.Form = form;
         return View(nameof(Index), vm);
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "Applications";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

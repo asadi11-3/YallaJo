@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Provider.Facades;
 using YallaJo.Web.Areas.Provider.Models.Packages;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Identity;
 using YallaJo.Web.Infrastructure.Mvc;
@@ -10,7 +9,7 @@ using YallaJo.Web.Infrastructure.Mvc;
 namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
-[Authorize(Policy = "Provider")]
+[Authorize]
 public sealed class PackagesController : BaseController
 {
     private readonly PackagesFacade _facade;
@@ -26,7 +25,6 @@ public sealed class PackagesController : BaseController
     [HttpGet("provider/packages")]
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
-        SetSidebar();
 
         var result = await _facade.GetIndexAsync(page, ct);
         return result.Outcome switch
@@ -44,7 +42,6 @@ public sealed class PackagesController : BaseController
     [RequirePermission(WebPermission.Package.Create)]
     public async Task<IActionResult> Create(CreatePackageFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
 
         if (!ModelState.IsValid)
             return await ReloadIndex(form, ct);
@@ -53,7 +50,7 @@ public sealed class PackagesController : BaseController
         switch (result.Outcome)
         {
             case PackageOutcome.Ok:
-                SetSuccess("Package created as a draft. Add inclusions, then submit it for review.");
+                SetSuccess(L["Provider.Flash.PackageCreated"]);
                 return RedirectToAction(nameof(Index));
             case PackageOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -62,7 +59,7 @@ public sealed class PackagesController : BaseController
                 return RedirectToStatus();
             default:
                 if (!ApplyFacadeValidation(result.ValidationErrors))
-                    SetError(result.Error ?? "Could not create the package.");
+                    SetError(result.Error ?? L["Provider.Flash.CouldNotCreatePackage"].Value);
                 return await ReloadIndex(form, ct);
         }
     }
@@ -71,7 +68,6 @@ public sealed class PackagesController : BaseController
     [HttpGet("provider/packages/{id:guid}")]
     public async Task<IActionResult> Manage(Guid id, CancellationToken ct = default)
     {
-        SetSidebar();
 
         var result = await _facade.GetManageAsync(id, ct);
         return result.Outcome switch
@@ -91,12 +87,12 @@ public sealed class PackagesController : BaseController
     {
         if (string.IsNullOrWhiteSpace(description))
         {
-            SetError("Enter an inclusion description.");
+            SetError(L["Provider.Flash.InclusionRequired"]);
             return RedirectToAction(nameof(Manage), new { id });
         }
 
         var result = await _facade.AddInclusionAsync(id, description, ct);
-        return Finish(result, id, "Inclusion added.");
+        return Finish(result, id, L["Provider.Flash.InclusionAdded"]);
     }
 
     // ── POST /provider/packages/{id}/submit ──────────────────────────────────────────
@@ -106,7 +102,7 @@ public sealed class PackagesController : BaseController
     public async Task<IActionResult> Submit(Guid id, CancellationToken ct = default)
     {
         var result = await _facade.SubmitAsync(id, ct);
-        return Finish(result, id, "Package submitted for review.");
+        return Finish(result, id, L["Provider.Flash.PackageSubmitted"]);
     }
 
     // ── POST /provider/packages/{id}/delete ──────────────────────────────────────────
@@ -119,9 +115,9 @@ public sealed class PackagesController : BaseController
         if (result.Outcome == PackageOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == PackageOutcome.Ok)
-            SetSuccess("Package deleted.");
+            SetSuccess(L["Provider.Flash.PackageDeleted"]);
         else
-            SetError(result.Error ?? "Could not delete the package.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDeletePackage"].Value);
 
         return RedirectToAction(nameof(Index));
     }
@@ -132,11 +128,7 @@ public sealed class PackagesController : BaseController
     {
         if (result.Outcome == PackageOutcome.ForceSignOut) return RedirectToLogin();
 
-        if (result.Outcome == PackageOutcome.Ok)
-            SetSuccess(success);
-        else
-            SetError(result.Error ?? "The action could not be completed.");
-
+        SetFlash(result.Outcome == PackageOutcome.Ok, result.Error, success, L["Provider.Common.ActionFailed"].Value);
         return RedirectToAction(nameof(Manage), new { id });
     }
 
@@ -159,7 +151,7 @@ public sealed class PackagesController : BaseController
 
     private IActionResult Fail(string? message)
     {
-        SetError(message ?? "Could not load packages.");
+        SetError(message ?? L["Provider.Flash.CouldNotLoadPackages"].Value);
         return View(nameof(Index), new PackagesIndexVm());
     }
 
@@ -172,9 +164,4 @@ public sealed class PackagesController : BaseController
     private IActionResult RedirectToStatus() =>
         RedirectToAction("Status", "Provider", new { area = "Provider" });
 
-    private void SetSidebar()
-    {
-        ViewData["ProviderNav"] = "Listings";
-        ViewBag.Sidebar = new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
-    }
 }

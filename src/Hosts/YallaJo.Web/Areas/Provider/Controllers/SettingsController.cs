@@ -4,10 +4,9 @@ using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.ChangePassword;
 using YallaJo.Web.Areas.Accounts.Models.Profile;
 using YallaJo.Web.Areas.Accounts.Models.UpdatePhone;
-using YallaJo.Web.Areas.Provider.ApiClients;
+using YallaJo.Web.Areas.Provider.Facades;
 using YallaJo.Web.Areas.Provider.Models;
 using YallaJo.Web.Areas.Provider.Models.Settings;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
@@ -19,14 +18,14 @@ public sealed class SettingsController : BaseController
     private readonly ProfileFacade _profile;
     private readonly ChangePasswordFacade _password;
     private readonly UpdatePhoneFacade _phone;
-    private readonly ProviderApiClient _provider;
+    private readonly ProviderFacade _provider;
     private readonly ILogger<SettingsController> _logger;
 
     public SettingsController(
         ProfileFacade profile,
         ChangePasswordFacade password,
         UpdatePhoneFacade phone,
-        ProviderApiClient provider,
+        ProviderFacade provider,
         ILogger<SettingsController> logger)
     {
         _profile = profile;
@@ -39,9 +38,12 @@ public sealed class SettingsController : BaseController
     [HttpGet("provider/settings")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        // API1: profile and business settings are independent — fetch in parallel.
+        var profileTask = _profile.GetAsync(ct);
+        var businessTask = SafeBusinessAsync(ct);
+        await Task.WhenAll(profileTask, businessTask);
 
-        var result = await _profile.GetAsync(ct);
+        var result = profileTask.Result;
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (!result.IsSuccess || result.Data is null)
@@ -50,15 +52,13 @@ public sealed class SettingsController : BaseController
             return View(new ProviderSettingsVm());
         }
 
-        var business = await SafeBusinessAsync(ct);
-        return View(BuildVm(result.Data, business));
+        return View(BuildVm(result.Data, businessTask.Result));
     }
 
     [HttpPost("provider/settings/profile")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateProfile(UpdateProfileVm form, CancellationToken ct = default)
     {
-        SetSidebar();
 
         if (!ModelState.IsValid)
             return await ReloadAsync(profile: form, ct: ct);
@@ -72,7 +72,7 @@ public sealed class SettingsController : BaseController
             return await ReloadAsync(profile: form, ct: ct);
         }
 
-        SetSuccess("Your profile has been updated.");
+        SetSuccess(L["Provider.Flash.ProfileUpdated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -80,7 +80,6 @@ public sealed class SettingsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ChangePassword(ChangePasswordVm form, CancellationToken ct = default)
     {
-        SetSidebar();
 
         if (!ModelState.IsValid)
             return await ReloadAsync(password: form, ct: ct);
@@ -94,7 +93,7 @@ public sealed class SettingsController : BaseController
             return await ReloadAsync(password: form, ct: ct);
         }
 
-        SetSuccess("Your password has been changed.");
+        SetSuccess(L["Provider.Flash.PasswordChanged"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -102,7 +101,6 @@ public sealed class SettingsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdatePhone(UpdatePhoneVm form, CancellationToken ct = default)
     {
-        SetSidebar();
 
         if (!ModelState.IsValid)
             return await ReloadAsync(phone: form, ct: ct);
@@ -116,7 +114,7 @@ public sealed class SettingsController : BaseController
             return await ReloadAsync(phone: form, ct: ct);
         }
 
-        SetSuccess("Your phone number has been updated.");
+        SetSuccess(L["Provider.Flash.PhoneUpdated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -153,7 +151,7 @@ public sealed class SettingsController : BaseController
     };
 
     /// <summary>
-    /// Loads the provider business information from <c>GET /api/v1/provider/settings</c>.
+    /// Loads the provider business information via <see cref="ProviderFacade.GetSettingsAsync"/>.
     /// Non-blocking: returns <c>null</c> on any failure (e.g. no application yet) so the
     /// account-settings forms always render.
     /// </summary>
@@ -184,20 +182,16 @@ public sealed class SettingsController : BaseController
 
     // Mirrors Accounts.Domain.Enums.ProviderType (byte). The API serializes the enum
     // as its numeric value for this client (no JsonStringEnumConverter configured).
-    private static string ProviderTypeLabel(int value) => value switch
+    // Labels come from resx (CON1) so the settings page localizes in AR.
+    private string ProviderTypeLabel(int value) => value switch
     {
-        0 => "Tour Operator",
-        1 => "Independent Guide",
-        2 => "Hotel / Resort",
-        3 => "Activity Center",
-        4 => "Agency",
-        5 => "Business Owner",
-        _ => "Unknown",
+        0 => L["Provider.Settings.Type.TourOperator"].Value,
+        1 => L["Provider.Settings.Type.IndependentGuide"].Value,
+        2 => L["Provider.Settings.Type.HotelResort"].Value,
+        3 => L["Provider.Settings.Type.ActivityCenter"].Value,
+        4 => L["Provider.Settings.Type.Agency"].Value,
+        5 => L["Provider.Settings.Type.BusinessOwner"].Value,
+        _ => L["Provider.Settings.Type.Unknown"].Value,
     };
 
-    private void SetSidebar()
-    {
-        ViewData["ProviderNav"] = "Settings";
-        ViewBag.Sidebar = new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
-    }
 }

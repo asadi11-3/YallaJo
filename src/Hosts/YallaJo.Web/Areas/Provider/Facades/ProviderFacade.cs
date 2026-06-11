@@ -32,6 +32,23 @@ public sealed class ProviderFacade
         return ApiResult<ProviderStatusVm>.Ok(ProviderMapper.ToStatusVm(result.Data));
     }
 
+    /// <summary>
+    /// Loads the approved provider's business settings
+    /// (<c>GET /api/v1/provider/settings</c>). A 404 means "no application yet" —
+    /// callers treat any failure as "no business info to show" (non-blocking).
+    /// </summary>
+    public async Task<ApiResult<ProviderSettingsResponse>> GetSettingsAsync(CancellationToken ct = default)
+    {
+        var result = await _api.GetSettingsAsync(ct);
+
+        if (result.IsUnauthorized) return ApiResult<ProviderSettingsResponse>.ForceSignOut();
+        if (!result.IsSuccess || result.Data is null)
+            return ApiResult<ProviderSettingsResponse>.Fail(
+                result.StatusCode, result.Error ?? "Could not load your business settings.");
+
+        return ApiResult<ProviderSettingsResponse>.Ok(result.Data);
+    }
+
     public async Task<ApiResult<RegisterProviderResponse>> RegisterAsync(
         ProviderApplyVm vm, CancellationToken ct = default)
     {
@@ -116,13 +133,19 @@ public sealed class ProviderFacade
     public async Task<ApiResult> ReplaceDocumentAsync(
         ReplaceProviderDocumentVm vm, CancellationToken ct = default)
     {
-        var request = new ReplaceProviderDocumentRequest(
-            FileUrl:       vm.FileUrl.Trim(),
-            FileName:      vm.FileName.Trim(),
-            FileSizeBytes: vm.FileSizeBytes,
-            ExpiresAt:     vm.ExpiresAt);
+        // F10: real multipart upload — no manual URL/size typing (UX plan Phase 5).
+        if (vm.File is null || vm.File.Length == 0)
+            return ApiResult.Fail(400, "Please choose a file to upload.");
 
-        var result = await _api.ReplaceDocumentAsync(vm.DocumentId, request, ct);
+        await using var stream = vm.File.OpenReadStream();
+
+        var result = await _api.ReplaceDocumentUploadAsync(
+            vm.DocumentId,
+            stream,
+            vm.File.FileName,
+            vm.File.ContentType,
+            vm.ExpiresAt,
+            ct);
 
         if (result.IsSuccess) return ApiResult.Ok();
         if (result.IsUnauthorized) return ApiResult.ForceSignOut();

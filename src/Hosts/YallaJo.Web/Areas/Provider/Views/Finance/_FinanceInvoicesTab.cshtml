@@ -1,0 +1,70 @@
+@* Invoices tab fragment for /provider/finance.
+   Rendered SSR inside Finance/Index (no-JS path, PE1) and returned standalone by
+   FinanceController.Invoices (GET provider/finance/tabs/invoices) for AJAX refresh (MOD8). *@
+@model YallaJo.Web.Areas.Provider.Models.Invoices.ProviderInvoicesVm
+@functions {
+    private static (string Color, string Icon) InvoiceBadge(string? status) => (status ?? string.Empty).ToLowerInvariant() switch
+    {
+        "paid" or "issued" or "settled" => ("success", "circle-check"),
+        "pending" or "draft" => ("warning", "clock"),
+        "void" or "cancelled" or "refunded" => ("danger", "circle-xmark"),
+        _ => ("secondary", "circle-info")
+    };
+}
+@{
+    // Localized status label with raw-value fallback (CON1); keys Provider.Status.{s}.
+    string StatusText(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status)) { return "—"; }
+        var s = Localizer["Provider.Status." + status];
+        return s.ResourceNotFound ? status : s.Value;
+    }
+}
+@if (!Model.HasInvoices)
+{
+    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["message"] = Localizer["Provider.Finance.NoInvoices"].Value })" />
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <caption class="visually-hidden">@Localizer["Provider.Finance.TabInvoices"]</caption>
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">@Localizer["Provider.Finance.ColInvoiceNumber"]</th>
+                    <th scope="col">@Localizer["Provider.Finance.ColCustomer"]</th>
+                    <th scope="col">@Localizer["Provider.Finance.ColIssued"]</th>
+                    <th scope="col">@Localizer["Provider.Finance.ColStatus"]</th>
+                    <th scope="col" class="text-end">@Localizer["Provider.Finance.ColTotal"]</th>
+                    <th scope="col" class="text-end"><span class="visually-hidden">@Localizer["Provider.Finance.Download"]</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var inv in Model.Invoices)
+                {
+                    var ib = InvoiceBadge(inv.Status);
+                    <tr>
+                        <td><bdi dir="ltr" class="font-data">@inv.InvoiceNumber</bdi><div class="small text-body-secondary">@Localizer["Provider.Finance.ItemsCount", Count(inv.ItemCount)]</div></td>
+                        <td><bdi>@inv.BuyerName</bdi></td>
+                        <td class="small"><bdi dir="ltr">@Date(inv.IssuedAt)</bdi></td>
+                        <td><span class="badge bg-@ib.Color bg-opacity-10 text-@ib.Color"><i class="fa-solid fa-@ib.Icon fa-fw" aria-hidden="true"></i> @StatusText(inv.Status)</span></td>
+                        <td class="text-end"><bdi dir="ltr" class="font-data">@Money(inv.AmountTotal, inv.Currency)</bdi></td>
+                        <td class="text-end">
+                            @if (inv.PdfAvailable)
+                            {
+                                <permission require="@WebPermission.Invoice.Download">
+                                    <a class="btn btn-sm btn-primary-soft" asp-area="Provider" asp-controller="Invoices"
+                                       asp-action="Download" asp-route-id="@inv.Id"><i class="fa-solid fa-download me-1" aria-hidden="true"></i>@Localizer["Provider.Finance.Pdf"]</a>
+                                </permission>
+                            }
+                            else
+                            {
+                                <span class="text-body-secondary small">&mdash;</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

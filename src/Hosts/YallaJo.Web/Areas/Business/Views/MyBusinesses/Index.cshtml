@@ -15,27 +15,18 @@
     string Rating(decimal r) => r.ToString("0.0", culture);
     string Count(int n) => n.ToString("N0", culture);
 
-    string StatusText(string s)
+    string TypeText(string t)
     {
-        var v = Localizer["Business.Status." + s];
-        return v.ResourceNotFound ? s : v.Value;
+        var v = Localizer["Business.Type." + t];
+        return v.ResourceNotFound ? t : v.Value;
     }
-    string StatusIcon(string s) => s.ToLowerInvariant() switch
-    {
-        "approved" or "published" or "active" => "circle-check",
-        "pending" or "pendingreview" or "submitted" => "clock",
-        "rejected" => "circle-xmark",
-        "suspended" => "circle-pause",
-        "moredocsneeded" or "moreinfoneeded" => "circle-question",
-        "draft" => "pen-ruler",
-        _ => "circle-info",
-    };
 }
 
-<partial name="_BusinessSidebar" model="sidebar" />
-
 <section class="pt-0">
-    <div class="container vstack gap-4">
+    <div class="container">
+        <div class="row g-4">
+            <partial name="_BusinessSidebar" model="sidebar" />
+            <div class="col-lg-8 col-xl-9 vstack gap-4">
         <div class="d-sm-flex justify-content-between align-items-start gap-3">
             <div>
                 <h1 class="fs-4 mb-1"><i class="fa-solid fa-shop me-2" aria-hidden="true"></i>@Localizer["Business.MyBusinesses.Heading"]</h1>
@@ -87,7 +78,6 @@
                         <tbody>
                             @foreach (var b in Model.Businesses)
                             {
-                                var color = MyBusinessesMapper.StatusColor(b.Status);
                                 var location = string.Join(", ", new[] { b.City, b.Country }.Where(x => !string.IsNullOrWhiteSpace(x)));
                                 <tr>
                                     <td>
@@ -100,11 +90,9 @@
                                         }
                                         <div class="small text-body-secondary"><bdi dir="ltr">@b.Slug</bdi></div>
                                     </td>
-                                    <td>@b.BusinessType</td>
+                                    <td>@TypeText(b.BusinessType)</td>
                                     <td>
-                                        <span class="badge bg-@color bg-opacity-10 text-@color">
-                                            <i class="fa-solid fa-@StatusIcon(b.Status) fa-fw" aria-hidden="true"></i> @StatusText(b.Status)
-                                        </span>
+                                        <partial name="_BusinessStatusBadge" model="@b.Status" />
                                     </td>
                                     <td>
                                         @if (string.IsNullOrWhiteSpace(location))
@@ -131,6 +119,36 @@
                     </table>
                 </div>
             </section>
+
+            @* D-15/D1: simple prev/next pager. Chevrons are directional (flipped in RTL via rtl.css); start/end utilities keep it reading-direction aware (RTL1/RTL2). *@
+            @if (Model.HasPrev || Model.HasNext)
+            {
+                <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="@Localizer["Business.MyBusinesses.Directory"]">
+                    @if (Model.HasPrev)
+                    {
+                        <a class="btn btn-sm btn-outline-secondary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index" asp-route-page="@(Model.PageNumber - 1)">
+                            <i class="fa-solid fa-chevron-left me-1" aria-hidden="true"></i>@Localizer["Business.Pagination.Previous"]
+                        </a>
+                    }
+                    else
+                    {
+                        <span></span>
+                    }
+                    <span class="text-body-secondary small"><bdi dir="ltr">@Localizer["Business.Pagination.Page", Model.PageNumber]</bdi></span>
+                    @if (Model.HasNext)
+                    {
+                        <a class="btn btn-sm btn-outline-secondary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index" asp-route-page="@(Model.PageNumber + 1)">
+                            @Localizer["Business.Pagination.Next"]<i class="fa-solid fa-chevron-right ms-1" aria-hidden="true"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <span></span>
+                    }
+                </nav>
+            }
         }
+            </div>
+        </div>
     </div>
 </section>

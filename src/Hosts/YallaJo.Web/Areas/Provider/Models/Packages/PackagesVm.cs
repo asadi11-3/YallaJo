@@ -7,6 +7,9 @@ public sealed class PackagesIndexVm
     public IReadOnlyList<PackageRowVm> Packages { get; init; } = [];
     public CreatePackageFormVm Create { get; set; } = new();
 
+    /// <summary>F10: provider's tours for the included-tours multi-select (replaces GUID-paste textarea). Empty = no options yet.</summary>
+    public IReadOnlyList<PackageTourOptionVm> TourOptions { get; set; } = [];
+
     public int Page { get; init; }
     public int PageSize { get; init; }
     public int TotalCount { get; init; }
@@ -14,6 +17,13 @@ public sealed class PackagesIndexVm
     public bool HasNext { get; init; }
 
     public bool HasPackages => Packages.Count > 0;
+}
+
+/// <summary>F10 option row for the included-tours picker.</summary>
+public sealed class PackageTourOptionVm
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = "";
 }
 
 public sealed class PackageRowVm
@@ -65,8 +75,9 @@ public sealed class CreatePackageFormVm
     [Display(Name = "Valid to (optional)")]
     public DateTime? ValidTo { get; set; }
 
-    [Display(Name = "Included tour IDs (comma-separated)")]
-    public string? IncludedTourIds { get; set; }
+    // F10: bound from the SSR <select multiple> of the provider's own tours (no GUID paste).
+    [Display(Name = "Included tours")]
+    public List<Guid> IncludedTourIds { get; set; } = [];
 
     [Display(Name = "Inclusions (one per line)")]
     public string? Inclusions { get; set; }

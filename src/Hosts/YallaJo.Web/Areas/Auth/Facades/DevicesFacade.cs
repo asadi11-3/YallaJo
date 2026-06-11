@@ -30,6 +30,21 @@ public sealed class DevicesFacade
         return ApiResult.Fail(result.Error ?? "Trust failed.");
     }
 
+    public async Task<ApiResult> UntrustAsync(Guid deviceId, CancellationToken ct = default)
+    {
+        var result = await _api.UntrustDeviceAsync(deviceId, ct);
+
+        if (result.IsSuccess) return ApiResult.Ok();
+
+        if (result.IsUnauthorized)
+        {
+            await _signIn.SignOutAsync();
+            return ApiResult.ForceSignOut();
+        }
+
+        return ApiResult.Fail(result.Error ?? "Untrust failed.");
+    }
+
     // ── Push-notification device tokens (§3.10 Devices tab) ──────────────────────
 
     /// <summary>

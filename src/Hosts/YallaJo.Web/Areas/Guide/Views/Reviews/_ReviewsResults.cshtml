@@ -1,0 +1,97 @@
+@model YallaJo.Web.Areas.Guide.Models.Reviews.ReviewsVm
+@{
+    // Results fragment for /guide/reviews — returned standalone when WantsAjax()
+    // (listing.js pager swap + provider-actions.js reply swap via data-yj-swap="reviews");
+    // rendered inline by Index for the full-page/no-JS path (PE1).
+    string Stars(decimal rating)
+    {
+        var full = (int)Math.Round(rating, MidpointRounding.AwayFromZero);
+        if (full < 0) full = 0;
+        if (full > 5) full = 5;
+        return string.Concat(Enumerable.Repeat("★", full)) + string.Concat(Enumerable.Repeat("☆", 5 - full));
+    }
+
+    // Thin DateOnly adapter — GuideFormat.Date takes DateTime (same yyyy-MM-dd output).
+    string Date(DateOnly d) => GuideFormat.Date(d.ToDateTime(TimeOnly.MinValue));
+}
+<div data-yj-swap="reviews" aria-live="polite">
+    @if (!Model.HasReviews)
+    {
+        <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Reviews.NoReviews"].Value)' />
+    }
+    else
+    {
+        <div class="vstack gap-3">
+            @foreach (var review in Model.Reviews)
+            {
+                <div class="border rounded p-3">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <span role="img" aria-label='@Localizer["Guide.Reviews.RatingAria", GuideFormat.Rating(review.Rating)]'>
+                                <span class="text-warning fs-5" aria-hidden="true">@Stars(review.Rating)</span>
+                            </span>
+                            <bdi dir="ltr" class="ms-1 fw-semibold font-data">@GuideFormat.Rating(review.Rating)</bdi>
+                            @if (review.IsVerifiedBooking)
+                            {
+                                <span class="badge bg-success bg-opacity-10 text-success ms-2">
+                                    <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.Reviews.Verified"]
+                                </span>
+                            }
+                            <partial name="_GuideStatusBadge" model="new StatusBadgeVm(review.Status)" />
+                        </div>
+                        <small class="text-body-secondary"><bdi dir="ltr" class="font-data">@GuideFormat.Date(review.CreatedAt)</bdi></small>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(review.Title))
+                    {
+                        <h3 class="h6 mt-2 mb-1">@review.Title</h3>
+                    }
+                    <p class="mb-1">@review.Content</p>
+                    <div class="d-flex gap-3 text-body-secondary small">
+                        @if (review.VisitDate is { } visit)
+                        {
+                            <span><i class="fa-solid fa-calendar-day fa-fw" aria-hidden="true"></i> @Localizer["Guide.Reviews.Visited", Date(visit)]</span>
+                        }
+                        <span><i class="fa-solid fa-thumbs-up fa-fw" aria-hidden="true"></i> @Localizer["Guide.Reviews.Helpful", GuideFormat.Count(review.HelpfulVoteCount)]</span>
+                    </div>
+                    @if (review.Replies.Count > 0)
+                    {
+                        <div class="mt-3 ps-3 border-start">
+                            @foreach (var reply in review.Replies)
+                            {
+                                <div class="mb-2">
+                                    <div class="small fw-semibold text-body-secondary">
+                                        <i class="fa-solid fa-reply fa-fw" aria-hidden="true"></i> @Localizer["Guide.Reviews.YourReply"]
+                                        <span class="fw-normal">· <bdi dir="ltr" class="font-data">@GuideFormat.Date(reply.CreatedAt)</bdi></span>
+                                    </div>
+                                    <div class="small">@reply.Content</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        @* B3: reply form for reviews without a reply yet — provider-actions.js posts it
+                           and swaps this fragment; without JS the controller PRGs back (PE1). *@
+                        <permission require="@WebPermission.ReviewReply.Create">
+                            <form asp-action="Reply" asp-route-id="@review.Id" method="post" class="mt-2"
+                                  data-loading data-yj-ajax data-yj-swap-target="reviews"
+                                  data-success-message='@Localizer["Guide.Reviews.ReplyPosted"]'
+                                  data-error-text='@Localizer["Public.Results.Error"]'>
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="page" value="@Model.Page" />
+                                <label class="form-label small mb-1" for="reply-content-@review.Id">@Localizer["Guide.Reviews.ReplyLabel"]</label>
+                                <textarea id="reply-content-@review.Id" name="content" rows="2" maxlength="2000" required
+                                          class="form-control form-control-sm mb-2"></textarea>
+                                <button type="submit" class="btn btn-sm btn-primary-soft">
+                                    <i class="fa-solid fa-reply me-1" aria-hidden="true"></i>@Localizer["Guide.Reviews.ReplySubmit"]
+                                </button>
+                            </form>
+                        </permission>
+                    }
+                </div>
+            }
+        </div>
+
+        <partial name="_GuidePagination" model='new PaginationVm(Model.Page, Model.TotalPages, Model.HasPreviousPage, Model.HasNextPage, "Reviews", Localizer["Guide.Reviews.Pagination"].Value)' />
+    }
+</div>

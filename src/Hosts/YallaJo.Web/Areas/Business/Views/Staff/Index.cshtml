@@ -10,15 +10,13 @@
     ViewData["BusinessNav"] = "Staff";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
-    var culture = CultureInfo.CurrentUICulture;
-    string Count(int n) => n.ToString("N0", culture);
 }
-
-<partial name="_BusinessSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container">
         <div class="row g-4">
+            <partial name="_BusinessSidebar" model="sidebar" />
+
             <div class="col-lg-8 col-xl-9">
                 @if (ViewBag.Error is string err && !string.IsNullOrEmpty(err))
                 {
@@ -38,7 +36,7 @@
 
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                <div class="row g-4">
+                <div class="row g-4" data-yj-component="business-crud" data-crud-list="#staff-list">
                     <permission require="@WebPermission.BusinessStaff.Create">
                         <div class="col-lg-5">
                             <div class="card shadow h-100">
@@ -46,9 +44,15 @@
                                     <h2 class="card-header-title h5 mb-0">@Localizer["Business.Staff.AddHeading"]</h2>
                                 </div>
                                 <div class="card-body">
-                                    <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post">
+                                    <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post" data-loading
+                                          data-crud-success="@Localizer["Business.Staff.Added"]">
                                         @Html.AntiForgeryToken()
-                                        <div class="mb-3">
+                                        @* Searchable user picker (F10): JS upgrades the raw ID input to a combobox; without JS the labeled input stays usable (PE1). *@
+                                        <div class="mb-3"
+                                             data-yj-component="staff-picker"
+                                             data-lookup-url="@Url.Action("Lookup", "Staff", new { id = Model.BusinessId })"
+                                             data-search-placeholder="@Localizer["Business.Staff.SearchPlaceholder"]"
+                                             data-no-results="@Localizer["Business.Staff.NoResults"]">
                                             <label asp-for="Form.UserId" class="form-label">@Localizer["Business.Staff.UserId"]</label>
                                             <input asp-for="Form.UserId" class="form-control font-data" dir="ltr" autocomplete="off"
                                                    aria-describedby="staff-user-help" />
@@ -75,55 +79,8 @@
                     </permission>
 
                     <div class="col-lg-7">
-                        <div class="card shadow h-100">
-                            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                                <h2 class="card-header-title h5 mb-0">@Localizer["Business.Staff.CurrentHeading"]</h2>
-                                <span class="badge bg-primary bg-opacity-10 text-primary"><bdi class="font-data">@Count(Model.Staff.Count)</bdi></span>
-                            </div>
-                            <div class="card-body">
-                                @if (!Model.HasStaff)
-                                {
-                                    <div class="text-center py-5">
-                                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                                        <p class="mb-0 text-body-secondary">@Localizer["Business.Staff.EmptyMsg"]</p>
-                                    </div>
-                                }
-                                else
-                                {
-                                    var ordinal = 0;
-                                    <div class="table-responsive">
-                                        <table class="table table-hover align-middle mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">@Localizer["Business.Staff.ColMember"]</th>
-                                                    <th scope="col">@Localizer["Business.Staff.ColRole"]</th>
-                                                    <th scope="col" class="text-end">@Localizer["Business.Staff.ColActions"]</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (var s in Model.Staff)
-                                                {
-                                                    ordinal++;
-                                                    var memberLabel = Localizer["Business.Staff.StaffLabel", Count(ordinal)].Value;
-                                                    <tr>
-                                                        <td class="fw-semibold">@memberLabel</td>
-                                                        <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@Localizer["Business.Staff.Role." + s.Role]</span></td>
-                                                        <td class="text-end">
-                                                            <permission require="@WebPermission.BusinessStaff.Delete">
-                                                                <button type="button" class="btn btn-sm btn-danger-soft"
-                                                                        data-bs-toggle="modal" data-bs-target="#remove-staff-@s.Id"
-                                                                        aria-label="@Localizer["Business.Staff.Remove"]">
-                                                                    <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
-                                                                </button>
-                                                            </permission>
-                                                        </td>
-                                                    </tr>
-                                                }
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                }
-                            </div>
+                        <div id="staff-list">
+                            <partial name="_StaffList" model="Model" />
                         </div>
                     </div>
                 </div>
@@ -132,40 +89,8 @@
     </div>
 </section>
 
-@if (Model.HasStaff)
-{
-    var modalOrdinal = 0;
-    <permission require="@WebPermission.BusinessStaff.Delete">
-        @foreach (var s in Model.Staff)
-        {
-            modalOrdinal++;
-            var memberLabel = Localizer["Business.Staff.StaffLabel", Count(modalOrdinal)].Value;
-            <div class="modal fade" id="remove-staff-@s.Id" tabindex="-1" aria-labelledby="remove-staff-title-@s.Id"
-                 aria-describedby="remove-staff-body-@s.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form class="modal-content" role="dialog" aria-modal="true" aria-labelledby="remove-staff-title-@s.Id"
-                          asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-staffId="@s.Id" method="post">
-                        @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="remove-staff-title-@s.Id">@Localizer["Business.Staff.RemoveTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Business.Staff.Close"]"></button>
-                        </div>
-                        <div class="modal-body" id="remove-staff-body-@s.Id">
-                            @Localizer["Business.Staff.RemoveBody", memberLabel]
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Business.Staff.Cancel"]</button>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fa-solid fa-trash fa-fw me-1" aria-hidden="true"></i>@Localizer["Business.Staff.RemoveConfirm"]
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        }
-    </permission>
-}
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/business-crud.js" asp-append-version="true" defer></script>
+    <script src="~/assets/js/business-staff.js" asp-append-version="true" defer></script>
 }

@@ -24,8 +24,19 @@ public sealed class GuideAgencyRosterFacade
 
     public async Task<ApiResult<AgencyRosterVm>> GetRosterAsync(CancellationToken ct = default)
     {
-        var guidesResult = await _api.GetGuidesAsync(ct);
-        if (guidesResult.RequireSignOut)
+        // UI-PERF-API1: independent reads fan out in parallel.
+        var guidesTask = _api.GetGuidesAsync(ct);
+        var applicationsTask = _api.GetApplicationsAsync(ct);
+        var invitationsTask = _api.GetSentInvitationsAsync(ct);
+        var availableTask = _api.GetAvailableGuidesAsync(page: 1, pageSize: AvailableGuidesPageSize, ct: ct);
+        await Task.WhenAll(guidesTask, applicationsTask, invitationsTask, availableTask);
+
+        var guidesResult = await guidesTask; // UI-PERF-R1: no .Result
+        var applicationsResult = await applicationsTask;
+        var invitationsResult = await invitationsTask;
+        var availableResult = await availableTask;
+
+        if (guidesResult.RequireSignOut || applicationsResult.RequireSignOut || invitationsResult.RequireSignOut)
         {
             return ApiResult<AgencyRosterVm>.ForceSignOut();
         }
@@ -33,18 +44,6 @@ public sealed class GuideAgencyRosterFacade
         if (!guidesResult.IsSuccess || guidesResult.Data is null)
         {
             return ApiResult<AgencyRosterVm>.Fail(guidesResult.StatusCode, guidesResult.Error ?? "Could not load your agency roster.");
-        }
-
-        var applicationsResult = await _api.GetApplicationsAsync(ct);
-        if (applicationsResult.RequireSignOut)
-        {
-            return ApiResult<AgencyRosterVm>.ForceSignOut();
-        }
-
-        var invitationsResult = await _api.GetSentInvitationsAsync(ct);
-        if (invitationsResult.RequireSignOut)
-        {
-            return ApiResult<AgencyRosterVm>.ForceSignOut();
         }
 
         var guides = guidesResult.Data
@@ -64,6 +63,16 @@ public sealed class GuideAgencyRosterFacade
             .Select(AgencyRosterMapper.ToRowVm)
             .ToList();
 
+        // Available-guides failures degrade gracefully (UI-ERR3): the invite picker is a
+        // secondary section of the roster page and must not block the primary tables.
+        List<AvailableGuideOptionVm> availableGuides = availableResult is { IsSuccess: true, Data: not null }
+            ? availableResult.Data.Select(g => new AvailableGuideOptionVm(g.UserId, g.BusinessName, g.ContactEmail)).ToList()
+            : [];
+        if (!availableResult.IsSuccess)
+        {
+            _logger.LogWarning("Available-guides lookup failed for the roster invite form (status {StatusCode}).", availableResult.StatusCode);
+        }
+
         var vm = new AgencyRosterVm
         {
             Guides = guides,
@@ -71,39 +80,10 @@ public sealed class GuideAgencyRosterFacade
             SentInvitations = invitations,
             PendingApplicationCount = applications.Count(a => a.IsPending),
             PendingInvitationCount = invitations.Count(i => i.Status == RosterInvitationStatus.Pending),
+            InviteForm = new InviteGuideFormVm { AvailableGuides = availableGuides },
         };
 
         return ApiResult<AgencyRosterVm>.Ok(vm);
-    }
-
-    /// <summary>Builds the invite form, populating the available-guides picker.</summary>
-    public async Task<ApiResult<InviteGuideFormVm>> GetInviteFormAsync(CancellationToken ct = default)
-    {
-        var result = await _api.GetAvailableGuidesAsync(page: 1, pageSize: AvailableGuidesPageSize, ct: ct);
-        if (result.RequireSignOut)
-        {
-            return ApiResult<InviteGuideFormVm>.ForceSignOut();
-        }
-
-        if (!result.IsSuccess || result.Data is null)
-        {
-            return ApiResult<InviteGuideFormVm>.Fail(result.StatusCode, result.Error ?? "Could not load available guides.");
-        }
-
-        var options = result.Data
-            .Select(g => new AvailableGuideOptionVm(g.UserId, g.BusinessName, g.ContactEmail))
-            .ToList();
-
-        return ApiResult<InviteGuideFormVm>.Ok(new InviteGuideFormVm { AvailableGuides = options });
-    }
-
-    /// <summary>Re-populates the available-guides picker on an invite form (e.g. after a validation error).</summary>
-    public async Task PopulateAvailableGuidesAsync(InviteGuideFormVm form, CancellationToken ct = default)
-    {
-        var result = await _api.GetAvailableGuidesAsync(page: 1, pageSize: AvailableGuidesPageSize, ct: ct);
-        form.AvailableGuides = result.IsSuccess && result.Data is not null
-            ? result.Data.Select(g => new AvailableGuideOptionVm(g.UserId, g.BusinessName, g.ContactEmail)).ToList()
-            : [];
     }
 
     public async Task<ApiResult> InviteAsync(InviteGuideFormVm form, CancellationToken ct = default)

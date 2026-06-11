@@ -1,15 +1,11 @@
 @model YallaJo.Web.Areas.Guide.Models.Discounts.DiscountsVm
-@using System.Globalization
-@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Guide.Models.Discounts
-@using YallaJo.Web.Areas.Guide.Shared
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Guide.Discounts.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
     var culture = CultureInfo.CurrentUICulture;
 
+    // Kept local: discount-specific formats (percentage 0-100 "0.##", money N2, dd MMM yyyy ranges,
+    // usage "x / y") differ from the GuideFormat conventions.
     string FormatValue(DiscountRowVm d) =>
         d.DiscountType == GuideDiscountType.Percentage
             ? d.DiscountValue.ToString("0.##", culture) + "%"
@@ -26,7 +22,7 @@
             : d.CurrentUsageCount.ToString("N0", culture);
 }
 
-<partial name="_GuideSidebar" model="sidebar" />
+@await Component.InvokeAsync("GuideSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">
@@ -35,7 +31,7 @@
             <div class="col-lg-5">
                 <div class="card card-body border h-100">
                     <h2 class="card-header-title h5 mb-3"><i class="fa-solid fa-plus me-2" aria-hidden="true"></i>@Localizer["Guide.Discounts.CreateHeading"]</h2>
-                    <form asp-area="Guide" asp-controller="Discounts" asp-action="Create" method="post">
+                    <form asp-area="Guide" asp-controller="Discounts" asp-action="Create" method="post" data-loading>
                         @Html.AntiForgeryToken()
                         <div asp-validation-summary="ModelOnly" class="text-danger small mb-2" role="alert"></div>
 
@@ -92,10 +88,16 @@
 
                         <div class="mb-3 mt-3">
                             <label asp-for="Form.TourId" class="form-label">@Localizer["Guide.Discounts.TourId"]</label>
-                            <input asp-for="Form.TourId" class="form-control font-data" dir="ltr" autocomplete="off"
-                                   aria-describedby="create-tour-help" placeholder="@Localizer["Guide.Discounts.TourIdPlaceholder"]" />
+                            @* F10: select the tour by name; the option value carries the id. *@
+                            <select asp-for="Form.TourId" class="form-select">
+                                <option value="">@Localizer["Guide.Discounts.SelectTour"]</option>
+                                @foreach (var tour in Model.TourOptions)
+                                {
+                                    @* OptionTagHelper auto-selects the option matching Form.TourId via asp-for. *@
+                                    <option value="@tour.TourId">@tour.Title</option>
+                                }
+                            </select>
                             <span asp-validation-for="Form.TourId" class="text-danger small" role="alert"></span>
-                            <div id="create-tour-help" class="form-text">@Localizer["Guide.Discounts.TourIdHelp"]</div>
                         </div>
 
                         <button type="submit" class="btn btn-primary mt-2">
@@ -111,10 +113,7 @@
 
                     @if (!Model.HasDiscounts)
                     {
-                        <div class="text-center py-5">
-                            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                            <p class="text-secondary mb-0">@Localizer["Guide.Discounts.NoDiscounts"]</p>
-                        </div>
+                        <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.Discounts.NoDiscounts"].Value)' />
                     }
                     else
                     {
@@ -139,7 +138,7 @@
                                                 <div class="fw-semibold">@d.Name</div>
                                                 @if (!string.IsNullOrWhiteSpace(d.Description))
                                                 {
-                                                    <div class="small text-body-secondary text-truncate" style="max-width: 220px;">@d.Description</div>
+                                                    <div class="small text-body-secondary text-truncate yj-cell-truncate" title="@d.Description">@d.Description</div>
                                                 }
                                             </td>
                                             <td>
@@ -171,42 +170,57 @@
                                                         aria-label="@Localizer["Guide.Discounts.EditLabel", d.Name]"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
                                                 @if (d.IsActive)
                                                 {
-                                                    <button type="button" class="btn btn-sm btn-outline-danger"
-                                                            data-bs-toggle="modal" data-bs-target="#deact-disc-@d.Id"
-                                                            aria-label="@Localizer["Guide.Discounts.DeactivateLabel", d.Name]">
-                                                        <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
-                                                    </button>
+                                                    <form asp-area="Guide" asp-controller="Discounts" asp-action="Deactivate" asp-route-id="@d.Id" method="post" class="d-inline" data-loading
+                                                          data-confirm='@Localizer["Guide.Discounts.DeactivateBody", d.Name]'
+                                                          data-confirm-title='@Localizer["Guide.Discounts.DeactivateTitle"]'
+                                                          data-confirm-action='@Localizer["Guide.Discounts.DeactivateConfirm"]'
+                                                          data-confirm-cancel='@Localizer["Guide.Common.Cancel"]'>
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                                aria-label="@Localizer["Guide.Discounts.DeactivateLabel", d.Name]">
+                                                            <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                                                        </button>
+                                                    </form>
                                                 }
                                             </td>
                                         </tr>
-                                        <tr class="collapse" id="edit-disc-@d.Id">
+                                        // On a failed edit POST, this row re-renders expanded with the user's submitted values (no data loss).
+                                        var isOpenEdit = Model.OpenEditId == d.Id && Model.EditForm is not null;
+                                        var ef = isOpenEdit ? Model.EditForm! : null;
+                                        <tr class="collapse @(isOpenEdit ? "show" : null)" id="edit-disc-@d.Id">
                                             <td colspan="7">
                                                 <form asp-area="Guide" asp-controller="Discounts" asp-action="Edit" asp-route-id="@d.Id"
-                                                      method="post" class="row g-2 align-items-end">
+                                                      method="post" class="row g-2 align-items-end" data-loading>
                                                     @Html.AntiForgeryToken()
+                                                    @if (isOpenEdit)
+                                                    {
+                                                        <div class="col-12">
+                                                            <div asp-validation-summary="All" class="text-danger small" role="alert"></div>
+                                                        </div>
+                                                    }
                                                     <div class="col-md-4">
                                                         <label class="form-label small mb-1" for="dn-@d.Id">@Localizer["Guide.Discounts.Name"]</label>
-                                                        <input id="dn-@d.Id" name="Name" value="@d.Name" class="form-control form-control-sm" maxlength="100" required />
+                                                        <input id="dn-@d.Id" name="Name" value="@(ef?.Name ?? d.Name)" class="form-control form-control-sm" maxlength="100" required />
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label small mb-1" for="dv-@d.Id">@Localizer["Guide.Discounts.Value"]</label>
-                                                        <input id="dv-@d.Id" name="DiscountValue" value="@d.DiscountValue.ToString(CultureInfo.InvariantCulture)" type="number" step="0.01" min="0" class="form-control form-control-sm" dir="ltr" required />
+                                                        <input id="dv-@d.Id" name="DiscountValue" value="@((ef?.DiscountValue ?? d.DiscountValue).ToString(CultureInfo.InvariantCulture))" type="number" step="0.01" min="0" class="form-control form-control-sm" dir="ltr" required />
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label small mb-1" for="df-@d.Id">@Localizer["Guide.Discounts.ValidFrom"]</label>
-                                                        <input id="df-@d.Id" name="ValidFrom" value="@d.ValidFrom.ToString("yyyy-MM-dd")" type="date" class="form-control form-control-sm" dir="ltr" required />
+                                                        <input id="df-@d.Id" name="ValidFrom" value="@((ef?.ValidFrom ?? d.ValidFrom).ToString("yyyy-MM-dd"))" type="date" class="form-control form-control-sm" dir="ltr" required />
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label small mb-1" for="du-@d.Id">@Localizer["Guide.Discounts.ValidUntil"]</label>
-                                                        <input id="du-@d.Id" name="ValidUntil" value="@(d.ValidUntil?.ToString("yyyy-MM-dd"))" type="date" class="form-control form-control-sm" dir="ltr" />
+                                                        <input id="du-@d.Id" name="ValidUntil" value="@((isOpenEdit ? ef!.ValidUntil : d.ValidUntil)?.ToString("yyyy-MM-dd"))" type="date" class="form-control form-control-sm" dir="ltr" />
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="form-label small mb-1" for="dd-@d.Id">@Localizer["Guide.Discounts.Description"]</label>
-                                                        <input id="dd-@d.Id" name="Description" value="@d.Description" class="form-control form-control-sm" maxlength="500" />
+                                                        <input id="dd-@d.Id" name="Description" value="@(isOpenEdit ? ef!.Description : d.Description)" class="form-control form-control-sm" maxlength="500" />
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label small mb-1" for="dm-@d.Id">@Localizer["Guide.Discounts.MaxUsage"]</label>
-                                                        <input id="dm-@d.Id" name="MaxUsageCount" value="@d.MaxUsageCount" type="number" min="1" class="form-control form-control-sm" dir="ltr" />
+                                                        <input id="dm-@d.Id" name="MaxUsageCount" value="@(isOpenEdit ? ef!.MaxUsageCount : d.MaxUsageCount)" type="number" min="1" class="form-control form-control-sm" dir="ltr" />
                                                     </div>
                                                     <div class="col-12"><button type="submit" class="btn btn-sm btn-primary">@Localizer["Guide.Discounts.SaveChanges"]</button></div>
                                                 </form>
@@ -223,32 +237,6 @@
     </div>
 </section>
 
-@if (Model.HasDiscounts)
-{
-    foreach (var d in Model.Discounts)
-    {
-        if (d.IsActive)
-        {
-            <div class="modal fade" id="deact-disc-@d.Id" tabindex="-1" aria-labelledby="deact-disc-title-@d.Id" aria-describedby="deact-disc-body-@d.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="deact-disc-title-@d.Id">@Localizer["Guide.Discounts.DeactivateTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
-                        </div>
-                        <div class="modal-body" id="deact-disc-body-@d.Id">
-                            <p class="mb-0">@Localizer["Guide.Discounts.DeactivateBody", d.Name]</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
-                            <form asp-area="Guide" asp-controller="Discounts" asp-action="Deactivate" asp-route-id="@d.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-danger">@Localizer["Guide.Discounts.DeactivateConfirm"]</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-    }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

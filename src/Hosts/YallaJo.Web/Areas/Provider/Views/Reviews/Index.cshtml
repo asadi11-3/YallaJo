@@ -1,30 +1,11 @@
-@using System.Globalization
-@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Models.Reviews
-@using YallaJo.Web.Areas.Provider.Shared
 @model YallaJo.Web.Areas.Provider.Models.Reviews.ReviewsVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.Reviews.Title"].Value;
     ViewData["ProviderNav"] = "Reviews";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
-
-    var culture = CultureInfo.CurrentUICulture;
-    string Count(int n) => n.ToString("N0", culture);
-    string Rating(decimal r) => r.ToString("0.0", culture);
-    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
-
-    string Stars(decimal rating)
-    {
-        var full = (int)Math.Round(rating, MidpointRounding.AwayFromZero);
-        if (full < 0) full = 0;
-        if (full > 5) full = 5;
-        return string.Concat(Enumerable.Repeat("\u2605", full)) + string.Concat(Enumerable.Repeat("\u2606", 5 - full));
-    }
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">
@@ -32,11 +13,8 @@
 
         @if (!Model.HasTours)
         {
-            <div class="card card-body border text-center py-5">
-                <img src="~/assets/images/element/17.svg" width="80" height="80" class="h-80px mx-auto mb-3" aria-hidden="true" alt="" />
-                <h2 class="h5 mb-1">@Localizer["Provider.Reviews.NoListingsTitle"]</h2>
-                <p class="text-body-secondary mb-3">@Localizer["Provider.Reviews.NoListingsMsg"]</p>
-                <div><a class="btn btn-primary" asp-area="Provider" asp-controller="Tours" asp-action="Create"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.Reviews.AddListing"]</a></div>
+            <div class="card card-body border">
+                <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.Reviews.NoListingsTitle"].Value, ["message"] = Localizer["Provider.Reviews.NoListingsMsg"].Value, ["ctaText"] = Localizer["Provider.Reviews.AddListing"].Value, ["ctaUrl"] = Url.Action("Create", "Tours", new { area = "Provider" }) })" />
             </div>
         }
         else
@@ -47,15 +25,19 @@
                         <div class="col-sm-8 col-lg-6">
                             <label class="form-label small mb-1" for="review-tour">@Localizer["Provider.Reviews.ChooseListing"]</label>
                             <select id="review-tour" name="tourId" class="form-select">
+                                @* [Backend] B6: options carry batch-fetched rating + count; degrades to plain names (ERR3). *@
                                 @foreach (var t in Model.Tours)
                                 {
+                                    var suffix = t.ReviewCount is not null
+                                        ? $" — {t.AverageRating:0.0} ★ ({t.ReviewCount})"
+                                        : string.Empty;
                                     if (t.Id == Model.SelectedTourId)
                                     {
-                                        <option value="@t.Id" selected>@t.Name</option>
+                                        <option value="@t.Id" selected>@t.Name@suffix</option>
                                     }
                                     else
                                     {
-                                        <option value="@t.Id">@t.Name</option>
+                                        <option value="@t.Id">@t.Name@suffix</option>
                                     }
                                 }
                             </select>
@@ -67,151 +49,12 @@
                 </div>
             </div>
 
-            <div class="card border">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="display-6 fw-bold mb-0 font-data"><bdi dir="ltr">@Rating(Model.AverageRating)</bdi></div>
-                    <div>
-                        <div class="text-warning fs-5" aria-label="@Localizer["Provider.Reviews.RatingAria", Rating(Model.AverageRating)]">@Stars(Model.AverageRating)</div>
-                        <span class="text-body-secondary small">@Localizer["Provider.Reviews.ReviewsFor", Count(Model.ReviewCount)] <strong><bdi dir="ltr">@Model.SelectedTourName</bdi></strong></span>
-                    </div>
-                </div>
-            </div>
-
-            @if (!Model.HasReviews)
-            {
-                <div class="card card-body border text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" class="h-80px mx-auto mb-3" aria-hidden="true" alt="" />
-                    <h2 class="h6 mb-1">@Localizer["Provider.Reviews.NoReviewsTitle"]</h2>
-                    <p class="text-body-secondary mb-0">@Localizer["Provider.Reviews.NoReviewsMsg"]</p>
-                </div>
-            }
-            else
-            {
-                <div class="vstack gap-3">
-                    @foreach (var r in Model.Reviews)
-                    {
-                        <div class="card border">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                                    <div>
-                                        <span class="text-warning" aria-label="@Localizer["Provider.Reviews.RatingAria", Rating(r.Rating)]">@Stars(r.Rating)</span>
-                                        @if (!string.IsNullOrWhiteSpace(r.Title))
-                                        {
-                                            <span class="fw-semibold ms-2">@r.Title</span>
-                                        }
-                                        @if (r.IsVerifiedBooking)
-                                        {
-                                            <span class="badge bg-success bg-opacity-10 text-success ms-2"><i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.VerifiedBooking"]</span>
-                                        }
-                                    </div>
-                                    <span class="text-body-secondary small"><bdi dir="ltr">@Date(r.CreatedAt)</bdi></span>
-                                </div>
-
-                                @if (!string.IsNullOrWhiteSpace(r.Content))
-                                {
-                                    <p class="mt-2 mb-2">@r.Content</p>
-                                }
-
-                                @if (r.HelpfulVoteCount > 0)
-                                {
-                                    <p class="small text-body-secondary mb-2"><i class="fa-solid fa-thumbs-up fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.HelpfulVotes", Count(r.HelpfulVoteCount)]</p>
-                                }
-
-                                @if (r.HasReply)
-                                {
-                                    <div class="bg-light rounded p-3 mt-2">
-                                        <div class="small fw-semibold mb-1"><i class="fa-solid fa-reply fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.YourReply"]</div>
-                                        <div class="small mb-2"><bdi>@r.ReplyContent</bdi></div>
-                                        <div class="d-flex gap-3">
-                                            <a class="small text-primary" data-bs-toggle="collapse" href="#edit-reply-@r.Id" role="button"><i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Edit"]</a>
-                                            <button type="button" class="btn btn-link btn-sm p-0 text-danger small" data-bs-toggle="modal" data-bs-target="#delete-reply-@r.Id"><i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Delete"]</button>
-                                        </div>
-                                        <div class="collapse mt-2" id="edit-reply-@r.Id">
-                                            <form method="post" asp-area="Provider" asp-controller="Reviews" asp-action="EditReply"
-                                                  asp-route-id="@r.Id" asp-route-replyId="@r.ReplyId" asp-route-tourId="@Model.SelectedTourId">
-                                                @Html.AntiForgeryToken()
-                                                <label class="visually-hidden" for="edit-reply-text-@r.Id">@Localizer["Provider.Reviews.EditReplyLabel"]</label>
-                                                <textarea id="edit-reply-text-@r.Id" name="content" class="form-control mb-2" rows="3" maxlength="2000" required>@r.ReplyContent</textarea>
-                                                <button type="submit" class="btn btn-sm btn-primary">@Localizer["Provider.Reviews.SaveReply"]</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                }
-
-                                <div class="d-flex gap-3 mt-2">
-                                    @if (!r.HasReply)
-                                    {
-                                        <a class="small text-primary" data-bs-toggle="collapse" href="#reply-@r.Id" role="button"><i class="fa-solid fa-reply fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Reply"]</a>
-                                    }
-                                    <a class="small text-danger" data-bs-toggle="collapse" href="#report-@r.Id" role="button"><i class="fa-solid fa-flag fa-fw" aria-hidden="true"></i> @Localizer["Provider.Reviews.Report"]</a>
-                                </div>
-
-                                @if (!r.HasReply)
-                                {
-                                    <div class="collapse mt-3" id="reply-@r.Id">
-                                        <form method="post" asp-area="Provider" asp-controller="Reviews" asp-action="Reply" asp-route-id="@r.Id" asp-route-tourId="@Model.SelectedTourId">
-                                            @Html.AntiForgeryToken()
-                                            <label class="visually-hidden" for="reply-text-@r.Id">@Localizer["Provider.Reviews.Reply"]</label>
-                                            <textarea id="reply-text-@r.Id" name="content" class="form-control mb-2" rows="3" maxlength="2000" placeholder="@Localizer["Provider.Reviews.ReplyPlaceholder"]" required></textarea>
-                                            <button type="submit" class="btn btn-sm btn-primary">@Localizer["Provider.Reviews.PostReply"]</button>
-                                        </form>
-                                    </div>
-                                }
-
-                                <div class="collapse mt-3" id="report-@r.Id">
-                                    <form method="post" asp-area="Provider" asp-controller="Reviews" asp-action="Report" asp-route-id="@r.Id" asp-route-tourId="@Model.SelectedTourId">
-                                        @Html.AntiForgeryToken()
-                                        <div class="row g-2">
-                                            <div class="col-sm-5">
-                                                <label class="form-label small mb-1" for="report-reason-@r.Id">@Localizer["Provider.Reviews.ReportReasonLabel"]</label>
-                                                <select id="report-reason-@r.Id" name="reason" class="form-select form-select-sm">
-                                                    @foreach (var reason in ReviewsVm.ReportReasons)
-                                                    {
-                                                        <option value="@reason">@Localizer["Provider.Reviews.Reason." + reason]</option>
-                                                    }
-                                                </select>
-                                            </div>
-                                            <div class="col-sm-7">
-                                                <label class="form-label small mb-1" for="report-desc-@r.Id">@Localizer["Provider.Reviews.ReportDescLabel"]</label>
-                                                <input id="report-desc-@r.Id" name="description" class="form-control form-control-sm" maxlength="500" placeholder="@Localizer["Provider.Reviews.ReportDescPlaceholder"]" />
-                                            </div>
-                                        </div>
-                                        <button type="submit" class="btn btn-sm btn-danger-soft mt-2"><i class="fa-solid fa-flag me-1" aria-hidden="true"></i>@Localizer["Provider.Reviews.SubmitReport"]</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
+            @* Swappable AJAX region (PE1): provider-actions.js replaces this fragment after reply/report writes. *@
+            <partial name="_ReviewsResults" model="Model" />
         }
     </div>
 </section>
 
-@if (Model.HasReviews)
-{
-    foreach (var r in Model.Reviews)
-    {
-        if (r.HasReply)
-        {
-            <div class="modal fade" id="delete-reply-@r.Id" tabindex="-1" aria-labelledby="delete-reply-title-@r.Id" aria-describedby="delete-reply-body-@r.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form method="post" class="modal-content" role="dialog" aria-modal="true"
-                          asp-area="Provider" asp-controller="Reviews" asp-action="DeleteReply"
-                          asp-route-id="@r.Id" asp-route-replyId="@r.ReplyId" asp-route-tourId="@Model.SelectedTourId">
-                        @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="delete-reply-title-@r.Id">@Localizer["Provider.Reviews.DeleteReplyTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.Reviews.Close"]"></button>
-                        </div>
-                        <div class="modal-body" id="delete-reply-body-@r.Id">@Localizer["Provider.Reviews.DeleteReplyBody"]</div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Provider.Reviews.Cancel"]</button>
-                            <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash me-1" aria-hidden="true"></i>@Localizer["Provider.Reviews.DeleteReplyConfirm"]</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        }
-    }
+@section Scripts {
+    <script src="~/assets/js/provider-actions.js" asp-append-version="true"></script>
 }

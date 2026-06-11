@@ -1,15 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Discounts;
-using YallaJo.Web.Areas.Guide.Shared;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class DiscountsController : BaseController
+public sealed class DiscountsController : GuideBaseController
 {
     private readonly GuideDiscountsFacade _discounts;
 
@@ -18,7 +13,7 @@ public sealed class DiscountsController : BaseController
     [HttpGet("guide/discounts")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Discounts");
         var result = await _discounts.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut)
         {
@@ -38,11 +33,11 @@ public sealed class DiscountsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateDiscountFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Discounts");
 
         if (form.ValidUntil.HasValue && form.ValidUntil.Value < form.ValidFrom)
         {
-            ModelState.AddModelError(nameof(form.ValidUntil), "Valid-until must be on or after the valid-from date.");
+            ModelState.AddModelError(nameof(form.ValidUntil), L["Guide.Validation.ValidUntilAfterValidFrom"].Value);
         }
 
         if (!ModelState.IsValid)
@@ -66,7 +61,7 @@ public sealed class DiscountsController : BaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Discount created.");
+        SetSuccess(L["Guide.Flash.DiscountCreated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -74,16 +69,17 @@ public sealed class DiscountsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, EditDiscountFormVm form, CancellationToken ct = default)
     {
+        SetNav("Discounts");
+
         if (form.ValidUntil.HasValue && form.ValidUntil.Value < form.ValidFrom)
         {
-            SetError("Valid-until must be on or after the valid-from date.");
-            return RedirectToAction(nameof(Index));
+            ModelState.AddModelError(nameof(form.ValidUntil), L["Guide.Validation.ValidUntilAfterValidFrom"].Value);
         }
 
+        // Re-render with the user's submitted values preserved instead of flash+redirect (no data loss).
         if (!ModelState.IsValid)
         {
-            SetError("Please correct the discount details and try again.");
-            return RedirectToAction(nameof(Index));
+            return await ReloadEditAsync(id, form, ct);
         }
 
         var result = await _discounts.UpdateAsync(id, form, ct);
@@ -92,15 +88,17 @@ public sealed class DiscountsController : BaseController
             return signOut;
         }
 
-        if (result.IsSuccess)
+        if (!result.IsSuccess)
         {
-            SetSuccess("Discount updated.");
-        }
-        else if (!ApplyValidationErrors(result))
-        {
-            SetError(result.Error ?? "Could not update the discount.");
+            if (!ApplyValidationErrors(result))
+            {
+                SetError(result.Error ?? L["Guide.Flash.DiscountUpdateFailed"].Value);
+            }
+
+            return await ReloadEditAsync(id, form, ct);
         }
 
+        SetSuccess(L["Guide.Flash.DiscountUpdated"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -108,28 +106,40 @@ public sealed class DiscountsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Deactivate(Guid id, CancellationToken ct = default)
     {
-        SetSidebar();
         var result = await _discounts.DeactivateAsync(id, ct);
         if (GuardSignOut(result) is { } signOut)
         {
             return signOut;
         }
 
-        SetFlash(result, "Discount deactivated.");
+        SetFlash(result, L["Guide.Flash.DiscountDeactivated"]);
         return RedirectToAction(nameof(Index));
     }
 
     private async Task<IActionResult> ReloadAsync(CreateDiscountFormVm form, CancellationToken ct)
     {
         var result = await _discounts.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
         var vm = result.IsSuccess && result.Data is not null ? result.Data : new DiscountsVm();
         vm.Form = form;
         return View(nameof(Index), vm);
     }
 
-    private void SetSidebar()
+    private async Task<IActionResult> ReloadEditAsync(Guid id, EditDiscountFormVm form, CancellationToken ct)
     {
-        ViewData["GuideNav"] = "Discounts";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
+        var result = await _discounts.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        var vm = result.IsSuccess && result.Data is not null ? result.Data : new DiscountsVm();
+        vm.EditForm = form;
+        vm.OpenEditId = id;
+        return View(nameof(Index), vm);
     }
 }

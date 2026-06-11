@@ -15241,4 +15241,1153 @@
 <data name="Public.Seo.PackagesDescription" xml:space="preserve">
 <value>تصفح باقات جولات منسقة ووفر على تجارب مختارة بعناية في جميع أنحاء الأردن مع YallaJo.</value>
 </data>
+<data name="Provider.Packages.SubmitTitle" xml:space="preserve">
+<value>إرسال للمراجعة؟</value>
+</data>
+<data name="Provider.Packages.SubmitBody" xml:space="preserve">
+<value>هل تريد إرسال "{0}" للمراجعة؟ لن تتمكن من تعديلها أثناء المراجعة.</value>
+</data>
+<data name="Provider.Packages.SubmitConfirm" xml:space="preserve">
+<value>إرسال</value>
+</data>
+<data name="Provider.Bookings.ApproveTitle" xml:space="preserve">
+<value>الموافقة على طلب الانضمام؟</value>
+</data>
+<data name="Provider.Bookings.ApproveBody" xml:space="preserve">
+<value>هل توافق على طلب الانضمام هذا؟ سيُضاف المسافر إلى الحجز.</value>
+</data>
+<data name="Provider.Bookings.ConfirmTitle" xml:space="preserve">
+<value>تأكيد الحجز؟</value>
+</data>
+<data name="Provider.Bookings.ConfirmBody" xml:space="preserve">
+<value>هل تريد تأكيد هذا الحجز؟ سيتم إشعار المسافر بتأكيد حجزه.</value>
+</data>
+<data name="Provider.ProviderBookings.ConfirmTitle" xml:space="preserve">
+<value>تأكيد الحجز؟</value>
+</data>
+<data name="Provider.ProviderBookings.ConfirmBody" xml:space="preserve">
+<value>هل تريد تأكيد هذا الحجز؟ سيتم إشعار المسافر بتأكيد حجزه.</value>
+</data>
+<data name="Provider.TourApplications.ApproveTitle" xml:space="preserve">
+<value>الموافقة على الطلب؟</value>
+</data>
+<data name="Provider.TourApplications.ApproveBody" xml:space="preserve">
+<value>هل توافق على طلب المرشد هذا؟ سيُمنح مقدم الطلب صلاحية الوصول إلى هذا العرض.</value>
+</data>
+<data name="Provider.Common.ResultsError" xml:space="preserve">
+<value>تعذّر تحميل النتائج.</value>
+</data>
+<data name="Provider.Common.Retry" xml:space="preserve">
+<value>حاول مرة أخرى</value>
+</data>
+<data name="Provider.Common.Loading" xml:space="preserve">
+<value>جارٍ التحميل…</value>
+</data>
+<data name="Provider.Common.LoadMore" xml:space="preserve">
+<value>تحميل المزيد</value>
+</data>
+<data name="Provider.Common.ActionFailed" xml:space="preserve">
+<value>تعذّر إتمام العملية.</value>
+</data>
+<data name="Provider.Bookings.JoinApprovedToast" xml:space="preserve">
+<value>تمت الموافقة على طلب الانضمام.</value>
+</data>
+<data name="Provider.Bookings.JoinDeclinedToast" xml:space="preserve">
+<value>تم رفض طلب الانضمام.</value>
+</data>
+<data name="Provider.Bookings.ConfirmedToast" xml:space="preserve">
+<value>تم تأكيد الحجز.</value>
+</data>
+<data name="Provider.Bookings.RejectedToast" xml:space="preserve">
+<value>تم رفض الحجز.</value>
+</data>
+<data name="Provider.Reviews.ReplyPostedToast" xml:space="preserve">
+<value>تم نشر ردك.</value>
+</data>
+<data name="Provider.Reviews.ReplyUpdatedToast" xml:space="preserve">
+<value>تم تحديث ردك.</value>
+</data>
+<data name="Provider.Reviews.ReplyDeletedToast" xml:space="preserve">
+<value>تم حذف ردك.</value>
+</data>
+<data name="Provider.Reviews.ReportToast" xml:space="preserve">
+<value>شكرًا لك. سيقوم فريق الإشراف بمراجعة هذا البلاغ.</value>
+</data>
+<data name="Provider.Dashboard.ThisMonth" xml:space="preserve">
+<value>هذا الشهر</value>
+</data>
+<data name="Provider.Dashboard.PendingPayout" xml:space="preserve">
+<value>دفعات قيد الانتظار</value>
+</data>
+<data name="Provider.Dashboard.GrossTotal" xml:space="preserve">
+<value>الإجمالي الكلي</value>
+</data>
+<data name="Provider.Dashboard.TotalCommission" xml:space="preserve">
+<value>إجمالي العمولة</value>
+</data>
+<data name="Provider.Dashboard.BookingsByStatus" xml:space="preserve">
+<value>الحجوزات حسب الحالة</value>
+</data>
+<data name="Provider.Dashboard.TotalBookings" xml:space="preserve">
+<value>إجمالي الحجوزات</value>
+</data>
+<data name="Provider.TourForm.PlaceSearchPlaceholder" xml:space="preserve">
+<value>اكتب للبحث عن الأماكن…</value>
+</data>
+<data name="Provider.TourGuides.SearchPlaceholder" xml:space="preserve">
+<value>اكتب اسم المرشد للبحث…</value>
+</data>
+<data name="Provider.TourGuides.NoMatches" xml:space="preserve">
+<value>لا يوجد مرشدون مطابقون.</value>
+</data>
+<data name="Provider.TourAvailability.PrevMonth" xml:space="preserve">
+<value>الشهر السابق</value>
+</data>
+<data name="Provider.TourAvailability.NextMonth" xml:space="preserve">
+<value>الشهر التالي</value>
+</data>
+<data name="Provider.TourAvailability.SlotsLabel" xml:space="preserve">
+<value>فترات</value>
+</data>
+<data name="Provider.TourAvailability.SeatsFree" xml:space="preserve">
+<value>مقاعد متاحة</value>
+</data>
+<data name="Provider.TourAvailability.CalendarHeading" xml:space="preserve">
+<value>نظرة شهرية</value>
+</data>
+<data name="Provider.TourForm.DraftFound" xml:space="preserve">
+<value>لديك مسودة غير محفوظة من زيارة سابقة لهذا النموذج.</value>
+</data>
+<data name="Provider.TourForm.DraftRestore" xml:space="preserve">
+<value>استعادة المسودة</value>
+</data>
+<data name="Provider.TourForm.DraftDiscard" xml:space="preserve">
+<value>تجاهل المسودة</value>
+</data>
+<data name="Provider.TourForm.DraftDiscardTitle" xml:space="preserve">
+<value>تجاهل المسودة المحفوظة؟</value>
+</data>
+<data name="Provider.TourForm.DraftDiscardBody" xml:space="preserve">
+<value>سيتم حذف المسودة المحفوظة محليًا. لا يمكن التراجع عن هذا الإجراء.</value>
+</data>
+<data name="Provider.TourForm.DraftRestoredToast" xml:space="preserve">
+<value>تمت استعادة المسودة.</value>
+</data>
+<data name="Provider.Packages.NoToursAvailable" xml:space="preserve">
+<value>ليس لديك جولات منشورة لتضمينها بعد.</value>
+</data>
+<data name="Provider.Status.ReplaceFileLabel" xml:space="preserve">
+<value>ملف جديد</value>
+</data>
+<data name="Provider.Status.ReplaceFileHelp" xml:space="preserve">
+<value>ارفع مستندًا بديلًا (PDF أو صورة، بحد أقصى 10 ميغابايت).</value>
+</data>
+<data name="Provider.ProviderBookings.FromDate" xml:space="preserve">
+<value>من تاريخ</value>
+</data>
+<data name="Provider.ProviderBookings.ToDate" xml:space="preserve">
+<value>إلى تاريخ</value>
+</data>
+<data name="Provider.ProviderBookings.TourFilter" xml:space="preserve">
+<value>الجولة</value>
+</data>
+<data name="Provider.ProviderBookings.AllTours" xml:space="preserve">
+<value>كل الجولات</value>
+</data>
+<data name="Provider.TourWaypoints.DragHandleAria" xml:space="preserve">
+<value>اسحب لإعادة ترتيب نقطة المسار {0}</value>
+</data>
+<data name="Provider.TourWaypoints.ReorderSavedToast" xml:space="preserve">
+<value>تم حفظ ترتيب نقاط المسار.</value>
+</data>
+<data name="Provider.TourWaypoints.ReorderFailedToast" xml:space="preserve">
+<value>تعذّر حفظ الترتيب الجديد. تمت استعادة القائمة.</value>
+</data>
+<data name="Provider.TourImages.PreviewAlt" xml:space="preserve">
+<value>معاينة الصورة المحددة</value>
+</data>
+<data name="Provider.TourImages.FileTooLarge" xml:space="preserve">
+<value>حجم هذا الملف أكبر من 5 ميغابايت. يرجى اختيار صورة أصغر.</value>
+</data>
+<data name="Provider.TourImages.InvalidType" xml:space="preserve">
+<value>يُسمح فقط بصور JPG أو PNG أو WebP.</value>
+</data>
+<data name="Provider.Flash.JoinApproved" xml:space="preserve">
+<value>تمت الموافقة على طلب الانضمام.</value>
+</data>
+<data name="Provider.Flash.JoinDeclined" xml:space="preserve">
+<value>تم رفض طلب الانضمام.</value>
+</data>
+<data name="Provider.Flash.BookingConfirmed" xml:space="preserve">
+<value>تم تأكيد الحجز.</value>
+</data>
+<data name="Provider.Flash.BookingRejected" xml:space="preserve">
+<value>تم رفض الحجز.</value>
+</data>
+<data name="Provider.Flash.BookingCancelled" xml:space="preserve">
+<value>تم إلغاء الحجز.</value>
+</data>
+<data name="Provider.Flash.BookingCompleted" xml:space="preserve">
+<value>تم وضع الحجز كمكتمل.</value>
+</data>
+<data name="Provider.Flash.InvalidBookingId" xml:space="preserve">
+<value>يرجى إدخال معرّف حجز صالح.</value>
+</data>
+<data name="Provider.Flash.RejectReasonRequired" xml:space="preserve">
+<value>يرجى ذكر سبب رفض الحجز.</value>
+</data>
+<data name="Provider.Flash.CancelReasonRequired" xml:space="preserve">
+<value>يرجى ذكر سبب إلغاء الحجز.</value>
+</data>
+<data name="Provider.Flash.ReplyPosted" xml:space="preserve">
+<value>تم نشر ردك.</value>
+</data>
+<data name="Provider.Flash.ReplyUpdated" xml:space="preserve">
+<value>تم تحديث ردك.</value>
+</data>
+<data name="Provider.Flash.ReplyDeleted" xml:space="preserve">
+<value>تم حذف ردك.</value>
+</data>
+<data name="Provider.Flash.ReportSubmitted" xml:space="preserve">
+<value>شكرًا. سيقوم فريق الإشراف بمراجعة هذا البلاغ.</value>
+</data>
+<data name="Provider.Flash.ReplyRequired" xml:space="preserve">
+<value>يرجى كتابة رد.</value>
+</data>
+<data name="Provider.Flash.ListingCreated" xml:space="preserve">
+<value>تم إنشاء الإعلان كمسودة.</value>
+</data>
+<data name="Provider.Flash.ListingSaved" xml:space="preserve">
+<value>تم حفظ الإعلان.</value>
+</data>
+<data name="Provider.Flash.ListingSubmitted" xml:space="preserve">
+<value>تم إرسال الإعلان للمراجعة.</value>
+</data>
+<data name="Provider.Flash.ListingArchived" xml:space="preserve">
+<value>تمت أرشفة الإعلان.</value>
+</data>
+<data name="Provider.Flash.ListingDeleted" xml:space="preserve">
+<value>تم حذف الإعلان.</value>
+</data>
+<data name="Provider.Flash.ListingNotFound" xml:space="preserve">
+<value>الإعلان غير موجود.</value>
+</data>
+<data name="Provider.Flash.CouldNotSubmitListing" xml:space="preserve">
+<value>تعذّر إرسال الإعلان.</value>
+</data>
+<data name="Provider.Flash.CouldNotArchiveListing" xml:space="preserve">
+<value>تعذّرت أرشفة الإعلان.</value>
+</data>
+<data name="Provider.Flash.CouldNotDeleteListing" xml:space="preserve">
+<value>تعذّر حذف الإعلان.</value>
+</data>
+<data name="Provider.Flash.TierCreated" xml:space="preserve">
+<value>تم إنشاء فئة التسعير.</value>
+</data>
+<data name="Provider.Flash.TierSaved" xml:space="preserve">
+<value>تم حفظ فئة التسعير.</value>
+</data>
+<data name="Provider.Flash.TierDeleted" xml:space="preserve">
+<value>تم حذف فئة التسعير.</value>
+</data>
+<data name="Provider.Flash.CouldNotDeleteTier" xml:space="preserve">
+<value>تعذّر حذف فئة التسعير.</value>
+</data>
+<data name="Provider.Flash.ScheduleCreated" xml:space="preserve">
+<value>تم إنشاء الجدول.</value>
+</data>
+<data name="Provider.Flash.ScheduleSaved" xml:space="preserve">
+<value>تم حفظ الجدول.</value>
+</data>
+<data name="Provider.Flash.ScheduleDeleted" xml:space="preserve">
+<value>تم حذف الجدول.</value>
+</data>
+<data name="Provider.Flash.NoScheduleAdded" xml:space="preserve">
+<value>لم تتم إضافة أي جدول.</value>
+</data>
+<data name="Provider.Flash.CouldNotDeleteSchedule" xml:space="preserve">
+<value>تعذّر حذف الجدول.</value>
+</data>
+<data name="Provider.Flash.WaypointAdded" xml:space="preserve">
+<value>تمت إضافة نقطة المسار.</value>
+</data>
+<data name="Provider.Flash.WaypointSaved" xml:space="preserve">
+<value>تم حفظ نقطة المسار.</value>
+</data>
+<data name="Provider.Flash.WaypointDeleted" xml:space="preserve">
+<value>تم حذف نقطة المسار.</value>
+</data>
+<data name="Provider.Flash.CouldNotDeleteWaypoint" xml:space="preserve">
+<value>تعذّر حذف نقطة المسار.</value>
+</data>
+<data name="Provider.Flash.OrderUpdated" xml:space="preserve">
+<value>تم تحديث ترتيب المسار.</value>
+</data>
+<data name="Provider.Flash.NoOrderSubmitted" xml:space="preserve">
+<value>لم يتم إرسال ترتيب نقاط المسار.</value>
+</data>
+<data name="Provider.Flash.CouldNotReorder" xml:space="preserve">
+<value>تعذّر إعادة ترتيب نقاط المسار.</value>
+</data>
+<data name="Provider.Flash.SlotCreated" xml:space="preserve">
+<value>تم إنشاء فترة الإتاحة.</value>
+</data>
+<data name="Provider.Flash.SlotSaved" xml:space="preserve">
+<value>تم حفظ فترة الإتاحة.</value>
+</data>
+<data name="Provider.Flash.SlotRemoved" xml:space="preserve">
+<value>تمت إزالة فترة الإتاحة.</value>
+</data>
+<data name="Provider.Flash.CouldNotRemoveSlot" xml:space="preserve">
+<value>تعذّرت إزالة الفترة.</value>
+</data>
+<data name="Provider.Flash.BulkSlotsCreated" xml:space="preserve">
+<value>تم إنشاء فترات الإتاحة المتكررة.</value>
+</data>
+<data name="Provider.Flash.CouldNotCreateBulkSlots" xml:space="preserve">
+<value>تعذّر إنشاء الفترات المتكررة.</value>
+</data>
+<data name="Provider.Flash.BulkFormInvalid" xml:space="preserve">
+<value>يرجى تعبئة نموذج الفترات المتكررة بشكل صحيح.</value>
+</data>
+<data name="Provider.Flash.SlotConflict" xml:space="preserve">
+<value>تتعارض هذه الفترة مع فترة قائمة.</value>
+</data>
+<data name="Provider.Flash.CapacityMin" xml:space="preserve">
+<value>يجب أن تكون السعة 1 على الأقل.</value>
+</data>
+<data name="Provider.Flash.GuideAssigned" xml:space="preserve">
+<value>تم تعيين المرشد.</value>
+</data>
+<data name="Provider.Flash.GuideRemoved" xml:space="preserve">
+<value>تمت إزالة المرشد.</value>
+</data>
+<data name="Provider.Flash.CouldNotRemoveGuide" xml:space="preserve">
+<value>تعذّرت إزالة المرشد.</value>
+</data>
+<data name="Provider.Flash.ImageUploaded" xml:space="preserve">
+<value>تم رفع الصورة.</value>
+</data>
+<data name="Provider.Flash.ImageDeleted" xml:space="preserve">
+<value>تم حذف الصورة.</value>
+</data>
+<data name="Provider.Flash.InvalidImage" xml:space="preserve">
+<value>يرجى اختيار صورة صالحة للرفع.</value>
+</data>
+<data name="Provider.Flash.CouldNotUploadImage" xml:space="preserve">
+<value>تعذّر رفع الصورة.</value>
+</data>
+<data name="Provider.Flash.CouldNotDeleteImage" xml:space="preserve">
+<value>تعذّر حذف الصورة.</value>
+</data>
+<data name="Provider.Flash.ApplicationApproved" xml:space="preserve">
+<value>تمت الموافقة على الطلب.</value>
+</data>
+<data name="Provider.Flash.ApplicationRejected" xml:space="preserve">
+<value>تم رفض الطلب.</value>
+</data>
+<data name="Provider.Flash.RejectAppReasonRequired" xml:space="preserve">
+<value>يلزم ذكر سبب لرفض الطلب.</value>
+</data>
+<data name="Provider.Flash.TourOpened" xml:space="preserve">
+<value>تم فتح الجولة لطلبات المرشدين.</value>
+</data>
+<data name="Provider.Flash.TourClosed" xml:space="preserve">
+<value>تم إغلاق الجولة أمام طلبات المرشدين.</value>
+</data>
+<data name="Provider.Flash.PackageCreated" xml:space="preserve">
+<value>تم إنشاء الباقة كمسودة. أضف المشمولات ثم أرسلها للمراجعة.</value>
+</data>
+<data name="Provider.Flash.PackageDeleted" xml:space="preserve">
+<value>تم حذف الباقة.</value>
+</data>
+<data name="Provider.Flash.PackageSubmitted" xml:space="preserve">
+<value>تم إرسال الباقة للمراجعة.</value>
+</data>
+<data name="Provider.Flash.InclusionAdded" xml:space="preserve">
+<value>تمت إضافة المشمول.</value>
+</data>
+<data name="Provider.Flash.InclusionRequired" xml:space="preserve">
+<value>أدخل وصف المشمول.</value>
+</data>
+<data name="Provider.Flash.CouldNotCreatePackage" xml:space="preserve">
+<value>تعذّر إنشاء الباقة.</value>
+</data>
+<data name="Provider.Flash.CouldNotDeletePackage" xml:space="preserve">
+<value>تعذّر حذف الباقة.</value>
+</data>
+<data name="Provider.Flash.CouldNotLoadPackages" xml:space="preserve">
+<value>تعذّر تحميل الباقات.</value>
+</data>
+<data name="Provider.Flash.MethodAdded" xml:space="preserve">
+<value>تمت إضافة وسيلة الدفع.</value>
+</data>
+<data name="Provider.Flash.MethodUpdated" xml:space="preserve">
+<value>تم تحديث وسيلة الدفع.</value>
+</data>
+<data name="Provider.Flash.MethodDeleted" xml:space="preserve">
+<value>تم حذف وسيلة الدفع.</value>
+</data>
+<data name="Provider.Flash.CouldNotAddMethod" xml:space="preserve">
+<value>تعذّرت إضافة وسيلة الدفع.</value>
+</data>
+<data name="Provider.Flash.CouldNotUpdateMethod" xml:space="preserve">
+<value>تعذّر تحديث وسيلة الدفع.</value>
+</data>
+<data name="Provider.Flash.CouldNotDeleteMethod" xml:space="preserve">
+<value>تعذّر حذف وسيلة الدفع.</value>
+</data>
+<data name="Provider.Flash.ApplicationStarted" xml:space="preserve">
+<value>تم بدء طلب مزوّد الخدمة. أرسله للمراجعة عندما تكون جاهزًا.</value>
+</data>
+<data name="Provider.Flash.ApplicationSubmitted" xml:space="preserve">
+<value>تم إرسال الطلب للمراجعة.</value>
+</data>
+<data name="Provider.Flash.CouldNotStartApplication" xml:space="preserve">
+<value>تعذّر بدء طلب مزوّد الخدمة.</value>
+</data>
+<data name="Provider.Flash.CouldNotSubmitApplication" xml:space="preserve">
+<value>تعذّر إرسال طلبك.</value>
+</data>
+<data name="Provider.Flash.DocumentUploaded" xml:space="preserve">
+<value>تم رفع المستند.</value>
+</data>
+<data name="Provider.Flash.DocumentReplaced" xml:space="preserve">
+<value>تم استبدال المستند.</value>
+</data>
+<data name="Provider.Flash.CouldNotUploadDocument" xml:space="preserve">
+<value>تعذّر رفع المستند.</value>
+</data>
+<data name="Provider.Flash.CouldNotReplaceDocument" xml:space="preserve">
+<value>تعذّر استبدال المستند.</value>
+</data>
+<data name="Provider.Flash.DocumentRejected" xml:space="preserve">
+<value>تم رفض المستند المرفوع. تحقق من نوع الملف وحجمه.</value>
+</data>
+<data name="Provider.Flash.ReplacementRejected" xml:space="preserve">
+<value>تم رفض المستند البديل.</value>
+</data>
+<data name="Provider.Flash.FixUploadForm" xml:space="preserve">
+<value>يرجى تصحيح نموذج رفع المستند والمحاولة مرة أخرى.</value>
+</data>
+<data name="Provider.Flash.FixReplaceForm" xml:space="preserve">
+<value>يرجى تصحيح نموذج استبدال المستند والمحاولة مرة أخرى.</value>
+</data>
+<data name="Provider.Flash.ProfileUpdated" xml:space="preserve">
+<value>تم تحديث ملفك الشخصي.</value>
+</data>
+<data name="Provider.Flash.PasswordChanged" xml:space="preserve">
+<value>تم تغيير كلمة المرور.</value>
+</data>
+<data name="Provider.Flash.PhoneUpdated" xml:space="preserve">
+<value>تم تحديث رقم هاتفك.</value>
+</data>
+<data name="Provider.Flash.CouldNotDownloadInvoice" xml:space="preserve">
+<value>تعذّر تنزيل الفاتورة.</value>
+</data>
+<data name="Provider.Flash.FixHighlighted" xml:space="preserve">
+<value>يرجى تصحيح الحقول المحددة والمحاولة مرة أخرى.</value>
+</data>
+<data name="Provider.Flash.NoAccess" xml:space="preserve">
+<value>ليس لديك صلاحية الوصول إلى هذا الإعلان.</value>
+</data>
+<data name="Provider.Flash.NotFound" xml:space="preserve">
+<value>غير موجود.</value>
+</data>
+<data name="Provider.Settings.Type.TourOperator" xml:space="preserve">
+<value>منظّم جولات</value>
+</data>
+<data name="Provider.Settings.Type.IndependentGuide" xml:space="preserve">
+<value>مرشد مستقل</value>
+</data>
+<data name="Provider.Settings.Type.HotelResort" xml:space="preserve">
+<value>فندق / منتجع</value>
+</data>
+<data name="Provider.Settings.Type.ActivityCenter" xml:space="preserve">
+<value>مركز أنشطة</value>
+</data>
+<data name="Provider.Settings.Type.Agency" xml:space="preserve">
+<value>وكالة</value>
+</data>
+<data name="Provider.Settings.Type.BusinessOwner" xml:space="preserve">
+<value>صاحب عمل</value>
+</data>
+<data name="Provider.Settings.Type.Unknown" xml:space="preserve">
+<value>غير معروف</value>
+</data>
+<data name="Provider.Status.Paid" xml:space="preserve">
+<value>مدفوع</value>
+</data>
+<data name="Provider.Status.Processing" xml:space="preserve">
+<value>قيد المعالجة</value>
+</data>
+<data name="Provider.Status.Scheduled" xml:space="preserve">
+<value>مجدول</value>
+</data>
+<data name="Provider.Status.Failed" xml:space="preserve">
+<value>فشل</value>
+</data>
+<data name="Provider.Status.Issued" xml:space="preserve">
+<value>صادرة</value>
+</data>
+<data name="Provider.Status.Settled" xml:space="preserve">
+<value>مسدّدة</value>
+</data>
+<data name="Provider.Status.Void" xml:space="preserve">
+<value>ملغاة</value>
+</data>
+<data name="Provider.Status.Refunded" xml:space="preserve">
+<value>مستردّة</value>
+</data>
+<data name="Provider.Status.Open" xml:space="preserve">
+<value>مفتوح</value>
+</data>
+<data name="Provider.Status.Resolved" xml:space="preserve">
+<value>تم الحل</value>
+</data>
+<data name="Provider.Status.InProgress" xml:space="preserve">
+<value>قيد التنفيذ</value>
+</data>
+<data name="Provider.Status.NoShow" xml:space="preserve">
+<value>لم يحضر</value>
+</data>
+<data name="Provider.Status.Disputed" xml:space="preserve">
+<value>متنازع عليه</value>
+</data>
+<data name="Provider.Flash.Reapplied" xml:space="preserve">
+<value>تمت إعادة فتح طلبك كمسودة. حدّثه وأرسله مرة أخرى عندما تكون جاهزًا.</value>
+</data>
+<data name="Provider.Flash.CouldNotReapply" xml:space="preserve">
+<value>تعذّرت إعادة التقديم على طلب مزوّد الخدمة.</value>
+</data>
+<data name="Provider.Flash.CouldNotLoadCalendar" xml:space="preserve">
+<value>تعذّر تحميل التقويم.</value>
+</data>
+<data name="Guide.Status.Approved" xml:space="preserve">
+<value>مقبول</value>
+</data>
+<data name="Guide.Status.Accepted" xml:space="preserve">
+<value>تم القبول</value>
+</data>
+<data name="Guide.Status.Rejected" xml:space="preserve">
+<value>مرفوض</value>
+</data>
+<data name="Guide.Status.Declined" xml:space="preserve">
+<value>تم الرفض</value>
+</data>
+<data name="Guide.Status.Submitted" xml:space="preserve">
+<value>مُرسل</value>
+</data>
+<data name="Guide.Status.Draft" xml:space="preserve">
+<value>مسودة</value>
+</data>
+<data name="Guide.Status.Expired" xml:space="preserve">
+<value>منتهي الصلاحية</value>
+</data>
+<data name="Guide.Status.Active" xml:space="preserve">
+<value>نشط</value>
+</data>
+<data name="Guide.Status.Suspended" xml:space="preserve">
+<value>موقوف</value>
+</data>
+<data name="Guide.Status.Removed" xml:space="preserve">
+<value>محذوف</value>
+</data>
+<data name="Guide.Status.Published" xml:space="preserve">
+<value>منشور</value>
+</data>
+<data name="Guide.Offering.Flash.ScheduleAdded" xml:space="preserve">
+<value>تمت إضافة الجدول.</value>
+</data>
+<data name="Guide.Offering.Flash.ScheduleRemoved" xml:space="preserve">
+<value>تم حذف الجدول.</value>
+</data>
+<data name="Guide.Offering.Flash.TierAdded" xml:space="preserve">
+<value>تمت إضافة فئة التسعير.</value>
+</data>
+<data name="Guide.Offering.Flash.TierRemoved" xml:space="preserve">
+<value>تم حذف فئة التسعير.</value>
+</data>
+<data name="Guide.Offering.Flash.PrivateUpdated" xml:space="preserve">
+<value>تم حفظ إعدادات الجولة الخاصة.</value>
+</data>
+<data name="Guide.Offering.Flash.PrivateDisabled" xml:space="preserve">
+<value>تم تعطيل الجولة الخاصة.</value>
+</data>
+<data name="Guide.AgencyRoster.Flash.ApplicationApproved" xml:space="preserve">
+<value>تمت الموافقة على الطلب. تمت إضافة المرشد إلى قائمتك.</value>
+</data>
+<data name="Guide.AgencyRoster.Flash.ApplicationRejected" xml:space="preserve">
+<value>تم رفض الطلب.</value>
+</data>
+<data name="Guide.AgencyRoster.Flash.GuideRemoved" xml:space="preserve">
+<value>تمت إزالة المرشد من قائمتك.</value>
+</data>
+<data name="Guide.AgencyRoster.RejectTitle" xml:space="preserve">
+<value>رفض الطلب؟</value>
+</data>
+<data name="Guide.AgencyRoster.RejectConfirm" xml:space="preserve">
+<value>رفض الطلب</value>
+</data>
+<data name="Guide.AgencyRoster.ReasonLabel" xml:space="preserve">
+<value>السبب</value>
+</data>
+<data name="Guide.AgencyRoster.ReasonHelp" xml:space="preserve">
+<value>مطلوب. سيتم مشاركته مع المرشد.</value>
+</data>
+<data name="Guide.Profile.RemoveLanguageTitle" xml:space="preserve">
+<value>إزالة اللغة؟</value>
+</data>
+<data name="Guide.Profile.RemoveLanguageConfirm" xml:space="preserve">
+<value>هل أنت متأكد من أنك تريد إزالة {0} من لغاتك؟</value>
+</data>
+<data name="Guide.Profile.RemoveSpecializationConfirm" xml:space="preserve">
+<value>هل أنت متأكد أنك تريد إزالة {0} من تخصصاتك؟</value>
+</data>
+<data name="Guide.Profile.RemoveSpecializationTitle" xml:space="preserve">
+<value>إزالة التخصص؟</value>
+</data>
+<data name="Guide.Profile.RemoveSpecializationLabel" xml:space="preserve">
+<value>إزالة {0}</value>
+</data>
+<data name="Guide.Applications.SelectTour" xml:space="preserve">
+<value>اختر جولة…</value>
+</data>
+<data name="Guide.Applications.NoResults" xml:space="preserve">
+<value>لا توجد جولات مطابقة</value>
+</data>
+<data name="Guide.Reviews.AverageRating" xml:space="preserve">
+<value>متوسط التقييم</value>
+</data>
+<data name="Guide.Reviews.TotalReviews" xml:space="preserve">
+<value>إجمالي التقييمات</value>
+</data>
+<data name="Guide.Reviews.ListHeading" xml:space="preserve">
+<value>ماذا يقول المسافرون</value>
+</data>
+<data name="Guide.Reviews.RatingAria" xml:space="preserve">
+<value>التقييم {0} من 5</value>
+</data>
+<data name="Guide.Reviews.Verified" xml:space="preserve">
+<value>حجز موثّق</value>
+</data>
+<data name="Guide.Reviews.Visited" xml:space="preserve">
+<value>تاريخ الزيارة {0}</value>
+</data>
+<data name="Guide.Reviews.Helpful" xml:space="preserve">
+<value>وجدها {0} مفيدة</value>
+</data>
+<data name="Guide.Reviews.YourReply" xml:space="preserve">
+<value>ردّك</value>
+</data>
+<data name="Guide.Reviews.ReplyLabel" xml:space="preserve">
+<value>اكتب ردًا</value>
+</data>
+<data name="Guide.Reviews.ReplySubmit" xml:space="preserve">
+<value>نشر الرد</value>
+</data>
+<data name="Guide.Reviews.ReplyPosted" xml:space="preserve">
+<value>تم نشر الرد.</value>
+</data>
+<data name="Guide.Status.AwaitingModeration" xml:space="preserve">
+<value>بانتظار المراجعة</value>
+</data>
+<data name="Guide.Status.AutoHidden" xml:space="preserve">
+<value>مخفي تلقائيًا</value>
+</data>
+<data name="Guide.Status.RemovedByAdmin" xml:space="preserve">
+<value>أزاله المشرف</value>
+</data>
+<data name="Guide.Status.DeletedByUser" xml:space="preserve">
+<value>حذفه المستخدم</value>
+</data>
+<data name="Guide.Discounts.SelectTour" xml:space="preserve">
+<value>كل الجولات (اختياري — اختر جولة لتقييد الخصم)</value>
+</data>
+<data name="Guide.Agency.SelectAgency" xml:space="preserve">
+<value>اختر وكالة…</value>
+</data>
+<data name="Guide.Proposals.SelectPlace" xml:space="preserve">
+<value>اختر مكاناً…</value>
+</data>
+<data name="Guide.Proposals.NoResults" xml:space="preserve">
+<value>لا توجد أماكن مطابقة لبحثك</value>
+</data>
+<data name="Guide.Flash.AgencyApplicationSubmitted" xml:space="preserve">
+<value>تم إرسال الطلب إلى الوكالة.</value>
+</data>
+<data name="Guide.Flash.InvitationAccepted" xml:space="preserve">
+<value>تم قبول الدعوة.</value>
+</data>
+<data name="Guide.Flash.InvitationDeclined" xml:space="preserve">
+<value>تم رفض الدعوة.</value>
+</data>
+<data name="Guide.Flash.LeftAgency" xml:space="preserve">
+<value>لقد غادرت الوكالة.</value>
+</data>
+<data name="Guide.Flash.ProposalCreated" xml:space="preserve">
+<value>تم إنشاء المقترح. يمكنك مراجعته وإرساله للموافقة.</value>
+</data>
+<data name="Guide.Flash.ProposalSubmitted" xml:space="preserve">
+<value>تم إرسال المقترح للمراجعة.</value>
+</data>
+<data name="Guide.Flash.ReplyFailed" xml:space="preserve">
+<value>تعذّر نشر ردّك.</value>
+</data>
+<data name="Guide.Flash.ApplicationSubmitted" xml:space="preserve">
+<value>تم إرسال الطلب.</value>
+</data>
+<data name="Guide.Flash.ProfileUpdated" xml:space="preserve">
+<value>تم تحديث الملف الشخصي.</value>
+</data>
+<data name="Guide.Flash.ProfileDeactivated" xml:space="preserve">
+<value>تم إلغاء تفعيل ملفك الشخصي كمرشد.</value>
+</data>
+<data name="Guide.Flash.LanguageAdded" xml:space="preserve">
+<value>تمت إضافة اللغة.</value>
+</data>
+<data name="Guide.Flash.LanguageRemoved" xml:space="preserve">
+<value>تمت إزالة اللغة.</value>
+</data>
+<data name="Guide.Flash.SpecializationAdded" xml:space="preserve">
+<value>تمت إضافة التخصص.</value>
+</data>
+<data name="Guide.Flash.SpecializationRemoved" xml:space="preserve">
+<value>تمت إزالة التخصص.</value>
+</data>
+<data name="Guide.Flash.AvatarUpdated" xml:space="preserve">
+<value>تم تحديث الصورة الشخصية.</value>
+</data>
+<data name="Guide.Flash.CoverUpdated" xml:space="preserve">
+<value>تم تحديث صورة الغلاف.</value>
+</data>
+<data name="Guide.Flash.DeactivateFailed" xml:space="preserve">
+<value>تعذّر إلغاء تفعيل ملفك الشخصي كمرشد.</value>
+</data>
+<data name="Guide.Flash.InvitationSent" xml:space="preserve">
+<value>تم إرسال الدعوة.</value>
+</data>
+<data name="Guide.Flash.RejectReasonRequired" xml:space="preserve">
+<value>يرجى تقديم سبب لرفض الطلب.</value>
+</data>
+<data name="Guide.Flash.RemoveReasonRequired" xml:space="preserve">
+<value>يرجى تقديم سبب لإزالة المرشد.</value>
+</data>
+<data name="Guide.Flash.OfferingRemoved" xml:space="preserve">
+<value>تمت إزالة العرض.</value>
+</data>
+<data name="Guide.Flash.OfferingRemoveFailed" xml:space="preserve">
+<value>تعذّرت إزالة العرض.</value>
+</data>
+<data name="Guide.Flash.CheckForm" xml:space="preserve">
+<value>يرجى التحقق من النموذج والمحاولة مرة أخرى.</value>
+</data>
+<data name="Guide.Flash.ActionFailed" xml:space="preserve">
+<value>تعذّر إتمام الإجراء.</value>
+</data>
+<data name="Guide.Flash.JoinRequestApproved" xml:space="preserve">
+<value>تمت الموافقة على طلب الانضمام.</value>
+</data>
+<data name="Guide.Flash.JoinRequestRejected" xml:space="preserve">
+<value>تم رفض طلب الانضمام.</value>
+</data>
+<data name="Guide.Flash.DiscountCreated" xml:space="preserve">
+<value>تم إنشاء الخصم.</value>
+</data>
+<data name="Guide.Flash.DiscountUpdated" xml:space="preserve">
+<value>تم تحديث الخصم.</value>
+</data>
+<data name="Guide.Flash.DiscountDeactivated" xml:space="preserve">
+<value>تم إلغاء تفعيل الخصم.</value>
+</data>
+<data name="Guide.Flash.DiscountUpdateFailed" xml:space="preserve">
+<value>تعذّر تحديث الخصم.</value>
+</data>
+<data name="Guide.Flash.AvailabilityAdded" xml:space="preserve">
+<value>تمت إضافة فترة عدم التوفر.</value>
+</data>
+<data name="Guide.Flash.AvailabilityRemoved" xml:space="preserve">
+<value>تمت إزالة فترة عدم التوفر.</value>
+</data>
+<data name="Guide.Validation.ValidUntilAfterValidFrom" xml:space="preserve">
+<value>يجب أن يكون تاريخ انتهاء الصلاحية في تاريخ البدء أو بعده.</value>
+</data>
+<data name="Guide.Validation.EndAfterStart" xml:space="preserve">
+<value>يجب أن يكون تاريخ الانتهاء في تاريخ البدء أو بعده.</value>
+</data>
+<data name="Guide.Validation.ImageRequired" xml:space="preserve">
+<value>يرجى اختيار صورة للرفع.</value>
+</data>
+<data name="Guide.Validation.ImageTooLarge" xml:space="preserve">
+<value>يجب ألا يتجاوز حجم الصورة 5 ميغابايت.</value>
+</data>
+<data name="Guide.Layout.SkipToContent" xml:space="preserve">
+<value>تخطَّ إلى المحتوى الرئيسي</value>
+</data>
+<data name="Guide.Validation.ImageInvalid" xml:space="preserve">
+<value>يُسمح بملفات الصور فقط.</value>
+</data>
+<data name="Business.Type.Restaurant" xml:space="preserve">
+<value>مطعم</value>
+</data>
+<data name="Business.Type.Hotel" xml:space="preserve">
+<value>فندق</value>
+</data>
+<data name="Business.Type.Shop" xml:space="preserve">
+<value>متجر</value>
+</data>
+<data name="Business.Type.Agency" xml:space="preserve">
+<value>وكالة سفر</value>
+</data>
+<data name="Business.Type.Transport" xml:space="preserve">
+<value>نقل</value>
+</data>
+<data name="Business.Type.Guide" xml:space="preserve">
+<value>مرشد سياحي</value>
+</data>
+<data name="Business.Type.Activity" xml:space="preserve">
+<value>نشاط</value>
+</data>
+<data name="Business.Type.Other" xml:space="preserve">
+<value>أخرى</value>
+</data>
+<data name="Business.Settings.Title" xml:space="preserve">
+<value>إعدادات النشاط التجاري</value>
+</data>
+<data name="Business.Settings.Heading" xml:space="preserve">
+<value>إعدادات النشاط التجاري</value>
+</data>
+<data name="Business.Settings.Breadcrumb" xml:space="preserve">
+<value>العودة إلى النشاط التجاري</value>
+</data>
+<data name="Business.Settings.TabHours" xml:space="preserve">
+<value>ساعات العمل</value>
+</data>
+<data name="Business.Settings.TabAccessibility" xml:space="preserve">
+<value>إمكانية الوصول</value>
+</data>
+<data name="Business.Settings.TabsAria" xml:space="preserve">
+<value>أقسام إعدادات النشاط التجاري</value>
+</data>
+<data name="Business.ConfirmDelete.Title" xml:space="preserve">
+<value>هل أنت متأكد؟</value>
+</data>
+<data name="Business.ConfirmDelete.Action" xml:space="preserve">
+<value>حذف</value>
+</data>
+<data name="Business.ConfirmDelete.Cancel" xml:space="preserve">
+<value>إلغاء</value>
+</data>
+<data name="Business.Amenities.Added" xml:space="preserve">
+<value>تمت إضافة المرفق.</value>
+</data>
+<data name="Business.Staff.Added" xml:space="preserve">
+<value>تمت إضافة الموظف.</value>
+</data>
+<data name="Business.Services.Added" xml:space="preserve">
+<value>تمت إضافة الخدمة.</value>
+</data>
+<data name="Business.Staff.SearchPlaceholder" xml:space="preserve">
+<value>ابحث بالبريد الإلكتروني…</value>
+</data>
+<data name="Business.Staff.NoResults" xml:space="preserve">
+<value>لا يوجد مستخدمون مطابقون.</value>
+</data>
+<data name="Business.Register.PlaceSearchPlaceholder" xml:space="preserve">
+<value>ابحث عن الأماكن…</value>
+</data>
+<data name="Business.Register.PlaceSearchLabel" xml:space="preserve">
+<value>البحث عن الأماكن</value>
+</data>
+<data name="Business.Register.PlaceNoResults" xml:space="preserve">
+<value>لا توجد أماكن مطابقة.</value>
+</data>
+<data name="Business.Amenities.IconNone" xml:space="preserve">
+<value>بدون أيقونة</value>
+</data>
+<data name="Business.Amenities.Icon.Wifi" xml:space="preserve">
+<value>واي فاي</value>
+</data>
+<data name="Business.Amenities.Icon.Parking" xml:space="preserve">
+<value>موقف سيارات</value>
+</data>
+<data name="Business.Amenities.Icon.Restaurant" xml:space="preserve">
+<value>مطعم</value>
+</data>
+<data name="Business.Amenities.Icon.Coffee" xml:space="preserve">
+<value>قهوة</value>
+</data>
+<data name="Business.Amenities.Icon.AirConditioning" xml:space="preserve">
+<value>تكييف هواء</value>
+</data>
+<data name="Business.Amenities.Icon.Wheelchair" xml:space="preserve">
+<value>مدخل لذوي الإعاقة</value>
+</data>
+<data name="Business.Amenities.Icon.PetFriendly" xml:space="preserve">
+<value>مناسب للحيوانات الأليفة</value>
+</data>
+<data name="Business.Amenities.Icon.Pool" xml:space="preserve">
+<value>مسبح</value>
+</data>
+<data name="Business.Amenities.Icon.Gym" xml:space="preserve">
+<value>نادٍ رياضي</value>
+</data>
+<data name="Business.Amenities.Icon.Spa" xml:space="preserve">
+<value>سبا</value>
+</data>
+<data name="Business.Amenities.Icon.Rooms" xml:space="preserve">
+<value>غرف</value>
+</data>
+<data name="Business.Amenities.Icon.Valet" xml:space="preserve">
+<value>خدمة صف السيارات</value>
+</data>
+<data name="Business.Amenities.Icon.LiveMusic" xml:space="preserve">
+<value>موسيقى حية</value>
+</data>
+<data name="Business.Amenities.Icon.Tv" xml:space="preserve">
+<value>تلفاز</value>
+</data>
+<data name="Business.Amenities.Icon.FamilyFriendly" xml:space="preserve">
+<value>مناسب للعائلات</value>
+</data>
+<data name="Business.Amenities.Icon.SmokingArea" xml:space="preserve">
+<value>منطقة تدخين</value>
+</data>
+<data name="Business.Amenities.Icon.CardPayment" xml:space="preserve">
+<value>الدفع بالبطاقة</value>
+</data>
+<data name="Business.Amenities.Icon.EvCharging" xml:space="preserve">
+<value>شحن السيارات الكهربائية</value>
+</data>
+<data name="Business.Amenities.Icon.Security" xml:space="preserve">
+<value>أمن</value>
+</data>
+<data name="Business.Amenities.Icon.Garden" xml:space="preserve">
+<value>حديقة</value>
+</data>
+<data name="Business.Flash.AmenityAdded" xml:space="preserve">
+<value>تمت إضافة المرفق.</value>
+</data>
+<data name="Business.Flash.AmenityRemoved" xml:space="preserve">
+<value>تمت إزالة المرفق.</value>
+</data>
+<data name="Business.Flash.AmenityInvalid" xml:space="preserve">
+<value>يرجى إدخال اسم مرفق صالح.</value>
+</data>
+<data name="Business.Flash.ServiceAdded" xml:space="preserve">
+<value>تمت إضافة الخدمة.</value>
+</data>
+<data name="Business.Flash.ServiceUpdated" xml:space="preserve">
+<value>تم تحديث الخدمة.</value>
+</data>
+<data name="Business.Flash.ServiceRemoved" xml:space="preserve">
+<value>تمت إزالة الخدمة.</value>
+</data>
+<data name="Business.Flash.ServiceInvalid" xml:space="preserve">
+<value>يرجى إدخال اسم وسعر وفئة صالحة للخدمة.</value>
+</data>
+<data name="Business.Flash.StaffAdded" xml:space="preserve">
+<value>تمت إضافة الموظف.</value>
+</data>
+<data name="Business.Flash.StaffRemoved" xml:space="preserve">
+<value>تمت إزالة الموظف.</value>
+</data>
+<data name="Business.Flash.StaffInvalid" xml:space="preserve">
+<value>يرجى إدخال معرف مستخدم ودور صالحين.</value>
+</data>
+<data name="Business.Flash.HoursUpdated" xml:space="preserve">
+<value>تم تحديث ساعات العمل.</value>
+</data>
+<data name="Business.Flash.AccessibilityUpdated" xml:space="preserve">
+<value>تم تحديث ميزات إمكانية الوصول.</value>
+</data>
+<data name="Business.Flash.Registered" xml:space="preserve">
+<value>تم تسجيل النشاط التجاري. وهو الآن قيد المراجعة.</value>
+</data>
+<data name="Business.Flash.ProfileUpdated" xml:space="preserve">
+<value>تم تحديث ملف النشاط التجاري.</value>
+</data>
+<data name="Business.Flash.Resubmitted" xml:space="preserve">
+<value>تمت إعادة إرسال النشاط التجاري للمراجعة.</value>
+</data>
+<data name="Business.Error.LoadBusiness" xml:space="preserve">
+<value>تعذر تحميل النشاط التجاري.</value>
+</data>
+<data name="Business.Error.LoadBusinesses" xml:space="preserve">
+<value>تعذر تحميل أنشطتك التجارية.</value>
+</data>
+<data name="Business.Error.LoadAmenities" xml:space="preserve">
+<value>تعذر تحميل المرافق.</value>
+</data>
+<data name="Business.Error.LoadHours" xml:space="preserve">
+<value>تعذر تحميل ساعات العمل.</value>
+</data>
+<data name="Business.Error.LoadServices" xml:space="preserve">
+<value>تعذر تحميل الخدمات.</value>
+</data>
+<data name="Business.Error.LoadService" xml:space="preserve">
+<value>تعذر تحميل الخدمة.</value>
+</data>
+<data name="Business.Error.LoadStaff" xml:space="preserve">
+<value>تعذر تحميل الموظفين.</value>
+</data>
+<data name="Business.Error.LoadAccessibility" xml:space="preserve">
+<value>تعذر تحميل ميزات إمكانية الوصول.</value>
+</data>
+<data name="Business.Error.NotOwner" xml:space="preserve">
+<value>أنت لا تملك هذا النشاط التجاري.</value>
+</data>
+<data name="Business.Error.BusinessNotFound" xml:space="preserve">
+<value>لم يتم العثور على النشاط التجاري.</value>
+</data>
+<data name="Business.Error.AmenityNotFound" xml:space="preserve">
+<value>لم يتم العثور على النشاط التجاري أو المرفق.</value>
+</data>
+<data name="Business.Error.ServiceNotFound" xml:space="preserve">
+<value>لم يتم العثور على النشاط التجاري أو الخدمة.</value>
+</data>
+<data name="Business.Error.StaffNotFound" xml:space="preserve">
+<value>لم يتم العثور على النشاط التجاري أو الموظف.</value>
+</data>
+<data name="Business.Error.AmenityExists" xml:space="preserve">
+<value>هذا المرفق موجود بالفعل.</value>
+</data>
+<data name="Business.Error.ServiceConflict" xml:space="preserve">
+<value>تتعارض هذه الخدمة مع خدمة موجودة.</value>
+</data>
+<data name="Business.Error.StaffExists" xml:space="preserve">
+<value>هذا الشخص موظف بالفعل.</value>
+</data>
+<data name="Business.Error.StateConflict" xml:space="preserve">
+<value>هذا الإجراء غير مسموح به في الحالة الحالية. يرجى إعادة التحميل والمحاولة مرة أخرى.</value>
+</data>
+<data name="Business.Error.RegisterDenied" xml:space="preserve">
+<value>ليست لديك صلاحية تسجيل نشاط تجاري.</value>
+</data>
+<data name="Business.Error.RegisterConflict" xml:space="preserve">
+<value>يوجد نشاط تجاري مماثل بالفعل. يرجى إعادة التحميل والمحاولة مرة أخرى.</value>
+</data>
+<data name="Business.Error.RegisterFailed" xml:space="preserve">
+<value>تعذر تسجيل النشاط التجاري.</value>
+</data>
+<data name="Business.Error.UpdateFailed" xml:space="preserve">
+<value>تعذر تحديث النشاط التجاري.</value>
+</data>
+<data name="Business.Error.SaveHoursFailed" xml:space="preserve">
+<value>تعذر حفظ ساعات العمل.</value>
+</data>
+<data name="Business.Error.SaveAccessibilityFailed" xml:space="preserve">
+<value>تعذر حفظ ميزات إمكانية الوصول.</value>
+</data>
+<data name="Business.Error.AddAmenityFailed" xml:space="preserve">
+<value>تعذر إضافة المرفق.</value>
+</data>
+<data name="Business.Error.RemoveAmenityFailed" xml:space="preserve">
+<value>تعذر إزالة المرفق.</value>
+</data>
+<data name="Business.Error.AddServiceFailed" xml:space="preserve">
+<value>تعذر إضافة الخدمة.</value>
+</data>
+<data name="Business.Error.UpdateServiceFailed" xml:space="preserve">
+<value>تعذر تحديث الخدمة.</value>
+</data>
+<data name="Business.Error.RemoveServiceFailed" xml:space="preserve">
+<value>تعذر حذف الخدمة.</value>
+</data>
+<data name="Business.Error.AddStaffFailed" xml:space="preserve">
+<value>تعذر إضافة الموظف.</value>
+</data>
+<data name="Business.Error.RemoveStaffFailed" xml:space="preserve">
+<value>تعذر إزالة الموظف.</value>
+</data>
+<data name="Business.Error.ResubmitFailed" xml:space="preserve">
+<value>تعذر إعادة إرسال النشاط التجاري للمراجعة.</value>
+</data>
+<data name="Business.Weather.RegionLabel" xml:space="preserve">
+<value>الطقس المحلي</value>
+</data>
+<data name="Business.Weather.FeelsLike" xml:space="preserve">
+<value>الإحساس كأنها</value>
+</data>
+<data name="Business.Weather.Humidity" xml:space="preserve">
+<value>الرطوبة {0}%</value>
+</data>
+<data name="Business.Weather.Wind" xml:space="preserve">
+<value>الرياح</value>
+</data>
+<data name="Business.Pagination.Previous" xml:space="preserve">
+<value>السابق</value>
+</data>
+<data name="Business.Pagination.Next" xml:space="preserve">
+<value>التالي</value>
+</data>
+<data name="Business.Pagination.Page" xml:space="preserve">
+<value>صفحة {0}</value>
+</data>
+<data name="Auth.Devices.Trusted" xml:space="preserve">
+<value>تم وضع علامة موثوق على الجهاز.</value>
+</data>
+<data name="Auth.Sessions.Revoked" xml:space="preserve">
+<value>تم إنهاء الجلسة.</value>
+</data>
+<data name="Auth.External.ProviderNotConfigured" xml:space="preserve">
+<value>مزوّد تسجيل الدخول غير مُهيّأ.</value>
+</data>
+<data name="Auth.Devices.Untrusted" xml:space="preserve">
+<value>تمت إزالة الثقة من الجهاز.</value>
+</data>
+<data name="Auth.Sessions.OthersRevoked" xml:space="preserve">
+<value>تم إنهاء {0} من الجلسات الأخرى.</value>
+</data>
+<data name="Auth.Sessions.OthersRevokedToast" xml:space="preserve">
+<value>تم تسجيل الخروج من جميع الأجهزة الأخرى.</value>
+</data>
+<data name="Auth.Sessions.ActionFailed" xml:space="preserve">
+<value>تعذّر إكمال العملية. حاول مرة أخرى.</value>
+</data>
+<data name="Auth.Sessions.Untrust" xml:space="preserve">
+<value>إزالة الثقة</value>
+</data>
+<data name="Auth.Sessions.UntrustConfirm" xml:space="preserve">
+<value>لن يُعد هذا الجهاز موثوقًا بعد الآن. هل تريد المتابعة؟</value>
+</data>
+<data name="Auth.Sessions.SignOutOthers" xml:space="preserve">
+<value>تسجيل الخروج من الأجهزة الأخرى</value>
+</data>
+<data name="Auth.Sessions.SignOutOthersConfirm" xml:space="preserve">
+<value>سيتم تسجيل خروجك من جميع الأجهزة الأخرى مع بقاء جلستك الحالية. هل تريد المتابعة؟</value>
+</data>
+<data name="Auth.External.ActionFailed" xml:space="preserve">
+<value>تعذّر إكمال العملية. حاول مرة أخرى.</value>
+</data>
+<data name="Auth.TwoFactor.ResendLabel" xml:space="preserve">
+<value>انقر لإعادة الإرسال</value>
+</data>
+<data name="Auth.TwoFactor.ResendCountdown" xml:space="preserve">
+<value>إعادة الإرسال خلال {0} ث</value>
+</data>
+<data name="Auth.TwoFactor.ResendSent" xml:space="preserve">
+<value>تم إرسال رمز جديد.</value>
+</data>
+<data name="Auth.TwoFactor.ResendFailed" xml:space="preserve">
+<value>تعذّر إعادة إرسال الرمز.</value>
+</data>
+<data name="Auth.TwoFactor.ResendRetry" xml:space="preserve">
+<value>تعذّر إعادة إرسال الرمز. حاول مرة أخرى.</value>
+</data>
+<data name="Auth.External.Completing" xml:space="preserve">
+<value>جارٍ إكمال تسجيل الدخول…</value>
+</data>
+<data name="Auth.Confirm.Cancel" xml:space="preserve">
+<value>إلغاء</value>
+</data>
+<data name="Auth.Password.StrengthWeak" xml:space="preserve">
+<value>كلمة مرور ضعيفة</value>
+</data>
+<data name="Auth.Password.StrengthFair" xml:space="preserve">
+<value>كلمة مرور متوسطة</value>
+</data>
+<data name="Auth.Password.StrengthStrong" xml:space="preserve">
+<value>كلمة مرور قوية</value>
+</data>
 </root>

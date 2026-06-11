@@ -1,29 +1,14 @@
 @model YallaJo.Web.Areas.Guide.Models.JoinRequests.JoinRequestsVm
-@using System.Globalization
-@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Guide.Models.JoinRequests
-@using YallaJo.Web.Areas.Guide.Shared
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Guide.JoinRequests.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
     var culture = CultureInfo.CurrentUICulture;
+    // Kept local: "dd MMM yyyy"(+HH:mm) output differs from GuideFormat.Date/DateTimeShort (yyyy-MM-dd).
     string Date(DateTime d) => d.ToString("dd MMM yyyy", culture);
     string DateTimeS(DateTime d) => d.ToString("dd MMM yyyy HH:mm", culture);
-    string Count(int n) => n.ToString("N0", culture);
-
-    (string Color, string Icon) StatusStyle(JoinRequestStatus status) => status switch
-    {
-        JoinRequestStatus.Approved => ("success", "circle-check"),
-        JoinRequestStatus.Rejected => ("danger", "circle-xmark"),
-        JoinRequestStatus.Cancelled => ("secondary", "ban"),
-        JoinRequestStatus.Expired => ("secondary", "hourglass-end"),
-        _ => ("warning", "clock")
-    };
 }
 
-<partial name="_GuideSidebar" model="sidebar" />
+@await Component.InvokeAsync("GuideSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">
@@ -34,17 +19,14 @@
             </div>
             @if (Model.PendingCount > 0)
             {
-                <span class="badge bg-warning bg-opacity-10 text-warning fs-6"><i class="fa-solid fa-clock fa-fw" aria-hidden="true"></i> @Localizer["Guide.JoinRequests.PendingCount", Count(Model.PendingCount)]</span>
+                <span class="badge bg-warning bg-opacity-10 text-warning fs-6"><i class="fa-solid fa-clock fa-fw" aria-hidden="true"></i> @Localizer["Guide.JoinRequests.PendingCount", GuideFormat.Count(Model.PendingCount)]</span>
             }
         </div>
 
         <div class="card card-body border">
             @if (!Model.HasRequests)
             {
-                <div class="text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                    <p class="text-secondary mb-0">@Localizer["Guide.JoinRequests.NoRequests"]</p>
-                </div>
+                <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.JoinRequests.NoRequests"].Value)' />
             }
             else
             {
@@ -66,11 +48,10 @@
                             @foreach (var req in Model.Requests)
                             {
                                 index++;
-                                var s = StatusStyle(req.Status);
                                 <tr>
-                                    <td class="fw-semibold">@Localizer["Guide.JoinRequests.RequestLabel", Count(index)]</td>
-                                    <td><bdi dir="ltr" class="font-data">@Count(req.ParticipantCount)</bdi></td>
-                                    <td class="text-truncate" style="max-width: 240px;">
+                                    <td class="fw-semibold">@Localizer["Guide.JoinRequests.RequestLabel", GuideFormat.Count(index)]</td>
+                                    <td><bdi dir="ltr" class="font-data">@GuideFormat.Count(req.ParticipantCount)</bdi></td>
+                                    <td class="text-truncate yj-cell-truncate" title="@req.Message">
                                         @if (string.IsNullOrWhiteSpace(req.Message))
                                         {
                                             <span class="text-body-secondary" aria-label="@Localizer["Guide.JoinRequests.NoMessage"]">&mdash;</span>
@@ -87,7 +68,7 @@
                                         }
                                     </td>
                                     <td>
-                                        <span class="badge bg-@s.Color bg-opacity-10 text-@s.Color"><i class="fa-solid fa-@s.Icon fa-fw" aria-hidden="true"></i> @req.Status</span>
+                                        <partial name="_GuideStatusBadge" model="new StatusBadgeVm(req.Status.ToString())" />
                                         @if (req.IsExpired)
                                         {
                                             <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-hourglass-end fa-fw" aria-hidden="true"></i> @Localizer["Guide.JoinRequests.Expired"]</span>
@@ -99,7 +80,7 @@
                                         @if (req.IsPending && !req.IsExpired)
                                         {
                                             <div class="d-inline-flex gap-2">
-                                                <form asp-area="Guide" asp-controller="JoinRequests" asp-action="Approve" method="post" class="d-inline">
+                                                <form asp-area="Guide" asp-controller="JoinRequests" asp-action="Approve" method="post" class="d-inline" data-loading>
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="RequestId" value="@req.Id" />
                                                     <button type="submit" class="btn btn-sm btn-success-soft">
@@ -149,7 +130,7 @@
                             <h2 class="modal-title h5" id="reject-req-title-@req.Id">@Localizer["Guide.JoinRequests.RejectTitle"]</h2>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
                         </div>
-                        <form asp-area="Guide" asp-controller="JoinRequests" asp-action="Reject" method="post">
+                        <form asp-area="Guide" asp-controller="JoinRequests" asp-action="Reject" method="post" data-loading>
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="RequestId" value="@req.Id" />
                             <div class="modal-body" id="reject-req-body-@req.Id">
@@ -169,4 +150,8 @@
             </div>
         }
     }
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

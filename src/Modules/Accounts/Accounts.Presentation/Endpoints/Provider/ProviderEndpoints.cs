@@ -134,6 +134,40 @@ public static class ProviderEndpoints
         .RequireAuthorization()
         .DisableAntiforgery();
 
+        // POST /api/v1/provider/documents/{id}/replace-upload — replace a document with an uploaded file (multipart).
+        // Additive: keeps the URL-based PUT route below intact for existing consumers.
+        group.MapPost("/documents/{id:guid}/replace-upload", async (
+            Guid id, [FromForm] ReplaceProviderDocumentUploadRequest req, ISender sender, CancellationToken ct) =>
+        {
+            var command = req.TryBuildCommand(id, out var leasedStream);
+            try
+            {
+                if (command is null)
+                    return Results.ValidationProblem(new Dictionary<string, string[]>
+                    {
+                        ["file"] = ["A file is required."],
+                    });
+
+                var result = await sender.Send(command, ct);
+                return result.ToApiResult();
+            }
+            finally
+            {
+                leasedStream?.Dispose();
+            }
+        })
+        .WithName("ReplaceProviderDocumentUpload")
+        .Accepts<ReplaceProviderDocumentUploadRequest>("multipart/form-data")
+        .Produces<ReplaceProviderDocumentResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .WithSummary("Replace a provider document with an uploaded file")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Update))
+        .RequireAuthorization()
+        .DisableAntiforgery();
+
         // PUT /api/v1/provider/documents/{id} — replace a document
         group.MapPut("/documents/{id:guid}", async (Guid id, ReplaceProviderDocumentRequest req, ISender sender, CancellationToken ct) =>
         {

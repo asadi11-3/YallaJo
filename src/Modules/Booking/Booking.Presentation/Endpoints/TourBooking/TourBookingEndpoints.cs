@@ -8,6 +8,7 @@ using Booking.Application.Commands.ResolveBookingDispute;
 using Booking.Application.Queries.GetAllBookings;
 using Booking.Application.Queries.GetMyBookings;
 using Booking.Application.Queries.GetProviderBookings;
+using Booking.Application.Queries.GetProviderBookingStats;
 using Booking.Application.Queries.GetTourBookingById;
 using Booking.Contracts.Authorization;
 using Booking.Domain.Enums;
@@ -34,6 +35,7 @@ internal static class TourBookingEndpoints
         MapGetTourBookingByIdEndpoint(group);
         MapGetMyBookingsEndpoint(group);
         MapGetProviderBookingsEndpoint(group);
+        MapGetProviderBookingStatsEndpoint(group);
         MapGetAllBookingsEndpoint(group);
         MapConfirmTourBookingEndpoint(group);
         MapRejectTourBookingEndpoint(group);
@@ -419,6 +421,62 @@ internal static class TourBookingEndpoints
                 "Supports status (comma-separated), slot-date range, and tourId filters. " +
                 "Each row includes the slot date/time. Requires TourBooking.ReadOwn.")
             .Produces<ProviderBookingsPage>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.TourBooking, AppAction.ReadOwn))
+            .RequireAuthorization();
+    }
+
+    // [Backend] B5: aggregate per-status booking counts for the provider dashboard / bookings tabs.
+    private static void MapGetProviderBookingStatsEndpoint(RouteGroupBuilder group)
+    {
+        group.MapGet("/provider/bookings/stats", async (
+                ICurrentUser currentUser,
+                ISender sender,
+                CancellationToken cancellationToken,
+                string? fromDate = null,
+                string? toDate = null) =>
+            {
+                if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+                {
+                    return Result.Failure<ProviderBookingStatsDto>(
+                            new Error("TourBooking.Unauthorized", "Authentication is required."),
+                            Outcome.Unauthorized)
+                        .ToApiResult();
+                }
+
+                if (!TryParseDate(fromDate, out var parsedFromDate))
+                {
+                    return Result.Failure<ProviderBookingStatsDto>(
+                            new Error("TourBooking.InvalidDateRange", "fromDate must be in YYYY-MM-DD format."),
+                            Outcome.Invalid)
+                        .ToApiResult();
+                }
+
+                if (!TryParseDate(toDate, out var parsedToDate))
+                {
+                    return Result.Failure<ProviderBookingStatsDto>(
+                            new Error("TourBooking.InvalidDateRange", "toDate must be in YYYY-MM-DD format."),
+                            Outcome.Invalid)
+                        .ToApiResult();
+                }
+
+                var query = new GetProviderBookingStatsQuery(
+                    currentUser.UserId.Value,
+                    parsedFromDate,
+                    parsedToDate);
+
+                var result = await sender.Send(query, cancellationToken);
+                return result.ToApiResult();
+            })
+            .WithName("GetProviderBookingStats")
+            .WithSummary("Provider: per-status booking counts for tours owned by the caller's provider.")
+            .WithDescription(
+                "Owner-scoped aggregate. Resolves the caller's provider via ProviderSnapshot.OwnerUserId and returns " +
+                "booking counts grouped by status (zeroes if the caller owns no provider). " +
+                "Optional slot-date range filter. Requires TourBooking.ReadOwn.")
+            .Produces<ProviderBookingStatsDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)

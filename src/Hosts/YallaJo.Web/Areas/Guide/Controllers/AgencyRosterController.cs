@@ -1,10 +1,8 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
+using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Areas.Guide.Models.AgencyRoster;
-using YallaJo.Web.Areas.Guide.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
@@ -13,10 +11,8 @@ namespace YallaJo.Web.Areas.Guide.Controllers;
 /// guide self-service <see cref="AgencyController"/> (/guide/agency). Gated by the
 /// AgencyRoster permission; the backend additionally enforces agency-ownership.
 /// </summary>
-[Area("Guide")]
-[Authorize]
 [RequirePermission(WebPermission.AgencyRoster.Read)]
-public sealed class AgencyRosterController : BaseController
+public sealed class AgencyRosterController : GuideBaseController
 {
     private readonly GuideAgencyRosterFacade _facade;
 
@@ -25,47 +21,35 @@ public sealed class AgencyRosterController : BaseController
     [HttpGet("guide/agency/roster")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("AgencyRoster");
         var result = await _facade.GetRosterAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new AgencyRosterVm());
+            return WantsAjax() ? PartialView("_RosterTables", new AgencyRosterVm()) : View(new AgencyRosterVm());
         }
 
-        return View(result.Data);
+        return WantsAjax() ? PartialView("_RosterTables", result.Data) : View(result.Data);
     }
 
+    /// <summary>Phase 3 view reduction: the Invite page was merged into the roster page
+    /// (#invite-guide anchor). The route is kept so existing links 301 to the new home.</summary>
     [HttpGet("guide/agency/roster/invite")]
     [RequirePermission(WebPermission.AgencyRoster.Create)]
-    public async Task<IActionResult> Invite(CancellationToken ct = default)
-    {
-        SetSidebar();
-        var result = await _facade.GetInviteFormAsync(ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-
-        if (!result.IsSuccess || result.Data is null)
-        {
-            SetError(result.Error);
-            return RedirectToAction(nameof(Index));
-        }
-
-        return View(result.Data);
-    }
+    public IActionResult Invite() => RedirectPermanent("/guide/agency/roster#invite-guide");
 
     [HttpPost("guide/agency/roster/invite")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.AgencyRoster.Create)]
     public async Task<IActionResult> Invite(InviteGuideFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("AgencyRoster");
 
         if (!ModelState.IsValid)
         {
-            await _facade.PopulateAvailableGuidesAsync(form, ct);
-            return View(form);
+            return await ReloadRosterAsync(form, ct);
         }
 
         var result = await _facade.InviteAsync(form, ct);
@@ -73,12 +57,15 @@ public sealed class AgencyRosterController : BaseController
 
         if (!result.IsSuccess)
         {
-            SetError(result.Error);
-            await _facade.PopulateAvailableGuidesAsync(form, ct);
-            return View(form);
+            if (!ApplyValidationErrors(result))
+            {
+                SetError(result.Error);
+            }
+
+            return await ReloadRosterAsync(form, ct);
         }
 
-        SetSuccess("Invitation sent.");
+        SetSuccess(L["Guide.Flash.InvitationSent"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -90,7 +77,9 @@ public sealed class AgencyRosterController : BaseController
         var result = await _facade.ApproveApplicationAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Application approved. The guide has been added to your roster.");
+        if (WantsAjax()) return await AjaxResultAsync(result, ct);
+
+        SetFlash(result, L["Guide.AgencyRoster.Flash.ApplicationApproved"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -99,16 +88,17 @@ public sealed class AgencyRosterController : BaseController
     [RequirePermission(WebPermission.AgencyRoster.Reject)]
     public async Task<IActionResult> Reject(Guid id, string? reason, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(reason))
+        if (RequireReason(reason, L["Guide.Flash.RejectReasonRequired"]) is { } invalid)
         {
-            SetError("Please provide a reason for rejecting the application.");
-            return RedirectToAction(nameof(Index));
+            return invalid;
         }
 
-        var result = await _facade.RejectApplicationAsync(id, reason, ct);
+        var result = await _facade.RejectApplicationAsync(id, reason!, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Application rejected.");
+        if (WantsAjax()) return await AjaxResultAsync(result, ct);
+
+        SetFlash(result, L["Guide.AgencyRoster.Flash.ApplicationRejected"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -117,22 +107,65 @@ public sealed class AgencyRosterController : BaseController
     [RequirePermission(WebPermission.AgencyRoster.Delete)]
     public async Task<IActionResult> Remove(Guid guideUserId, string? reason, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(reason))
+        if (RequireReason(reason, L["Guide.Flash.RemoveReasonRequired"]) is { } invalid)
         {
-            SetError("Please provide a reason for removing the guide.");
-            return RedirectToAction(nameof(Index));
+            return invalid;
         }
 
-        var result = await _facade.RemoveGuideAsync(guideUserId, reason, ct);
+        var result = await _facade.RemoveGuideAsync(guideUserId, reason!, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Guide removed from your roster.");
+        if (WantsAjax()) return await AjaxResultAsync(result, ct);
+
+        SetFlash(result, L["Guide.AgencyRoster.Flash.GuideRemoved"]);
         return RedirectToAction(nameof(Index));
     }
 
-    private void SetSidebar()
+    /// <summary>Re-renders the roster page with the submitted invite form (PE1: no-JS POST
+    /// failure keeps the user's input and the #invite-guide section visible).</summary>
+    private async Task<IActionResult> ReloadRosterAsync(InviteGuideFormVm form, CancellationToken ct)
     {
-        ViewData["GuideNav"] = "AgencyRoster";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
+        var roster = await _facade.GetRosterAsync(ct);
+        if (GuardSignOut(roster) is { } signOut) return signOut;
+
+        var vm = roster is { IsSuccess: true, Data: not null } ? roster.Data : new AgencyRosterVm();
+        form.AvailableGuides = vm.InviteForm.AvailableGuides;
+        vm.InviteForm = form;
+        return View(nameof(Index), vm);
+    }
+
+    /// <summary>
+    /// AJAX (WantsAjax) tail for approve/reject/remove writes: 400 + { error } on failure
+    /// (the client toasts it), otherwise the refreshed swappable roster fragment — the
+    /// client toasts its own data-success-message (NF1). No-JS callers keep the PRG flash.
+    /// </summary>
+    private async Task<IActionResult> AjaxResultAsync(ApiResult result, CancellationToken ct)
+    {
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new { error = result.Message });
+        }
+
+        var refreshed = await _facade.GetRosterAsync(ct);
+        if (GuardSignOut(refreshed) is { } signOut) return signOut;
+
+        return PartialView("_RosterTables", refreshed.Data ?? new AgencyRosterVm());
+    }
+
+    /// <summary>Shared reason-required guard for reject/remove actions; null when the reason is present.</summary>
+    private IActionResult? RequireReason(string? reason, string errorMessage)
+    {
+        if (!string.IsNullOrWhiteSpace(reason))
+        {
+            return null;
+        }
+
+        if (WantsAjax())
+        {
+            return BadRequest(new { error = errorMessage });
+        }
+
+        SetError(errorMessage);
+        return RedirectToAction(nameof(Index));
     }
 }

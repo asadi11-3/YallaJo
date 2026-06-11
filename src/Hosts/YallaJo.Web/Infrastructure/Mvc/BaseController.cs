@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Infrastructure.Mvc;
 
@@ -24,6 +27,16 @@ public abstract class BaseController : Controller
     // TempData keys consumed by _Layout / _Alerts partials.
     protected const string SuccessKey = "Success";
     protected const string ErrorKey   = "Error";
+
+    private IStringLocalizer<SharedResource>? _localizer;
+
+    /// <summary>
+    /// Lazily-resolved shared localizer for flash/toast messages (rule CON1: all
+    /// user-facing copy comes from resx). Resolved from request services so existing
+    /// controller constructors don't need an extra injected parameter.
+    /// </summary>
+    protected IStringLocalizer<SharedResource> L =>
+        _localizer ??= HttpContext.RequestServices.GetRequiredService<IStringLocalizer<SharedResource>>();
 
     /// <summary>
     /// Redirect to the Auth area login page. Single source of truth for what
@@ -72,6 +85,18 @@ public abstract class BaseController : Controller
             SetSuccess(successMessage);
         else
             SetError(result.Error ?? fallbackError);
+    }
+
+    /// <summary>
+    /// Outcome-enum variant of <see cref="SetFlash(ApiResult,string,string?)"/> for
+    /// facades that return bespoke outcome results instead of <see cref="ApiResult"/>.
+    /// </summary>
+    protected void SetFlash(bool isSuccess, string? error, string successMessage, string? fallbackError = null)
+    {
+        if (isSuccess)
+            SetSuccess(successMessage);
+        else
+            SetError(error ?? fallbackError);
     }
 
     /// <summary>

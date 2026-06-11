@@ -1,0 +1,25 @@
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Business.Models.MyBusinesses
+@model string
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    // Shared business status badge (extracted from MyBusinesses/Index + Manage, D-18).
+    var status = Model ?? "";
+    var color = MyBusinessesMapper.StatusColor(status);
+    var text = Localizer["Business.Status." + status];
+    var statusText = text.ResourceNotFound ? status : text.Value;
+    var icon = status.ToLowerInvariant() switch
+    {
+        "approved" or "published" or "active" => "circle-check",
+        "pending" or "pendingreview" or "submitted" => "clock",
+        "rejected" => "circle-xmark",
+        "suspended" => "circle-pause",
+        "moredocsneeded" or "moreinfoneeded" => "circle-question",
+        "draft" => "pen-ruler",
+        _ => "circle-info"
+    };
+}
+<span class="badge bg-@color bg-opacity-10 text-@color">
+    <i class="fa-solid fa-@icon fa-fw" aria-hidden="true"></i>
+    @statusText
+</span>

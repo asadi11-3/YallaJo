@@ -1,0 +1,93 @@
+@using System.Globalization
+@*
+    Guide dashboard layout — derived from the shared _Layout.cshtml but trimmed for the
+    authenticated Guide area (UI-PERF-C2 pages, UI-UX-D1):
+      - Drops the public marketing footer, back-to-top button and public mobile bottom navbar.
+      - Drops tiny-slider/glightbox CSS+JS (no slider/lightbox elements on dashboard pages) and
+        favorites.js/search-overlay.js (public-only features). Keeps flatpickr + Choices for pickers.
+      - Adds robots noindex/nofollow (authenticated dashboard pages must never be indexed).
+    The sticky top header still lives in the _Navbar2.cshtml partial (single source of truth).
+*@
+@{
+    var seoCulture = CultureInfo.CurrentUICulture;
+    var seoDir = seoCulture.TextInfo.IsRightToLeft ? "rtl" : "ltr";
+}
+<!DOCTYPE html>
+<html lang="@seoCulture.TwoLetterISOLanguageName" dir="@seoDir">
+<head>
+    @* dark mode switch (must run before stylesheets paint to avoid a flash of the wrong theme) *@
+    <script src="~/assets/js/theme-bootstrap.js" asp-append-version="true"></script>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - YallaJo</title>
+
+    @* Authenticated dashboard pages — never indexed. *@
+    <meta name="robots" content="noindex,nofollow" />
+
+    @* Language toggle: persists culture via the .AspNetCore.Culture cookie + reload (CookieRequestCultureProvider). CSP-safe external script per A6/SEC1/J3. *@
+    <script src="~/assets/js/language-toggle.js" asp-append-version="true" defer></script>
+
+    @* favicon *@
+    <link rel="shortcut icon" href="~/assets/images/favicon.ico" />
+
+    @* Plugins CSS (tiny-slider/glightbox intentionally omitted — unused on dashboard pages) *@
+    <link rel="stylesheet" type="text/css" href="~/assets/vendor/font-awesome/css/all.min.css" />
+    <link rel="stylesheet" type="text/css" href="~/assets/vendor/bootstrap-icons/bootstrap-icons.css" />
+    <link rel="stylesheet" type="text/css" href="~/assets/vendor/flatpickr/css/flatpickr.min.css" />
+    <link rel="stylesheet" type="text/css" href="~/assets/vendor/choices/css/choices.min.css" />
+
+    @* Theme CSS (bundles Bootstrap v5.3.0) *@
+    <link rel="stylesheet" type="text/css" href="~/assets/css/style.css" />
+
+    @* Site CSS — self-hosted fonts (UI-PERF-V3/V4, no Google Fonts CDN per A5), shell styles, shared utilities *@
+    <link rel="stylesheet" type="text/css" href="~/assets/css/site.css" asp-append-version="true" />
+
+    @* RTL overrides — loaded only for right-to-left cultures (UI-UX-Design.md §2, RTL1) *@
+    @if (seoDir == "rtl")
+    {
+        <link rel="stylesheet" type="text/css" href="~/assets/css/rtl.css" asp-append-version="true" />
+    }
+
+    @* Per-view extra styles *@
+    @await RenderSectionAsync("Styles", required: false)
+    @* Import map for fingerprinted JS modules served via MapStaticAssets()/.WithStaticAssets(). *@
+    <ImportMap />
+</head>
+
+<body>
+
+    @* A11Y2: skip link — first focusable element; Bootstrap's visually-hidden-focusable reveals it on focus. *@
+    <a class="visually-hidden-focusable" href="#main-content">@Localizer["Guide.Layout.SkipToContent"]</a>
+
+    <partial name="_Navbar2" />
+
+    @* **************** MAIN CONTENT START **************** *@
+    <main id="main-content" tabindex="-1">
+        <partial name="_Alerts" />
+        @RenderBody()
+    </main>
+    @* **************** MAIN CONTENT END **************** *@
+
+    @* Bootstrap JS bundle (served locally; fingerprinted + immutable-cached via .WithStaticAssets()). *@
+    <script src="~/assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @* Vendor plugins (flatpickr/Choices retained for date pickers and async comboboxes; tiny-slider/glightbox omitted) *@
+    <script src="~/assets/vendor/flatpickr/js/flatpickr.min.js"></script>
+    <script src="~/assets/vendor/choices/js/choices.min.js"></script>
+
+    @* Theme functions (vendor initializers are element-guarded; no slider/lightbox elements exist here) *@
+    <script src="~/assets/js/functions.js"></script>
+
+    @* Antiforgery token consumed by api-client.js for all AJAX POSTs (rules UI-SEC SEC7). *@
+    @Html.AntiForgeryToken()
+
+    @* Shared AJAX client + site-wide form UX (loading states, toasts, confirm modal). Rules UI-JS JS5, UI-UX-L2/F7/NF1. *@
+    <script src="~/assets/js/api-client.js" asp-append-version="true"></script>
+    <script src="~/assets/js/form-ux.js" asp-append-version="true"></script>
+
+    @* Per-view extra scripts *@
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

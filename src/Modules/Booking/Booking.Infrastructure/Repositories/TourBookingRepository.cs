@@ -203,6 +203,34 @@ internal sealed class TourBookingRepository(BookingDbContext context)
         return await query.CountAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// [Backend] B5: per-status booking counts for a provider, optionally scoped to a
+    /// slot-date range. Single grouped query (no N-per-status round trips).
+    /// </summary>
+    public async Task<IReadOnlyDictionary<BookingStatus, int>> GetProviderBookingStatusCountsAsync(
+        Guid providerId,
+        DateOnly? fromDate,
+        DateOnly? toDate,
+        CancellationToken cancellationToken = default)
+    {
+        var query = BuildAdminBookingsQuery(
+            statuses: null,
+            fromDate: fromDate,
+            toDate: toDate,
+            userId: null,
+            providerId: providerId,
+            tourId: null,
+            paymentStatus: null);
+
+        var rows = await query
+            .GroupBy(b => b.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return rows.ToDictionary(r => r.Status, r => r.Count);
+    }
+
     public async Task<IReadOnlyList<TourBooking>> GetPendingConfirmationOlderThanAsync(
         DateTime cutoffUtc,
         int batchSize,

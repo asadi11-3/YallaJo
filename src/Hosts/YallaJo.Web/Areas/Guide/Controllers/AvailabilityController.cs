@@ -1,15 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Availability;
-using YallaJo.Web.Areas.Guide.Shared;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class AvailabilityController : BaseController
+public sealed class AvailabilityController : GuideBaseController
 {
     private readonly GuideAvailabilityFacade _availability;
 
@@ -18,7 +13,7 @@ public sealed class AvailabilityController : BaseController
     [HttpGet("guide/availability")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Availability");
         var result = await _availability.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut)
         {
@@ -38,11 +33,11 @@ public sealed class AvailabilityController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Add(AddAvailabilityBlockFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("Availability");
 
         if (form.EndDate < form.StartDate)
         {
-            ModelState.AddModelError(nameof(form.EndDate), "End date must be on or after the start date.");
+            ModelState.AddModelError(nameof(form.EndDate), L["Guide.Validation.EndAfterStart"].Value);
         }
 
         if (!ModelState.IsValid)
@@ -66,7 +61,7 @@ public sealed class AvailabilityController : BaseController
             return await ReloadAsync(form, ct);
         }
 
-        SetSuccess("Availability block added.");
+        SetSuccess(L["Guide.Flash.AvailabilityAdded"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -74,28 +69,26 @@ public sealed class AvailabilityController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid blockId, CancellationToken ct = default)
     {
-        SetSidebar();
         var result = await _availability.DeleteBlockAsync(blockId, ct);
         if (GuardSignOut(result) is { } signOut)
         {
             return signOut;
         }
 
-        SetFlash(result, "Availability block removed.");
+        SetFlash(result, L["Guide.Flash.AvailabilityRemoved"]);
         return RedirectToAction(nameof(Index));
     }
 
     private async Task<IActionResult> ReloadAsync(AddAvailabilityBlockFormVm form, CancellationToken ct)
     {
         var result = await _availability.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
         var vm = result.IsSuccess && result.Data is not null ? result.Data : new AvailabilityVm();
         vm.Form = form;
         return View(nameof(Index), vm);
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "Availability";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

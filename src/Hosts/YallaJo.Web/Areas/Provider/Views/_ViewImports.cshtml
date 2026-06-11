@@ -1,6 +1,12 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web
 @using YallaJo.Web.Areas.Provider
 @using YallaJo.Web.Areas.Provider.Shared
 @using YallaJo.Web.Infrastructure.Authorization
+@* Area-wide display formatting (CON3): Money/Count/Date resolve to ProviderFormat;
+   views with intentionally different semantics declare local overrides that shadow these. *@
+@using static YallaJo.Web.Areas.Provider.Models.Shared.ProviderFormat
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @addTagHelper *, YallaJo.Web

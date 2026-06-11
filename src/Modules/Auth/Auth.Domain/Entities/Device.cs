@@ -35,6 +35,13 @@ public sealed class Device : AuditableEntity, IAggregateRoot
         MarkUpdated();
     }
 
+    public void Untrust()
+    {
+        IsTrusted = false;
+        TrustedAt = null;
+        MarkUpdated();
+    }
+
     public void RecordSeen()
     {
         LastSeenAt = DateTime.UtcNow;

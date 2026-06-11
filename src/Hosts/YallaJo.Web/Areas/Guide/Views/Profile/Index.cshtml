@@ -1,19 +1,9 @@
 @model YallaJo.Web.Areas.Guide.Models.Profile.ProfileVm
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Areas.Guide.Shared
-@using YallaJo.Web.Infrastructure.Authorization
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Guide.Profile.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
-    var culture = CultureInfo.CurrentUICulture;
-    string Count(int n) => n.ToString("N0", culture);
-    string Rating(decimal v) => v.ToString("0.0", culture);
 }
 
-<partial name="_GuideSidebar" model="sidebar" />
+@await Component.InvokeAsync("GuideSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">
@@ -28,26 +18,26 @@
                 <div class="col-auto">
                     @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
                     {
-                        <img src="@Model.AvatarUrl" class="rounded-circle" width="96" height="96" alt="@Model.DisplayName" style="object-fit:cover;" />
+                        <img src="@Model.AvatarUrl" class="rounded-circle yj-avatar-96" width="96" height="96" alt="@Model.DisplayName" />
                     }
                     else
                     {
-                        <div class="rounded-circle bg-primary-soft d-flex align-items-center justify-content-center" style="width:96px;height:96px;">
+                        <div class="rounded-circle bg-primary-soft d-flex align-items-center justify-content-center yj-avatar-96">
                             <i class="fa-solid fa-user fs-1 text-primary" aria-hidden="true"></i>
                         </div>
                     }
                 </div>
                 <div class="col">
                     <h2 class="h5 mb-1">@Model.DisplayName</h2>
-                    <div class="hstack gap-3 text-secondary small">
-                        <span><i class="fa-solid fa-star text-warning me-1" aria-hidden="true"></i><bdi dir="ltr">@Rating(Model.AverageRating) (@Count(Model.ReviewCount))</bdi></span>
-                        <span><i class="fa-solid fa-map me-1" aria-hidden="true"></i><bdi dir="ltr">@Localizer["Guide.Profile.ToursCount", Count(Model.TourCount)]</bdi></span>
+                    <div class="hstack gap-3 text-body-secondary small">
+                        <span><i class="fa-solid fa-star text-warning me-1" aria-hidden="true"></i><bdi dir="ltr">@GuideFormat.Rating(Model.AverageRating) (@GuideFormat.Count(Model.ReviewCount))</bdi></span>
+                        <span><i class="fa-solid fa-map me-1" aria-hidden="true"></i><bdi dir="ltr">@Localizer["Guide.Profile.ToursCount", GuideFormat.Count(Model.TourCount)]</bdi></span>
                     </div>
                 </div>
                 <div class="col-12 col-md-auto">
                     <div class="row g-2">
                         <div class="col">
-                            <form asp-area="Guide" asp-controller="Profile" asp-action="UploadAvatar" method="post" enctype="multipart/form-data" class="hstack gap-2">
+                            <form asp-area="Guide" asp-controller="Profile" asp-action="UploadAvatar" method="post" enctype="multipart/form-data" class="hstack gap-2" data-loading>
                                 @Html.AntiForgeryToken()
                                 <label for="avatar-file" class="visually-hidden">@Localizer["Guide.Profile.AvatarUpload"]</label>
                                 <input id="avatar-file" type="file" name="file" accept="image/*" class="form-control form-control-sm" required />
@@ -55,7 +45,7 @@
                             </form>
                         </div>
                         <div class="col">
-                            <form asp-area="Guide" asp-controller="Profile" asp-action="UploadCover" method="post" enctype="multipart/form-data" class="hstack gap-2">
+                            <form asp-area="Guide" asp-controller="Profile" asp-action="UploadCover" method="post" enctype="multipart/form-data" class="hstack gap-2" data-loading>
                                 @Html.AntiForgeryToken()
                                 <label for="cover-file" class="visually-hidden">@Localizer["Guide.Profile.CoverUpload"]</label>
                                 <input id="cover-file" type="file" name="file" accept="image/*" class="form-control form-control-sm" required />
@@ -70,7 +60,7 @@
         @* Core fields *@
         <div class="card card-body border">
             <h2 class="h6 mb-3">@Localizer["Guide.Profile.Details"]</h2>
-            <form asp-area="Guide" asp-controller="Profile" asp-action="Update" method="post" class="vstack gap-3">
+            <form asp-area="Guide" asp-controller="Profile" asp-action="Update" method="post" class="vstack gap-3" data-loading>
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
 
@@ -111,7 +101,7 @@
 
             @if (Model.Languages.Count == 0)
             {
-                <p class="text-secondary small mb-3">@Localizer["Guide.Profile.NoLanguages"]</p>
+                <p class="text-body-secondary small mb-3">@Localizer["Guide.Profile.NoLanguages"]</p>
             }
             else
             {
@@ -120,7 +110,11 @@
                     {
                         <span class="badge bg-primary-soft text-primary d-inline-flex align-items-center gap-2 py-2">
                             @lang.Name@(string.IsNullOrWhiteSpace(lang.Proficiency) ? "" : $" · {lang.Proficiency}")
-                            <form asp-area="Guide" asp-controller="Profile" asp-action="RemoveLanguage" method="post" class="d-inline">
+                            <form asp-area="Guide" asp-controller="Profile" asp-action="RemoveLanguage" method="post" class="d-inline" data-loading
+                                  data-confirm='@Localizer["Guide.Profile.RemoveLanguageConfirm", lang.Name]'
+                                  data-confirm-title='@Localizer["Guide.Profile.RemoveLanguageTitle"]'
+                                  data-confirm-action='@Localizer["Guide.Profile.Remove"]'
+                                  data-confirm-cancel='@Localizer["Guide.Common.Cancel"]'>
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="languageId" value="@lang.LanguageId" />
                                 <button type="submit" class="btn btn-sm btn-link p-0 text-danger lh-1" title="@Localizer["Guide.Profile.Remove"]" aria-label="@Localizer["Guide.Profile.RemoveLanguageLabel", lang.Name]">
@@ -134,7 +128,7 @@
 
             @if (Model.AvailableLanguages.Count > 0)
             {
-                <form asp-area="Guide" asp-controller="Profile" asp-action="AddLanguage" method="post" class="row g-2 align-items-end">
+                <form asp-area="Guide" asp-controller="Profile" asp-action="AddLanguage" method="post" class="row g-2 align-items-end" data-loading>
                     @Html.AntiForgeryToken()
                     <div class="col-sm-5">
                         <label for="add-language" class="form-label">@Localizer["Guide.Profile.Language"]</label>
@@ -168,19 +162,30 @@
 
             @if (Model.Specializations.Count == 0)
             {
-                <p class="text-secondary small mb-3">@Localizer["Guide.Profile.NoSpecializations"]</p>
+                <p class="text-body-secondary small mb-3">@Localizer["Guide.Profile.NoSpecializations"]</p>
             }
             else
             {
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     @foreach (var spec in Model.Specializations)
                     {
-                        <span class="badge bg-info-soft text-info py-2">
+                        <span class="badge bg-info-soft text-info d-inline-flex align-items-center gap-2 py-2">
                             @if (!string.IsNullOrWhiteSpace(spec.Icon))
                             {
                                 <i class="fa-solid @spec.Icon me-1" aria-hidden="true"></i>
                             }
                             @spec.Name
+                            <form asp-area="Guide" asp-controller="Profile" asp-action="RemoveSpecialization" method="post" class="d-inline" data-loading
+                                  data-confirm='@Localizer["Guide.Profile.RemoveSpecializationConfirm", spec.Name]'
+                                  data-confirm-title='@Localizer["Guide.Profile.RemoveSpecializationTitle"]'
+                                  data-confirm-action='@Localizer["Guide.Profile.Remove"]'
+                                  data-confirm-cancel='@Localizer["Guide.Common.Cancel"]'>
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="specializationId" value="@spec.Id" />
+                                <button type="submit" class="btn btn-sm btn-link p-0 text-danger lh-1" title='@Localizer["Guide.Profile.Remove"]' aria-label='@Localizer["Guide.Profile.RemoveSpecializationLabel", spec.Name]'>
+                                    <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                                </button>
+                            </form>
                         </span>
                     }
                 </div>
@@ -188,7 +193,7 @@
 
             @if (Model.AvailableSpecializations.Count > 0)
             {
-                <form asp-area="Guide" asp-controller="Profile" asp-action="AddSpecialization" method="post" class="row g-2 align-items-end">
+                <form asp-area="Guide" asp-controller="Profile" asp-action="AddSpecialization" method="post" class="row g-2 align-items-end" data-loading>
                     @Html.AntiForgeryToken()
                     <div class="col-sm-9">
                         <label for="add-specialization" class="form-label">@Localizer["Guide.Profile.Specialization"]</label>
@@ -223,7 +228,8 @@
 
             <div class="modal fade" id="deactivateProfileModal" tabindex="-1" aria-labelledby="deactivateProfileTitle" aria-describedby="deactivateProfileBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered">
-                    <form asp-area="Guide" asp-controller="Profile" asp-action="Deactivate" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deactivateProfileTitle">
+                    @* A11Y: Bootstrap injects the dialog/modal ARIA semantics on the .modal root at runtime — keep .modal-content clean. *@
+                    <form asp-area="Guide" asp-controller="Profile" asp-action="Deactivate" method="post" class="modal-content" data-loading>
                         @Html.AntiForgeryToken()
                         <div class="modal-header bg-danger text-white">
                             <h2 class="modal-title h5" id="deactivateProfileTitle">@Localizer["Guide.Profile.DeactivateModalTitle"]</h2>

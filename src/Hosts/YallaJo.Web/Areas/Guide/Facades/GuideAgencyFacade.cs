@@ -17,7 +17,13 @@ public sealed class GuideAgencyFacade
 
     public async Task<ApiResult<AgencyVm>> GetAsync(CancellationToken ct = default)
     {
-        var result = await _api.GetMyInvitationsAsync(ct);
+        // UI-PERF-API1: fetch invitations and the agency directory (F10 picker options) in parallel.
+        var invitationsTask = _api.GetMyInvitationsAsync(ct);
+        var agencyOptionsTask = FetchAgencyOptionsAsync(ct);
+        await Task.WhenAll(invitationsTask, agencyOptionsTask);
+
+        var result = await invitationsTask;
+        var agencyOptions = await agencyOptionsTask;
         if (result.RequireSignOut)
         {
             return ApiResult<AgencyVm>.ForceSignOut();
@@ -45,7 +51,35 @@ public sealed class GuideAgencyFacade
 
         var pendingCount = rows.Count(r => r.Status == AgencyInvitationStatus.Pending && r.ExpiresAt > now);
 
-        return ApiResult<AgencyVm>.Ok(new AgencyVm { Invitations = rows, PendingCount = pendingCount });
+        return ApiResult<AgencyVm>.Ok(new AgencyVm
+        {
+            Invitations = rows,
+            PendingCount = pendingCount,
+            AgencyOptions = agencyOptions,
+        });
+    }
+
+    private async Task<IReadOnlyList<AgencyOptionVm>> FetchAgencyOptionsAsync(CancellationToken ct)
+    {
+        // UI-ERR3: picker options are an enhancement — degrade to an empty list
+        // (the select still renders with just the placeholder) on any failure.
+        try
+        {
+            var result = await _api.GetAgenciesAsync(page: 1, pageSize: 50, ct);
+            if (result is not { IsSuccess: true, Data: not null })
+            {
+                return [];
+            }
+
+            return result.Data.Agencies
+                .Select(a => new AgencyOptionVm(a.UserId, string.IsNullOrWhiteSpace(a.BusinessName) ? a.UserId.ToString() : a.BusinessName))
+                .ToList();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Failed to load agency options for the apply form.");
+            return [];
+        }
     }
 
     public async Task<ApiResult> ApplyAsync(ApplyToAgencyFormVm form, CancellationToken ct = default)

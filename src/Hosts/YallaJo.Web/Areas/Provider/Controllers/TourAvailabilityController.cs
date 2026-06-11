@@ -10,7 +10,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
 [Authorize]
-public sealed class TourAvailabilityController : BaseController
+public sealed class TourAvailabilityController : ProviderTourResourceController
 {
     private readonly ProviderTourAvailabilityFacade _facade;
     private readonly ICurrentUser _currentUser;
@@ -22,6 +22,27 @@ public sealed class TourAvailabilityController : BaseController
     }
 
     // ── GET /provider/tours/{id}/availability ─────────────────────────────────────
+    /// <summary>
+    /// [Backend] B3 Web proxy — server-rendered month grid for the availability
+    /// calendar (CAL1, lazy per month via api.loadPartial; JS5). The slot table on
+    /// the Index page remains the no-JS path (PE1).
+    /// </summary>
+    [HttpGet("provider/tours/{id:guid}/availability/calendar")]
+    public async Task<IActionResult> Calendar(Guid id, int year, int month, CancellationToken ct)
+    {
+        if (!_currentUser.HasPermission(WebPermission.AvailabilitySlot.Read)) return Forbid();
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        if (year < 2000 || year > 2100) year = today.Year;
+        if (month is < 1 or > 12) month = today.Month;
+
+        var vm = await _facade.GetCalendarAsync(id, year, month, ct);
+        if (vm is null)
+            return BadRequest(new { error = L["Provider.Flash.CouldNotLoadCalendar"].Value });
+
+        return PartialView("_AvailabilityCalendar", vm);
+    }
+
     [HttpGet("provider/tours/{id:guid}/availability")]
     public async Task<IActionResult> Index(Guid id, CancellationToken ct)
     {
@@ -49,7 +70,7 @@ public sealed class TourAvailabilityController : BaseController
         vm.TourId = id;
         if (!ModelState.IsValid)
         {
-            SetError("Please complete the recurring-slots form correctly.");
+            SetError(L["Provider.Flash.BulkFormInvalid"]);
             return RedirectToAction(nameof(Index), new { id });
         }
 
@@ -57,7 +78,7 @@ public sealed class TourAvailabilityController : BaseController
         switch (result.Outcome)
         {
             case TourAvailabilityOutcome.Ok:
-                SetSuccess("Recurring availability slots created.");
+                SetSuccess(L["Provider.Flash.BulkSlotsCreated"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourAvailabilityOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -65,7 +86,7 @@ public sealed class TourAvailabilityController : BaseController
                 SetError(result.Error);
                 return RedirectToStatus();
             default:
-                SetError(result.Error ?? "Could not create the recurring slots.");
+                SetError(result.Error ?? L["Provider.Flash.CouldNotCreateBulkSlots"].Value);
                 return RedirectToAction(nameof(Index), new { id });
         }
     }
@@ -80,7 +101,7 @@ public sealed class TourAvailabilityController : BaseController
         var result = await _facade.GetCreateAsync(id, ct);
         return result.Outcome switch
         {
-            TourAvailabilityOutcome.Ok => View(result.Form),
+            TourAvailabilityOutcome.Ok => View("Upsert", result.Form),
             TourAvailabilityOutcome.ForceSignOut => RedirectToLogin(),
             TourAvailabilityOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error),
@@ -98,13 +119,13 @@ public sealed class TourAvailabilityController : BaseController
         vm.TourId = id;
         vm.IsEdit = false;
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.CreateAsync(id, vm, ct);
         switch (result.Outcome)
         {
             case TourAvailabilityOutcome.Ok:
-                SetSuccess("Availability slot created.");
+                SetSuccess(L["Provider.Flash.SlotCreated"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourAvailabilityOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -115,11 +136,11 @@ public sealed class TourAvailabilityController : BaseController
                 SetError(result.Error);
                 return RedirectToAction(nameof(Index), new { id });
             case TourAvailabilityOutcome.Conflict:
-                ModelState.AddModelError(string.Empty, result.Error ?? "This slot conflicts with an existing one.");
-                return View(vm);
+                ModelState.AddModelError(string.Empty, result.Error ?? L["Provider.Flash.SlotConflict"].Value);
+                return View("Upsert", vm);
             default:
-                ApplyValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                ApplyFacadeValidation(result.ValidationErrors, result.Error);
+                return View("Upsert", vm);
         }
     }
 
@@ -133,7 +154,7 @@ public sealed class TourAvailabilityController : BaseController
         var result = await _facade.GetEditAsync(id, slotId, ct);
         return result.Outcome switch
         {
-            TourAvailabilityOutcome.Ok => View(result.Form),
+            TourAvailabilityOutcome.Ok => View("Upsert", result.Form),
             TourAvailabilityOutcome.ForceSignOut => RedirectToLogin(),
             TourAvailabilityOutcome.Forbidden => Denied(result.Error),
             _ => NotFoundRedirect(result.Error, id),
@@ -157,16 +178,16 @@ public sealed class TourAvailabilityController : BaseController
         ModelState.Remove(nameof(vm.StartTime));
         ModelState.Remove(nameof(vm.EndTime));
         if (vm.MaxCapacity < 1)
-            ModelState.AddModelError(nameof(vm.MaxCapacity), "Capacity must be at least 1.");
+            ModelState.AddModelError(nameof(vm.MaxCapacity), L["Provider.Flash.CapacityMin"].Value);
 
         if (!ModelState.IsValid)
-            return View(vm);
+            return View("Upsert", vm);
 
         var result = await _facade.UpdateAsync(id, slotId, vm, ct);
         switch (result.Outcome)
         {
             case TourAvailabilityOutcome.Ok:
-                SetSuccess("Availability slot saved.");
+                SetSuccess(L["Provider.Flash.SlotSaved"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourAvailabilityOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -178,10 +199,10 @@ public sealed class TourAvailabilityController : BaseController
                 return RedirectToAction(nameof(Index), new { id });
             case TourAvailabilityOutcome.Conflict:
                 SetError(result.Error);
-                return View(vm);
+                return View("Upsert", vm);
             default:
-                ApplyValidation(result.ValidationErrors, result.Error);
-                return View(vm);
+                ApplyFacadeValidation(result.ValidationErrors, result.Error);
+                return View("Upsert", vm);
         }
     }
 
@@ -197,48 +218,10 @@ public sealed class TourAvailabilityController : BaseController
         if (result.Outcome == TourAvailabilityOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourAvailabilityOutcome.Ok)
-            SetSuccess("Availability slot removed.");
+            SetSuccess(L["Provider.Flash.SlotRemoved"]);
         else
-            SetError(result.Error ?? "Could not remove the slot.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotRemoveSlot"].Value);
 
         return RedirectToAction(nameof(Index), new { id });
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────────
-
-    private void ApplyValidation(IReadOnlyDictionary<string, string[]>? errors, string? fallback)
-    {
-        var applied = false;
-        if (errors is { Count: > 0 })
-        {
-            foreach (var (field, messages) in errors)
-            {
-                foreach (var message in messages)
-                    ModelState.AddModelError(field, message);
-                applied = true;
-            }
-        }
-
-        if (!applied)
-            ModelState.AddModelError(string.Empty, fallback ?? "Please correct the highlighted fields and try again.");
-        else if (!string.IsNullOrWhiteSpace(fallback))
-            SetError(fallback);
-    }
-
-    private IActionResult Denied(string? message)
-    {
-        SetError(message ?? "You don't have access to this listing.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult NotFoundRedirect(string? message, Guid? tourId = null)
-    {
-        SetError(message ?? "Not found.");
-        return tourId.HasValue
-            ? RedirectToAction(nameof(Index), new { id = tourId.Value })
-            : RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
 }

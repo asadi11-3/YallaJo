@@ -22,6 +22,17 @@ public sealed class PlaceOptionsResponse
     public List<PlaceOptionResponse> Items { get; set; } = [];
 }
 
+/// <summary>
+/// Mirrors ContentPlaces PlaceLookupDto (GET /api/v1/places/lookup) — the
+/// lightweight typeahead row used by the Register form's place search.
+/// </summary>
+public sealed class PlaceLookupItemResponse
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = "";
+    public string? City { get; set; }
+}
+
 /// <summary>Mirrors ContentPlaces BusinessSummaryDto.</summary>
 public sealed class BusinessSummaryResponse
 {

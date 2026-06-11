@@ -10,7 +10,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
 [Authorize]
-public sealed class TourGuidesController : BaseController
+public sealed class TourGuidesController : ProviderTourResourceController
 {
     private readonly ProviderTourGuidesFacade _facade;
     private readonly ICurrentUser _currentUser;
@@ -41,6 +41,19 @@ public sealed class TourGuidesController : BaseController
     // ── POST /provider/tours/{id}/guides/assign ───────────────────────────────────
     [HttpPost("provider/tours/{id:guid}/guides/assign")]
     [ValidateAntiForgeryToken]
+    /// <summary>
+    /// [Backend] B7 Web proxy — JSON suggestions for the guide combobox (F10/JS5).
+    /// No-JS users keep the manual GUID input (PE1).
+    /// </summary>
+    [HttpGet("provider/tours/{id:guid}/guides/lookup")]
+    public async Task<IActionResult> Lookup(Guid id, string? term, CancellationToken ct)
+    {
+        if (!_currentUser.HasPermission(WebPermission.TourGuide.Update)) return Forbid();
+
+        var items = await _facade.LookupAsync(id, term, ct);
+        return Json(items.Select(g => new { userId = g.UserId, displayName = g.DisplayName, avatarUrl = g.AvatarUrl }));
+    }
+
     public async Task<IActionResult> Assign(Guid id, AssignTourGuideFormVm vm, CancellationToken ct)
     {
         if (!_currentUser.HasPermission(WebPermission.TourGuide.Update))
@@ -53,7 +66,7 @@ public sealed class TourGuidesController : BaseController
         switch (result.Outcome)
         {
             case TourGuideOutcome.Ok:
-                SetSuccess("Guide assigned.");
+                SetSuccess(L["Provider.Flash.GuideAssigned"]);
                 return RedirectToAction(nameof(Index), new { id });
             case TourGuideOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -64,7 +77,7 @@ public sealed class TourGuidesController : BaseController
                 SetError(result.Error);
                 return RedirectToAction(nameof(Index), new { id });
             default:
-                ApplyValidation(result.ValidationErrors, result.Error);
+                ApplyFacadeValidation(result.ValidationErrors, result.Error, keyPrefix: "Assign.");
                 return await ReloadIndex(id, vm, ct);
         }
     }
@@ -81,9 +94,9 @@ public sealed class TourGuidesController : BaseController
         if (result.Outcome == TourGuideOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourGuideOutcome.Ok)
-            SetSuccess("Guide removed.");
+            SetSuccess(L["Provider.Flash.GuideRemoved"]);
         else
-            SetError(result.Error ?? "Could not remove the guide.");
+            SetError(result.Error ?? L["Provider.Flash.CouldNotRemoveGuide"].Value);
 
         return RedirectToAction(nameof(Index), new { id });
     }
@@ -107,38 +120,4 @@ public sealed class TourGuidesController : BaseController
         };
         return View(nameof(Index), vm);
     }
-
-    private void ApplyValidation(IReadOnlyDictionary<string, string[]>? errors, string? fallback)
-    {
-        var applied = false;
-        if (errors is { Count: > 0 })
-        {
-            foreach (var (field, messages) in errors)
-            {
-                foreach (var message in messages)
-                    ModelState.AddModelError($"Assign.{field}", message);
-                applied = true;
-            }
-        }
-
-        if (!applied)
-            ModelState.AddModelError(string.Empty, fallback ?? "Please correct the highlighted fields and try again.");
-        else if (!string.IsNullOrWhiteSpace(fallback))
-            SetError(fallback);
-    }
-
-    private IActionResult Denied(string? message)
-    {
-        SetError(message ?? "You don't have access to this listing.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult NotFoundRedirect(string? message)
-    {
-        SetError(message ?? "Not found.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
 }

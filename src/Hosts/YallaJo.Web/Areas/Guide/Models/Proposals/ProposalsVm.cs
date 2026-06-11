@@ -11,8 +11,14 @@ public sealed class ProposalsVm
 
     public CreateProposalFormVm Form { get; set; } = new();
 
+    /// <summary>F10: place options prefetching the create-form picker (best-effort; may be empty).</summary>
+    public IReadOnlyList<PlaceOptionVm> Places { get; init; } = [];
+
     public bool HasProposals => Proposals.Count > 0;
 }
+
+/// <summary>F10 picker option — place shown as "Name — City" (or just Name), submitting the id.</summary>
+public sealed record PlaceOptionVm(Guid Id, string Label);
 
 /// <summary>
 /// A single proposal row.

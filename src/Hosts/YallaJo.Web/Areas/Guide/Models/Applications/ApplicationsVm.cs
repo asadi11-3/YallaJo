@@ -11,6 +11,9 @@ public sealed class ApplicationsVm
     public int PageSize { get; init; } = 20;
     public ApplyForTourFormVm Form { get; set; } = new();
 
+    /// <summary>Tours open for guide applications — server-rendered options for the picker (PE1).</summary>
+    public IReadOnlyList<OpenTourOptionVm> OpenTours { get; set; } = [];
+
     public bool HasApplications => Applications.Count > 0;
     public int TotalPages => PageSize > 0 ? (int)Math.Ceiling(TotalCount / (double)PageSize) : 0;
     public bool HasPreviousPage => Page > 1;
@@ -28,6 +31,9 @@ public sealed record ApplicationRowVm(
     DateTime CreatedAt,
     DateTime? ReviewedAt,
     string? RejectionReason);
+
+/// <summary>A selectable tour option for the apply-to-run picker (F10).</summary>
+public sealed record OpenTourOptionVm(Guid TourId, string Label);
 
 /// <summary>Form for applying to run a tour.</summary>
 public sealed class ApplyForTourFormVm

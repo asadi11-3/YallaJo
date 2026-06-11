@@ -12,6 +12,10 @@ public sealed class DevicesApiClient
     public Task<ApiResult> TrustDeviceAsync(Guid deviceId, CancellationToken ct = default)
         => _api.PatchAsync($"/api/v1/auth/devices/{deviceId}/trust", null, ct);
 
+    // DELETE /api/v1/auth/devices/{id}/trust — remove the trusted mark from a device.
+    public Task<ApiResult> UntrustDeviceAsync(Guid deviceId, CancellationToken ct = default)
+        => _api.DeleteAsync($"/api/v1/auth/devices/{deviceId}/trust", ct);
+
     // ── Push-notification device tokens (Messaging /devices/*) — §3.10 Devices ──
 
     // GET /api/v1/devices/tokens — the current user's registered device tokens.

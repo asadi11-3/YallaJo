@@ -1,0 +1,13 @@
+@model YallaJo.Web.Areas.Guide.Models.Shared.EmptyStateVm
+@*
+    Shared empty state (UI-L6): illustration + message + optional CTA.
+    Message/CtaText arrive pre-localized.
+*@
+<div class="text-center py-5">
+    <img src="~/assets/images/element/17.svg" width="80" height="80" alt="" aria-hidden="true" class="h-80px mb-3" />
+    <p class="mb-3 text-body-secondary">@Model.Message</p>
+    @if (Model.CtaText is { Length: > 0 } && Model.CtaHref is { Length: > 0 })
+    {
+        <a href="@Model.CtaHref" class="btn btn-sm btn-primary-soft">@Model.CtaText</a>
+    }
+</div>

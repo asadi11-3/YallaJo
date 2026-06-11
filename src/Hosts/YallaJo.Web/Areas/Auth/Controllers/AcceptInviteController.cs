@@ -9,6 +9,7 @@ namespace YallaJo.Web.Areas.Auth.Controllers;
 [Area("Auth")]
 [AllowAnonymous]
 [Route("auth/accept-invite")]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)] // C2: carries invite token + password form
 public sealed class AcceptInviteController : BaseController
 {
     private readonly AcceptInviteFacade _facade;
@@ -27,7 +28,7 @@ public sealed class AcceptInviteController : BaseController
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
         {
-            return View("InvalidLink");
+            return View("Status", new InviteStatusVm { Kind = InviteStatusKind.InvalidLink });
         }
 
         return View(new AcceptInviteVm
@@ -54,7 +55,7 @@ public sealed class AcceptInviteController : BaseController
 
         if (result.IsExpired)
         {
-            return View("Expired", new ResendFromExpiredVm { Email = vm.Email });
+            return View("Status", new InviteStatusVm { Kind = InviteStatusKind.Expired, Email = vm.Email });
         }
 
         if (result.IsAlreadyCompleted)

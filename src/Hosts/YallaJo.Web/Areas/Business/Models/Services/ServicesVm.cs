@@ -9,6 +9,13 @@ public sealed class ServicesVm
     public string Status { get; set; } = "";
     public IReadOnlyList<ServiceRowVm> Services { get; set; } = [];
     public AddServiceFormVm Form { get; set; } = new();
+
+    /// <summary>
+    /// When set, Services/Index renders the inline edit panel for this service
+    /// (no-JS fallback for the edit offcanvas, PE1).
+    /// </summary>
+    public EditServiceFormVm? EditForm { get; set; }
+
     public bool HasServices => Services.Count > 0;
 }
 

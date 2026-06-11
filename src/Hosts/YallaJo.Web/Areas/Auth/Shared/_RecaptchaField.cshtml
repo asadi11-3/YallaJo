@@ -16,7 +16,10 @@
 
 @if (Recaptcha.IsEnabled)
 {
-    <script src="https://www.google.com/recaptcha/api.js?render=@Recaptcha.SiteKey"></script>
+    @* defer (A6): grecaptcha is only needed at submit time, long after parsing —
+       no reason to block the parser mid-body. recaptcha-field.js degrades
+       gracefully if it has not loaded yet. *@
+    <script src="https://www.google.com/recaptcha/api.js?render=@Recaptcha.SiteKey" defer></script>
     @* CSP (SEC1): reCAPTCHA submit wiring externalized to recaptcha-field.js (reads
        data-recaptcha-sitekey + data-recaptcha-action off the hidden input) so no inline
        <script> is needed on the auth funnel. *@

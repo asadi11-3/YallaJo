@@ -39,7 +39,7 @@
                                 <div asp-validation-summary="All" class="text-danger mt-3 mb-0"></div>
 
                                 <!-- Form START -->
-                                <form asp-area="Auth" asp-controller="Auth" asp-action="TwoFactor" method="post" class="mt-sm-4 text-start">
+                                <form asp-area="Auth" asp-controller="Auth" asp-action="TwoFactor" method="post" class="mt-sm-4 text-start" data-loading>
                                     @Html.AntiForgeryToken()
 
                                     @* No hidden Email field: the pending identity lives in the encrypted
@@ -90,6 +90,20 @@
        "</script>" cannot terminate this non-executable application/json island. The
        payload is config-controlled (site key + constant action name), and Html.Raw only
        prevents Razor from double-encoding the already-safe JSON. *@
-    <script type="application/json" id="auth-twofactor-data">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { recaptchaEnabled = Recaptcha.IsEnabled, recaptchaSiteKey = Recaptcha.SiteKey, resendAction = RecaptchaActions.ResendOtp }))</script>
+    <script type="application/json" id="auth-twofactor-data">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+    {
+        recaptchaEnabled = Recaptcha.IsEnabled,
+        recaptchaSiteKey = Recaptcha.SiteKey,
+        resendAction = RecaptchaActions.ResendOtp,
+        // CON1: user-facing JS strings come from resx, never hardcoded in auth-twofactor.js.
+        strings = new
+        {
+            resendLabel = Localizer["Auth.TwoFactor.ResendLabel"].Value,
+            countdownFormat = Localizer["Auth.TwoFactor.ResendCountdown"].Value,
+            sent = Localizer["Auth.TwoFactor.ResendSent"].Value,
+            failed = Localizer["Auth.TwoFactor.ResendFailed"].Value,
+            retry = Localizer["Auth.TwoFactor.ResendRetry"].Value
+        }
+    }))</script>
     <script src="~/assets/js/auth-twofactor.js" asp-append-version="true"></script>
 }

@@ -30,4 +30,14 @@ public interface IUserRepository : IRepository<User, Guid>
     /// Single query, ordered by email, capped at <paramref name="limit"/> — feeds admin typeahead lookups.
     /// </summary>
     Task<IReadOnlyList<User>> SuggestByEmailAsync(string query, int limit, CancellationToken ct = default);
+
+    /// <summary>
+    /// Lightweight lookup for typeahead pickers (B1): matches active users by primary-email
+    /// substring (<paramref name="query"/>) and/or exact ids. Results capped at <paramref name="limit"/>.
+    /// </summary>
+    Task<IReadOnlyList<User>> SearchAsync(
+        string? query,
+        IReadOnlyCollection<Guid>? ids,
+        int limit,
+        CancellationToken ct = default);
 }

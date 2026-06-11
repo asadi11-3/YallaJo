@@ -129,4 +129,33 @@ internal sealed class UserRepository(SecurityDbContext context)
             .Take(limit)
             .ToListAsync(ct);
     }
+
+    public async Task<IReadOnlyList<User>> SearchAsync(
+        string? query,
+        IReadOnlyCollection<Guid>? ids,
+        int limit,
+        CancellationToken ct = default)
+    {
+        var users = context.Users
+            .AsNoTracking()
+            .Include(u => u.Emails.Where(e => e.IsPrimary))
+            .Where(u => u.IsActive);
+
+        if (ids is { Count: > 0 })
+        {
+            users = users.Where(u => ids.Contains(u.Id));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            // Email addresses are stored lowercased; normalize the term the same way.
+            var term = query.Trim().ToLowerInvariant();
+            users = users.Where(u => u.Emails.Any(e => e.IsPrimary && e.Address.Contains(term)));
+        }
+
+        return await users
+            .OrderBy(u => u.Id)
+            .Take(limit)
+            .ToListAsync(ct);
+    }
 }

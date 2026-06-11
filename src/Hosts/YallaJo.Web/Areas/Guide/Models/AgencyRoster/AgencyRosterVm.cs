@@ -16,6 +16,10 @@ public sealed class AgencyRosterVm
     public int PendingApplicationCount { get; init; }
     public int ActiveGuideCount => Guides.Count;
     public int PendingInvitationCount { get; init; }
+
+    /// <summary>Inline invite-guide form (Phase 3: the Invite page was merged into this view
+    /// at the #invite-guide anchor; GET /guide/agency/roster/invite 301s here).</summary>
+    public InviteGuideFormVm InviteForm { get; set; } = new();
 }
 
 public sealed record AgencyGuideRowVm(

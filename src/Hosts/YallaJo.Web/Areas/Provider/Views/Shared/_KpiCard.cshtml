@@ -1,0 +1,25 @@
+@*
+    Provider KPI stat card (icon + value + caption), used on Dashboard and Finance.
+    ViewData knobs:
+      icon      (required) - Font Awesome icon classes, e.g. "fa-solid fa-map"
+      color     (required) - Bootstrap contextual color suffix, e.g. "success", "info"
+      value     (required) - pre-formatted display value; rendered inside <bdi dir="ltr"> per RTL3
+      label     (required) - localized caption text
+      cardClass (optional) - extra classes on the card element, e.g. "h-100"
+*@
+@{
+    var icon = ViewData["icon"] as string ?? string.Empty;
+    var color = ViewData["color"] as string ?? "primary";
+    var value = ViewData["value"] as string ?? string.Empty;
+    var label = ViewData["label"] as string ?? string.Empty;
+    var cardClass = ViewData["cardClass"] as string;
+}
+<div class="card card-body border @cardClass">
+    <div class="d-flex align-items-center">
+        <div class="icon-xl bg-@color bg-opacity-10 rounded-3 text-@color"><i class="@icon fs-5" aria-hidden="true"></i></div>
+        <div class="ms-3">
+            <p class="h4 font-data mb-0"><bdi dir="ltr">@value</bdi></p>
+            <span class="small text-body-secondary">@label</span>
+        </div>
+    </div>
+</div>

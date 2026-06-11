@@ -1,0 +1,197 @@
+@using YallaJo.Web.Areas.Guide.Models.AgencyRoster
+@model AgencyRosterVm
+@{
+    // AJAX fragment contract (PE1): single-root swappable region for provider-actions.js —
+    // AgencyRosterController returns it from WantsAjax() branches after approve/reject/remove writes.
+    var culture = CultureInfo.CurrentUICulture;
+    // Kept local: commission arrives as a 0-100 percentage ("0.##" + %), unlike GuideFormat.Pct (0-1 fraction).
+    string Pct(decimal v) => v.ToString("0.##", culture) + "%";
+}
+<div class="vstack gap-4" data-yj-swap="roster" id="roster-tables" aria-live="polite">
+    @* ── Current guides ── *@
+    <div class="card border">
+        <div class="card-header border-bottom">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Guide.AgencyRoster.CurrentGuides"]</h2>
+            <small class="text-body-secondary">@Localizer["Guide.AgencyRoster.CurrentGuidesSubtitle"]</small>
+        </div>
+        <div class="card-body">
+            @if (!Model.HasGuides)
+            {
+                <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.AgencyRoster.NoGuides"].Value)' />
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">@Localizer["Guide.AgencyRoster.ColGuide"]</th>
+                                <th scope="col" class="text-end">@Localizer["Guide.AgencyRoster.ColCommission"]</th>
+                                <th scope="col">@Localizer["Guide.AgencyRoster.ColJoined"]</th>
+                                <permission require="@WebPermission.AgencyRoster.Delete">
+                                    <th scope="col" class="text-end">@Localizer["Guide.AgencyRoster.ColActions"]</th>
+                                </permission>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var g in Model.Guides)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@g.GuideHandle</td>
+                                    <td class="text-end"><bdi dir="ltr" class="font-data">@Pct(g.CommissionPercentage)</bdi></td>
+                                    <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(g.JoinedAt)</bdi></td>
+                                    <permission require="@WebPermission.AgencyRoster.Delete">
+                                        <td class="text-end">
+                                            <form asp-action="Remove" asp-route-guideUserId="@g.GuideUserId" method="post" class="d-inline"
+                                                  data-loading data-yj-ajax data-yj-swap-target="roster"
+                                                  data-success-message='@Localizer["Guide.AgencyRoster.Flash.GuideRemoved"]'
+                                                  data-error-text='@Localizer["Public.Results.Error"]'
+                                                  data-yj-reason-form
+                                                  data-reason-title='@Localizer["Guide.AgencyRoster.RemoveTitle"]'
+                                                  data-reason-action='@Localizer["Guide.AgencyRoster.RemoveConfirm"]'>
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="reason" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fa-solid fa-user-minus me-1" aria-hidden="true"></i>@Localizer["Guide.AgencyRoster.Remove"]
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </permission>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* ── Pending applications ── *@
+    <div class="card border">
+        <div class="card-header border-bottom">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Guide.AgencyRoster.ApplicationsHeading"]</h2>
+            <small class="text-body-secondary">@Localizer["Guide.AgencyRoster.ApplicationsSubtitle"]</small>
+        </div>
+        <div class="card-body">
+            @if (!Model.HasApplications)
+            {
+                <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.AgencyRoster.NoApplications"].Value)' />
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">@Localizer["Guide.AgencyRoster.ColGuide"]</th>
+                                <th scope="col">@Localizer["Guide.AgencyRoster.ColMessage"]</th>
+                                <th scope="col">@Localizer["Guide.AgencyRoster.ColStatus"]</th>
+                                <th scope="col">@Localizer["Guide.AgencyRoster.ColApplied"]</th>
+                                <th scope="col" class="text-end">@Localizer["Guide.AgencyRoster.ColActions"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in Model.Applications)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@a.GuideHandle</td>
+                                    <td class="small text-body-secondary">
+                                        @if (string.IsNullOrWhiteSpace(a.Message))
+                                        {
+                                            <span aria-label="@Localizer["Guide.AgencyRoster.NoMessage"]">&mdash;</span>
+                                        }
+                                        else
+                                        {
+                                            @a.Message
+                                        }
+                                    </td>
+                                    <td><partial name="_GuideStatusBadge" model="new StatusBadgeVm(a.Status.ToString())" /></td>
+                                    <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(a.CreatedAt)</bdi></td>
+                                    <td class="text-end">
+                                        @if (a.IsPending)
+                                        {
+                                            <div class="d-inline-flex gap-1">
+                                                <permission require="@WebPermission.AgencyRoster.Approve">
+                                                    <form asp-action="Approve" asp-route-id="@a.Id" method="post" class="d-inline"
+                                                          data-loading data-yj-ajax data-yj-swap-target="roster"
+                                                          data-success-message='@Localizer["Guide.AgencyRoster.Flash.ApplicationApproved"]'
+                                                          data-error-text='@Localizer["Public.Results.Error"]'>
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-success-soft">
+                                                            <i class="fa-solid fa-check me-1" aria-hidden="true"></i>@Localizer["Guide.AgencyRoster.Approve"]
+                                                        </button>
+                                                    </form>
+                                                </permission>
+                                                <permission require="@WebPermission.AgencyRoster.Reject">
+                                                    <form asp-action="Reject" asp-route-id="@a.Id" method="post" class="d-inline"
+                                                          data-loading data-yj-ajax data-yj-swap-target="roster"
+                                                          data-success-message='@Localizer["Guide.AgencyRoster.Flash.ApplicationRejected"]'
+                                                          data-error-text='@Localizer["Public.Results.Error"]'
+                                                          data-yj-reason-form
+                                                          data-reason-title='@Localizer["Guide.AgencyRoster.RejectTitle"]'
+                                                          data-reason-action='@Localizer["Guide.AgencyRoster.RejectConfirm"]'>
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="reason" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                            <i class="fa-solid fa-xmark me-1" aria-hidden="true"></i>@Localizer["Guide.AgencyRoster.Reject"]
+                                                        </button>
+                                                    </form>
+                                                </permission>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-body-secondary small">&mdash;</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* ── Sent invitations ── *@
+    <div class="card border">
+        <div class="card-header border-bottom">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Guide.AgencyRoster.SentHeading"]</h2>
+            <small class="text-body-secondary">@Localizer["Guide.AgencyRoster.SentSubtitle"]</small>
+        </div>
+        <div class="card-body">
+            @if (!Model.HasSentInvitations)
+            {
+                <partial name="_GuideEmptyState" model='new EmptyStateVm(Localizer["Guide.AgencyRoster.NoSent"].Value)' />
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">@Localizer["Guide.AgencyRoster.ColGuide"]</th>
+                                <th scope="col" class="text-end">@Localizer["Guide.AgencyRoster.ColProposedCommission"]</th>
+                                <th scope="col">@Localizer["Guide.AgencyRoster.ColStatus"]</th>
+                                <th scope="col">@Localizer["Guide.AgencyRoster.ColExpires"]</th>
+                                <th scope="col">@Localizer["Guide.AgencyRoster.ColSent"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var i in Model.SentInvitations)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@i.GuideHandle</td>
+                                    <td class="text-end"><bdi dir="ltr" class="font-data">@Pct(i.ProposedCommissionPercentage)</bdi></td>
+                                    <td><partial name="_GuideStatusBadge" model="new StatusBadgeVm(i.Status.ToString())" /></td>
+                                    <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(i.ExpiresAt)</bdi></td>
+                                    <td><bdi dir="ltr" class="font-data small">@GuideFormat.Date(i.CreatedAt)</bdi></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

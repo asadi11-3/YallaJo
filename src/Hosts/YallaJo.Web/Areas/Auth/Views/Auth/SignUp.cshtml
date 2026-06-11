@@ -38,7 +38,7 @@
                                 <div asp-validation-summary="All" class="text-danger mt-3 mb-0"></div>
 
                                 <!-- Form START -->
-                                <form asp-area="Auth" asp-controller="Auth" asp-action="SignUp" method="post" class="mt-4 text-start">
+                                <form asp-area="Auth" asp-controller="Auth" asp-action="SignUp" method="post" class="mt-4 text-start" data-loading>
                                     @Html.AntiForgeryToken()
 
                                     <div class="row">
@@ -66,16 +66,13 @@
                                     <!-- Password -->
                                     <div class="mb-3 position-relative">
                                         <label asp-for="Password" class="form-label">@Localizer["Auth.Field.Password"]</label>
-                                        <input asp-for="Password" class="form-control fakepassword" id="psw-input" type="password" autocomplete="new-password" />
+                                        <input asp-for="Password" class="form-control fakepassword" id="psw-input" type="password" autocomplete="new-password" data-psw-meter="#pswMeter" aria-describedby="pswHint" />
                                         <span class="position-absolute top-50 end-0 translate-middle-y p-0 mt-3">
                                             <i class="fakepasswordicon fas fa-eye-slash cursor-pointer p-2"></i>
                                         </span>
                                         <span asp-validation-for="Password" class="text-danger small"></span>
-                                        <!-- Password strength meter -->
-                                        <div class="progress progress-thin mt-2">
-                                            <div id="pswMeter" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                                        </div>
-                                        <small id="pswHint" class="form-text">@Localizer["Auth.SignUp.PasswordHint"]</small>
+                                        <!-- Password strength meter (shared partial, F3) -->
+                                        <partial name="_PasswordMeterField" view-data='new ViewDataDictionary(ViewData) { ["MeterId"] = "pswMeter", ["HintKey"] = "Auth.SignUp.PasswordHint", ["HintId"] = "pswHint" }' />
                                     </div>
 
                                     <partial name="_RecaptchaField" model="@RecaptchaActions.Register" />
@@ -95,33 +92,8 @@
                                         <p class="small position-absolute top-50 start-50 translate-middle bg-mode px-1 px-sm-2">@Localizer["Auth.SignUp.OrWith"]</p>
                                     </div>
 
-                                    <!-- Google and Facebook -->
-                                    <div class="vstack gap-3">
-                                        @if (ProviderAvailability.IsGoogleAvailable)
-                                        {
-                                            <form asp-area="Auth" asp-controller="ExternalAuth" asp-action="Challenge" method="post">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="provider" value="google" />
-                                                <input type="hidden" name="mode" value="login" />
-                                                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-                                                <button type="submit" class="btn btn-light w-100 mb-0">
-                                                    <i class="fab fa-fw fa-google text-google-icon me-2" aria-hidden="true"></i>@Localizer["Auth.Social.GoogleSignup"]
-                                                </button>
-                                            </form>
-                                        }
-                                        @if (ProviderAvailability.IsFacebookAvailable)
-                                        {
-                                            <form asp-area="Auth" asp-controller="ExternalAuth" asp-action="Challenge" method="post">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="provider" value="facebook" />
-                                                <input type="hidden" name="mode" value="login" />
-                                                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-                                                <button type="submit" class="btn btn-light w-100 mb-0">
-                                                    <i class="fab fa-fw fa-facebook-f text-facebook me-2" aria-hidden="true"></i>@Localizer["Auth.Social.FacebookSignup"]
-                                                </button>
-                                            </form>
-                                        }
-                                    </div>
+                                    <!-- Google and Facebook (shared partial) -->
+                                    <partial name="_SocialAuthButtons" view-data='new ViewDataDictionary(ViewData) { ["ReturnUrl"] = Model.ReturnUrl, ["Mode"] = "login", ["GoogleLabelKey"] = "Auth.Social.GoogleSignup", ["FacebookLabelKey"] = "Auth.Social.FacebookSignup" }' />
                                 }
                             </div>
                         </div>
@@ -134,5 +106,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/assets/js/auth-signup.js" asp-append-version="true"></script>
+    <script src="~/assets/js/password-meter.js" asp-append-version="true"></script>
 }

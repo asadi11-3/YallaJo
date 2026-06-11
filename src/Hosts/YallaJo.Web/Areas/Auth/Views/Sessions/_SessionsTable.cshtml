@@ -1,0 +1,121 @@
+@using System.Globalization
+@model YallaJo.Web.Areas.Auth.Models.Sessions.SessionsVm
+@{
+    var culture = CultureInfo.CurrentUICulture;
+    string When(DateTime dt) => dt.ToString("g", culture);
+}
+@* Swappable sessions table (PE1: served as a PartialView for AJAX refreshes via
+   WantsAjax(); the full Index page renders it inline for the no-JS path). *@
+@if (!Model.Sessions.Any())
+{
+    <div class="text-center py-5">
+        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+        <p class="mb-0 text-secondary">@Localizer["Auth.Sessions.EmptyMessage"]</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 yj-table-stack">
+            <thead>
+                <tr>
+                    <th scope="col">@Localizer["Auth.Sessions.ColDevice"]</th>
+                    <th scope="col">@Localizer["Auth.Sessions.ColIp"]</th>
+                    <th scope="col">@Localizer["Auth.Sessions.ColStarted"]</th>
+                    <th scope="col">@Localizer["Auth.Sessions.ColExpires"]</th>
+                    <th scope="col" class="text-end">@Localizer["Auth.Sessions.ColActions"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Sessions)
+                {
+                    <tr>
+                        <td data-label="@Localizer["Auth.Sessions.ColDevice"]">
+                            <span class="fw-semibold">@s.DeviceName</span>
+                            @if (s.IsCurrent)
+                            {
+                                <span class="badge bg-success bg-opacity-10 text-success ms-2">
+                                    <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i>
+                                    @Localizer["Auth.Sessions.Current"]
+                                </span>
+                            }
+                            @if (s.IsTrusted)
+                            {
+                                <span class="badge bg-primary bg-opacity-10 text-primary ms-2">
+                                    <i class="fa-solid fa-shield-halved fa-fw" aria-hidden="true"></i>
+                                    @Localizer["Auth.Sessions.Trusted"]
+                                </span>
+                            }
+                        </td>
+                        <td data-label="@Localizer["Auth.Sessions.ColIp"]">
+                            @if (string.IsNullOrWhiteSpace(s.IpAddress))
+                            {
+                                <span class="text-secondary" aria-label="@Localizer["Auth.Sessions.NoIp"]">&mdash;</span>
+                            }
+                            else
+                            {
+                                <bdi dir="ltr" class="font-data">@s.IpAddress</bdi>
+                            }
+                        </td>
+                        <td data-label="@Localizer["Auth.Sessions.ColStarted"]"><bdi dir="ltr" class="font-data">@When(s.CreatedAt)</bdi></td>
+                        <td data-label="@Localizer["Auth.Sessions.ColExpires"]"><bdi dir="ltr" class="font-data">@When(s.ExpiresAt)</bdi></td>
+                        <td data-label="" class="text-end">
+                            <div class="d-inline-flex gap-2">
+                                @if (!s.IsTrusted)
+                                {
+                                    <form asp-area="Auth" asp-controller="Devices" asp-action="Trust"
+                                          asp-route-deviceId="@s.DeviceId" method="post" class="d-inline"
+                                          data-sessions-ajax
+                                          data-success-msg="@Localizer["Auth.Devices.Trusted"]"
+                                          data-error-msg="@Localizer["Auth.Sessions.ActionFailed"]">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa-solid fa-shield-halved fa-fw me-1" aria-hidden="true"></i>
+                                            @Localizer["Auth.Sessions.Trust"]
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-area="Auth" asp-controller="Devices" asp-action="Untrust"
+                                          asp-route-deviceId="@s.DeviceId" method="post" class="d-inline"
+                                          data-sessions-ajax
+                                          data-confirm="@Localizer["Auth.Sessions.UntrustConfirm"]"
+                                          data-confirm-title="@Localizer["Auth.Sessions.Untrust"]"
+                                          data-confirm-action="@Localizer["Auth.Sessions.Untrust"]"
+                                          data-confirm-cancel="@Localizer["Auth.Confirm.Cancel"]"
+                                          data-success-msg="@Localizer["Auth.Devices.Untrusted"]"
+                                          data-error-msg="@Localizer["Auth.Sessions.ActionFailed"]">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa-solid fa-shield-slash fa-fw me-1" aria-hidden="true"></i>
+                                            @Localizer["Auth.Sessions.Untrust"]
+                                        </button>
+                                    </form>
+                                }
+                                @if (!s.IsCurrent)
+                                {
+                                    <form asp-area="Auth" asp-controller="Sessions" asp-action="Revoke"
+                                          asp-route-sessionId="@s.SessionId" method="post" class="d-inline"
+                                          data-sessions-ajax
+                                          data-confirm="@Localizer["Auth.Sessions.RevokeConfirm"]"
+                                          data-confirm-title="@Localizer["Auth.Sessions.Revoke"]"
+                                          data-confirm-action="@Localizer["Auth.Sessions.Revoke"]"
+                                          data-confirm-cancel="@Localizer["Auth.Confirm.Cancel"]"
+                                          data-success-msg="@Localizer["Auth.Sessions.Revoked"]"
+                                          data-error-msg="@Localizer["Auth.Sessions.ActionFailed"]">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="fa-solid fa-ban fa-fw me-1" aria-hidden="true"></i>
+                                            @Localizer["Auth.Sessions.Revoke"]
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

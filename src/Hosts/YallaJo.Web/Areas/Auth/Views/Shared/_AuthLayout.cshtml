@@ -7,6 +7,8 @@
     site chrome (top navbar, footer, back-to-top, mobile navbar) so auth screens
     render as standalone, focused, full-height pages.
 *@
+@using YallaJo.Web.Infrastructure.Security.Recaptcha
+@inject IRecaptchaScriptService AuthRecaptcha
 @{
     var authCulture = System.Globalization.CultureInfo.CurrentUICulture;
     var authLang = authCulture.TwoLetterISOLanguageName;
@@ -26,11 +28,32 @@
     @* favicon *@
     <link rel="shortcut icon" href="~/assets/images/favicon.ico" />
 
+    @* Font preload (A5/V4): only the file the current culture paints body text with —
+       Arabic preloads IBM Plex Sans Arabic 400, everything else the DM Sans variable
+       file. Other weights load on demand via site.css @@font-face (font-display: swap). *@
+    @if (authDir == "rtl")
+    {
+        <link rel="preload" href="~/fonts/ibm-plex-sans-arabic-400.woff2" as="font" type="font/woff2" crossorigin />
+    }
+    else
+    {
+        <link rel="preload" href="~/fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+    }
+
+    @* Preconnect (A5): only when reCAPTCHA is configured — the funnel forms load
+       https://www.google.com/recaptcha/api.js via _RecaptchaField. No other third-party
+       origins are used on auth pages. *@
+    @if (AuthRecaptcha.IsEnabled)
+    {
+        <link rel="preconnect" href="https://www.google.com" crossorigin />
+        <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+    }
+
     @* Fonts: the external Google Fonts CDN has been removed (UI-UX-Design.md V3 — no
-       third-party font CDN). No local DM Sans / Poppins font files are bundled, so the
-       theme's existing "DM Sans"/"Poppins" rules fall back to their declared `sans-serif`
-       generic (and Bootstrap's --bs-font-sans-serif system stack). Icon fonts
-       (Font Awesome, Bootstrap Icons) remain self-hosted under ~/assets/vendor. *@
+       third-party font CDN). Self-hosted brand fonts (DM Sans, Poppins, IBM Plex Sans
+       Arabic) live under ~/fonts/ with @@font-face declarations in site.css
+       (V3/V4/A5/X10), loaded below. Icon fonts (Font Awesome, Bootstrap Icons)
+       remain self-hosted under ~/assets/vendor. *@
 
     @* Plugins CSS *@
     <link rel="stylesheet" type="text/css" href="~/assets/vendor/font-awesome/css/all.min.css" />
@@ -38,6 +61,10 @@
 
     @* Theme CSS (bundles Bootstrap v5.3.0) *@
     <link rel="stylesheet" type="text/css" href="~/assets/css/style.css" />
+
+    @* Project-owned site-wide styles: self-hosted brand @@font-face (DM Sans, Poppins,
+       IBM Plex Sans Arabic via html[lang="ar"]) + shared utilities (V3/V4/A5/X10). *@
+    <link rel="stylesheet" type="text/css" href="~/assets/css/site.css" asp-append-version="true" />
 
     @* Project-owned Auth custom styles (loaded after the theme so it can override). *@
     <link rel="stylesheet" type="text/css" href="~/assets/css/auth.css" asp-append-version="true" />
@@ -64,8 +91,20 @@
     </main>
     @* **************** MAIN CONTENT END **************** *@
 
+    @* Script loading audit (A6): every script below sits at the end of <body>, which is
+       already non-parser-blocking (equivalent to defer for first paint). `defer` is NOT
+       added here because per-view @@section Scripts (validation, page scripts) are plain
+       end-of-body scripts that depend on these globals — defer would reorder them after.
+       The only head script is theme-bootstrap.js, blocking by design (T5/X1 pre-paint). *@
+
     @* Bootstrap JS bundle (served locally; fingerprinted + immutable-cached via .WithStaticAssets()). *@
     <script src="~/assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @* Shared AJAX client (window.YallaJo.api — antiforgery header, timeout, 401→sign-in; JS5/SEC7). *@
+    <script src="~/assets/js/api-client.js" asp-append-version="true"></script>
+
+    @* Shared form UX (data-loading spinner L2/F7, YallaJo.toast NF1, data-confirm modal F8). *@
+    <script src="~/assets/js/form-ux.js" asp-append-version="true"></script>
 
     @* Theme functions (password eye-toggle, dark-mode switch wiring, etc.) *@
     <script src="~/assets/js/functions.js"></script>

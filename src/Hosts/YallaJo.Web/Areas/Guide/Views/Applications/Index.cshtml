@@ -1,29 +1,9 @@
 @model YallaJo.Web.Areas.Guide.Models.Applications.ApplicationsVm
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Areas.Guide.Shared
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Guide.Applications.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
-    var culture = CultureInfo.CurrentUICulture;
-
-    string Money(decimal? amount, string currency = "JOD")
-        => amount is null ? "—" : amount.Value.ToString("N2", culture) + " " + currency;
-
-    string Date(DateTime d) => d.ToString("dd MMM yyyy", culture);
-
-    (string Color, string Icon) StatusStyle(string? status) => status?.ToLowerInvariant() switch
-    {
-        "approved" or "accepted" => ("success", "circle-check"),
-        "rejected" or "declined" => ("danger", "circle-xmark"),
-        "pending" or "submitted" => ("warning", "clock"),
-        _ => ("secondary", "circle-info"),
-    };
 }
 
-<partial name="_GuideSidebar" model="sidebar" />
+@await Component.InvokeAsync("GuideSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">
@@ -36,16 +16,24 @@
             <div class="col-lg-5">
                 <div class="card card-body border h-100">
                     <h2 class="card-header-title h5 mb-3"><i class="fa-solid fa-paper-plane me-2" aria-hidden="true"></i>@Localizer["Guide.Applications.ApplyHeading"]</h2>
-                    <form asp-area="Guide" asp-controller="Applications" asp-action="Apply" method="post">
+                    <form asp-area="Guide" asp-controller="Applications" asp-action="Apply" method="post" data-loading>
                         @Html.AntiForgeryToken()
                         <div asp-validation-summary="ModelOnly" class="text-danger small mb-2" role="alert"></div>
 
                         <div class="mb-3">
                             <label asp-for="Form.TourId" class="form-label">@Localizer["Guide.Applications.TourId"]</label>
-                            <input asp-for="Form.TourId" class="form-control font-data" dir="ltr" autocomplete="off"
-                                   aria-describedby="apply-tour-help" placeholder="@Localizer["Guide.Applications.TourIdPlaceholder"]" />
+                            @* F10: SSR select (PE1) progressively enhanced into an async searchable combobox by guide-applications.js. *@
+                            <select asp-for="Form.TourId" class="form-select js-open-tour-picker"
+                                    data-lookup-url="@Url.Action("OpenTours")"
+                                    data-no-results="@Localizer["Guide.Applications.NoResults"]">
+                                <option value="">@Localizer["Guide.Applications.SelectTour"]</option>
+                                @foreach (var tour in Model.OpenTours)
+                                {
+                                    @* OptionTagHelper auto-selects the option matching Form.TourId via asp-for. *@
+                                    <option value="@tour.TourId">@tour.Label</option>
+                                }
+                            </select>
                             <span asp-validation-for="Form.TourId" class="text-danger small" role="alert"></span>
-                            <div id="apply-tour-help" class="form-text">@Localizer["Guide.Applications.TourIdHelp"]</div>
                         </div>
 
                         <div class="mb-3">
@@ -77,80 +65,19 @@
                 <div class="card card-body border h-100">
                     <h2 class="card-header-title h5 mb-3"><i class="fa-solid fa-list-check me-2" aria-hidden="true"></i>@Localizer["Guide.Applications.MyApplications"]</h2>
 
-                    @if (!Model.HasApplications)
-                    {
-                        <div class="text-center py-5">
-                            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                            <p class="text-secondary mb-0">@Localizer["Guide.Applications.NoApplications"]</p>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">@Localizer["Guide.Applications.ColTour"]</th>
-                                        <th scope="col">@Localizer["Guide.Applications.ColStatus"]</th>
-                                        <th scope="col">@Localizer["Guide.Applications.ColPrice"]</th>
-                                        <th scope="col">@Localizer["Guide.Applications.ColApplied"]</th>
-                                        <th scope="col">@Localizer["Guide.Applications.ColReviewed"]</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var app in Model.Applications)
-                                    {
-                                        var s = StatusStyle(app.Status);
-                                        <tr>
-                                            <td>
-                                                <div class="fw-semibold">@app.TourTitle</div>
-                                                @if (!string.IsNullOrWhiteSpace(app.Message))
-                                                {
-                                                    <div class="small text-body-secondary text-truncate" style="max-width: 280px;">@app.Message</div>
-                                                }
-                                                @if (!string.IsNullOrWhiteSpace(app.RejectionReason))
-                                                {
-                                                    <div class="small text-danger"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i>@app.RejectionReason</div>
-                                                }
-                                            </td>
-                                            <td><span class="badge bg-@s.Color bg-opacity-10 text-@s.Color"><i class="fa-solid fa-@s.Icon fa-fw" aria-hidden="true"></i> @app.Status</span></td>
-                                            <td><bdi dir="ltr" class="font-data">@Money(app.ProposedBasePrice)</bdi></td>
-                                            <td><bdi dir="ltr" class="font-data">@Date(app.CreatedAt)</bdi></td>
-                                            <td>
-                                                @if (app.ReviewedAt.HasValue)
-                                                {
-                                                    <bdi dir="ltr" class="font-data">@Date(app.ReviewedAt.Value)</bdi>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-secondary">&mdash;</span>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-
-                        @if (Model.TotalPages > 1)
-                        {
-                            <nav class="mt-3" aria-label="@Localizer["Guide.Applications.Pagination"]">
-                                <ul class="pagination pagination-sm mb-0 justify-content-center">
-                                    <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                                        <a class="page-link" asp-area="Guide" asp-controller="Applications" asp-action="Index" asp-route-page="@(Model.Page - 1)">@Localizer["Guide.Common.Previous"]</a>
-                                    </li>
-                                    <li class="page-item disabled">
-                                        <span class="page-link">@Localizer["Guide.Common.PageOf", Model.Page, Model.TotalPages]</span>
-                                    </li>
-                                    <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                                        <a class="page-link" asp-area="Guide" asp-controller="Applications" asp-action="Index" asp-route-page="@(Model.Page + 1)">@Localizer["Guide.Common.Next"]</a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        }
-                    }
+                    @* Phase 4: results fragment swapped via AJAX by listing.js; plain markup without JS (PE1). *@
+                    <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+                         data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]" data-loading-text="@Localizer["Public.Loading"]">
+                        <partial name="_ApplicationsResults" model="Model" />
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true"></script>
+    <script src="~/assets/js/guide-applications.js" asp-append-version="true"></script>
+    <partial name="_ValidationScriptsPartial" />
+}

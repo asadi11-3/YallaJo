@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Provider.Facades;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
@@ -21,25 +20,33 @@ public sealed class ProviderBookingsController : BaseController
     public ProviderBookingsController(ProviderBookingsFacade facade) => _facade = facade;
 
     [HttpGet("provider/bookings/manage")]
-    public async Task<IActionResult> Index(string? status, CancellationToken ct = default)
+    public async Task<IActionResult> Index(
+        string? status, string? cursor = null,
+        string? fromDate = null, string? toDate = null, Guid? tourId = null,
+        CancellationToken ct = default)
     {
-        SetSidebar();
-        var result = await _facade.GetListAsync(status, ct);
+        var result = await _facade.GetListAsync(status, cursor, fromDate, toDate, tourId, ct);
         if (result.Outcome == ProviderBookingOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome != ProviderBookingOutcome.Ok || result.Data is null)
         {
             SetError(result.Error);
-            return View(new Models.Bookings.ProviderBookingsIndexVm { Status = status });
+            var fallback = new Models.Bookings.ProviderBookingsIndexVm
+            {
+                Status = status, FromDate = fromDate, ToDate = toDate, TourId = tourId,
+            };
+            return WantsAjax() ? PartialView("_BookingsResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        // AJAX requests get the table fragment (status filter + cursor Load-more; the
+        // cursor paging here is the sanctioned high-volume exception, plan §4.6).
+        // Full requests keep the SSR page so everything works without JS (PE1).
+        return WantsAjax() ? PartialView("_BookingsResults", result.Data) : View(result.Data);
     }
 
     [HttpGet("provider/bookings/manage/{id:guid}")]
     public async Task<IActionResult> Details(Guid id, CancellationToken ct = default)
     {
-        SetSidebar();
         var result = await _facade.GetDetailsAsync(id, ct);
         if (result.Outcome == ProviderBookingOutcome.ForceSignOut) return RedirectToLogin();
 
@@ -59,7 +66,7 @@ public sealed class ProviderBookingsController : BaseController
     public async Task<IActionResult> Confirm(Guid id, CancellationToken ct = default)
     {
         var result = await _facade.ConfirmAsync(id, ct);
-        return Finish(result, id, "Booking confirmed.");
+        return Finish(result, id, L["Provider.Flash.BookingConfirmed"]);
     }
 
     [HttpPost("provider/bookings/manage/{id:guid}/reject")]
@@ -68,12 +75,12 @@ public sealed class ProviderBookingsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("Please provide a reason for rejecting the booking.");
+            SetError(L["Provider.Flash.RejectReasonRequired"]);
             return RedirectToAction(nameof(Details), new { id });
         }
 
         var result = await _facade.RejectAsync(id, reason, ct);
-        return Finish(result, id, "Booking rejected.");
+        return Finish(result, id, L["Provider.Flash.BookingRejected"]);
     }
 
     [HttpPost("provider/bookings/manage/{id:guid}/cancel")]
@@ -82,12 +89,12 @@ public sealed class ProviderBookingsController : BaseController
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("Please provide a reason for cancelling the booking.");
+            SetError(L["Provider.Flash.CancelReasonRequired"]);
             return RedirectToAction(nameof(Details), new { id });
         }
 
         var result = await _facade.CancelAsync(id, reason, ct);
-        return Finish(result, id, "Booking cancelled.");
+        return Finish(result, id, L["Provider.Flash.BookingCancelled"]);
     }
 
     [HttpPost("provider/bookings/manage/{id:guid}/complete")]
@@ -95,27 +102,15 @@ public sealed class ProviderBookingsController : BaseController
     public async Task<IActionResult> Complete(Guid id, CancellationToken ct = default)
     {
         var result = await _facade.CompleteAsync(id, ct);
-        return Finish(result, id, "Booking marked as completed.");
+        return Finish(result, id, L["Provider.Flash.BookingCompleted"]);
     }
 
     private IActionResult Finish(ProviderBookingActionResult result, Guid id, string successMessage)
     {
         if (result.Outcome == ProviderBookingOutcome.ForceSignOut) return RedirectToLogin();
 
-        if (result.Outcome == ProviderBookingOutcome.Ok)
-            SetSuccess(successMessage);
-        else
-            SetError(result.Error);
-
+        SetFlash(result.Outcome == ProviderBookingOutcome.Ok, result.Error, successMessage);
         return RedirectToAction(nameof(Details), new { id });
     }
 
-    private void SetSidebar()
-    {
-        ViewData["ProviderNav"] = "Bookings";
-        ViewBag.Sidebar = new ProviderSidebarVm
-        {
-            DisplayName = User.Identity?.Name ?? "Provider",
-        };
-    }
 }

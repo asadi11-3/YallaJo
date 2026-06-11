@@ -1,17 +1,12 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.MyTours;
-using YallaJo.Web.Areas.Guide.Shared;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class MyToursController : BaseController
+public sealed class MyToursController : GuideBaseController
 {
     private const int DefaultPageSize = 20;
 
@@ -22,7 +17,7 @@ public sealed class MyToursController : BaseController
     [HttpGet("guide/tours")]
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("MyTours");
         if (page < 1)
         {
             page = 1;
@@ -34,19 +29,29 @@ public sealed class MyToursController : BaseController
             return signOut;
         }
 
+        MyToursVm vm;
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new MyToursVm());
+            vm = new MyToursVm();
+        }
+        else
+        {
+            vm = result.Data;
         }
 
-        return View(result.Data);
+        if (WantsAjax())
+        {
+            return PartialView("_MyToursResults", vm);
+        }
+
+        return View(vm);
     }
 
     [HttpGet("guide/tours/{tourId:guid}")]
     public async Task<IActionResult> Offering(Guid tourId, CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("MyTours");
         var result = await _facade.GetOfferingDetailAsync(tourId, ct);
         if (GuardSignOut(result) is { } signOut)
         {
@@ -66,8 +71,13 @@ public sealed class MyToursController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddSchedule(Guid tourId, AddScheduleFormVm form, CancellationToken ct = default)
     {
+        if (InvalidModelRedirect(tourId) is { } invalid)
+        {
+            return invalid;
+        }
+
         var result = await _facade.AddScheduleAsync(tourId, form, ct);
-        return HandleMutation(result, tourId, "Schedule added.");
+        return await HandleMutationAsync(result, tourId, L["Guide.Offering.Flash.ScheduleAdded"], "_OfferingSchedules", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/schedules/{scheduleId:guid}/delete")]
@@ -75,15 +85,20 @@ public sealed class MyToursController : BaseController
     public async Task<IActionResult> DeleteSchedule(Guid tourId, Guid scheduleId, CancellationToken ct = default)
     {
         var result = await _facade.DeleteScheduleAsync(tourId, scheduleId, ct);
-        return HandleMutation(result, tourId, "Schedule removed.");
+        return await HandleMutationAsync(result, tourId, L["Guide.Offering.Flash.ScheduleRemoved"], "_OfferingSchedules", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/pricing-tiers")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddPricingTier(Guid tourId, AddPricingTierFormVm form, CancellationToken ct = default)
     {
+        if (InvalidModelRedirect(tourId) is { } invalid)
+        {
+            return invalid;
+        }
+
         var result = await _facade.AddPricingTierAsync(tourId, form, ct);
-        return HandleMutation(result, tourId, "Pricing tier added.");
+        return await HandleMutationAsync(result, tourId, L["Guide.Offering.Flash.TierAdded"], "_OfferingPricingTiers", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/pricing-tiers/{tierId:guid}/delete")]
@@ -91,15 +106,20 @@ public sealed class MyToursController : BaseController
     public async Task<IActionResult> DeletePricingTier(Guid tourId, Guid tierId, CancellationToken ct = default)
     {
         var result = await _facade.DeletePricingTierAsync(tourId, tierId, ct);
-        return HandleMutation(result, tourId, "Pricing tier removed.");
+        return await HandleMutationAsync(result, tourId, L["Guide.Offering.Flash.TierRemoved"], "_OfferingPricingTiers", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/private-tour")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EnablePrivateTour(Guid tourId, PrivateTourFormVm form, CancellationToken ct = default)
     {
+        if (InvalidModelRedirect(tourId) is { } invalid)
+        {
+            return invalid;
+        }
+
         var result = await _facade.EnablePrivateTourAsync(tourId, form, ct);
-        return HandleMutation(result, tourId, "Private tour enabled.");
+        return await HandleMutationAsync(result, tourId, L["Guide.Offering.Flash.PrivateUpdated"], "_OfferingPrivateTour", ct);
     }
 
     [HttpPost("guide/tours/{tourId:guid}/private-tour/delete")]
@@ -107,7 +127,7 @@ public sealed class MyToursController : BaseController
     public async Task<IActionResult> DisablePrivateTour(Guid tourId, CancellationToken ct = default)
     {
         var result = await _facade.DisablePrivateTourAsync(tourId, ct);
-        return HandleMutation(result, tourId, "Private tour disabled.");
+        return await HandleMutationAsync(result, tourId, L["Guide.Offering.Flash.PrivateDisabled"], "_OfferingPrivateTour", ct);
     }
 
     // POST /guide/tours/{tourId}/offering/remove — remove the guide's whole offering on this tour.
@@ -124,31 +144,74 @@ public sealed class MyToursController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Offering removed.");
+            SetSuccess(L["Guide.Flash.OfferingRemoved"]);
         }
         else
         {
-            SetError(result.Error ?? "Could not remove the offering.");
+            SetError(result.Error ?? L["Guide.Flash.OfferingRemoveFailed"].Value);
         }
 
         // The offering no longer exists — return to the tours list, not the offering page.
         return RedirectToAction(nameof(Index));
     }
 
-    private IActionResult HandleMutation(ApiResult result, Guid tourId, string successMessage)
+    /// <summary>
+    /// Guard for invalid ModelState. AJAX (WantsAjax): return the first error as
+    /// <c>400 { error }</c> so provider-actions.js toasts it. Otherwise PRG: flash the
+    /// first ModelState error and bounce back to the offering page.
+    /// </summary>
+    private IActionResult? InvalidModelRedirect(Guid tourId)
+    {
+        if (ModelState.IsValid)
+        {
+            return null;
+        }
+
+        var firstError = ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage)
+            .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
+
+        if (WantsAjax())
+        {
+            return BadRequest(new { error = firstError ?? L["Guide.Flash.CheckForm"].Value });
+        }
+
+        SetError(firstError ?? L["Guide.Flash.CheckForm"].Value);
+        return RedirectToAction(nameof(Offering), new { tourId });
+    }
+
+    /// <summary>
+    /// Shared epilogue for offering mutations. AJAX (WantsAjax): on failure return
+    /// <c>400 { error }</c> (toasted by provider-actions.js); on success re-fetch the
+    /// offering and return the swappable fragment named by <paramref name="fragmentName"/>
+    /// so the client replaces just that card (PE1). Otherwise: flash + PRG redirect.
+    /// </summary>
+    private async Task<IActionResult> HandleMutationAsync(
+        ApiResult result, Guid tourId, string successMessage, string fragmentName, CancellationToken ct)
     {
         if (GuardSignOut(result) is { } signOut)
         {
             return signOut;
         }
 
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+            {
+                return BadRequest(new { error = result.Message ?? L["Guide.Flash.ActionFailed"].Value });
+            }
+
+            var refreshed = await _facade.GetOfferingDetailAsync(tourId, ct);
+            if (GuardSignOut(refreshed) is { } so)
+            {
+                return so;
+            }
+
+            return PartialView(fragmentName, refreshed.Data ?? new OfferingDetailVm());
+        }
+
         SetFlash(result, successMessage);
         return RedirectToAction(nameof(Offering), new { tourId });
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "MyTours";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

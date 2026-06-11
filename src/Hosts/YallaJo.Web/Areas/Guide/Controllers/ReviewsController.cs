@@ -1,15 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Reviews;
-using YallaJo.Web.Areas.Guide.Shared;
-using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Infrastructure.Authorization;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class ReviewsController : BaseController
+public sealed class ReviewsController : GuideBaseController
 {
     private const int DefaultPageSize = 20;
 
@@ -21,22 +17,67 @@ public sealed class ReviewsController : BaseController
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
         if (page < 1) page = 1;
-        SetSidebar();
+        SetNav("Reviews");
 
         var result = await _reviews.GetAsync(page, DefaultPageSize, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
+
+        ReviewsVm vm;
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new ReviewsVm());
+            vm = new ReviewsVm();
+        }
+        else
+        {
+            vm = result.Data;
         }
 
-        return View(result.Data);
+        if (WantsAjax())
+        {
+            return PartialView("_ReviewsResults", vm);
+        }
+
+        return View(vm);
     }
 
-    private void SetSidebar()
+    /// <summary>
+    /// Posts the guide's reply to a review (B3). AJAX (WantsAjax): 400 + { error } on failure
+    /// (provider-actions.js toasts it), otherwise the refreshed swappable reviews fragment —
+    /// the client toasts its own data-success-message (NF1). No-JS callers keep the PRG flash.
+    /// </summary>
+    [HttpPost("guide/reviews/{id:guid}/reply")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.ReviewReply.Create)]
+    public async Task<IActionResult> Reply(Guid id, string? content, int page = 1, CancellationToken ct = default)
     {
-        ViewData["GuideNav"] = "Reviews";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
+        if (page < 1) page = 1;
+
+        var result = await _reviews.ReplyAsync(id, content, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+            {
+                return BadRequest(new { error = result.Message ?? L["Guide.Flash.ReplyFailed"].Value });
+            }
+
+            var refreshed = await _reviews.GetAsync(page, DefaultPageSize, ct);
+            if (GuardSignOut(refreshed) is { } refreshSignOut) return refreshSignOut;
+
+            return PartialView("_ReviewsResults", refreshed.Data ?? new ReviewsVm());
+        }
+
+        if (!result.IsSuccess)
+        {
+            SetError(result.Error ?? L["Guide.Flash.ReplyFailed"].Value);
+        }
+        else
+        {
+            SetSuccess(L["Guide.Reviews.ReplyPosted"]);
+        }
+
+        return RedirectToAction(nameof(Index), new { page });
     }
 }

@@ -1,0 +1,85 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Business.Shared
+@using YallaJo.Web.Areas.Business.Models.Staff
+@using YallaJo.Web.Infrastructure.Authorization
+@model StaffVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    var culture = CultureInfo.CurrentUICulture;
+    string Count(int n) => n.ToString("N0", culture);
+}
+
+<div class="card shadow h-100">
+    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Business.Staff.CurrentHeading"]</h2>
+        <span class="badge bg-primary bg-opacity-10 text-primary"><bdi class="font-data">@Count(Model.Staff.Count)</bdi></span>
+    </div>
+    <div class="card-body">
+        @if (!Model.HasStaff)
+        {
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-0 text-body-secondary">@Localizer["Business.Staff.EmptyMsg"]</p>
+            </div>
+        }
+        else
+        {
+            var ordinal = 0;
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <caption class="visually-hidden">@Localizer["Business.Staff.CurrentHeading"]</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">@Localizer["Business.Staff.ColMember"]</th>
+                            <th scope="col">@Localizer["Business.Staff.ColRole"]</th>
+                            <th scope="col" class="text-end">@Localizer["Business.Staff.ColActions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.Staff)
+                        {
+                            ordinal++;
+                            @* D-5: real identity from B1 enrichment; ordinal label only as fallback. *@
+                            var memberLabel = !string.IsNullOrWhiteSpace(s.DisplayName)
+                                ? s.DisplayName!
+                                : Localizer["Business.Staff.StaffLabel", Count(ordinal)].Value;
+                            <tr>
+                                <td>
+                                    <span class="fw-semibold d-block"><bdi>@memberLabel</bdi></span>
+                                    @if (!string.IsNullOrWhiteSpace(s.Email))
+                                    {
+                                        <small class="text-body-secondary"><bdi dir="ltr">@s.Email</bdi></small>
+                                    }
+                                    else if (string.IsNullOrWhiteSpace(s.DisplayName))
+                                    {
+                                        <small class="text-body-secondary font-data"><bdi dir="ltr">@s.UserId</bdi></small>
+                                    }
+                                </td>
+                                <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@Localizer["Business.Staff.Role." + s.Role]</span></td>
+                                <td class="text-end">
+                                    <permission require="@WebPermission.BusinessStaff.Delete">
+                                        @{
+                                            var removeVm = new DeleteConfirmFormVm
+                                            {
+                                                Controller = "Staff",
+                                                RouteValues = new Dictionary<string, string>
+                                                {
+                                                    ["id"] = Model.BusinessId.ToString(),
+                                                    ["staffId"] = s.Id.ToString()
+                                                },
+                                                ConfirmMessage = Localizer["Business.Staff.RemoveBody", memberLabel].Value,
+                                                ButtonLabel = Localizer["Business.Staff.Remove"].Value
+                                            };
+                                        }
+                                        <partial name="_DeleteConfirmForm" model="removeVm" />
+                                    </permission>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

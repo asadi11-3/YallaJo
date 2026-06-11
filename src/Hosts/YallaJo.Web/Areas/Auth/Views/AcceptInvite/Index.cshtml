@@ -17,15 +17,17 @@
 
                     <div asp-validation-summary="All" class="text-danger mb-3" role="alert"></div>
 
-                    <form asp-area="Auth" asp-controller="AcceptInvite" asp-action="Index" method="post">
+                    <form asp-area="Auth" asp-controller="AcceptInvite" asp-action="Index" method="post" data-loading>
                         @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="Email" />
                         <input type="hidden" asp-for="Token" />
 
                         <div class="mb-3">
                             <label asp-for="Password" class="form-label">@Localizer["Auth.Field.Password"]</label>
-                            <input asp-for="Password" type="password" class="form-control" autocomplete="new-password" aria-describedby="invite-pwd-help" />
+                            <input asp-for="Password" type="password" class="form-control" autocomplete="new-password" aria-describedby="invite-pwd-help" data-psw-meter="#pswMeter" />
                             <span asp-validation-for="Password" class="text-danger" role="alert"></span>
+                            <!-- Password strength meter (shared partial, F3) -->
+                            <partial name="_PasswordMeterField" view-data='new ViewDataDictionary(ViewData) { ["MeterId"] = "pswMeter" }' />
                             <small id="invite-pwd-help" class="form-text">@Localizer["Auth.AcceptInvite.PasswordHint"]</small>
                         </div>
 
@@ -49,4 +51,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/password-meter.js" asp-append-version="true"></script>
 }

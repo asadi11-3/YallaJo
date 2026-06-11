@@ -19,10 +19,10 @@ public sealed class MyBusinessesController : BaseController
 
     [HttpGet("business")]
     [HttpGet("business/businesses")]
-    public async Task<IActionResult> Index(CancellationToken ct = default)
+    public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
         SetSidebar("MyBusinesses", null);
-        var result = await _facade.GetIndexAsync(ct);
+        var result = await _facade.GetIndexAsync(page, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
         {
@@ -64,7 +64,7 @@ public sealed class MyBusinessesController : BaseController
             return await ReloadRegisterAsync(form, ct);
         }
 
-        SetSuccess("Business registered. It is now pending review.");
+        SetSuccess(L["Business.Flash.Registered"].Value);
         return RedirectToAction(nameof(Manage), new { id = result.Data });
     }
 
@@ -100,8 +100,44 @@ public sealed class MyBusinessesController : BaseController
             return await ReloadManageAsync(id, form, ct);
         }
 
-        SetSuccess("Business profile updated.");
+        SetSuccess(L["Business.Flash.ProfileUpdated"].Value);
         return RedirectToAction(nameof(Manage), new { id });
+    }
+
+    /// <summary>
+    /// JSON proxy for the Register form's place typeahead (JS5: the browser never
+    /// calls the API host directly). Backed by GET /api/v1/places/lookup.
+    /// </summary>
+    [HttpGet("business/businesses/places/lookup")]
+    [RequirePermission(WebPermission.Business.Create)]
+    public async Task<IActionResult> PlacesLookup(string? q, CancellationToken ct = default)
+    {
+        var term = q?.Trim();
+        if (string.IsNullOrEmpty(term) || term.Length < 2)
+            return Json(Array.Empty<object>());
+
+        var result = await _facade.LookupPlacesAsync(term, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess || result.Data is null)
+            return Json(Array.Empty<object>());
+
+        return Json(result.Data.Select(p => new { id = p.Id, name = p.Name, city = p.City }));
+    }
+
+    /// <summary>
+    /// Lazy fragment for the Place-contextual weather widget (A7/D-17). The Manage
+    /// page renders an empty slot that fetches this over AJAX so weather never blocks
+    /// first paint; a &lt;noscript&gt; SSR fallback keeps the no-JS path (PE1).
+    /// </summary>
+    [HttpGet("business/businesses/{id:guid}/weather")]
+    public async Task<IActionResult> Weather(Guid id, CancellationToken ct = default)
+    {
+        var result = await _facade.GetManageAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess || result.Data is null)
+            return new EmptyResult();
+
+        return ViewComponent("WeatherWidget", new { placeId = result.Data.Form.PlaceId });
     }
 
     [HttpPost("business/businesses/{id:guid}/resubmit")]
@@ -111,7 +147,7 @@ public sealed class MyBusinessesController : BaseController
     {
         var result = await _facade.ResubmitAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Business resubmitted for review.", "Could not resubmit the business for review.");
+        SetFlash(result, L["Business.Flash.Resubmitted"].Value, L["Business.Error.ResubmitFailed"].Value);
         return RedirectToAction(nameof(Manage), new { id });
     }
 

@@ -31,20 +31,44 @@ public sealed record ProviderBookingActionResult(
 public sealed class ProviderBookingsFacade
 {
     private readonly ProviderBookingsApiClient _api;
+    private readonly ProviderToursApiClient _tours;
 
-    public ProviderBookingsFacade(ProviderBookingsApiClient api) => _api = api;
-
-    public async Task<ProviderBookingListResult> GetListAsync(string? status, CancellationToken ct = default)
+    public ProviderBookingsFacade(ProviderBookingsApiClient api, ProviderToursApiClient tours)
     {
-        var result = await _api.GetListAsync(status, ct);
+        _api = api;
+        _tours = tours;
+    }
+
+    public async Task<ProviderBookingListResult> GetListAsync(
+        string? status, string? cursor = null,
+        string? fromDate = null, string? toDate = null, Guid? tourId = null,
+        CancellationToken ct = default)
+    {
+        // API1: bookings page + tour filter options in parallel.
+        var listTask = _api.GetListAsync(status, cursor, fromDate, toDate, tourId, ct);
+        var toursTask = _tours.GetMyToursAsync(1, 100, status: null, sort: null, ct);
+        await Task.WhenAll(listTask, toursTask);
+
+        var result = listTask.Result;
         if (result.IsUnauthorized) return new(ProviderBookingOutcome.ForceSignOut);
         if (result.IsForbidden) return new(ProviderBookingOutcome.Forbidden, Error: "You don't have access to provider bookings.");
         if (result.IsValidationError) return new(ProviderBookingOutcome.ValidationError, Error: result.Error ?? "Invalid filter.");
         if (!result.IsSuccess || result.Data is null)
             return new(ProviderBookingOutcome.ValidationError, Error: result.Error ?? "Could not load bookings.");
 
+        // Filter dropdown options — soft-degrade to empty list on failure (ERR3).
+        IReadOnlyList<BookingTourFilterOptionVm> tourOptions = [];
+        var toursResult = toursTask.Result;
+        if (toursResult.IsSuccess && toursResult.Data is not null)
+        {
+            tourOptions = toursResult.Data.Items
+                .Select(t => new BookingTourFilterOptionVm { Id = t.Id, Name = t.Name })
+                .ToList();
+        }
+
         var tourNames = await HydrateTourNamesAsync(result.Data.Items.Select(i => i.TourId), ct);
-        return new(ProviderBookingOutcome.Ok, ProviderBookingsMapper.ToIndexVm(result.Data, status, tourNames));
+        return new(ProviderBookingOutcome.Ok,
+            ProviderBookingsMapper.ToIndexVm(result.Data, status, tourNames, fromDate, toDate, tourId, tourOptions));
     }
 
     public async Task<ProviderBookingDetailsResult> GetDetailsAsync(Guid id, CancellationToken ct = default)

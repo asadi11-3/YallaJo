@@ -23,6 +23,12 @@ public sealed class ProviderTourAvailabilityApiClient
         => _api.GetAsync<List<ManageAvailabilitySlotResponse>>($"{Base}/{tourId}/manage", ct);
 
     // POST /api/v1/booking/availability/slots
+    // [Backend] B3 — GET /api/v1/booking/availability/{tourId}/calendar?year=&month=
+    public Task<ApiResult<List<AvailabilityCalendarDayResponse>>> GetCalendarAsync(
+        Guid tourId, int year, int month, CancellationToken ct = default)
+        => _api.GetAsync<List<AvailabilityCalendarDayResponse>>(
+            $"{Base}/{tourId}/calendar?year={year}&month={month}", ct);
+
     public Task<ApiResult<CreateAvailabilitySlotResponse>> CreateAsync(
         CreateAvailabilitySlotApiRequest request, CancellationToken ct = default)
         => _api.PostAsync<CreateAvailabilitySlotResponse>($"{Base}/slots", request, ct);

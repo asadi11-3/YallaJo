@@ -1,38 +1,17 @@
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Provider.Models.Tours
-@using YallaJo.Web.Areas.Provider.Shared
 @model ProviderToursIndexVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.Tours.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
-    Layout = "~/Views/Shared/_Layout.cshtml";
 
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
-    var culture = CultureInfo.CurrentUICulture;
-    string Money(decimal a, string? c) => a.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(c) ? "JOD" : c);
-    string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
     string StatusText(string status, string fallback)
     {
         var s = Localizer["Provider.Status." + status];
         return s.ResourceNotFound ? fallback : s.Value;
     }
-    string StatusIcon(string status) => (status ?? "").ToLowerInvariant() switch
-    {
-        "approved" or "published" => "circle-check",
-        "pending" or "pendingreview" or "submitted" => "clock",
-        "rejected" => "circle-xmark",
-        "archived" => "box-archive",
-        "suspended" => "circle-pause",
-        "draft" => "pen-ruler",
-        _ => "circle-info",
-    };
-    string PageUrl(int p) => Url.Action("Index", "Tours", new { area = "Provider", status = Model.Status, page = p })!;
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">
@@ -47,14 +26,19 @@
 
         <div class="card border">
             <div class="card-body">
-                <form asp-area="Provider" asp-controller="Tours" asp-action="Index" method="get" class="row g-2 align-items-end">
+                @* data-yj-listing: with JS the filter swaps the results fragment in place
+                   (provider-listing.js); without JS it is a plain GET navigation (PE1). *@
+                <form asp-area="Provider" asp-controller="Tours" asp-action="Index" method="get"
+                      class="row g-2 align-items-end" data-yj-listing>
                     <div class="col-sm-5 col-lg-4">
                         <label for="status" class="form-label small mb-1">@Localizer["Provider.Tours.FilterStatus"]</label>
                         <select id="status" name="status" class="form-select form-select-sm">
-                            <option value="">@Localizer["Provider.Tours.AllStatuses"]</option>
+                            @* [Backend] B1: per-status counts appended when available; degrades to plain labels (ERR3). *@
+                            <option value="">@Localizer["Provider.Tours.AllStatuses"]@(Model.StatusCounts is not null ? $" ({Model.StatusCounts.Total})" : "")</option>
                             @foreach (var opt in Model.StatusOptions)
                             {
-                                <option value="@opt.Value" selected="@(string.Equals(opt.Value, Model.Status, StringComparison.OrdinalIgnoreCase))">@StatusText(opt.Value, opt.Label)</option>
+                                var count = Model.StatusCounts?.For(opt.Value);
+                                <option value="@opt.Value" selected="@(string.Equals(opt.Value, Model.Status, StringComparison.OrdinalIgnoreCase))">@StatusText(opt.Value, opt.Label)@(count is not null ? $" ({count})" : "")</option>
                             }
                         </select>
                     </div>
@@ -68,159 +52,16 @@
             </div>
         </div>
 
-        @if (!Model.HasItems)
-        {
-            <div class="card border">
-                <div class="card-body text-center py-5">
-                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                    <h2 class="h6 mb-1">@Localizer["Provider.Tours.EmptyTitle"]</h2>
-                    <p class="text-body-secondary mb-3">@Localizer["Provider.Tours.EmptyMsg"]</p>
-                    <permission require="@WebPermission.Tour.Create">
-                        <a asp-area="Provider" asp-controller="Tours" asp-action="Create" class="btn btn-primary">
-                            <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.CreateFirst"]
-                        </a>
-                    </permission>
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="card border">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <caption class="visually-hidden">@Localizer["Provider.Tours.TableCaption"]</caption>
-                        <thead class="table-light">
-                            <tr>
-                                <th scope="col">@Localizer["Provider.Tours.ColName"]</th>
-                                <th scope="col">@Localizer["Provider.Tours.ColStatus"]</th>
-                                <th scope="col" class="text-end">@Localizer["Provider.Tours.ColPrice"]</th>
-                                <th scope="col">@Localizer["Provider.Tours.ColCreated"]</th>
-                                <th scope="col" class="text-end"><span class="visually-hidden">@Localizer["Provider.Tours.ColActions"]</span></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var row in Model.Items)
-                            {
-                                <tr>
-                                    <td class="fw-semibold"><bdi>@row.Name</bdi></td>
-                                    <td>
-                                        <span class="badge @row.StatusBadgeClass">
-                                            <i class="fa-solid fa-@(StatusIcon(row.Status)) fa-fw" aria-hidden="true"></i>
-                                            @StatusText(row.Status, row.StatusLabel)
-                                        </span>
-                                    </td>
-                                    <td class="text-end"><bdi dir="ltr" class="font-data">@Money(row.BasePrice, row.Currency)</bdi></td>
-                                    <td class="small text-body-secondary"><bdi dir="ltr">@Date(row.CreatedAt)</bdi></td>
-                                    <td class="text-end">
-                                        <div class="d-inline-flex justify-content-end gap-1 flex-wrap">
-                                            @if (row.CanEdit)
-                                            {
-                                                <permission require="@WebPermission.Tour.Update">
-                                                    <a asp-area="Provider" asp-controller="Tours" asp-action="Edit"
-                                                       asp-route-id="@row.Id" class="btn btn-sm btn-outline-secondary">@Localizer["Provider.Tours.Edit"]</a>
-                                                </permission>
-                                                <div class="dropdown d-inline">
-                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-                                                            data-bs-toggle="dropdown" aria-expanded="false"
-                                                            aria-label="@Localizer["Provider.Tours.ManageAria", row.Name]">@Localizer["Provider.Tours.Manage"]</button>
-                                                    <ul class="dropdown-menu dropdown-menu-end">
-                                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@row.Id"><i class="fa-solid fa-tag fa-fw me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.NavPricing"]</a></li>
-                                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourSchedules" asp-action="Index" asp-route-id="@row.Id"><i class="fa-solid fa-calendar-days fa-fw me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.NavSchedules"]</a></li>
-                                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourWaypoints" asp-action="Index" asp-route-id="@row.Id"><i class="fa-solid fa-location-dot fa-fw me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.NavWaypoints"]</a></li>
-                                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourGuides" asp-action="Index" asp-route-id="@row.Id"><i class="fa-solid fa-id-badge fa-fw me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.NavGuides"]</a></li>
-                                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourApplications" asp-action="Index" asp-route-id="@row.Id"><i class="fa-solid fa-file-lines fa-fw me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.NavApplications"]</a></li>
-                                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourImages" asp-action="Index" asp-route-id="@row.Id"><i class="fa-solid fa-images fa-fw me-2" aria-hidden="true"></i>@Localizer["Provider.Tours.NavImages"]</a></li>
-                                                    </ul>
-                                                </div>
-                                            }
-                                            @if (row.CanSubmit)
-                                            {
-                                                <permission require="@WebPermission.Tour.Submit">
-                                                    <form asp-area="Provider" asp-controller="Tours" asp-action="Submit"
-                                                          asp-route-id="@row.Id" method="post" class="d-inline">
-                                                        @Html.AntiForgeryToken()
-                                                        <button type="submit" class="btn btn-sm btn-outline-primary">@Localizer["Provider.Tours.Submit"]</button>
-                                                    </form>
-                                                </permission>
-                                            }
-                                            @if (row.CanArchive)
-                                            {
-                                                <permission require="@WebPermission.Tour.Archive">
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#archive-tour-@row.Id">@Localizer["Provider.Tours.Archive"]</button>
-                                                </permission>
-                                            }
-                                            <permission require="@WebPermission.Tour.DeleteOwn">
-                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-tour-@row.Id">@Localizer["Provider.Tours.Delete"]</button>
-                                            </permission>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            @if (Model.TotalPages > 1)
-            {
-                <nav aria-label="@Localizer["Provider.Tours.Pagination"]">
-                    <ul class="pagination pagination-sm justify-content-center mb-0">
-                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                            <a class="page-link" href="@PageUrl(Model.Page - 1)">@Localizer["Provider.Tours.Previous"]</a>
-                        </li>
-                        <li class="page-item active" aria-current="page"><span class="page-link">@Localizer["Provider.Tours.PageOf", Model.Page, Model.TotalPages]</span></li>
-                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                            <a class="page-link" href="@PageUrl(Model.Page + 1)">@Localizer["Provider.Tours.Next"]</a>
-                        </li>
-                    </ul>
-                </nav>
-            }
-        }
+        <div id="toursResults" class="vstack gap-4" data-yj-component="provider-listing"
+             aria-live="polite" aria-busy="false"
+             data-skeleton="table"
+             data-error-text="@Localizer["Provider.Common.ResultsError"]"
+             data-retry-text="@Localizer["Provider.Common.Retry"]">
+            <partial name="_ToursResults" model="Model" />
+        </div>
     </div>
 </section>
 
-@if (Model.HasItems)
-{
-    foreach (var row in Model.Items)
-    {
-        if (row.CanArchive)
-        {
-            <permission require="@WebPermission.Tour.Archive">
-                <div class="modal fade" id="archive-tour-@row.Id" tabindex="-1" aria-labelledby="archive-tour-title-@row.Id" aria-describedby="archive-tour-body-@row.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <form asp-area="Provider" asp-controller="Tours" asp-action="Archive" asp-route-id="@row.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
-                            @Html.AntiForgeryToken()
-                            <div class="modal-header">
-                                <h2 class="modal-title h5" id="archive-tour-title-@row.Id">@Localizer["Provider.Tours.ArchiveTitle"]</h2>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.Tours.Close"]"></button>
-                            </div>
-                            <div class="modal-body" id="archive-tour-body-@row.Id">@Localizer["Provider.Tours.ArchiveBody", row.Name]</div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.Tours.Cancel"]</button>
-                                <button type="submit" class="btn btn-danger">@Localizer["Provider.Tours.ArchiveConfirm"]</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </permission>
-        }
-        <permission require="@WebPermission.Tour.DeleteOwn">
-            <div class="modal fade" id="delete-tour-@row.Id" tabindex="-1" aria-labelledby="delete-tour-title-@row.Id" aria-describedby="delete-tour-body-@row.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form asp-area="Provider" asp-controller="Tours" asp-action="Delete" asp-route-id="@row.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
-                        @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h2 class="modal-title h5" id="delete-tour-title-@row.Id">@Localizer["Provider.Tours.DeleteTitle"]</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Provider.Tours.Close"]"></button>
-                        </div>
-                        <div class="modal-body" id="delete-tour-body-@row.Id">@Localizer["Provider.Tours.DeleteBody", row.Name]</div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Provider.Tours.Cancel"]</button>
-                            <button type="submit" class="btn btn-danger">@Localizer["Provider.Tours.DeleteConfirm"]</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </permission>
-    }
+@section Scripts {
+    <script src="~/assets/js/provider-listing.js" asp-append-version="true"></script>
 }

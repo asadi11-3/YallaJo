@@ -15,28 +15,18 @@
     string Count(int n) => n.ToString("N0", culture);
     string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
 
-    var color = MyBusinessesMapper.StatusColor(Model.Status);
-    string StatusText(string s)
+    string TypeText(string t)
     {
-        var v = Localizer["Business.Status." + s];
-        return v.ResourceNotFound ? s : v.Value;
+        var v = Localizer["Business.Type." + t];
+        return v.ResourceNotFound ? t : v.Value;
     }
-    string StatusIcon(string s) => s.ToLowerInvariant() switch
-    {
-        "approved" or "published" or "active" => "circle-check",
-        "pending" or "pendingreview" or "submitted" => "clock",
-        "rejected" => "circle-xmark",
-        "suspended" => "circle-pause",
-        "moredocsneeded" or "moreinfoneeded" => "circle-question",
-        "draft" => "pen-ruler",
-        _ => "circle-info",
-    };
 }
 
-<partial name="_BusinessSidebar" model="sidebar" />
-
 <section class="pt-0">
-    <div class="container vstack gap-4">
+    <div class="container">
+        <div class="row g-4">
+            <partial name="_BusinessSidebar" model="sidebar" />
+            <div class="col-lg-8 col-xl-9 vstack gap-4">
         <div class="d-sm-flex justify-content-between align-items-start gap-3">
             <div>
                 <a class="small text-body-secondary text-decoration-none" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">
@@ -48,9 +38,7 @@
                 </p>
             </div>
             <div class="d-flex flex-wrap gap-2 align-items-center">
-                <span class="badge bg-@color bg-opacity-10 text-@color">
-                    <i class="fa-solid fa-@StatusIcon(Model.Status) fa-fw" aria-hidden="true"></i> @StatusText(Model.Status)
-                </span>
+                <partial name="_BusinessStatusBadge" model="@Model.Status" />
                 @if (Model.IsVerified)
                 {
                     <span class="badge bg-primary bg-opacity-10 text-primary">
@@ -62,8 +50,11 @@
 
         @if (ViewBag.Error is string err) { <div class="alert alert-danger" role="alert">@err</div> }
 
-        @* Place-contextual weather widget (renders only when data is available). *@
-        @await Component.InvokeAsync("WeatherWidget", new { placeId = Model.Form.PlaceId })
+        @* Place-contextual weather widget. A7/D-17: lazy-loaded over AJAX so it never blocks first paint; the <noscript> fallback keeps the no-JS path (PE1). *@
+        <div data-yj-component="weather-widget" data-url="@Url.Action("Weather", new { id = Model.Id })"></div>
+        <noscript>
+            @await Component.InvokeAsync("WeatherWidget", new { placeId = Model.Form.PlaceId })
+        </noscript>
 
         @if (Model.CanResubmit)
         {
@@ -154,7 +145,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label" for="biz-type-display">@Localizer["Business.Register.Type"]</label>
-                                <input id="biz-type-display" class="form-control" value="@Model.BusinessType" disabled />
+                                <input id="biz-type-display" class="form-control" value="@TypeText(Model.BusinessType)" disabled />
                             </div>
 
                             <div class="col-12">
@@ -227,6 +218,8 @@
                 </div>
             </section>
         </permission>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -256,4 +249,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/business-crud.js" asp-append-version="true" defer></script>
 }

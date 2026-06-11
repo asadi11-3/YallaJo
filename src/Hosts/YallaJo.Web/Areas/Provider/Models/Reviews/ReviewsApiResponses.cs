@@ -54,3 +54,6 @@ public sealed record AddReplyRequest(string Content);
 
 // POST /api/v1/social/reviews/{id}/report (Reason = ReportReason enum name)
 public sealed record ReviewReportRequest(string Reason, string Description);
+
+/// <summary>[Backend] B6 mirror of RatingSummaryBatchItemDto.</summary>
+public sealed record RatingSummaryBatchItemResponse(Guid EntityId, decimal Average, int Count);

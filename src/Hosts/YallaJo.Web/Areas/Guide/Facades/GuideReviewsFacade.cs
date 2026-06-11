@@ -5,10 +5,11 @@ using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Areas.Guide.Facades;
 
-/// <summary>Builds the read-only Reviews view model for the logged-in guide.</summary>
+/// <summary>Builds the Reviews view model and posts review replies (B3) for the logged-in guide.</summary>
 public sealed class GuideReviewsFacade
 {
     private const int DefaultPageSize = 20;
+    private const int MaxReplyLength = 2000;
 
     private readonly ReviewsApiClient _api;
     private readonly ILogger<GuideReviewsFacade> _logger;
@@ -35,8 +36,8 @@ public sealed class GuideReviewsFacade
         var summaryTask = SafeSummaryAsync(guideId, ct);
         await Task.WhenAll(reviewsTask, summaryTask);
 
-        var reviews = reviewsTask.Result;
-        var summary = summaryTask.Result;
+        var reviews = await reviewsTask; // UI-PERF-R1: no .Result
+        var summary = await summaryTask;
 
         var rows = reviews.Items
             .Select(r => new ReviewRowVm(
@@ -65,6 +66,23 @@ public sealed class GuideReviewsFacade
         };
 
         return ApiResult<ReviewsVm>.Ok(vm);
+    }
+
+    /// <summary>Posts the guide's reply to a review (B3). Content is trimmed and capped at 2000 chars.</summary>
+    public async Task<ApiResult> ReplyAsync(Guid reviewId, string? content, CancellationToken ct = default)
+    {
+        var trimmed = content?.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            return ApiResult.Fail(400, "Please write a reply before posting.");
+        }
+
+        if (trimmed.Length > MaxReplyLength)
+        {
+            trimmed = trimmed[..MaxReplyLength];
+        }
+
+        return await _api.AddReplyAsync(reviewId, trimmed, ct);
     }
 
     private async Task<PublicReviewPageResponse> SafeReviewsAsync(Guid guideId, int page, int pageSize, CancellationToken ct)

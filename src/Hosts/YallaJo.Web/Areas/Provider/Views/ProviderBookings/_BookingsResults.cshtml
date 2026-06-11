@@ -1,0 +1,72 @@
+@using YallaJo.Web.Areas.Provider.Models.Bookings
+@model ProviderBookingsIndexVm
+@{
+    // Results fragment for /provider/bookings/manage — returned standalone when
+    // WantsAjax() (PE1: full page render without JS; cursor "Load more" appends
+    // rows via provider-listing.js — sanctioned high-volume exception §4.6).
+    (string Color, string Icon) StatusBadge(string s) => (s ?? "").ToLowerInvariant() switch
+    {
+        "confirmed" => ("success", "circle-check"),
+        "completed" => ("primary", "flag-checkered"),
+        "awaitingpayment" => ("warning", "hourglass-half"),
+        "pendingconfirmation" => ("warning", "clock"),
+        "cancelled" => ("secondary", "ban"),
+        "rejected" => ("danger", "circle-xmark"),
+        _ => ("secondary", "circle-info"),
+    };
+}
+
+@if (!Model.HasItems)
+{
+    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["message"] = Localizer["Provider.ProviderBookings.EmptyMessage"].Value })" />
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">@Localizer["Provider.ProviderBookings.ColReference"]</th>
+                    <th scope="col">@Localizer["Provider.ProviderBookings.ColTour"]</th>
+                    <th scope="col">@Localizer["Provider.ProviderBookings.ColTraveler"]</th>
+                    <th scope="col">@Localizer["Provider.ProviderBookings.ColSlot"]</th>
+                    <th scope="col" class="text-end">@Localizer["Provider.ProviderBookings.ColGuests"]</th>
+                    <th scope="col" class="text-end">@Localizer["Provider.ProviderBookings.ColTotal"]</th>
+                    <th scope="col">@Localizer["Provider.ProviderBookings.ColStatus"]</th>
+                    <th scope="col" class="text-end">@Localizer["Provider.ProviderBookings.ColActions"]</th>
+                </tr>
+            </thead>
+            <tbody data-yj-rows>
+                @foreach (var b in Model.Items)
+                {
+                    var badge = StatusBadge(b.Status);
+                    <tr>
+                        <td><bdi dir="ltr" class="font-data">@b.Reference</bdi></td>
+                        <td class="fw-semibold">@b.TourName</td>
+                        <td><bdi dir="ltr">@b.TravelerHandle</bdi></td>
+                        <td class="small"><bdi dir="ltr">@b.SlotLabel</bdi></td>
+                        <td class="text-end"><bdi dir="ltr" class="font-data">@Count(b.ParticipantCount)</bdi></td>
+                        <td class="text-end"><bdi dir="ltr" class="font-data">@Money(b.TotalAmount, b.Currency)</bdi></td>
+                        <td><span class="badge bg-@badge.Color bg-opacity-10 text-@badge.Color"><i class="fa-solid fa-@badge.Icon fa-fw" aria-hidden="true"></i> @Localizer["Provider.Status." + b.Status]</span></td>
+                        <td class="text-end">
+                            <a asp-action="Details" asp-route-id="@b.Id" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-gear me-1" aria-hidden="true"></i>@Localizer["Provider.ProviderBookings.Manage"]</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.NextCursor))
+    {
+        <div class="text-center mt-3" data-yj-load-more-wrap>
+            @* With JS the button appends the next page in place; without JS the
+               anchor fallback navigates with the cursor in the query string (PE1). *@
+            <a class="btn btn-sm btn-outline-primary" data-yj-load-more
+               href="@Url.Action("Index", "ProviderBookings", new { area = "Provider", status = Model.Status, fromDate = Model.FromDate, toDate = Model.ToDate, tourId = Model.TourId, cursor = Model.NextCursor })"
+               data-url="@Url.Action("Index", "ProviderBookings", new { area = "Provider", status = Model.Status, fromDate = Model.FromDate, toDate = Model.ToDate, tourId = Model.TourId, cursor = Model.NextCursor })">
+                @Localizer["Provider.Common.LoadMore"]
+            </a>
+        </div>
+    }
+}

@@ -1,0 +1,69 @@
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Business.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@model YallaJo.Web.Areas.Business.Models.Amenities.AmenitiesVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+
+<div class="card shadow h-100">
+    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Business.Amenities.CurrentHeading"]</h2>
+        <span class="badge bg-primary bg-opacity-10 text-primary"><bdi dir="ltr">@Model.Amenities.Count</bdi></span>
+    </div>
+    <div class="card-body">
+        @if (!Model.HasAmenities)
+        {
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-0 text-body-secondary">@Localizer["Business.Amenities.EmptyMsg"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <caption class="visually-hidden">@Localizer["Business.Amenities.CurrentHeading"]</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">@Localizer["Business.Amenities.ColAmenity"]</th>
+                            <th scope="col" class="text-end">@Localizer["Business.Amenities.ColOrder"]</th>
+                            <th scope="col" class="text-end">@Localizer["Business.Amenities.ColActions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Amenities)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.Icon))
+                                    {
+                                        <i class="fa-solid @item.Icon me-2" aria-hidden="true"></i>
+                                    }
+                                    <span class="fw-semibold">@item.Name</span>
+                                </td>
+                                <td class="text-end"><bdi dir="ltr" class="font-data">@item.SortOrder</bdi></td>
+                                <td class="text-end">
+                                    <permission require="@WebPermission.BusinessAmenity.Delete">
+                                        @{
+                                            var removeVm = new DeleteConfirmFormVm
+                                            {
+                                                Controller = "Amenities",
+                                                RouteValues = new Dictionary<string, string>
+                                                {
+                                                    ["id"] = Model.BusinessId.ToString(),
+                                                    ["amenityId"] = item.Id.ToString()
+                                                },
+                                                ConfirmMessage = Localizer["Business.Amenities.RemoveBody", item.Name].Value,
+                                                ButtonLabel = Localizer["Business.Amenities.Remove", item.Name].Value
+                                            };
+                                        }
+                                        <partial name="_DeleteConfirmForm" model="removeVm" />
+                                    </permission>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

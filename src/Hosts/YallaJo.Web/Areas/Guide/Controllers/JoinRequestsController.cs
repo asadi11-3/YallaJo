@@ -1,15 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.JoinRequests;
-using YallaJo.Web.Areas.Guide.Shared;
-using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
-[Area("Guide")]
-[Authorize]
-public sealed class JoinRequestsController : BaseController
+public sealed class JoinRequestsController : GuideBaseController
 {
     private readonly GuideJoinRequestsFacade _joinRequests;
 
@@ -18,7 +13,7 @@ public sealed class JoinRequestsController : BaseController
     [HttpGet("guide/join-requests")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
+        SetNav("JoinRequests");
         var result = await _joinRequests.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
@@ -36,7 +31,7 @@ public sealed class JoinRequestsController : BaseController
     {
         var result = await _joinRequests.ApproveAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Join request approved.");
+        SetFlash(result, L["Guide.Flash.JoinRequestApproved"]);
         return RedirectToAction(nameof(Index));
     }
 
@@ -46,13 +41,7 @@ public sealed class JoinRequestsController : BaseController
     {
         var result = await _joinRequests.RejectAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        SetFlash(result, "Join request rejected.");
+        SetFlash(result, L["Guide.Flash.JoinRequestRejected"]);
         return RedirectToAction(nameof(Index));
-    }
-
-    private void SetSidebar()
-    {
-        ViewData["GuideNav"] = "JoinRequests";
-        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
     }
 }

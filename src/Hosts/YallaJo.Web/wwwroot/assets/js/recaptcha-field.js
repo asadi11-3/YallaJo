@@ -25,7 +25,22 @@
                 return;
             }
 
+            // Client-side validation gate: when jQuery unobtrusive validation
+            // is active and the form is invalid, stand down -- the validator
+            // cancels this submit, and the form.submit() below must never
+            // bypass it.
+            if (window.jQuery && window.jQuery.fn && window.jQuery.fn.valid && !window.jQuery(form).valid()) {
+                return;
+            }
+
             e.preventDefault();
+
+            // Engage the submit loading state here (L2/F7): this pass is
+            // cancelled and the real submission goes through form.submit(),
+            // which fires no submit event, so form-ux.js cannot pick it up.
+            if (form.hasAttribute("data-loading") && window.YallaJo && window.YallaJo.formUx) {
+                window.YallaJo.formUx.startLoading(form);
+            }
 
             if (typeof grecaptcha === "undefined" || !grecaptcha.ready) {
                 // reCAPTCHA script unavailable -> submit without blocking the user.

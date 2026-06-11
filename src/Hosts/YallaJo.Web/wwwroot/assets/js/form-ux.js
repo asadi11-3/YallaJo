@@ -119,6 +119,7 @@
 
     var confirmModalEl = null;
     var pendingForm = null;
+    var confirmInvoker = null; // element to restore focus to on dismiss (A11Y8)
 
     function buildConfirmModal() {
         if (confirmModalEl) { return confirmModalEl; }
@@ -144,6 +145,14 @@
 
         confirmModalEl.addEventListener("shown.bs.modal", function () {
             confirmModalEl.querySelector("#yj-confirm-cancel").focus();
+        });
+        // A11Y8: return focus to the invoking control when the modal closes
+        // (Esc, backdrop-dismiss button or cancel) so focus never drops to <body>.
+        confirmModalEl.addEventListener("hidden.bs.modal", function () {
+            if (confirmInvoker && document.contains(confirmInvoker)) {
+                confirmInvoker.focus();
+            }
+            confirmInvoker = null;
         });
         confirmModalEl.querySelector("#yj-confirm-accept").addEventListener("click", function () {
             var form = pendingForm;
@@ -173,6 +182,7 @@
         modal.querySelector("#yj-confirm-accept").textContent =
             form.dataset.confirmAction || "Confirm";
         pendingForm = form;
+        confirmInvoker = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         window.bootstrap.Modal.getOrCreateInstance(modal).show();
         return false;
     }
@@ -203,7 +213,15 @@
                 e.preventDefault(); // double-submit guard
                 return;
             }
-            startLoading(form);
+            // Defer past the bubble phase so client-side validation (jQuery
+            // unobtrusive) or the reCAPTCHA interceptor can cancel the submit
+            // first -- otherwise the spinner strands on a form that never
+            // leaves the page (L2/F7). reCAPTCHA forms re-submit via
+            // form.submit() (no submit event), so recaptcha-field.js engages
+            // the loading state itself for that path.
+            setTimeout(function () {
+                if (!e.defaultPrevented) { startLoading(form); }
+            }, 0);
         }
     }, true);
 

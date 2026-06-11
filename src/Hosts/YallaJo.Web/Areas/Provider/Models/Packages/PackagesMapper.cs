@@ -45,20 +45,8 @@ public static class PackagesMapper
         MaxParticipants: vm.MaxParticipants,
         ValidFrom:       vm.ValidFrom,
         ValidTo:         vm.ValidTo,
-        IncludedTourIds: ParseGuids(vm.IncludedTourIds),
+        IncludedTourIds: vm.IncludedTourIds.Distinct().ToList(),
         Inclusions:      ParseLines(vm.Inclusions));
-
-    // Comma/space/newline-separated GUIDs → distinct list (ignores invalid tokens).
-    private static IReadOnlyCollection<Guid> ParseGuids(string? raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw)) return [];
-        return raw.Split([',', ';', ' ', '\n', '\r', '\t'], StringSplitOptions.RemoveEmptyEntries)
-            .Select(t => Guid.TryParse(t.Trim(), out var g) ? g : (Guid?)null)
-            .Where(g => g.HasValue)
-            .Select(g => g!.Value)
-            .Distinct()
-            .ToList();
-    }
 
     private static IReadOnlyCollection<string> ParseLines(string? raw)
     {

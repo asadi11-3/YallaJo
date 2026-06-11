@@ -19,14 +19,25 @@ public sealed class ProviderBookingsApiClient
 
     // GET /api/v1/booking/provider/bookings — owner-scoped list
     public Task<ApiResult<ProviderBookingsPageResponse>> GetListAsync(
-        string? status, CancellationToken ct = default)
+        string? status, string? cursor = null,
+        string? fromDate = null, string? toDate = null, Guid? tourId = null,
+        CancellationToken ct = default)
     {
         var query = new Dictionary<string, string?> { ["pageSize"] = "50" };
         if (!string.IsNullOrWhiteSpace(status)) query["status"] = status;
+        if (!string.IsNullOrWhiteSpace(cursor)) query["cursor"] = cursor;
+        // Phase 5: date-range + tour filters (API already supports them; YYYY-MM-DD).
+        if (!string.IsNullOrWhiteSpace(fromDate)) query["fromDate"] = fromDate;
+        if (!string.IsNullOrWhiteSpace(toDate)) query["toDate"] = toDate;
+        if (tourId.HasValue) query["tourId"] = tourId.Value.ToString();
 
         var url = QueryHelpers.AddQueryString($"{Base}/provider/bookings", query);
         return _api.GetAsync<ProviderBookingsPageResponse>(url, ct);
     }
+
+    // [Backend] B5 — GET /api/v1/booking/provider/bookings/stats — per-status counts (API7)
+    public Task<ApiResult<ProviderBookingStatsResponse>> GetStatsAsync(CancellationToken ct = default)
+        => _api.GetAsync<ProviderBookingStatsResponse>($"{Base}/provider/bookings/stats", ct);
 
     // GET /api/v1/booking/{id} — owner/provider/admin can view
     public Task<ApiResult<ProviderBookingDetailResponse>> GetByIdAsync(Guid id, CancellationToken ct = default)

@@ -1,10 +1,7 @@
-@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Models
 @model ProviderApplyVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.Apply.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <section class="pt-5">
@@ -18,7 +15,7 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
-                        <form asp-action="Apply" method="post" class="row g-3">
+                        <form asp-action="Apply" method="post" data-loading class="row g-3">
                             @Html.AntiForgeryToken()
 
                             <div class="col-md-6">

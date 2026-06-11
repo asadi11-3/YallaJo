@@ -34,28 +34,18 @@ public sealed class ProviderDocumentTypeOptionVm
 
 /// <summary>
 /// Posted by the inline "replace document" form on the status page. Targets a single
-/// existing document by <see cref="DocumentId"/> and swaps in new file metadata via
-/// <c>PUT /api/v1/provider/documents/{id}</c>.
+/// existing document by <see cref="DocumentId"/> and uploads a real replacement file via
+/// <c>POST /api/v1/provider/documents/{id}/replace-upload</c> (multipart).
+/// Replaced the old manual FileUrl/FileName/FileSizeBytes inputs per F10/UX plan Phase 5.
 /// </summary>
 public sealed class ReplaceProviderDocumentVm
 {
     [Required]
     public Guid DocumentId { get; set; }
 
-    [Required(ErrorMessage = "A file URL is required.")]
-    [Url(ErrorMessage = "Enter a valid file URL.")]
-    [StringLength(2048)]
-    [Display(Name = "File URL")]
-    public string FileUrl { get; set; } = string.Empty;
-
-    [Required(ErrorMessage = "A file name is required.")]
-    [StringLength(256)]
-    [Display(Name = "File name")]
-    public string FileName { get; set; } = string.Empty;
-
-    [Range(1, long.MaxValue, ErrorMessage = "File size must be greater than zero.")]
-    [Display(Name = "File size (bytes)")]
-    public long FileSizeBytes { get; set; }
+    [Required(ErrorMessage = "Please choose a file to upload.")]
+    [Display(Name = "New file")]
+    public IFormFile? File { get; set; }
 
     [Display(Name = "Expires at")]
     [DataType(DataType.Date)]

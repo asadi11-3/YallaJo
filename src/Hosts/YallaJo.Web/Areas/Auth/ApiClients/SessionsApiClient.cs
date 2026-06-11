@@ -13,4 +13,8 @@ public sealed class SessionsApiClient
 
     public Task<ApiResult> RevokeSessionAsync(Guid sessionId, CancellationToken ct = default)
         => _api.DeleteAsync($"/api/v1/auth/sessions/{sessionId}", ct);
+
+    // POST /api/v1/auth/sessions/revoke-others — revoke every session except the current one.
+    public Task<ApiResult<RevokeOthersResponse>> RevokeOthersAsync(CancellationToken ct = default)
+        => _api.PostAsync<RevokeOthersResponse>("/api/v1/auth/sessions/revoke-others", null, ct);
 }

@@ -62,4 +62,22 @@ public sealed class ProviderApiClient
         Guid documentId, ReplaceProviderDocumentRequest request, CancellationToken ct = default)
         => _api.PutAsync<ReplaceProviderDocumentResponse>(
             $"/api/v1/provider/documents/{documentId}", request, ct);
+
+    // POST /api/v1/provider/documents/{id}/replace-upload — multipart replacement (real file upload).
+    public Task<ApiResult<ReplaceProviderDocumentResponse>> ReplaceDocumentUploadAsync(
+        Guid documentId,
+        Stream fileStream,
+        string fileName,
+        string contentType,
+        DateTime? expiresAt,
+        CancellationToken ct = default)
+    {
+        var fields = new Dictionary<string, string>();
+        if (expiresAt.HasValue)
+            fields["expiresAt"] = expiresAt.Value.ToString("O");
+
+        return _api.PostFileAsync<ReplaceProviderDocumentResponse>(
+            $"/api/v1/provider/documents/{documentId}/replace-upload",
+            fileStream, fileName, contentType, fields, "file", ct);
+    }
 }
