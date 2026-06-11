@@ -28,7 +28,9 @@ public sealed class GetAdminBlogByIdQueryHandler(
         {
             var blog = await blogRepository.GetAsync(
                 filter:       b => b.Id == request.BlogId,
-                include:      q => q.Include(b => b.BlogTranslations),
+                include:      q => q
+                    .Include(b => b.BlogTranslations)
+                    .Include(b => b.BlogTours),
                 asNoTracking: true,
                 ct:           cancellationToken)
                 .ConfigureAwait(false);
@@ -72,6 +74,16 @@ public sealed class GetAdminBlogByIdQueryHandler(
                 ? resolvedLanguage.Code
                 : DefaultLanguageMarker;
 
+            // Mirror the public detail query's tour projection so the editor can
+            // render linked-tour chips (and drop its raw-GUID inputs). Additive
+            // fields only — existing Admin consumers ignore them.
+            var linkedTours = blog.BlogTours
+                .OrderBy(bt => bt.SortOrder)
+                .ThenBy(bt => bt.TourId)
+                .Select(bt => new BlogTourSummaryDto(bt.TourId, bt.SortOrder))
+                .ToList()
+                .AsReadOnly();
+
             var dto = new AdminBlogDetailDto(
                 Id:               blog.Id,
                 Slug:             blog.Slug,
@@ -87,6 +99,8 @@ public sealed class GetAdminBlogByIdQueryHandler(
                 PlaceId:          blog.PlaceId,
                 LanguageCode:     languageCode,
                 RowVersion:       blog.RowVersion,
+                TourCount:        linkedTours.Count,
+                LinkedTours:      linkedTours,
                 IsFeatured:       blog.IsFeatured);
 
             return Result<AdminBlogDetailDto>.Success(dto);

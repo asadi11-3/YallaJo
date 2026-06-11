@@ -13849,4 +13849,28 @@
 <data name="Creator.Images.Toast.Failed" xml:space="preserve">
 <value>Something went wrong. Please try again.</value>
 </data>
+<data name="Creator.Editor.TourSearchLabel" xml:space="preserve">
+<value>Link a tour</value>
+</data>
+<data name="Creator.Editor.TourSearchPlaceholder" xml:space="preserve">
+<value>Search tours by name</value>
+</data>
+<data name="Creator.Editor.TourSearchHelp" xml:space="preserve">
+<value>Type at least two letters, then pick a tour from the list.</value>
+</data>
+<data name="Creator.Editor.TourNoResults" xml:space="preserve">
+<value>No matching tours found.</value>
+</data>
+<data name="Creator.Editor.LinkedToursLabel" xml:space="preserve">
+<value>Linked tours</value>
+</data>
+<data name="Creator.Editor.NoLinkedTours" xml:space="preserve">
+<value>No tours linked yet.</value>
+</data>
+<data name="Creator.Editor.UnlinkConfirmBody" xml:space="preserve">
+<value>Remove the link to "{0}"?</value>
+</data>
+<data name="Creator.Editor.UnlinkTourNamed" xml:space="preserve">
+<value>Unlink {0}</value>
+</data>
 </root>

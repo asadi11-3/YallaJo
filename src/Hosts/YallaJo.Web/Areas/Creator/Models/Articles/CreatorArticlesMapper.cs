@@ -77,6 +77,12 @@ public static class CreatorArticlesMapper
             Summary            = b.Summary,
             MetaTitle          = b.MetaTitle,
             MetaDescription    = b.MetaDescription,
+            // Names are resolved later (controller → facade.ResolveTourNamesAsync); here we
+            // only carry the ids + order so the editor can render unlink chips.
+            LinkedTours        = b.LinkedTours
+                .OrderBy(t => t.SortOrder)
+                .Select(t => new LinkedTourChipVm(t.TourId, null, t.SortOrder))
+                .ToList(),
         };
 
     public static CreateBlogRequestBody ToCreateBody(ArticleEditorVm form)

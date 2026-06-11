@@ -82,6 +82,15 @@ public sealed class ArticleEditorVm
     /// </summary>
     public Images.ArticleImagesVm? Images { get; set; }
 
+    /// <summary>
+    /// Tours currently linked to this article, rendered as removable chips (CCD B4).
+    /// Sourced from admin-get; tour display names are resolved separately (bounded
+    /// parallel lookups) and may be null if a name could not be resolved.
+    /// </summary>
+    public IReadOnlyList<LinkedTourChipVm> LinkedTours { get; set; } = [];
+
+    public bool HasLinkedTours => LinkedTours.Count > 0;
+
     [Required(ErrorMessage = "Please enter a title.")]
     [StringLength(200, MinimumLength = 3, ErrorMessage = "Title must be 3-200 characters.")]
     public string Title { get; set; } = string.Empty;
@@ -124,3 +133,17 @@ public sealed class ArticleEditorVm
         && (string.Equals(Status, "Draft", StringComparison.OrdinalIgnoreCase)
             || string.Equals(Status, "Rejected", StringComparison.OrdinalIgnoreCase));
 }
+
+/// <summary>One linked-tour chip in the editor: the tour id, its resolved display name
+/// (null if unresolved), and its sort order.</summary>
+public sealed record LinkedTourChipVm(Guid TourId, string? Name, int SortOrder)
+{
+    /// <summary>Name when resolved, else a short GUID fragment so the chip is never blank.</summary>
+    public string DisplayName =>
+        string.IsNullOrWhiteSpace(Name) ? TourId.ToString()[..8] : Name!;
+}
+
+/// <summary>Local mirror of the tours suggest endpoint response
+/// (GET /api/v1/tours/search/suggest). Mirrored here so the Creator area does not
+/// depend on Public-area models.</summary>
+public sealed record TourSuggestResponse(Guid Id, string Name, string Slug);

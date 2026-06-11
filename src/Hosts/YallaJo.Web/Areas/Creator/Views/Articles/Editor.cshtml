@@ -133,16 +133,30 @@
                     <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-link me-2" aria-hidden="true"></i>@Localizer["Creator.Editor.ToursHeading"]</h2>
                     <small class="text-body-secondary">@Localizer["Creator.Editor.ToursSubtitle"]</small>
                 </div>
-                <div class="card-body vstack gap-3">
+                <div class="card-body vstack gap-3" data-yj-component="tour-combobox"
+                     data-lookup-url="@Url.Action("TourLookup", "Articles", new { area = "Creator" })">
+                    @* Currently linked tours: chips with inline unlink (F8 confirm). *@
+                    <partial name="_LinkedTourChips" model="Model" />
+
                     <permission require="@WebPermission.BlogTourLink.Create">
+                        @* F10: no raw entity-ID input. Async combobox resolves a tour by name to a
+                           hidden GUID; with JS off the typed name posts as tourQuery and the server
+                           resolves it (PE1). *@
                         <form asp-area="Creator" asp-controller="Articles" asp-action="LinkTour"
                               asp-route-id="@Model.Id" method="post" class="row g-2 align-items-end">
                             <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
-                            <div class="col-sm-8">
-                                <label for="linkTourId" class="form-label">@Localizer["Creator.Editor.TourIdLabel"]</label>
-                                <input type="text" id="linkTourId" name="tourId" class="form-control font-data" dir="ltr"
-                                       aria-describedby="link-tour-help" autocomplete="off" />
-                                <div id="link-tour-help" class="form-text">@Localizer["Creator.Editor.TourIdHelp"]</div>
+                            <input type="hidden" id="tourId" name="tourId" />
+                            <div class="col-sm-8 position-relative">
+                                <label for="tourSearch" class="form-label">@Localizer["Creator.Editor.TourSearchLabel"]</label>
+                                <input type="text" id="tourSearch" name="tourQuery" class="form-control"
+                                       role="combobox" aria-expanded="false" aria-controls="tourSearchList"
+                                       aria-autocomplete="list" aria-describedby="tour-search-help"
+                                       autocomplete="off" placeholder="@Localizer["Creator.Editor.TourSearchPlaceholder"]" />
+                                <ul id="tourSearchList" class="list-group position-absolute w-100 shadow-sm mt-1"
+                                    role="listbox" aria-label="@Localizer["Creator.Editor.TourSearchLabel"]"
+                                    style="z-index: 1080; max-block-size: 16rem; overflow-y: auto;" hidden></ul>
+                                <div id="tour-search-help" class="form-text">@Localizer["Creator.Editor.TourSearchHelp"]</div>
+                                <div class="form-text text-body-secondary" data-tour-empty hidden>@Localizer["Creator.Editor.TourNoResults"]</div>
                             </div>
                             <div class="col-sm-4 d-grid">
                                 <button type="submit" class="btn btn-primary">
@@ -150,36 +164,6 @@
                                 </button>
                             </div>
                         </form>
-                    </permission>
-                    <permission require="@WebPermission.BlogTourLink.Delete">
-                        <button type="button" class="btn btn-outline-danger align-self-start" data-bs-toggle="modal" data-bs-target="#unlinkTourModal">
-                            <i class="fa-solid fa-xmark me-1" aria-hidden="true"></i>@Localizer["Creator.Editor.UnlinkTour"]
-                        </button>
-
-                        <div class="modal fade" id="unlinkTourModal" tabindex="-1" aria-labelledby="unlinkTourModalLabel"
-                             aria-describedby="unlinkTourModalBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <form asp-area="Creator" asp-controller="Articles" asp-action="UnlinkTour"
-                                      asp-route-id="@Model.Id" method="post" class="modal-content" role="dialog" aria-modal="true">
-                                    <div class="modal-header">
-                                        <h2 class="modal-title h5" id="unlinkTourModalLabel">@Localizer["Creator.Editor.UnlinkTitle"]</h2>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Creator.Editor.Cancel"]"></button>
-                                    </div>
-                                    <div class="modal-body" id="unlinkTourModalBody">
-                                        <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
-                                        <p>@Localizer["Creator.Editor.UnlinkBody"]</p>
-                                        <label for="unlinkTourId" class="form-label">@Localizer["Creator.Editor.UnlinkTourIdLabel"]</label>
-                                        <input type="text" id="unlinkTourId" name="tourId" class="form-control font-data" dir="ltr"
-                                               aria-describedby="unlink-tour-help" autocomplete="off" required />
-                                        <div id="unlink-tour-help" class="form-text">@Localizer["Creator.Editor.TourIdHelp"]</div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Creator.Editor.Cancel"]</button>
-                                        <button type="submit" class="btn btn-danger">@Localizer["Creator.Editor.UnlinkTour"]</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
                     </permission>
                     <p class="text-body-secondary small mb-0">
                         <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>@Localizer["Creator.Editor.ToursVersionNote"]
@@ -242,4 +226,5 @@
     <script src="~/assets/vendor/quill/js/quill.min.js" asp-append-version="true"></script>
     <script src="~/assets/js/creator-article-editor.js" asp-append-version="true" defer></script>
     <script src="~/assets/js/creator-article-images.js" asp-append-version="true" defer></script>
+    <script src="~/assets/js/creator-tour-combobox.js" asp-append-version="true" defer></script>
 }

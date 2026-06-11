@@ -81,4 +81,23 @@ public sealed class CreatorArticlesApiClient
             $"/api/v1/blogs/{id}/tours/{tourId}",
             new BlogRowVersionRequestBody(rowVersion),
             ct);
+
+    // ── Tour lookup (for the link combobox + chip name resolution) ─────────────
+
+    /// <summary>
+    /// GET /api/v1/tours/search/suggest?q= — anonymous tour autocomplete. Used to power
+    /// the link combobox (F10: pick a tour by name, never paste a raw GUID) and to
+    /// resolve chip display names.
+    /// </summary>
+    public Task<ApiResult<List<TourSuggestResponse>>> SuggestToursAsync(string q, CancellationToken ct = default)
+        => _api.GetAsync<List<TourSuggestResponse>>(
+            $"/api/v1/tours/search/suggest?q={Uri.EscapeDataString(q ?? string.Empty)}", ct);
+
+    /// <summary>
+    /// GET /api/v1/tours/{id} — single tour, used to resolve a linked-tour chip's display
+    /// name when it is not already known. Callers batch these with a small fixed bound
+    /// (Task.WhenAll over the few linked tours — API1; the bound keeps API7 satisfied).
+    /// </summary>
+    public Task<ApiResult<TourSuggestResponse>> GetTourAsync(Guid id, CancellationToken ct = default)
+        => _api.GetAsync<TourSuggestResponse>($"/api/v1/tours/{id}", ct);
 }

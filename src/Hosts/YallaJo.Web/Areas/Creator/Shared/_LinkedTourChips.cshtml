@@ -1,0 +1,38 @@
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Creator.Models.Articles
+@using YallaJo.Web.Infrastructure.Authorization
+@model YallaJo.Web.Areas.Creator.Models.Articles.ArticleEditorVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+
+@if (Model.HasLinkedTours)
+{
+    <ul class="list-unstyled d-flex flex-wrap gap-2 mb-0" aria-label="@Localizer["Creator.Editor.LinkedToursLabel"]">
+        @foreach (var chip in Model.LinkedTours.OrderBy(t => t.SortOrder))
+        {
+            <li class="badge text-bg-light border d-inline-flex align-items-center gap-2 py-2 px-3">
+                <span class="text-truncate" style="max-inline-size: 14rem;"><bdi>@chip.DisplayName</bdi></span>
+                <permission require="@WebPermission.BlogTourLink.Delete">
+                    <form asp-area="Creator" asp-controller="Articles" asp-action="UnlinkTour"
+                          asp-route-id="@Model.Id" asp-route-tourId="@chip.TourId" method="post" class="d-inline-flex"
+                          data-confirm="@Localizer["Creator.Editor.UnlinkConfirmBody", chip.DisplayName]"
+                          data-confirm-title="@Localizer["Creator.Editor.UnlinkTitle"]"
+                          data-confirm-action="@Localizer["Creator.Editor.UnlinkTour"]"
+                          data-confirm-cancel="@Localizer["Creator.Editor.Cancel"]">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+                        <button type="submit" class="btn btn-sm btn-link text-danger p-0 lh-1"
+                                aria-label="@Localizer["Creator.Editor.UnlinkTourNamed", chip.DisplayName]">
+                            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </permission>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p class="text-body-secondary small mb-0">
+        <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>@Localizer["Creator.Editor.NoLinkedTours"]
+    </p>
+}

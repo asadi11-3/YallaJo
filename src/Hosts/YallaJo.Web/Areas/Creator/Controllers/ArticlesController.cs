@@ -130,6 +130,10 @@ public sealed class ArticlesController : BaseController
         if (imagesResult is { IsSuccess: true, Data: { } imagesVm })
             vm.Images = imagesVm;
 
+        // Resolve human-readable names for the linked-tour chips (best-effort, bounded).
+        if (vm.HasLinkedTours)
+            vm.LinkedTours = await _facade.ResolveTourNamesAsync(vm.LinkedTours, ct);
+
         return View("Editor", vm);
     }
 
@@ -234,24 +238,42 @@ public sealed class ArticlesController : BaseController
 
     // ── Blog ↔ Tour links (§7.2) — RowVersion-guarded, separate from text-save ──
 
+    // GET /creator/articles/tour-lookup?q=  — type-ahead source for the link combobox.
+    // JSON only; the combobox degrades to a plain name input (resolved server-side) without JS.
+    [HttpGet("creator/articles/tour-lookup")]
+    [RequirePermission(WebPermission.BlogTourLink.Create)]
+    public async Task<IActionResult> TourLookup(string? q, CancellationToken ct = default)
+    {
+        var matches = await _facade.SuggestToursAsync(q, ct);
+        return Json(new { items = matches.Select(t => new { id = t.Id, name = t.Name, slug = t.Slug }) });
+    }
+
     // POST /creator/articles/{id}/tours  — BlogTourLink.Create (RowVersion)
+    // JS path posts the resolved GUID in `tourId`; the no-JS combobox posts the typed
+    // name in `tourQuery`, resolved here via the suggest endpoint (PE1).
     [HttpPost("creator/articles/{id:guid}/tours")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.BlogTourLink.Create)]
-    public async Task<IActionResult> LinkTour(Guid id, Guid tourId, string rowVersion, CancellationToken ct = default)
+    public async Task<IActionResult> LinkTour(
+        Guid id, Guid? tourId, string? tourQuery, string rowVersion, CancellationToken ct = default)
     {
-        if (tourId == Guid.Empty)
-        {
-            SetError("Please provide a valid tour to link.");
-            return RedirectToAction(nameof(Edit), new { id });
-        }
         if (string.IsNullOrEmpty(rowVersion))
         {
             SetError("Missing version token. Please refresh and try again.");
             return RedirectToAction(nameof(Edit), new { id });
         }
 
-        var result = await _facade.LinkTourAsync(id, tourId, rowVersion, ct);
+        var resolvedTourId = tourId is { } tid && tid != Guid.Empty
+            ? tid
+            : await _facade.ResolveTourIdByNameAsync(tourQuery, ct);
+
+        if (resolvedTourId is not { } linkTourId || linkTourId == Guid.Empty)
+        {
+            SetError("Pick a tour from the suggestions.");
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        var result = await _facade.LinkTourAsync(id, linkTourId, rowVersion, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Tour linked to your article.", "Could not link the tour.");

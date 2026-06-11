@@ -56,6 +56,10 @@ public sealed class AdminBlogDetailResponse
     // byte[] RowVersion serializes as a base64 string over JSON; round-trip it verbatim.
     public string? RowVersion { get; init; }
     public bool IsFeatured { get; init; }
+
+    // Tours linked to this article (exposed by admin-get for the editor; B4 additive).
+    public int TourCount { get; init; }
+    public IReadOnlyList<BlogTourSummaryResponse> LinkedTours { get; init; } = [];
 }
 
 public sealed class MyBlogResponse

@@ -105,6 +105,69 @@ public sealed class CreatorArticlesFacade
     public async Task<ApiResult> UnlinkTourAsync(Guid id, Guid tourId, string rowVersion, CancellationToken ct = default)
         => Normalize(await _articles.UnlinkTourAsync(id, tourId, rowVersion, ct).ConfigureAwait(false), "unlink the tour from");
 
+    // ── Tour autocomplete + chip-name resolution (F10 fix) ──────────────────────
+
+    /// <summary>
+    /// Type-ahead suggestions for the tour-link combobox. Returns an empty list on any
+    /// failure (the combobox degrades to "no results" rather than erroring).
+    /// </summary>
+    public async Task<IReadOnlyList<TourSuggestResponse>> SuggestToursAsync(string? q, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+            return [];
+
+        var result = await _articles.SuggestToursAsync(q, ct).ConfigureAwait(false);
+        return result is { IsSuccess: true, Data: { } data } ? data : [];
+    }
+
+    /// <summary>
+    /// Resolves human-readable names for the already-linked tour chips. Names are looked
+    /// up in parallel but the set is small and fixed (the tours linked to one article),
+    /// so the bounded <see cref="Task.WhenAll(System.Threading.Tasks.Task[])"/> fan-out is
+    /// acceptable here (API1); a dedicated batch endpoint (API7) is unnecessary at this size.
+    /// Failures are non-fatal: the chip falls back to a short id (handled in the VM).
+    /// </summary>
+    public async Task<IReadOnlyList<LinkedTourChipVm>> ResolveTourNamesAsync(
+        IReadOnlyList<LinkedTourChipVm> chips, CancellationToken ct = default)
+    {
+        if (chips.Count == 0)
+            return chips;
+
+        var lookups = chips
+            .Select(async chip =>
+            {
+                var result = await _articles.GetTourAsync(chip.TourId, ct).ConfigureAwait(false);
+                var name = result is { IsSuccess: true, Data: { } tour } ? tour.Name : null;
+                return chip with { Name = name };
+            })
+            .ToList();
+
+        return await Task.WhenAll(lookups).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// No-JS fallback for the link form: the visible combobox submits the typed tour
+    /// <em>name</em> (not a GUID). Resolve it to a tour id via the suggest endpoint,
+    /// preferring a case-insensitive exact name match, else the single unambiguous result.
+    /// Returns <c>null</c> when nothing matches confidently (caller shows a validation error).
+    /// </summary>
+    public async Task<Guid?> ResolveTourIdByNameAsync(string? tourQuery, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(tourQuery))
+            return null;
+
+        var matches = await SuggestToursAsync(tourQuery, ct).ConfigureAwait(false);
+        if (matches.Count == 0)
+            return null;
+
+        var exact = matches.FirstOrDefault(t =>
+            string.Equals(t.Name, tourQuery.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (exact is not null)
+            return exact.Id;
+
+        return matches.Count == 1 ? matches[0].Id : null;
+    }
+
     /// <summary>
     /// Fetches the current RowVersion for an article (via admin-get) so destructive
     /// actions (delete) can be issued from the list where the summary lacks RowVersion.
