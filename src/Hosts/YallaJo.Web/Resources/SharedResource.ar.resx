@@ -12856,4 +12856,31 @@
   <data name="Accounts.Recommendations.DismissFailed" xml:space="preserve">
     <value>تعذّر تحديث توصياتك. يرجى المحاولة مرة أخرى.</value>
   </data>
+<data name="Accounts.Support.NoMessages" xml:space="preserve">
+<value>لا توجد رسائل على هذه التذكرة بعد.</value>
+</data>
+<data name="Accounts.Support.SupportTeam" xml:space="preserve">
+<value>فريق الدعم</value>
+</data>
+<data name="Accounts.Support.You" xml:space="preserve">
+<value>أنت</value>
+</data>
+<data name="Accounts.Support.Reply" xml:space="preserve">
+<value>رد</value>
+</data>
+<data name="Accounts.Support.ReplyPlaceholder" xml:space="preserve">
+<value>اكتب ردك…</value>
+</data>
+<data name="Accounts.Support.SendReply" xml:space="preserve">
+<value>إرسال الرد</value>
+</data>
+<data name="Accounts.Support.CannotReply" xml:space="preserve">
+<value>هذه التذكرة {0} ولم يعد بالإمكان الرد عليها.</value>
+</data>
+<data name="Accounts.Support.ReplyFailed" xml:space="preserve">
+<value>تعذّر إرسال ردك.</value>
+</data>
+<data name="Accounts.Support.ReplySent" xml:space="preserve">
+<value>تم إرسال ردك.</value>
+</data>
 </root>

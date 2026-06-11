@@ -63,12 +63,26 @@ public sealed class SupportController : BaseController
     {
         if (string.IsNullOrWhiteSpace(body))
         {
+            // Phase 4d: AJAX callers get a JSON error; no-JS callers get the PRG flash.
+            if (WantsAjax()) return BadRequest(new { error = "Please type a message before sending." });
             SetError("Please type a message before sending.");
             return RedirectToAction(nameof(Details), new { id });
         }
 
         var result = await _support.PostMessageAsync(id, body.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
+
+        // Phase 4d: AJAX reply returns the refreshed thread partial; PRG remains the no-JS path (PE1).
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.Error ?? "Could not post your reply." });
+
+            var refreshed = await _support.GetDetailAsync(id, ct);
+            return refreshed is { IsSuccess: true, Data: { } detail }
+                ? PartialView("_SupportThread", detail)
+                : BadRequest(new { error = refreshed.Error ?? "Could not load the updated thread." });
+        }
 
         if (result.IsSuccess)
             SetSuccess("Your reply was sent.");

@@ -12856,4 +12856,31 @@
   <data name="Accounts.Recommendations.DismissFailed" xml:space="preserve">
     <value>Could not update your recommendations. Please try again.</value>
   </data>
+<data name="Accounts.Support.NoMessages" xml:space="preserve">
+<value>No messages on this ticket yet.</value>
+</data>
+<data name="Accounts.Support.SupportTeam" xml:space="preserve">
+<value>Support team</value>
+</data>
+<data name="Accounts.Support.You" xml:space="preserve">
+<value>You</value>
+</data>
+<data name="Accounts.Support.Reply" xml:space="preserve">
+<value>Reply</value>
+</data>
+<data name="Accounts.Support.ReplyPlaceholder" xml:space="preserve">
+<value>Type your reply…</value>
+</data>
+<data name="Accounts.Support.SendReply" xml:space="preserve">
+<value>Send reply</value>
+</data>
+<data name="Accounts.Support.CannotReply" xml:space="preserve">
+<value>This ticket is {0} and can no longer be replied to.</value>
+</data>
+<data name="Accounts.Support.ReplyFailed" xml:space="preserve">
+<value>Could not post your reply.</value>
+</data>
+<data name="Accounts.Support.ReplySent" xml:space="preserve">
+<value>Your reply was sent.</value>
+</data>
 </root>

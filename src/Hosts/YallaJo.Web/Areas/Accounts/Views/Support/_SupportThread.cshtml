@@ -1,0 +1,50 @@
+@model YallaJo.Web.Areas.Accounts.Models.Support.SupportTicketDetailVm
+@{
+    string TimeStamp(DateTime utc) => utc.ToString("dd MMM yyyy HH:mm") + " UTC";
+}
+@* Phase 4d (Accounts plan): message thread + reply form — AJAX-swappable region (NF6/PE1/L1). *@
+<div class="card-body p-3">
+    @* ── Message thread (internal staff notes are excluded by the mapper) ── *@
+    @if (Model.Messages.Count == 0)
+    {
+        <p class="text-muted small text-center py-3 mb-0">@Localizer["Accounts.Support.NoMessages"]</p>
+    }
+    else
+    {
+        <ul class="list-unstyled mb-0">
+            @foreach (var m in Model.Messages)
+            {
+                <li class="mb-3">
+                    <div class="d-flex @(m.IsFromStaff ? "" : "justify-content-end")">
+                        <div class="rounded p-2 @(m.IsFromStaff ? "bg-light" : "bg-primary bg-opacity-10") max-w-80">
+                            <div class="small fw-bold mb-1">@(m.IsFromStaff ? Localizer["Accounts.Support.SupportTeam"] : Localizer["Accounts.Support.You"])</div>
+                            <div class="small">@m.Body</div>
+                            <div class="small text-muted mt-1" dir="ltr">@TimeStamp(m.CreatedAt)</div>
+                        </div>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+@if (Model.CanReply)
+{
+    <div class="card-body border-top">
+        <form asp-area="Accounts" asp-controller="Support" asp-action="Reply" asp-route-id="@Model.Id" method="post" class="js-support-reply" data-loading>
+            @Html.AntiForgeryToken()
+            <label class="form-label small mb-1" for="body">@Localizer["Accounts.Support.Reply"]</label>
+            <textarea class="form-control mb-2" id="body" name="body" rows="3"
+                      maxlength="4000" required placeholder="@Localizer["Accounts.Support.ReplyPlaceholder"]"></textarea>
+            <button type="submit" class="btn btn-sm btn-primary mb-0">@Localizer["Accounts.Support.SendReply"]</button>
+        </form>
+    </div>
+}
+else
+{
+    <div class="card-body border-top">
+        <p class="small text-muted mb-0">
+            @Localizer["Accounts.Support.CannotReply", Model.Status.ToLowerInvariant()]
+        </p>
+    </div>
+}
