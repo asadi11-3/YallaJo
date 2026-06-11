@@ -20,5 +20,6 @@ public static class SecurityCacheKeys
     // ── Cache key builders ────────────────────────────────────────────────────
     public static string User(Guid userId) => $"security:user:{userId}";
     public static string Users(int page, int pageSize) => $"security:users:p{page}:s{pageSize}";
+    public static string UserSuggest(string query) => $"security:users:suggest:{query}";
     public const string ActiveRoles = "security:roles:active";
 }

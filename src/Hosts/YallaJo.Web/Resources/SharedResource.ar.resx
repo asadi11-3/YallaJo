@@ -14086,4 +14086,13 @@
 <data name="Admin.Providers.Status.Rejected" xml:space="preserve">
 <value>مرفوض</value>
 </data>
+<data name="Admin.Lookup.UserPlaceholder" xml:space="preserve">
+<value>ابحث بالبريد الإلكتروني…</value>
+</data>
+<data name="Admin.Lookup.PlacePlaceholder" xml:space="preserve">
+<value>ابحث عن الأماكن بالاسم…</value>
+</data>
+<data name="Admin.Lookup.NoResults" xml:space="preserve">
+<value>لا توجد نتائج مطابقة.</value>
+</data>
 </root>

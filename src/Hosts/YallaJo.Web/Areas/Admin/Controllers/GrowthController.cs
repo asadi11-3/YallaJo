@@ -19,8 +19,13 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class GrowthController : BaseController
 {
     private readonly GrowthFacade _facade;
+    private readonly LookupsFacade _lookups;
 
-    public GrowthController(GrowthFacade facade) => _facade = facade;
+    public GrowthController(GrowthFacade facade, LookupsFacade lookups)
+    {
+        _facade = facade;
+        _lookups = lookups;
+    }
 
     // ── GET /admin/growth ─────────────────────────────────────────────────────────
     [HttpGet("admin/growth")]
@@ -47,8 +52,23 @@ public sealed class GrowthController : BaseController
     [HttpPost("admin/growth/seasonality")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.SeasonalityRule.Create)]
-    public async Task<IActionResult> CreateSeasonalityRule(CreateSeasonalityRuleVm form, CancellationToken ct)
+    public async Task<IActionResult> CreateSeasonalityRule(CreateSeasonalityRuleVm form, [FromForm] string? placeQuery, CancellationToken ct)
     {
+        // PE1/F10: JS fills the hidden PlaceId; without JS the typed query is resolved
+        // server-side (GUID paste first, then a name lookup via the suggest proxy).
+        if (form.PlaceId == Guid.Empty && !string.IsNullOrWhiteSpace(placeQuery))
+        {
+            form.PlaceId = Guid.TryParse(placeQuery.Trim(), out var parsed)
+                ? parsed
+                : await _lookups.ResolvePlaceIdAsync(placeQuery, ct) ?? Guid.Empty;
+        }
+
+        if (form.PlaceId == Guid.Empty)
+        {
+            SetError("Could not find a place matching that search. Pick a suggestion or paste the place id.");
+            return RedirectToAction(nameof(Index));
+        }
+
         var result = await _facade.CreateSeasonalityRuleAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 

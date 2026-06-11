@@ -1,3 +1,4 @@
+using YallaJo.Web.Areas.Admin.Models.Lookups;
 using YallaJo.Web.Areas.Admin.Models.Users;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
@@ -13,6 +14,12 @@ public sealed class UsersApiClient
         int page, int pageSize, CancellationToken ct = default)
         => _api.GetAsync<UserListResponse>(
             $"/api/v1/security/users?page={page}&pageSize={pageSize}", ct);
+
+    // GET /api/v1/security/users/suggest — typeahead lookup by primary email fragment (F10).
+    public Task<ApiResult<IReadOnlyList<UserSuggestResponse>>> SuggestAsync(
+        string q, CancellationToken ct = default)
+        => _api.GetAsync<IReadOnlyList<UserSuggestResponse>>(
+            $"/api/v1/security/users/suggest?q={Uri.EscapeDataString(q)}", ct);
 
     public Task<ApiResult<UserItemResponse>> GetUserAsync(
         Guid userId, CancellationToken ct = default)

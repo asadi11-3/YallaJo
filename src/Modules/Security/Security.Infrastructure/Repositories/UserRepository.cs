@@ -118,4 +118,15 @@ internal sealed class UserRepository(SecurityDbContext context)
             .Select(u => (string?)u.PasswordHash)
             .FirstOrDefaultAsync(ct);
     }
+
+    public async Task<IReadOnlyList<User>> SuggestByEmailAsync(string query, int limit, CancellationToken ct = default)
+    {
+        return await context.Users
+            .AsNoTracking()
+            .Include(u => u.Emails.Where(e => e.IsPrimary))
+            .Where(u => u.Emails.Any(e => e.IsPrimary && e.Address.Contains(query)))
+            .OrderBy(u => u.Emails.Where(e => e.IsPrimary).Select(e => e.Address).FirstOrDefault())
+            .Take(limit)
+            .ToListAsync(ct);
+    }
 }

@@ -12,6 +12,7 @@ using Security.Application.Queries.Dtos;
 using Security.Application.Queries.GetSecurityMe;
 using Security.Application.Queries.GetUser;
 using Security.Application.Queries.ListUsers;
+using Security.Application.Queries.SuggestUsers;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -27,6 +28,7 @@ internal static class UserEndpoints
     {
         MapMeEndpoint(group);
         MapListUsersEndpoint(group);
+        MapSuggestUsersEndpoint(group);
         MapGetUserEndpoint(group);
         MapActivateUserEndpoint(group);
         MapDeactivateUserEndpoint(group);
@@ -67,6 +69,23 @@ internal static class UserEndpoints
         .WithName("ListUsers")
         .Produces<PagedUsersResponse>(StatusCodes.Status200OK)
         .WithSummary("List users with pagination")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Read))
+        .RequireAuthorization();
+    }
+
+    private static void MapSuggestUsersEndpoint(RouteGroupBuilder group)
+    {
+        // GET /api/v1/security/users/suggest — typeahead suggestions by primary email fragment.
+        // Registered as a literal segment BEFORE /users/{userId:guid}; the guid constraint
+        // never matches "suggest" so there is no route collision.
+        group.MapGet("/users/suggest", async (string q, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new SuggestUsersQuery(q), ct);
+            return result.ToApiResult();
+        })
+        .WithName("SuggestUsers")
+        .Produces<IReadOnlyList<UserSuggestDto>>(StatusCodes.Status200OK)
+        .WithSummary("Suggest users by primary email fragment (max 10)")
         .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Read))
         .RequireAuthorization();
     }

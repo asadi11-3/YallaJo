@@ -1,4 +1,5 @@
 using System.Globalization;
+using YallaJo.Web.Areas.Admin.Models.Lookups;
 using YallaJo.Web.Areas.Admin.Models.Places;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
@@ -28,6 +29,12 @@ public sealed class PlacesApiClient
 
     public Task<ApiResult<PlaceDetailsResponse>> GetByIdAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<PlaceDetailsResponse>($"{BasePath}/{id}", ct);
+
+    // GET /api/v1/places/search/suggest — typeahead lookup by name prefix (F10).
+    public Task<ApiResult<IReadOnlyList<PlaceSuggestResponse>>> SuggestAsync(
+        string q, CancellationToken ct = default)
+        => _api.GetAsync<IReadOnlyList<PlaceSuggestResponse>>(
+            $"{BasePath}/search/suggest?q={Uri.EscapeDataString(q)}", ct);
 
     // ── Commands ─────────────────────────────────────────────────────────────
     public Task<ApiResult<CreatePlaceResponse>> CreateAsync(

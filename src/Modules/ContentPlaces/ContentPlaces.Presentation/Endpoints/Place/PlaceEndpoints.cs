@@ -8,6 +8,7 @@ using ContentPlaces.Application.Queries.Place.GetPlaceById;
 using ContentPlaces.Application.Queries.Place.GetPlaceBySlug;
 using ContentPlaces.Application.Queries.Place.GetPlaceImages;
 using ContentPlaces.Application.Queries.Place.ListPlaces;
+using ContentPlaces.Application.Queries.Place.SuggestPlaces;
 using ContentPlaces.Presentation.Endpoints.Place.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -49,6 +50,20 @@ internal static class PlaceEndpoints
         .WithName("ListPlaces")
         .Produces<PaginatedResult<PlaceSummaryDto>>(StatusCodes.Status200OK)
         .WithSummary("List places with pagination and optional filters (max 50 per page)")
+        .AllowAnonymous();
+
+        // GET /api/v1/places/search/suggest — typeahead suggestions (mirrors tours /search/suggest).
+        // Registered as literal segments BEFORE /{id:guid} and /{slug}; the two-segment literal
+        // path can never collide with the single-segment parameterised routes below.
+        places.MapGet("/search/suggest", async (string q, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new SuggestPlacesQuery(q), ct);
+            return result.ToApiResult();
+        })
+        .WithName("SuggestPlaces")
+        .Produces<IReadOnlyList<PlaceSuggestDto>>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .WithSummary("Suggest places by name prefix for typeahead lookups (max 10)")
         .AllowAnonymous();
 
         places.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>

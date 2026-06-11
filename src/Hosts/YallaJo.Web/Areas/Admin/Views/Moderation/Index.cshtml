@@ -54,7 +54,16 @@
                 <div class="modal-body" id="warnModalBody">
                     <p class="small text-secondary">@Localizer["Admin.Moderation.OperatorHelp"]</p>
                     <label class="form-label" for="warn-user-id">@Localizer["Admin.Moderation.UserIdLabel"]</label>
-                    <input id="warn-user-id" name="UserId" class="form-control mb-3" dir="ltr" required aria-describedby="warn-user-id-help" />
+                    @* F10/S2/JS6: typeahead user lookup — JS fills the hidden UserId; no-JS posts userQuery and the server resolves it (PE1). *@
+                    <div class="position-relative mb-3" data-yj-component="lookup" data-lookup-url="/admin/lookups/users">
+                        <input id="warn-user-id" name="userQuery" class="form-control" dir="ltr" required
+                               role="combobox" aria-expanded="false" aria-autocomplete="list" autocomplete="off"
+                               placeholder="@Localizer["Admin.Lookup.UserPlaceholder"]" aria-describedby="warn-user-id-help"
+                               data-lookup-input />
+                        <input type="hidden" name="UserId" data-lookup-id />
+                        <ul class="list-group position-absolute w-100 shadow z-3" role="listbox" hidden data-lookup-list></ul>
+                        <small class="form-text text-secondary" hidden data-lookup-empty>@Localizer["Admin.Lookup.NoResults"]</small>
+                    </div>
                     <div class="form-text mb-3" id="warn-user-id-help">@Localizer["Admin.Moderation.UserIdHelp"]</div>
                     <label class="form-label" for="warn-entity-type">@Localizer["Admin.Moderation.EntityTypeLabel"]</label>
                     <select id="warn-entity-type" name="EntityType" class="form-select mb-3" required>
@@ -88,7 +97,16 @@
                 <div class="modal-body" id="banModalBody">
                     <p class="small text-secondary">@Localizer["Admin.Moderation.OperatorHelp"]</p>
                     <label class="form-label" for="ban-user-id">@Localizer["Admin.Moderation.UserIdLabel"]</label>
-                    <input id="ban-user-id" name="UserId" class="form-control mb-3" dir="ltr" required aria-describedby="ban-user-id-help" />
+                    @* F10/S2/JS6: typeahead user lookup — JS fills the hidden UserId; no-JS posts userQuery and the server resolves it (PE1). *@
+                    <div class="position-relative mb-3" data-yj-component="lookup" data-lookup-url="/admin/lookups/users">
+                        <input id="ban-user-id" name="userQuery" class="form-control" dir="ltr" required
+                               role="combobox" aria-expanded="false" aria-autocomplete="list" autocomplete="off"
+                               placeholder="@Localizer["Admin.Lookup.UserPlaceholder"]" aria-describedby="ban-user-id-help"
+                               data-lookup-input />
+                        <input type="hidden" name="UserId" data-lookup-id />
+                        <ul class="list-group position-absolute w-100 shadow z-3" role="listbox" hidden data-lookup-list></ul>
+                        <small class="form-text text-secondary" hidden data-lookup-empty>@Localizer["Admin.Lookup.NoResults"]</small>
+                    </div>
                     <div class="form-text mb-3" id="ban-user-id-help">@Localizer["Admin.Moderation.UserIdHelp"]</div>
                     <label class="form-label" for="ban-entity-type">@Localizer["Admin.Moderation.EntityTypeLabel"]</label>
                     <select id="ban-entity-type" name="EntityType" class="form-select mb-3" required>
@@ -128,7 +146,16 @@
                 @Html.AntiForgeryToken()
                 <div class="col-sm-8">
                     <label class="form-label" for="unban-user-id">@Localizer["Admin.Moderation.BannedUserIdLabel"]</label>
-                    <input id="unban-user-id" name="userId" class="form-control" dir="ltr" required aria-describedby="unban-user-id-help" />
+                    @* F10/S2/JS6: typeahead user lookup — JS fills the hidden userId; no-JS posts userQuery and the server resolves it (PE1). *@
+                    <div class="position-relative" data-yj-component="lookup" data-lookup-url="/admin/lookups/users">
+                        <input id="unban-user-id" name="userQuery" class="form-control" dir="ltr" required
+                               role="combobox" aria-expanded="false" aria-autocomplete="list" autocomplete="off"
+                               placeholder="@Localizer["Admin.Lookup.UserPlaceholder"]" aria-describedby="unban-user-id-help"
+                               data-lookup-input />
+                        <input type="hidden" name="userId" data-lookup-id />
+                        <ul class="list-group position-absolute w-100 shadow z-3" role="listbox" hidden data-lookup-list></ul>
+                        <small class="form-text text-secondary" hidden data-lookup-empty>@Localizer["Admin.Lookup.NoResults"]</small>
+                    </div>
                     <div class="form-text" id="unban-user-id-help">@Localizer["Admin.Moderation.UserIdHelp"]</div>
                 </div>
                 <div class="col-sm-4">
@@ -141,4 +168,5 @@
 
 @section Scripts {
     <script src="~/assets/js/listing.js" asp-append-version="true" defer></script>
+    <script src="~/assets/js/admin-lookup.js" asp-append-version="true" defer></script>
 }

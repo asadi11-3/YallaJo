@@ -14086,4 +14086,13 @@
   <data name="Admin.Providers.Status.Rejected" xml:space="preserve">
     <value>Rejected</value>
   </data>
+  <data name="Admin.Lookup.UserPlaceholder" xml:space="preserve">
+    <value>Search by email…</value>
+  </data>
+  <data name="Admin.Lookup.PlacePlaceholder" xml:space="preserve">
+    <value>Search places by name…</value>
+  </data>
+  <data name="Admin.Lookup.NoResults" xml:space="preserve">
+    <value>No matches found.</value>
+  </data>
 </root>

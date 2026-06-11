@@ -120,8 +120,16 @@
                         <h3 class="h6">@Localizer["Admin.Growth.AddRuleHeading"]</h3>
                         <div class="mb-2">
                             <label class="form-label" for="s-place">@Localizer["Admin.Growth.PlaceIdLabel"]</label>
-                            <input type="text" class="form-control font-data" id="s-place" name="PlaceId" dir="ltr"
-                                   aria-describedby="s-place-help" required />
+                            @* F10/S2/JS6: typeahead place lookup — JS fills the hidden PlaceId; no-JS posts placeQuery and the server resolves it (PE1). *@
+                            <div class="position-relative" data-yj-component="lookup" data-lookup-url="/admin/lookups/places">
+                                <input type="text" class="form-control" id="s-place" name="placeQuery" dir="auto" required
+                                       role="combobox" aria-expanded="false" aria-autocomplete="list" autocomplete="off"
+                                       placeholder="@Localizer["Admin.Lookup.PlacePlaceholder"]" aria-describedby="s-place-help"
+                                       data-lookup-input />
+                                <input type="hidden" name="PlaceId" data-lookup-id />
+                                <ul class="list-group position-absolute w-100 shadow z-3" role="listbox" hidden data-lookup-list></ul>
+                                <small class="form-text text-secondary" hidden data-lookup-empty>@Localizer["Admin.Lookup.NoResults"]</small>
+                            </div>
                             <small id="s-place-help" class="form-text">@Localizer["Admin.Growth.PlaceIdHelp"]</small>
                         </div>
                         <div class="row g-2 mb-2">
@@ -339,3 +347,7 @@
         </section>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/assets/js/admin-lookup.js" asp-append-version="true" defer></script>
+}
