@@ -1,6 +1,7 @@
 using ContentTours.Application.Commands.GuideApplication.Apply;
 using ContentTours.Application.Commands.GuideApplication.Approve;
 using ContentTours.Application.Commands.GuideApplication.Reject;
+using ContentTours.Application.Queries.Tour.ListOpenForApplicationTours;
 using ContentTours.Application.Queries.TourGuides.ListApplications;
 using ContentTours.Contracts.Authorization;
 using ContentTours.Domain.Enums;
@@ -20,6 +21,29 @@ internal static class GuideApplicationEndpoints
 {
     internal static void MapGuideApplicationEndpoints(RouteGroupBuilder group)
     {
+        // GET /open-for-applications — public browse of tours accepting guide applications.
+        // Registered before the {tourId:guid} sub-group for clean ordering (the literal
+        // segment wins over the guid constraint anyway, but keep it unambiguous).
+        group.MapGet("/open-for-applications", async (
+            string? q,
+            int? page,
+            int? pageSize,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            // R4: clamp paging at the edge.
+            var query = new ListOpenForApplicationToursQuery(
+                q,
+                Math.Max(1, page ?? 1),
+                Math.Clamp(pageSize ?? 20, 1, 50));
+            var result = await sender.Send(query, ct);
+            return result.ToApiResult();
+        })
+        .WithName("ListOpenForApplicationTours")
+        .WithSummary("List published tours currently open for guide applications")
+        .Produces<ListOpenForApplicationToursResult>(StatusCodes.Status200OK)
+        .AllowAnonymous();
+
         var apps = group.MapGroup("/{tourId:guid}/applications")
             .WithTags("ContentTours | Guide Applications");
 

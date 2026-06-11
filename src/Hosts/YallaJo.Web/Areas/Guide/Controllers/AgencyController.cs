@@ -30,7 +30,9 @@ public sealed class AgencyController : GuideBaseController
     [HttpPost("guide/agency/apply")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.GuideAgency.Create)]
-    public async Task<IActionResult> Apply(ApplyToAgencyFormVm form, CancellationToken ct = default)
+    // Bind prefix matches the view's asp-for="ApplyForm.*" field names (the bare
+    // parameter name "form" wouldn't match the posted "ApplyForm." prefix).
+    public async Task<IActionResult> Apply([Bind(Prefix = "ApplyForm")] ApplyToAgencyFormVm form, CancellationToken ct = default)
     {
         SetNav("Agency");
         if (!ModelState.IsValid) return await ReloadAsync(form, ct);

@@ -86,6 +86,14 @@ public sealed class ProfileController : GuideBaseController
         return HandleMutation(result, "Specialization added.");
     }
 
+    [HttpPost("guide/profile/specializations/delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveSpecialization(Guid specializationId, CancellationToken ct = default)
+    {
+        var result = await _profile.RemoveSpecializationAsync(specializationId, ct);
+        return HandleMutation(result, "Specialization removed.");
+    }
+
     [HttpPost("guide/profile/avatar")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UploadAvatar(IFormFile? file, CancellationToken ct = default)

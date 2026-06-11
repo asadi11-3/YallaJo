@@ -32,6 +32,9 @@ public sealed record PublicReviewPageResponse(
     int PageSize,
     int TotalCount);
 
+/// <summary>Body for POST /api/v1/social/reviews/{id}/reply (B3 — guide replies to a review).</summary>
+public sealed record AddReviewReplyRequest(string Content);
+
 /// <summary>Aggregate rating summary (matches Social.RatingSummaryDto JSON).</summary>
 public sealed record RatingSummaryResponse(
     string EntityType,

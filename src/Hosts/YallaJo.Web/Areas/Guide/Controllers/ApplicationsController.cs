@@ -47,6 +47,23 @@ public sealed class ApplicationsController : GuideBaseController
         return View(vm);
     }
 
+    /// <summary>
+    /// [Backend] B2 Web proxy — JSON options for the async open-tour picker (F10/JS5).
+    /// The browser never calls the API host directly; no-JS users keep the SSR select (PE1).
+    /// </summary>
+    [HttpGet("guide/applications/open-tours")]
+    public async Task<IActionResult> OpenTours(string? q, CancellationToken ct = default)
+    {
+        var result = await _applications.GetOpenToursAsync(q, ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        var items = result.Data ?? [];
+        return Json(items.Select(t => new { tourId = t.TourId, label = t.Label }));
+    }
+
     [HttpPost("guide/applications/apply")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Apply(ApplyForTourFormVm form, CancellationToken ct = default)

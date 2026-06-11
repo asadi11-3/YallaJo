@@ -13303,4 +13303,76 @@
 <data name="Guide.Profile.RemoveLanguageConfirm" xml:space="preserve">
 <value>هل أنت متأكد من أنك تريد إزالة {0} من لغاتك؟</value>
 </data>
+<data name="Guide.Profile.RemoveSpecializationConfirm" xml:space="preserve">
+<value>هل أنت متأكد أنك تريد إزالة {0} من تخصصاتك؟</value>
+</data>
+<data name="Guide.Profile.RemoveSpecializationTitle" xml:space="preserve">
+<value>إزالة التخصص؟</value>
+</data>
+<data name="Guide.Profile.RemoveSpecializationLabel" xml:space="preserve">
+<value>إزالة {0}</value>
+</data>
+<data name="Guide.Applications.SelectTour" xml:space="preserve">
+<value>اختر جولة…</value>
+</data>
+<data name="Guide.Applications.NoResults" xml:space="preserve">
+<value>لا توجد جولات مطابقة</value>
+</data>
+<data name="Guide.Reviews.AverageRating" xml:space="preserve">
+<value>متوسط التقييم</value>
+</data>
+<data name="Guide.Reviews.TotalReviews" xml:space="preserve">
+<value>إجمالي التقييمات</value>
+</data>
+<data name="Guide.Reviews.ListHeading" xml:space="preserve">
+<value>ماذا يقول المسافرون</value>
+</data>
+<data name="Guide.Reviews.RatingAria" xml:space="preserve">
+<value>التقييم {0} من 5</value>
+</data>
+<data name="Guide.Reviews.Verified" xml:space="preserve">
+<value>حجز موثّق</value>
+</data>
+<data name="Guide.Reviews.Visited" xml:space="preserve">
+<value>تاريخ الزيارة {0}</value>
+</data>
+<data name="Guide.Reviews.Helpful" xml:space="preserve">
+<value>وجدها {0} مفيدة</value>
+</data>
+<data name="Guide.Reviews.YourReply" xml:space="preserve">
+<value>ردّك</value>
+</data>
+<data name="Guide.Reviews.ReplyLabel" xml:space="preserve">
+<value>اكتب ردًا</value>
+</data>
+<data name="Guide.Reviews.ReplySubmit" xml:space="preserve">
+<value>نشر الرد</value>
+</data>
+<data name="Guide.Reviews.ReplyPosted" xml:space="preserve">
+<value>تم نشر الرد.</value>
+</data>
+<data name="Guide.Status.AwaitingModeration" xml:space="preserve">
+<value>بانتظار المراجعة</value>
+</data>
+<data name="Guide.Status.AutoHidden" xml:space="preserve">
+<value>مخفي تلقائيًا</value>
+</data>
+<data name="Guide.Status.RemovedByAdmin" xml:space="preserve">
+<value>أزاله المشرف</value>
+</data>
+<data name="Guide.Status.DeletedByUser" xml:space="preserve">
+<value>حذفه المستخدم</value>
+</data>
+<data name="Guide.Discounts.SelectTour" xml:space="preserve">
+<value>كل الجولات (اختياري — اختر جولة لتقييد الخصم)</value>
+</data>
+<data name="Guide.Agency.SelectAgency" xml:space="preserve">
+<value>اختر وكالة…</value>
+</data>
+<data name="Guide.Proposals.SelectPlace" xml:space="preserve">
+<value>اختر مكاناً…</value>
+</data>
+<data name="Guide.Proposals.NoResults" xml:space="preserve">
+<value>لا توجد أماكن مطابقة لبحثك</value>
+</data>
 </root>

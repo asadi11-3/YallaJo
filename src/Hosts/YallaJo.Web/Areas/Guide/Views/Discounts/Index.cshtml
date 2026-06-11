@@ -88,10 +88,16 @@
 
                         <div class="mb-3 mt-3">
                             <label asp-for="Form.TourId" class="form-label">@Localizer["Guide.Discounts.TourId"]</label>
-                            <input asp-for="Form.TourId" class="form-control font-data" dir="ltr" autocomplete="off"
-                                   aria-describedby="create-tour-help" placeholder="@Localizer["Guide.Discounts.TourIdPlaceholder"]" />
+                            @* F10: select the tour by name; the option value carries the id. *@
+                            <select asp-for="Form.TourId" class="form-select">
+                                <option value="">@Localizer["Guide.Discounts.SelectTour"]</option>
+                                @foreach (var tour in Model.TourOptions)
+                                {
+                                    @* OptionTagHelper auto-selects the option matching Form.TourId via asp-for. *@
+                                    <option value="@tour.TourId">@tour.Title</option>
+                                }
+                            </select>
                             <span asp-validation-for="Form.TourId" class="text-danger small" role="alert"></span>
-                            <div id="create-tour-help" class="form-text">@Localizer["Guide.Discounts.TourIdHelp"]</div>
                         </div>
 
                         <button type="submit" class="btn btn-primary mt-2">

@@ -23,3 +23,17 @@ public sealed record ApplyForTourRequest(
     string RelevantExperience,
     decimal? ProposedBasePrice = null,
     string? ProposedScheduleJson = null);
+
+/// <summary>Paged result of tours currently open for guide applications (F10 picker).</summary>
+public sealed record OpenToursResponse(
+    IReadOnlyList<OpenTourItemResponse> Items,
+    int TotalCount);
+
+/// <summary>A single open-for-applications tour as returned by the API.</summary>
+public sealed record OpenTourItemResponse(
+    Guid TourId,
+    string Title,
+    string? Slug,
+    string? City,
+    decimal BasePrice,
+    string Currency);

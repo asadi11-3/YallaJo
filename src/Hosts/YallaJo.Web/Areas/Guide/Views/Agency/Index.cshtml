@@ -32,9 +32,15 @@
                             <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
                             <div>
                                 <label asp-for="ApplyForm.AgencyUserId" class="form-label">@Localizer["Guide.Agency.AgencyIdLabel"]</label>
-                                <input asp-for="ApplyForm.AgencyUserId" class="form-control font-data" dir="ltr" autocomplete="off"
-                                       aria-describedby="agency-id-help" placeholder="@Localizer["Guide.Agency.AgencyIdPlaceholder"]" />
-                                <div id="agency-id-help" class="form-text">@Localizer["Guide.Agency.AgencyIdHelp"]</div>
+                                @* F10: select the agency by business name; the option value carries the agency user id. *@
+                                <select asp-for="ApplyForm.AgencyUserId" class="form-select">
+                                    <option value="">@Localizer["Guide.Agency.SelectAgency"]</option>
+                                    @foreach (var agency in Model.AgencyOptions)
+                                    {
+                                        @* OptionTagHelper auto-selects the option matching ApplyForm.AgencyUserId via asp-for. *@
+                                        <option value="@agency.UserId">@agency.BusinessName</option>
+                                    }
+                                </select>
                                 <span asp-validation-for="ApplyForm.AgencyUserId" class="text-danger small" role="alert"></span>
                             </div>
                             <div>

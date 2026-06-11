@@ -13303,4 +13303,76 @@
 <data name="Guide.Profile.RemoveLanguageConfirm" xml:space="preserve">
 <value>Are you sure you want to remove {0} from your languages?</value>
 </data>
+<data name="Guide.Profile.RemoveSpecializationConfirm" xml:space="preserve">
+<value>Are you sure you want to remove {0} from your specializations?</value>
+</data>
+<data name="Guide.Profile.RemoveSpecializationTitle" xml:space="preserve">
+<value>Remove specialization?</value>
+</data>
+<data name="Guide.Profile.RemoveSpecializationLabel" xml:space="preserve">
+<value>Remove {0}</value>
+</data>
+<data name="Guide.Applications.SelectTour" xml:space="preserve">
+<value>Select a tour…</value>
+</data>
+<data name="Guide.Applications.NoResults" xml:space="preserve">
+<value>No matching tours found</value>
+</data>
+<data name="Guide.Reviews.AverageRating" xml:space="preserve">
+<value>Average rating</value>
+</data>
+<data name="Guide.Reviews.TotalReviews" xml:space="preserve">
+<value>Total reviews</value>
+</data>
+<data name="Guide.Reviews.ListHeading" xml:space="preserve">
+<value>What travellers say</value>
+</data>
+<data name="Guide.Reviews.RatingAria" xml:space="preserve">
+<value>Rated {0} out of 5</value>
+</data>
+<data name="Guide.Reviews.Verified" xml:space="preserve">
+<value>Verified booking</value>
+</data>
+<data name="Guide.Reviews.Visited" xml:space="preserve">
+<value>Visited {0}</value>
+</data>
+<data name="Guide.Reviews.Helpful" xml:space="preserve">
+<value>{0} found this helpful</value>
+</data>
+<data name="Guide.Reviews.YourReply" xml:space="preserve">
+<value>Your reply</value>
+</data>
+<data name="Guide.Reviews.ReplyLabel" xml:space="preserve">
+<value>Write a reply</value>
+</data>
+<data name="Guide.Reviews.ReplySubmit" xml:space="preserve">
+<value>Post reply</value>
+</data>
+<data name="Guide.Reviews.ReplyPosted" xml:space="preserve">
+<value>Reply posted.</value>
+</data>
+<data name="Guide.Status.AwaitingModeration" xml:space="preserve">
+<value>Awaiting moderation</value>
+</data>
+<data name="Guide.Status.AutoHidden" xml:space="preserve">
+<value>Hidden automatically</value>
+</data>
+<data name="Guide.Status.RemovedByAdmin" xml:space="preserve">
+<value>Removed by admin</value>
+</data>
+<data name="Guide.Status.DeletedByUser" xml:space="preserve">
+<value>Deleted by user</value>
+</data>
+<data name="Guide.Discounts.SelectTour" xml:space="preserve">
+<value>All tours (optional — pick one to limit the discount)</value>
+</data>
+<data name="Guide.Agency.SelectAgency" xml:space="preserve">
+<value>Select an agency…</value>
+</data>
+<data name="Guide.Proposals.SelectPlace" xml:space="preserve">
+<value>Select a place…</value>
+</data>
+<data name="Guide.Proposals.NoResults" xml:space="preserve">
+<value>No places match your search</value>
+</data>
 </root>

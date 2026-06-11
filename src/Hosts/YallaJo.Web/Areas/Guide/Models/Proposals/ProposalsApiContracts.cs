@@ -25,3 +25,6 @@ public sealed record CreateTourProposalRequest(
     decimal BasePrice,
     string Currency,
     bool RequestExclusive = false);
+
+/// <summary>GET /api/v1/places/lookup — mirrors ContentPlaces PlaceLookupDto.</summary>
+public sealed record PlaceLookupResponse(Guid Id, string Name, string? City);

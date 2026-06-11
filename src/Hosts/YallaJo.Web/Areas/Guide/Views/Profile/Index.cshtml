@@ -169,12 +169,23 @@
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     @foreach (var spec in Model.Specializations)
                     {
-                        <span class="badge bg-info-soft text-info py-2">
+                        <span class="badge bg-info-soft text-info d-inline-flex align-items-center gap-2 py-2">
                             @if (!string.IsNullOrWhiteSpace(spec.Icon))
                             {
                                 <i class="fa-solid @spec.Icon me-1" aria-hidden="true"></i>
                             }
                             @spec.Name
+                            <form asp-area="Guide" asp-controller="Profile" asp-action="RemoveSpecialization" method="post" class="d-inline" data-loading
+                                  data-confirm='@Localizer["Guide.Profile.RemoveSpecializationConfirm", spec.Name]'
+                                  data-confirm-title='@Localizer["Guide.Profile.RemoveSpecializationTitle"]'
+                                  data-confirm-action='@Localizer["Guide.Profile.Remove"]'
+                                  data-confirm-cancel='@Localizer["Guide.Common.Cancel"]'>
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="specializationId" value="@spec.Id" />
+                                <button type="submit" class="btn btn-sm btn-link p-0 text-danger lh-1" title='@Localizer["Guide.Profile.Remove"]' aria-label='@Localizer["Guide.Profile.RemoveSpecializationLabel", spec.Name]'>
+                                    <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                                </button>
+                            </form>
                         </span>
                     }
                 </div>

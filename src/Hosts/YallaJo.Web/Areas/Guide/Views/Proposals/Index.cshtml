@@ -41,9 +41,17 @@
 
                         <div>
                             <label asp-for="Form.PlaceId" class="form-label">@Localizer["Guide.Proposals.PlaceId"]</label>
-                            <input asp-for="Form.PlaceId" class="form-control font-data" dir="ltr" autocomplete="off"
-                                   aria-describedby="proposal-place-help" placeholder="@Localizer["Guide.Proposals.PlaceIdPlaceholder"]" />
-                            <div id="proposal-place-help" class="form-text">@Localizer["Guide.Proposals.PlaceIdHelp"]</div>
+                            @* F10: SSR select (PE1) progressively enhanced into an async searchable combobox by guide-proposals.js. *@
+                            <select asp-for="Form.PlaceId" class="form-select js-place-picker"
+                                    data-lookup-url="@Url.Action("PlaceLookup")"
+                                    data-no-results='@Localizer["Guide.Proposals.NoResults"]'>
+                                <option value="">@Localizer["Guide.Proposals.SelectPlace"]</option>
+                                @foreach (var place in Model.Places)
+                                {
+                                    @* OptionTagHelper auto-selects the option matching Form.PlaceId via asp-for. *@
+                                    <option value="@place.Id">@place.Label</option>
+                                }
+                            </select>
                             <span asp-validation-for="Form.PlaceId" class="text-danger small" role="alert"></span>
                         </div>
 
@@ -157,5 +165,6 @@
 </section>
 
 @section Scripts {
+    <script src="~/assets/js/guide-proposals.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
 }

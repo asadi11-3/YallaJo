@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.WebUtilities;
 using YallaJo.Web.Areas.Guide.Models.Applications;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
@@ -21,6 +22,22 @@ public sealed class ApplicationsApiClient
         CancellationToken ct = default) =>
         _api.GetAsync<GuideApplicationsResponse>(
             $"{GuidesBase}/me/applications?page={page}&pageSize={pageSize}", ct);
+
+    /// <summary>GET /api/v1/tours/open-for-applications?q&amp;page&amp;pageSize — tours open for guide applications.</summary>
+    public Task<ApiResult<OpenToursResponse>> GetOpenToursAsync(
+        string? q,
+        int page,
+        int pageSize,
+        CancellationToken ct = default)
+    {
+        var url = QueryHelpers.AddQueryString($"{ToursBase}/open-for-applications", new Dictionary<string, string?>
+        {
+            ["q"] = string.IsNullOrWhiteSpace(q) ? null : q,
+            ["page"] = page.ToString(),
+            ["pageSize"] = pageSize.ToString(),
+        });
+        return _api.GetAsync<OpenToursResponse>(url, ct);
+    }
 
     /// <summary>POST /api/v1/tours/{tourId}/applications — apply to run a tour.</summary>
     public Task<ApiResult> ApplyForTourAsync(

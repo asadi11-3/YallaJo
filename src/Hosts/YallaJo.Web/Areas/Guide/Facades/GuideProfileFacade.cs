@@ -155,6 +155,17 @@ public sealed class GuideProfileFacade
             guideId.Value, new AddTourGuideSpecializationRequest(specializationId), ct);
     }
 
+    public async Task<ApiResult> RemoveSpecializationAsync(Guid specializationId, CancellationToken ct = default)
+    {
+        var guideId = await ResolveGuideIdAsync(ct);
+        if (guideId is null)
+        {
+            return ApiResult.Fail("Unable to resolve your guide profile.");
+        }
+
+        return await _api.RemoveSpecializationAsync(guideId.Value, specializationId, ct);
+    }
+
     public Task<ApiResult> DeactivateAsync(CancellationToken ct = default)
         => _api.DeactivateAsync(ct);
 

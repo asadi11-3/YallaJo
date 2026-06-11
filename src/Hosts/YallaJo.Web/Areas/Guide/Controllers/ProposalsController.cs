@@ -25,6 +25,20 @@ public sealed class ProposalsController : GuideBaseController
         return View(result.Data);
     }
 
+    /// <summary>
+    /// [Backend] B2 Web proxy — JSON options for the async place picker (F10/JS5).
+    /// The browser never calls the API host directly; no-JS users keep the SSR select (PE1/PE2).
+    /// </summary>
+    [HttpGet("guide/proposals/places")]
+    public async Task<IActionResult> PlaceLookup(string? term, CancellationToken ct = default)
+    {
+        var result = await _proposals.GetPlaceOptionsAsync(term, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        var items = result.Data ?? [];
+        return Json(items.Select(p => new { id = p.Id, label = p.Label }));
+    }
+
     [HttpPost("guide/proposals/create")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateProposalFormVm form, CancellationToken ct = default)

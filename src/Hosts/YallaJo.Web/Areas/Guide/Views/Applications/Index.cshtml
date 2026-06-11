@@ -22,10 +22,18 @@
 
                         <div class="mb-3">
                             <label asp-for="Form.TourId" class="form-label">@Localizer["Guide.Applications.TourId"]</label>
-                            <input asp-for="Form.TourId" class="form-control font-data" dir="ltr" autocomplete="off"
-                                   aria-describedby="apply-tour-help" placeholder="@Localizer["Guide.Applications.TourIdPlaceholder"]" />
+                            @* F10: SSR select (PE1) progressively enhanced into an async searchable combobox by guide-applications.js. *@
+                            <select asp-for="Form.TourId" class="form-select js-open-tour-picker"
+                                    data-lookup-url="@Url.Action("OpenTours")"
+                                    data-no-results="@Localizer["Guide.Applications.NoResults"]">
+                                <option value="">@Localizer["Guide.Applications.SelectTour"]</option>
+                                @foreach (var tour in Model.OpenTours)
+                                {
+                                    @* OptionTagHelper auto-selects the option matching Form.TourId via asp-for. *@
+                                    <option value="@tour.TourId">@tour.Label</option>
+                                }
+                            </select>
                             <span asp-validation-for="Form.TourId" class="text-danger small" role="alert"></span>
-                            <div id="apply-tour-help" class="form-text">@Localizer["Guide.Applications.TourIdHelp"]</div>
                         </div>
 
                         <div class="mb-3">
@@ -70,5 +78,6 @@
 
 @section Scripts {
     <script src="~/assets/js/listing.js" asp-append-version="true"></script>
+    <script src="~/assets/js/guide-applications.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
 }

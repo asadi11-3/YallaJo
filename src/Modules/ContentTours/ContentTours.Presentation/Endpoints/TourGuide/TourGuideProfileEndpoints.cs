@@ -4,6 +4,7 @@ using ContentTours.Application.Commands.TourGuides.AddLanguage;
 using ContentTours.Application.Commands.TourGuides.AddSpecialization;
 using ContentTours.Application.Commands.TourGuides.DeactivateGuide;
 using ContentTours.Application.Commands.TourGuides.RemoveLanguage;
+using ContentTours.Application.Commands.TourGuides.RemoveSpecialization;
 using ContentTours.Application.Commands.TourGuides.UpdateAvatar;
 using ContentTours.Application.Commands.TourGuides.UpdateCoverImage;
 using ContentTours.Application.Commands.TourGuides.UpdateProfile;
@@ -180,6 +181,29 @@ internal static class TourGuideProfileEndpoints
         })
         .WithName("RemoveTourGuideLanguage")
         .WithSummary("Remove a language from the authenticated owner's tour guide profile")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuide, AppAction.Update))
+        .RequireAuthorization();
+
+        group.MapDelete("/{id:guid}/specializations/{specializationId:guid}", async (
+            Guid id,
+            Guid specializationId,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var command = new RemoveTourGuideSpecializationCommand(
+                id,
+                specializationId);
+
+            var result = await sender.Send(command, ct);
+            return result.ToApiResult();
+        })
+        .WithName("RemoveTourGuideSpecialization")
+        .WithSummary("Remove a specialization from the authenticated owner's tour guide profile")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)

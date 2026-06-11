@@ -1,15 +1,6 @@
 @model YallaJo.Web.Areas.Guide.Models.Reviews.ReviewsVm
 @{
-    ViewData["Title"] = "Reviews";
-
-    // Kept local: only used by the Average Rating stat card; the list copy lives in _ReviewsResults.
-    string Stars(decimal rating)
-    {
-        var full = (int)Math.Round(rating, MidpointRounding.AwayFromZero);
-        if (full < 0) full = 0;
-        if (full > 5) full = 5;
-        return string.Concat(Enumerable.Repeat("★", full)) + string.Concat(Enumerable.Repeat("☆", 5 - full));
-    }
+    ViewData["Title"] = Localizer["Guide.Reviews.Title"].Value;
 }
 
 @await Component.InvokeAsync("GuideSidebar")
@@ -17,44 +8,26 @@
 <section class="pt-0">
     <div class="container vstack gap-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h1 class="h3 mb-0">Reviews</h1>
+            <h1 class="h4 mb-0"><i class="fa-solid fa-star me-2" aria-hidden="true"></i>@Localizer["Guide.Reviews.Heading"]</h1>
         </div>
 
         <div class="row g-4">
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1 text-body-secondary">Average Rating</h6>
-                            <h4 class="mb-0">@Model.AverageRating.ToString("0.0") <small class="text-warning">@Stars(Model.AverageRating)</small></h4>
-                        </div>
-                        <div class="icon-xl bg-warning-soft text-warning rounded-circle">
-                            <i class="bi bi-star-fill"></i>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_GuideStatCard" model='new StatCardVm(Localizer["Guide.Reviews.AverageRating"].Value, GuideFormat.Rating(Model.AverageRating), "star", "warning")' />
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-body border h-100">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1 text-body-secondary">Total Reviews</h6>
-                            <h4 class="mb-0">@Model.ReviewCount</h4>
-                        </div>
-                        <div class="icon-xl bg-primary-soft text-primary rounded-circle">
-                            <i class="bi bi-chat-square-text"></i>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_GuideStatCard" model='new StatCardVm(Localizer["Guide.Reviews.TotalReviews"].Value, GuideFormat.Count(Model.ReviewCount), "comments", "primary")' />
             </div>
         </div>
 
         <div class="card border">
             <div class="card-header border-bottom">
-                <h5 class="card-header-title mb-0">What travellers say</h5>
+                <h2 class="card-header-title h5 mb-0">@Localizer["Guide.Reviews.ListHeading"]</h2>
             </div>
             <div class="card-body">
-                @* Phase 4: results fragment swapped via AJAX by listing.js; plain markup without JS (PE1). *@
+                @* Phase 4: results fragment swapped via AJAX by listing.js; plain markup without JS (PE1).
+                   The fragment root also carries data-yj-swap="reviews" so provider-actions.js can
+                   swap it after a reply POST (B3). *@
                 <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
                      data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]" data-loading-text="@Localizer["Public.Loading"]">
                     <partial name="_ReviewsResults" model="Model" />
@@ -66,4 +39,7 @@
 
 @section Scripts {
     <script src="~/assets/js/listing.js" asp-append-version="true"></script>
+    @* provider-actions.js posts the data-yj-ajax reply forms and swaps the reviews fragment (B3). *@
+    <script src="~/assets/js/provider-actions.js" asp-append-version="true"></script>
+    <partial name="_ValidationScriptsPartial" />
 }
