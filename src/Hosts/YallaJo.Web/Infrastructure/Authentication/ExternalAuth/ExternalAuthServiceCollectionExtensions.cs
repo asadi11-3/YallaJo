@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
 
@@ -82,6 +84,24 @@ public static class ExternalAuthServiceCollectionExtensions
                 // surface it. Auto-linking relies on this claim, so map it
                 // explicitly into the external principal.
                 o.ClaimActions.MapJsonKey("email_verified", "email_verified", ClaimValueTypes.Boolean);
+
+                o.Events.OnRedirectToAuthorizationEndpoint = ctx =>
+                {
+                    var redirectUri = QueryHelpers.ParseQuery(new Uri(ctx.RedirectUri).Query)
+                        .TryGetValue("redirect_uri", out var values)
+                        ? values.ToString()
+                        : "(missing)";
+
+                    ctx.HttpContext.RequestServices
+                        .GetRequiredService<ILoggerFactory>()
+                        .CreateLogger("YallaJo.ExternalAuth.Google")
+                        .LogInformation(
+                            "Google OAuth challenge: redirect_uri={RedirectUri} (Request.Scheme={Scheme}, Host={Host})",
+                            redirectUri, ctx.Request.Scheme, ctx.Request.Host.Value);
+
+                    ctx.Response.Redirect(ctx.RedirectUri);
+                    return Task.CompletedTask;
+                };
             });
         }
 
