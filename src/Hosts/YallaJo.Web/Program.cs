@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
 using YallaJo.Web.Infrastructure.Authentication.SignIn;
@@ -17,6 +18,22 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });
+
+// ── Data Protection (REQUIRED on shared IIS hosting — e.g. runasp.net) ────────
+// Persist the Data Protection keyring to a stable, writable folder under the
+// content root. Without this, keys live in the default per-process/profile
+// location which on shared hosting is NOT writable or is WIPED on every
+// app-pool recycle. When the keyring is lost, the antiforgery system can no
+// longer decrypt the request-verification token, so EVERY POST/form submit
+// across the whole site fails with HTTP 400 (Bad Request) — and auth cookies
+// stop decrypting too. SetApplicationName pins the key isolation discriminator
+// so keys keep working even if the app's physical deployment path changes.
+var dpKeysFolder = new DirectoryInfo(
+    Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataProtectionKeys"));
+Directory.CreateDirectory(dpKeysFolder.FullName);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(dpKeysFolder)
+    .SetApplicationName("YallaJo.Web");
 
 // ── Authentication (cookie — MVC frontend, BFF pattern) ──────────────────────
 var authBuilder = builder.Services

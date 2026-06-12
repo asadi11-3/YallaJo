@@ -43,8 +43,15 @@ internal sealed class CurrentUser : ICurrentUser
         }
     }
 
+    // A principal holding the "*" wildcard permission (super-roles Owner /
+    // SuperAdmin) is granted EVERY permission. These roles no longer carry the
+    // full explicit permission array in their JWT (it was dropped to keep the
+    // token small enough for the IIS request-header limit), so the wildcard MUST
+    // be honored here or admin nav / RequirePermission-gated pages would break.
+    private const string WildcardPermission = "*";
+
     public bool HasPermission(string permission) =>
-        Permissions.Contains(permission);
+        Permissions.Contains(WildcardPermission) || Permissions.Contains(permission);
 
     public bool IsInRole(string role) =>
         Roles.Contains(role);

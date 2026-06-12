@@ -103,8 +103,16 @@ public sealed class CurrentUser(IHttpContextAccessor accessor) : ICurrentUser
     public string? GetClaim(string claimType) =>
         User?.FindFirstValue(claimType);
 
+    // "*" wildcard permission (super-roles Owner / SuperAdmin) grants every
+    // permission. These roles no longer carry the full explicit permission array
+    // in their JWT (it was dropped to keep the Bearer header under the IIS
+    // request-header size limit on shared hosting), so the wildcard MUST be
+    // honored here or imperative HasPermission checks would deny super-admins.
+    private const string WildcardPermission = "*";
+
     public bool HasPermission(string permission) =>
-        Permissions.Contains(permission, StringComparer.OrdinalIgnoreCase);
+        Permissions.Contains(WildcardPermission, StringComparer.OrdinalIgnoreCase)
+        || Permissions.Contains(permission, StringComparer.OrdinalIgnoreCase);
 
     public bool IsInRole(string role) =>
         Roles.Contains(role, StringComparer.OrdinalIgnoreCase);

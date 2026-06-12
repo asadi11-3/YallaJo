@@ -74,10 +74,9 @@ internal sealed class SecurityService(
             .SelectMany(ur => ur.Role.RoleClaims)
             .Select(c => (c.ClaimType, c.ClaimValue));
 
-        var claims = userClaims
+        var claims = CollapseWildcardPermissions(userClaims
             .Concat(roleClaims)
-            .DistinctBy(c => (c.ClaimType, c.ClaimValue))
-            .ToList();
+            .DistinctBy(c => (c.ClaimType, c.ClaimValue)));
 
         return new SecurityUserData(
             UserId: user.Id,
@@ -118,10 +117,9 @@ internal sealed class SecurityService(
             .SelectMany(ur => ur.Role.RoleClaims)
             .Select(c => (c.ClaimType, c.ClaimValue));
 
-        var claims = userClaims
+        var claims = CollapseWildcardPermissions(userClaims
             .Concat(roleClaims)
-            .DistinctBy(c => (c.ClaimType, c.ClaimValue))
-            .ToList();
+            .DistinctBy(c => (c.ClaimType, c.ClaimValue)));
 
         return new SecurityUserData(
             UserId: user.Id,
@@ -130,6 +128,47 @@ internal sealed class SecurityService(
             Roles: roles,
             Claims: claims,
             Lifecycle: ToContractSnapshot(user.LifecycleState));
+    }
+
+    // Permission claim types that carry authorization grants. The canonical type
+    // is "Permission" (matched by PermissionAuthorizationHandler); "permission"
+    // (lowercase) is the legacy type the wildcard was historically seeded under.
+    private const string PermissionClaimType = "Permission";
+    private const string LegacyPermissionClaimType = "permission";
+    private const string WildcardPermission = "*";
+
+    /// <summary>
+    /// If the principal effectively has the "*" wildcard permission (super-roles
+    /// Owner / SuperAdmin), collapse ALL permission claims down to a SINGLE
+    /// canonical <c>Permission = "*"</c> claim. This drops the ~350-entry explicit
+    /// permission array these roles would otherwise carry, keeping the minted JWT
+    /// small enough that the <c>Authorization: Bearer</c> header stays under the
+    /// http.sys / IIS request-header size limit on shared hosting (an oversized
+    /// header was being rejected with a raw HTTP 400 "Request Too Long" before the
+    /// app ran, so every authenticated request returned empty data). Non-wildcard
+    /// users keep their explicit (and far smaller) permission set unchanged.
+    /// </summary>
+    private static List<(string ClaimType, string ClaimValue)> CollapseWildcardPermissions(
+        IEnumerable<(string ClaimType, string ClaimValue)> claims)
+    {
+        var list = claims.ToList();
+
+        var hasWildcard = list.Any(c =>
+            c.ClaimValue == WildcardPermission
+            && (c.ClaimType == PermissionClaimType || c.ClaimType == LegacyPermissionClaimType));
+
+        if (!hasWildcard)
+            return list;
+
+        // Drop every permission-bearing claim (explicit array + any wildcard
+        // variants), then add back exactly one canonical wildcard claim.
+        var collapsed = list
+            .Where(c => c.ClaimType != PermissionClaimType
+                        && c.ClaimType != LegacyPermissionClaimType)
+            .ToList();
+
+        collapsed.Add((PermissionClaimType, WildcardPermission));
+        return collapsed;
     }
 
     public async Task<string?> GetPrimaryPhoneNumberAsync(Guid userId, CancellationToken ct = default)

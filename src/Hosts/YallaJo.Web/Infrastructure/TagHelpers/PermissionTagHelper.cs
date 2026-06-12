@@ -75,9 +75,14 @@ public sealed class PermissionTagHelper : TagHelper
     {
         if (ViewContext?.ViewData[SecurityMePermissionsKey] is IReadOnlyCollection<string> dbPermissions)
         {
-            return dbPermissions.Contains(permission);
+            // "*" wildcard (super-roles) grants every permission. Super-roles no
+            // longer carry the full explicit permission array (dropped to keep the
+            // JWT under the IIS header-size limit), so honor the wildcard here.
+            return dbPermissions.Contains(WildcardPermission) || dbPermissions.Contains(permission);
         }
 
         return _currentUser.HasPermission(permission);
     }
+
+    private const string WildcardPermission = "*";
 }

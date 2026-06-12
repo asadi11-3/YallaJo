@@ -25,8 +25,13 @@ public class NotificationHub : Hub
         if (!string.IsNullOrWhiteSpace(providerId))
             await Groups.AddToGroupAsync(Context.ConnectionId, $"provider:{providerId}");
 
-        // Add to admin group if user has admin permission claim
-        var hasAdminPermission = Context.User?.HasClaim("permission", "Permission.AdminSupportQueue.Read") ?? false;
+        // Add to admin group if the user holds the admin-support permission, OR
+        // the "*" wildcard (super-roles, which no longer carry the explicit
+        // permission array in their JWT). The token issuer emits capital-P
+        // "Permission"; the legacy lowercase "permission" type is also accepted.
+        var hasAdminPermission = Context.User is not null && Context.User.Claims.Any(c =>
+            (c.Type == "Permission" || c.Type == "permission")
+            && (c.Value == "Permission.AdminSupportQueue.Read" || c.Value == "*"));
         if (hasAdminPermission)
             await Groups.AddToGroupAsync(Context.ConnectionId, "admin");
 
