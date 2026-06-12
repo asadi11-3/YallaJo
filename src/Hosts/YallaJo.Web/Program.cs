@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
 using YallaJo.Web.Infrastructure.Authentication.SignIn;
 using YallaJo.Web.Infrastructure.Authorization;
@@ -9,6 +10,13 @@ using YallaJo.Web.Infrastructure.Security.Recaptcha;
 using YallaJo.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // ── Authentication (cookie — MVC frontend, BFF pattern) ──────────────────────
 var authBuilder = builder.Services
@@ -259,6 +267,11 @@ if (builder.Environment.IsDevelopment())
 var app = builder.Build();
 
 // ── Middleware pipeline ───────────────────────────────────────────────────────
+// MUST run first: restores the original client scheme (https) / IP from
+// X-Forwarded-* before anything below (HSTS, HTTPS redirect, auth handlers)
+// reads Request.Scheme. Critical for OAuth redirect_uri generation.
+app.UseForwardedHeaders();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/error");
