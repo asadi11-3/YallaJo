@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+using YallaJo.SharedKernel.Application.Abstractions.Translation;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.ValueObjects;
 
@@ -20,6 +21,8 @@ public sealed class CreateTourPricingTierCommandHandler(
     IContentToursOutboxWriter outbox,
     HybridCache cache,
     ICurrentUser currentUser,
+    IEntityTranslationOrchestrator translationOrchestrator,
+    ITourPricingTierTranslationRepository tierTranslationRepo,
     ILogger<CreateTourPricingTierCommandHandler> logger)
     : ICommandHandler<CreateTourPricingTierCommand, CreateTourPricingTierResult>
 {
@@ -73,6 +76,55 @@ public sealed class CreateTourPricingTierCommandHandler(
                 request.MinParticipants, request.MaxParticipants);
 
             await tierRepo.AddAsync(tier, cancellationToken);
+
+            // Auto-generate translations (e.g. Arabic) for every other active language.
+            // Best-effort: a translation-provider failure must never fail tier creation.
+            try
+            {
+                var fieldsToTranslate = new Dictionary<string, string>
+                {
+                    ["Name"] = tier.Name,
+                    ["Description"] = tier.Description ?? string.Empty,
+                };
+
+                var translatedSets = await translationOrchestrator
+                    .TranslateToAllActiveLanguagesAsync(fieldsToTranslate, "en", cancellationToken)
+                    .ConfigureAwait(false);
+
+                foreach (var set in translatedSets)
+                {
+                    if (!set.Fields.TryGetValue("Name", out var translatedName) ||
+                        string.IsNullOrWhiteSpace(translatedName))
+                    {
+                        continue;
+                    }
+
+                    var translatedDescription =
+                        set.Fields.TryGetValue("Description", out var d) && !string.IsNullOrWhiteSpace(d)
+                            ? d
+                            : null;
+
+                    await tierTranslationRepo.AddAsync(
+                        ContentTours.Domain.Entities.TourPricingTierTranslation.Create(
+                            tier.Id, set.LanguageCode, translatedName, translatedDescription),
+                        cancellationToken).ConfigureAwait(false);
+                }
+
+                logger.LogInformation(
+                    "TourPricingTier {TierId}: auto-created {Count} translation(s) from source language 'en'.",
+                    tier.Id, translatedSets.Count);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(
+                    ex,
+                    "TourPricingTier {TierId}: automatic translation failed; tier created with the source-language version only.",
+                    tier.Id);
+            }
 
             outbox.Enqueue(new TourPricingTierChangedIntegrationEvent(
                 tier.Id, tour.Id, tier.Price.Amount, tier.Currency, TourEntityChangeType.Created));
