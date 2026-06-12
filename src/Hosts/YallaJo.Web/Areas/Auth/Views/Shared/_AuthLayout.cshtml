@@ -29,7 +29,7 @@
     <link rel="shortcut icon" href="~/assets/images/favicon.ico" />
 
     @* Font preload (A5/V4): only the file the current culture paints body text with —
-       Arabic preloads IBM Plex Sans Arabic 400, everything else the DM Sans variable
+       Arabic preloads IBM Plex Sans Arabic 400, everything else the Montserrat variable
        file. Other weights load on demand via site.css @@font-face (font-display: swap). *@
     @if (authDir == "rtl")
     {
@@ -37,7 +37,7 @@
     }
     else
     {
-        <link rel="preload" href="~/fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="~/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin />
     }
 
     @* Preconnect (A5): only when reCAPTCHA is configured — the funnel forms load
@@ -50,10 +50,10 @@
     }
 
     @* Fonts: the external Google Fonts CDN has been removed (UI-UX-Design.md V3 — no
-       third-party font CDN). Self-hosted brand fonts (DM Sans, Poppins, IBM Plex Sans
-       Arabic) live under ~/fonts/ with @@font-face declarations in site.css
-       (V3/V4/A5/X10), loaded below. Icon fonts (Font Awesome, Bootstrap Icons)
-       remain self-hosted under ~/assets/vendor. *@
+       third-party font CDN). Self-hosted brand fonts (Montserrat, Playfair Display,
+       Cairo, IBM Plex Sans Arabic) live under ~/fonts/ with @@font-face declarations
+       in site.css (V3/V4/A5/X10), loaded below. Icon fonts (Font Awesome, Bootstrap
+       Icons) remain self-hosted under ~/assets/vendor. *@
 
     @* Plugins CSS *@
     <link rel="stylesheet" type="text/css" href="~/assets/vendor/font-awesome/css/all.min.css" />
@@ -62,8 +62,8 @@
     @* Theme CSS (bundles Bootstrap v5.3.0) *@
     <link rel="stylesheet" type="text/css" href="~/assets/css/style.css" />
 
-    @* Project-owned site-wide styles: self-hosted brand @@font-face (DM Sans, Poppins,
-       IBM Plex Sans Arabic via html[lang="ar"]) + shared utilities (V3/V4/A5/X10). *@
+    @* Project-owned site-wide styles: self-hosted brand @@font-face (Montserrat, Playfair
+       Display, Cairo + IBM Plex Sans Arabic via html[lang="ar"]) + shared utilities (V3/V4/A5/X10). *@
     <link rel="stylesheet" type="text/css" href="~/assets/css/site.css" asp-append-version="true" />
 
     @* Project-owned Auth custom styles (loaded after the theme so it can override). *@

@@ -4,6 +4,7 @@
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["BodyClass"] = "yj-home-page";
     var isAuthed = User.Identity?.IsAuthenticated == true;
 
     var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
@@ -20,59 +21,72 @@
 @Html.AntiForgeryToken()
 
 @*========================== Hero ==========================*@
-<section class="pt-3 pt-md-4">
+<section class="pt-4 pt-md-5 position-relative overflow-hidden">
+    @* Decorative desert-gold compass ornament on the sand canvas *@
+    <svg class="yj-ornament top-0 end-0 mt-5 me-5" width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M12 7l1.8 3.2L17 12l-3.2 1.8L12 17l-1.8-3.2L7 12l3.2-1.8z" />
+    </svg>
+
     <div class="container position-relative">
-        <div class="row align-items-center">
-            @* Left column: heading + lead + CTAs + rating card *@
-            <div class="col-lg-6 position-relative">
-                <h1 class="mb-4 display-5">
-                    @Localizer["Home.Hero.TitleLead"]
-                    <span class="position-relative z-index-9">@Localizer["Home.Hero.TitleEmphasis"]
-                        <span class="position-absolute top-100 start-50 translate-middle-x lh-1 z-index-n1 mt-n2 d-none d-sm-block">
-                            <svg width="312" height="20"><path class="fill-warning" d="M5.30139136,11.6159869 C97.7456615,3.99473776 190.487019,1.16989503 283.526046,3.14145867 C286.918674,3.21336915 290.319591,3.30077939 293.732559,3.40400843 C296.479285,3.48733786 298.815678,1.41165142 298.949683,-1.23625234 C299.083763,-3.88412226 296.964974,-6.11393513 294.218248,-6.19726457 C201.073542,-9.01876514 108.182826,-6.4280056 15.6260619,-1.5500571 C12.8775757,-1.40520901 10.7637473,0.901732816 10.9035097,3.54980626 C11.0432721,6.19787971 13.3837473,8.30521874 16.1322328,8.16037064 C58.3573392,5.92637211 100.683324,4.66950357 143.105306,4.38763751 C107.301966,5.50613199 71.5114713,7.39738012 35.7358452,10.0556907 C32.9883223,10.2598156 30.9259811,12.5965719 31.1268783,15.2461823 C31.3277755,17.8957927 33.7156844,19.9013713 36.4632073,19.6972464 C40.5417758,19.3940839 44.620934,19.1110193 48.7006587,18.8480333 C46.9568941,18.9608097 45.213323,19.0758185 43.4699469,19.1930603 C40.7194817,19.378245 38.6307989,21.6843376 38.804662,24.336891 C38.9785251,26.9894444 41.349114,28.9947791 44.0995792,28.8095944 C57.2010199,27.9277523 70.3066968,27.1929156 83.4162547,26.6052075 C74.6843539,27.0140747 65.9534376,27.4884854 57.2237208,28.0285154 C54.4719714,28.1986921 52.3795262,30.4870643 52.5476755,33.1397632 C52.7158248,35.7924621 55.0810205,37.8049305 57.8327699,37.6347538 C133.398811,32.9594936 209.07671,33.0531796 284.654653,37.9156877 C287.408154,38.0928188 289.781849,36.0617512 289.957098,33.4080846 C290.132347,30.754418 288.042822,28.4359175 285.289321,28.2587864 C262.523335,26.7944778 239.731768,25.7437342 216.926489,25.1064985 C235.831931,25.0588205 254.738509,25.3680525 273.640747,26.0341781 C276.394728,26.1311105 278.704066,23.9803011 278.799908,21.3253074 C278.89575,18.6703136 276.741725,16.3623486 273.987744,16.2654162 C211.034465,14.0476423 148.013494,14.8459959 85.1428213,18.6589023 C108.482697,17.6914303 131.838768,16.973572 155.205953,16.5042816 C155.281032,16.5028023 155.355919,16.5005275 155.430588,16.4974637 C188.546149,15.1379355 221.694341,14.6701583 254.840321,15.0951333 C257.595239,15.1304447 259.853399,12.9362808 259.884768,10.2789443 C259.916138,7.62160774 257.708812,5.43989434 254.953894,5.40458297 C190.927765,4.58387442 126.811555,6.69821576 62.9580562,11.7409267 C76.9209428,11.0747443 90.8909324,10.5751779 104.86426,10.2436272 C107.61918,10.1782672 109.804178,7.92666171 109.745569,5.26905648 C109.686961,2.61145125 107.406958,0.46587437 104.652038,0.531234346 C71.4071602,1.31987002 38.1903745,3.34294989 5.10300659,6.59970158 C2.34944395,6.87065346 0.314994035,9.27495162 0.5612991,11.9286275 C0.807604166,14.5823034 3.2417998,16.5470989 5.99536245,16.2761471 C6.99543395,16.1777355 7.99572805,16.0820559 8.99624475,15.9891082 L5.30139136,11.6159869 Z"/></svg>
-                        </span>
-                    </span>
+        <div class="row align-items-center g-4 g-lg-5">
+            @* Left column: eyebrow + heading + lead + CTAs + trust row *@
+            <div class="col-lg-6">
+                <span class="yj-eyebrow mb-2">@Localizer["Home.Hero.Eyebrow"]</span>
+                <h1 class="yj-hero-title mt-2 mb-3">
+                    @Localizer["Home.Hero.Title1"]
+                    <span class="text-primary">@Localizer["Home.Hero.TitleAccent"]</span>
+                    @Localizer["Home.Hero.Title2"]
                 </h1>
-                <p class="mb-4">@Localizer["Home.Hero.Lead"]</p>
+                <p class="lead text-body-secondary mb-4">@Localizer["Home.Hero.Lead"]</p>
 
-                <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-primary mb-0">@Localizer["Home.Hero.Cta"]</a>
-                @* GLightbox modal — uses theme convention. JS will lazy-init on `.glightbox`. *@
-                @* TODO(content): re-add a 'Watch our story' CTA once a real brand video exists (Phase 11 removed unverifiable placeholder). *@
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-4 mb-md-5">
+                    <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-primary rounded-pill px-4 mb-0">@Localizer["Home.Hero.Cta"]</a>
+                    @* 'Watch our story' routes to Stories (Blog) until a real brand video exists (Phase 11 honesty rule). *@
+                    <a asp-area="Public" asp-controller="Blog" asp-action="Index" class="btn btn-outline-dark rounded-pill px-4 mb-0">
+                        <i class="bi bi-play-circle me-2" aria-hidden="true"></i>@Localizer["Home.Hero.Watch"]
+                    </a>
+                </div>
 
-                @* Client rating card — Phase 11 replaces these unverified trust claims with honest copy or real stats. *@
-                <div class="card shadow rounded-3 p-3 w-sm-75 w-xl-50 position-md-absolute mt-4 mt-md-5 ms-md-n5 mb-md-n5 bottom-md-0 start-md-100 z-index-1">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-patch-check-fill fs-3 text-success me-3" aria-hidden="true"></i>
-                        <div>
-                            <h6 class="mb-0">@Localizer["Home.Trust.Title"]</h6>
-                            <small class="small text-body-secondary">@Localizer["Home.Trust.Text"]</small>
-                        </div>
+                @* Trust row — honest copy only (Phase 11: no fabricated stats). *@
+                <div class="d-flex align-items-center gap-3">
+                    <div class="yj-avatar-group" aria-hidden="true">
+                        <img src="~/assets/images/avatar/01.jpg" alt="">
+                        <img src="~/assets/images/avatar/02.jpg" alt="">
+                        <img src="~/assets/images/avatar/03.jpg" alt="">
+                    </div>
+                    <div>
+                        <h6 class="mb-0">@Localizer["Home.Trust.Title"]</h6>
+                        <small class="text-body-secondary">@Localizer["Home.Trust.Text"]</small>
                     </div>
                 </div>
             </div>
 
-            @* Right column: stacked imagery *@
-            <div class="col-lg-6 position-relative mt-7 mt-lg-0">
-                @* Decorative SVG behind right images *@
-                <figure class="position-absolute top-50 start-0 translate-middle-y ms-n5 ms-md-n7 d-none d-md-block z-index-n1 yj-hero-decor">
-                    <svg width="465.5px" height="384.4px" viewBox="0 0 465.5 384.4">
-                        <path class="fill-mode" d="M58.6,326.5c-19.9-25.6-37-54.7-46.6-85.7C2.4,209.8-0.6,176-3.7,143.6c-2.3-23.5-2.7-48,4.8-70.5
-                            C16.3,28,62.5-1.4,108.4-12.6c45.9-11.2,93.9-7.2,141.1-3.1c33.5,2.9,67.5,5.9,99.1,17.4c52,18.9,94.3,62,114.4,113.5
-                            s17.9,111.1-2.4,162.6c-12.4,31.5-31.8,60.4-57.7,82c-39.7,33.1-93.1,46.6-144.7,46c-51.6-0.6-102-14.5-149.7-34.3"/>
-                    </svg>
-                </figure>
+            @* Right column: rounded hero photo + floating badge + destination thumbs *@
+            <div class="col-lg-6">
+                <div class="yj-hero-media">
+                    @* TODO(content): placeholder from theme assets — swap assets/images/jordan/*.jpg for licensed Jordan photography. *@
+                    <img src="~/assets/images/jordan/petra-hero.jpg" class="yj-hero-img" alt="@Localizer["Home.Hero.ImageAlt"]" fetchpriority="high">
 
-                @* TODO(content): replace theme stock photo with real Jordan imagery. *@
-                <img src="~/assets/images/bg/06.jpg" class="rounded-3" alt="Tour landscape" fetchpriority="high">
+                    <div class="yj-float-badge">
+                        <span class="yj-badge-icon"><i class="bi bi-headset" aria-hidden="true"></i></span>
+                        <div>
+                            <h6 class="mb-0 small">24/7</h6>
+                            <small class="small text-body-secondary">@Localizer["Home.Hero.SupportBadge"]</small>
+                        </div>
+                    </div>
 
-                @* Small 24/7 badge *@
-                <div class="position-absolute top-0 end-0 mt-4 me-n4 d-none d-md-block">
-                    <div class="bg-body shadow rounded-3 p-3 text-center">
-                        <h6 class="mb-0">24/7</h6>
-                        <small class="small">@Localizer["Home.Hero.SupportBadge"]</small>
+                    <div class="yj-hero-thumbs">
+                        <div class="yj-hero-thumb">
+                            <img src="~/assets/images/jordan/wadi-rum.jpg" alt="">
+                            <span class="yj-thumb-label">@Localizer["Home.Hero.Thumb1"]</span>
+                        </div>
+                        <div class="yj-hero-thumb">
+                            <img src="~/assets/images/jordan/dead-sea.jpg" alt="">
+                            <span class="yj-thumb-label">@Localizer["Home.Hero.Thumb2"]</span>
+                        </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -166,66 +180,37 @@
     </div>
 </section>
 
-@*========================== About / Features ==========================*@
-<section class="pt-5 pt-md-7">
+@*========================== Feature strip ==========================*@
+<section class="pt-5 pt-md-6">
     <div class="container">
-        <div class="row align-items-center g-4 g-md-5">
-            @* Left: image with rating overlay — Phase 11 replaces unverified stats with honest copy or real stats. *@
-            <div class="col-lg-6 position-relative">
-                @* TODO(content): replace theme stock photo with real Jordan imagery. *@
-                <img src="~/assets/images/category/hotel/4by3/11.jpg" class="rounded-3" alt="About YallaJo" loading="lazy">
-                <div class="card shadow rounded-3 p-3 w-sm-50 position-md-absolute bottom-0 end-0 mb-md-n4 me-md-n4 mt-3 mt-md-0">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-patch-check-fill fa-2x text-success" aria-hidden="true"></i>
-                        <div class="ms-2">
-                            <h6 class="mb-0">@Localizer["Home.Features.VerifiedTitle"]</h6>
-                            <small class="small">@Localizer["Home.Features.VerifiedText"]</small>
-                        </div>
+        <div class="yj-feature-strip p-4 p-md-5">
+            <div class="row g-4">
+                <div class="col-sm-6 col-xl-3 d-flex align-items-start gap-3">
+                    <span class="yj-feature-icon yj-fi-red"><i class="bi bi-bookmark-star" aria-hidden="true"></i></span>
+                    <div>
+                        <h6 class="mb-1">@Localizer["Home.Strip.HandpickedTitle"]</h6>
+                        <p class="small text-body-secondary mb-0">@Localizer["Home.Strip.HandpickedText"]</p>
                     </div>
                 </div>
-            </div>
-
-            @* Right: heading + 4 tour-ified feature icons *@
-            <div class="col-lg-6">
-                <h2 class="mb-3">@Localizer["Home.Features.Title"]</h2>
-                <p class="mb-4">@Localizer["Home.Features.Lead"]</p>
-
-                <div class="row g-4">
-                    <div class="col-sm-6 d-flex">
-                        <div class="icon-lg bg-light text-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 avatar-48">
-                            <i class="bi bi-shield-check fs-4"></i>
-                        </div>
-                        <div class="ms-3">
-                            <h6 class="mb-1">@Localizer["Home.Features.GuidesTitle"]</h6>
-                            <p class="small mb-0">@Localizer["Home.Features.GuidesText"]</p>
-                        </div>
+                <div class="col-sm-6 col-xl-3 d-flex align-items-start gap-3">
+                    <span class="yj-feature-icon yj-fi-green"><i class="bi bi-shield-lock" aria-hidden="true"></i></span>
+                    <div>
+                        <h6 class="mb-1">@Localizer["Home.Strip.SecureTitle"]</h6>
+                        <p class="small text-body-secondary mb-0">@Localizer["Home.Strip.SecureText"]</p>
                     </div>
-                    <div class="col-sm-6 d-flex">
-                        <div class="icon-lg bg-light text-success rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 avatar-48">
-                            <i class="bi bi-lightning-charge fs-4"></i>
-                        </div>
-                        <div class="ms-3">
-                            <h6 class="mb-1">@Localizer["Home.Features.InstantTitle"]</h6>
-                            <p class="small mb-0">@Localizer["Home.Features.InstantText"]</p>
-                        </div>
+                </div>
+                <div class="col-sm-6 col-xl-3 d-flex align-items-start gap-3">
+                    <span class="yj-feature-icon yj-fi-gold"><i class="bi bi-person-badge" aria-hidden="true"></i></span>
+                    <div>
+                        <h6 class="mb-1">@Localizer["Home.Strip.ExpertsTitle"]</h6>
+                        <p class="small text-body-secondary mb-0">@Localizer["Home.Strip.ExpertsText"]</p>
                     </div>
-                    <div class="col-sm-6 d-flex">
-                        <div class="icon-lg bg-light text-info rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 avatar-48">
-                            <i class="bi bi-lock fs-4"></i>
-                        </div>
-                        <div class="ms-3">
-                            <h6 class="mb-1">@Localizer["Home.Features.SecureTitle"]</h6>
-                            <p class="small mb-0">@Localizer["Home.Features.SecureText"]</p>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 d-flex">
-                        <div class="icon-lg bg-light text-warning rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 avatar-48">
-                            <i class="bi bi-headset fs-4"></i>
-                        </div>
-                        <div class="ms-3">
-                            <h6 class="mb-1">@Localizer["Home.Features.SupportTitle"]</h6>
-                            <p class="small mb-0">@Localizer["Home.Features.SupportText"]</p>
-                        </div>
+                </div>
+                <div class="col-sm-6 col-xl-3 d-flex align-items-start gap-3">
+                    <span class="yj-feature-icon yj-fi-red"><i class="bi bi-headset" aria-hidden="true"></i></span>
+                    <div>
+                        <h6 class="mb-1">@Localizer["Home.Strip.SupportTitle"]</h6>
+                        <p class="small text-body-secondary mb-0">@Localizer["Home.Strip.SupportText"]</p>
                     </div>
                 </div>
             </div>
@@ -240,7 +225,8 @@
         <div class="container">
             <div class="row mb-4 align-items-end">
                 <div class="col-md-8">
-                    <h2 class="mb-1">@Localizer["Home.Featured.Title"]</h2>
+                    <span class="yj-eyebrow">@Localizer["Home.Featured.Eyebrow"]</span>
+                    <h2 class="mb-1 mt-2">@Localizer["Home.Featured.Title"]</h2>
                     <p class="mb-0 text-body-secondary">@Localizer["Home.Featured.Subtitle"]</p>
                 </div>
                 <div class="col-md-4 text-md-end">
@@ -266,7 +252,11 @@
         <div class="container">
             <div class="row mb-4 align-items-end">
                 <div class="col-md-8">
-                    <h2 class="mb-1">@Localizer["Home.Places.Title"]</h2>
+                    <span class="yj-eyebrow">@Localizer["Home.Places.Eyebrow"]</span>
+                    <h2 class="mb-1 mt-2">
+                        @Localizer["Home.Places.TitleLead"]
+                        <span class="d-md-block text-warning">@Localizer["Home.Places.TitleAccent"]</span>
+                    </h2>
                     <p class="mb-0 text-body-secondary">@Localizer["Home.Places.Subtitle"]</p>
                 </div>
                 <div class="col-md-4 text-md-end">
@@ -292,7 +282,8 @@
         <div class="container">
             <div class="row mb-4 align-items-end">
                 <div class="col-md-8">
-                    <h2 class="mb-1">@Localizer["Home.Popular.Title"]</h2>
+                    <span class="yj-eyebrow">@Localizer["Home.Popular.Eyebrow"]</span>
+                    <h2 class="mb-1 mt-2">@Localizer["Home.Popular.Title"]</h2>
                     <p class="mb-0 text-body-secondary">@Localizer["Home.Popular.Subtitle"]</p>
                 </div>
                 <div class="col-md-4 text-md-end">
@@ -318,7 +309,8 @@
         <div class="container">
             <div class="row mb-4 align-items-end">
                 <div class="col-md-8">
-                    <h2 class="mb-1">@Localizer["Home.Businesses.Title"]</h2>
+                    <span class="yj-eyebrow">@Localizer["Home.Businesses.Eyebrow"]</span>
+                    <h2 class="mb-1 mt-2">@Localizer["Home.Businesses.Title"]</h2>
                     <p class="mb-0 text-body-secondary">@Localizer["Home.Businesses.Subtitle"]</p>
                 </div>
                 <div class="col-md-4 text-md-end">
@@ -344,7 +336,8 @@
         <div class="container">
             <div class="row mb-4">
                 <div class="col-12 text-center">
-                    <h2 class="mb-1">@Localizer["Home.Categories.Title"]</h2>
+                    <span class="yj-eyebrow justify-content-center">@Localizer["Home.Categories.Eyebrow"]</span>
+                    <h2 class="mb-1 mt-2">@Localizer["Home.Categories.Title"]</h2>
                     <p class="mb-0 text-body-secondary">@Localizer["Home.Categories.Subtitle"]</p>
                 </div>
             </div>

@@ -62,7 +62,7 @@
     <value>Life is an adventure, explore it</value>
   </data>
   <data name="Home.Hero.Lead" xml:space="preserve">
-    <value>Discover hand-picked tours, guided experiences and unforgettable places.</value>
+    <value>Discover authentic experiences across Jordan. Explore tours, local guides, hidden gems, and unforgettable adventures — all in one place.</value>
   </data>
   <data name="Home.Search.Label" xml:space="preserve">
     <value>Search tours</value>
@@ -12584,13 +12584,100 @@
 <value>tours in Jordan</value>
 </data>
 <data name="Home.Hero.Cta" xml:space="preserve">
-<value>Discover Now</value>
+<value>Explore Tours</value>
 </data>
 <data name="Home.Hero.Watch" xml:space="preserve">
 <value>Watch our story</value>
 </data>
 <data name="Home.Hero.SupportBadge" xml:space="preserve">
 <value>Support</value>
+</data>
+<data name="Home.Hero.Eyebrow" xml:space="preserve">
+<value>Explore Jordan</value>
+</data>
+<data name="Home.Hero.Title1" xml:space="preserve">
+<value>Discover</value>
+</data>
+<data name="Home.Hero.TitleAccent" xml:space="preserve">
+<value>Jordan</value>
+</data>
+<data name="Home.Hero.Title2" xml:space="preserve">
+<value>One Journey at a Time</value>
+</data>
+<data name="Home.Hero.ImageAlt" xml:space="preserve">
+<value>The Treasury at Petra, Jordan</value>
+</data>
+<data name="Home.Hero.Thumb1" xml:space="preserve">
+<value>Wadi Rum</value>
+</data>
+<data name="Home.Hero.Thumb2" xml:space="preserve">
+<value>Dead Sea</value>
+</data>
+<data name="Home.Strip.HandpickedTitle" xml:space="preserve">
+<value>Handpicked tours</value>
+</data>
+<data name="Home.Strip.HandpickedText" xml:space="preserve">
+<value>Every experience is curated and quality-checked.</value>
+</data>
+<data name="Home.Strip.SecureTitle" xml:space="preserve">
+<value>Secure booking</value>
+</data>
+<data name="Home.Strip.SecureText" xml:space="preserve">
+<value>Encrypted payments and instant confirmation.</value>
+</data>
+<data name="Home.Strip.ExpertsTitle" xml:space="preserve">
+<value>Local experts</value>
+</data>
+<data name="Home.Strip.ExpertsText" xml:space="preserve">
+<value>Guides who know Jordan inside out.</value>
+</data>
+<data name="Home.Strip.SupportTitle" xml:space="preserve">
+<value>24/7 support</value>
+</data>
+<data name="Home.Strip.SupportText" xml:space="preserve">
+<value>Real humans, whenever you need us.</value>
+</data>
+<data name="Home.Featured.Eyebrow" xml:space="preserve">
+<value>Handpicked</value>
+</data>
+<data name="Home.Places.Eyebrow" xml:space="preserve">
+<value>Top Destinations</value>
+</data>
+<data name="Home.Places.TitleLead" xml:space="preserve">
+<value>Explore Jordan’s</value>
+</data>
+<data name="Home.Places.TitleAccent" xml:space="preserve">
+<value>Most Loved Destinations</value>
+</data>
+<data name="Home.Popular.Eyebrow" xml:space="preserve">
+<value>Traveler Favorites</value>
+</data>
+<data name="Home.Businesses.Eyebrow" xml:space="preserve">
+<value>Local Picks</value>
+</data>
+<data name="Home.Categories.Eyebrow" xml:space="preserve">
+<value>Browse by Interest</value>
+</data>
+<data name="Public.Tours.Hero.Title1" xml:space="preserve">
+<value>Explore</value>
+</data>
+<data name="Public.Tours.Hero.TitleAccent" xml:space="preserve">
+<value>Jordan</value>
+</data>
+<data name="Public.Tours.Hero.Title2" xml:space="preserve">
+<value>Through Authentic Experiences</value>
+</data>
+<data name="Public.SortLabel" xml:space="preserve">
+<value>Sort</value>
+</data>
+<data name="Public.Filter.Category" xml:space="preserve">
+<value>Category</value>
+</data>
+<data name="Public.Filter.Preferences" xml:space="preserve">
+<value>Preferences</value>
+</data>
+<data name="Public.Breadcrumb.Home" xml:space="preserve">
+<value>Home</value>
 </data>
 <data name="Home.Search.Where" xml:space="preserve">
 <value>Where to?</value>
@@ -12683,7 +12770,7 @@
 <value>See all tours</value>
 </data>
 <data name="Home.BrowseAllPlaces" xml:space="preserve">
-<value>Browse all places</value>
+<value>View all destinations</value>
 </data>
 <data name="Home.SeeAllBusinesses" xml:space="preserve">
 <value>See all businesses</value>

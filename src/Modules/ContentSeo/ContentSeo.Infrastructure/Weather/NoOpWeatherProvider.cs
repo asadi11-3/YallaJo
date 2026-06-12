@@ -30,7 +30,8 @@ internal sealed class NoOpWeatherProvider(
             this.options.Provider,
             !string.IsNullOrWhiteSpace(this.options.ApiKey));
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var daily = Enumerable.Range(0, 7)
+        var horizon = Math.Clamp(this.options.ForecastDays, 1, 10);
+        var daily = Enumerable.Range(0, horizon)
             .Select(offset => new DailyForecast(today.AddDays(offset), 0m, 0m, "Unavailable", string.Empty, 0))
             .ToList();
         return Task.FromResult(new WeatherSnapshot(0m, 0m, 0, 0m, 0, "Unavailable", string.Empty, null, daily));

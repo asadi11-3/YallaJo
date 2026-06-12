@@ -4,16 +4,32 @@
 @{
     ViewData["Title"] = Localizer["Public.Explore.Tours"];
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["BodyClass"] = "yj-sand-page"; // warm-sand canvas (brand refresh)
     var f = Model.Filters;
+    var clearUrl = Url.Action("Index", "Tours", new { area = "Public", q = Model.Query, placeId = Model.PlaceId, sort = Model.Sort });
 }
 
 <!-- ======================= Page banner START -->
 <section class="pt-3">
     <div class="container">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h1 class="h2 mb-2">@Localizer["Public.Explore.Tours"]</h1>
-                <p class="mb-0">@Localizer["Public.Discover.handpicked.experiences.and.book.your.next.adventure"]</p>
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a class="text-decoration-none" asp-area="Public" asp-controller="Home" asp-action="Index">@Localizer["Public.Breadcrumb.Home"]</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Localizer["Public.Explore.Tours"]</li>
+            </ol>
+        </nav>
+        <div class="yj-page-hero">
+            <!-- TODO(content): placeholder stock photo — swap assets/images/jordan/*.jpg for licensed Jordan photography. -->
+            <img src="~/assets/images/jordan/petra-hero.jpg" class="yj-page-hero-img" alt="" aria-hidden="true" fetchpriority="high" />
+            <div class="yj-page-hero-overlay" aria-hidden="true"></div>
+            <div class="yj-page-hero-content">
+                <h1 class="yj-hero-title mb-3">
+                    @Localizer["Public.Tours.Hero.Title1"]
+                    <span class="text-warning">@Localizer["Public.Tours.Hero.TitleAccent"]</span>
+                    @Localizer["Public.Tours.Hero.Title2"]
+                </h1>
+                <div class="yj-divider-star mb-3" aria-hidden="true">&#10022;</div>
+                <p class="mb-0 text-body-secondary">@Localizer["Public.Discover.handpicked.experiences.and.book.your.next.adventure"]</p>
             </div>
         </div>
     </div>
@@ -39,213 +55,275 @@
             </div>
         }
 
-        <!-- Filter bar START -->
-        <div class="row g-3 align-items-center mb-4">
-            <!-- Filters offcanvas trigger (UI-UX-D4/S3) -->
-            <div class="col-auto">
-                <button type="button" class="btn btn-outline-secondary position-relative"
-                        data-bs-toggle="offcanvas" data-bs-target="#tourFilters" aria-controls="tourFilters">
-                    <i class="bi bi-sliders me-1" aria-hidden="true"></i>@Localizer["Public.Filters"]
-                    @if (f.ActiveCount > 0)
-                    {
-                        <span class="badge text-bg-primary ms-1">@f.ActiveCount</span>
-                    }
-                </button>
-            </div>
+        <div class="row g-4">
+            <!-- ======================= Filter sidebar START (desktop panel / mobile offcanvas via offcanvas-lg) -->
+            <aside class="col-lg-3">
+                <div class="yj-filter-sticky">
+                    <div class="offcanvas-lg offcanvas-end filter-offcanvas" tabindex="-1" id="tourFilters" aria-labelledby="tourFiltersLabel">
+                        <div class="offcanvas-header border-bottom">
+                            <h5 class="offcanvas-title" id="tourFiltersLabel"><i class="bi bi-sliders me-2" aria-hidden="true"></i>@Localizer["Public.Filters"]</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tourFilters" aria-label="@Localizer["Search.Overlay.Close"]"></button>
+                        </div>
+                        <div class="offcanvas-body d-block">
+                            <form method="get" asp-area="Public" asp-controller="Tours" asp-action="Index" id="tourFiltersForm" class="yj-filter-panel w-100">
+                                @if (!string.IsNullOrWhiteSpace(Model.Query))
+                                {
+                                    <input type="hidden" name="q" value="@Model.Query" />
+                                }
+                                @if (Model.PlaceId is not null)
+                                {
+                                    <input type="hidden" name="placeId" value="@Model.PlaceId" />
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.Sort))
+                                {
+                                    <input type="hidden" name="sort" value="@Model.Sort" />
+                                }
 
-            <!-- Client-side text search over the loaded cards -->
-            <div class="col-sm-6 col-xl-4 ms-auto">
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="text" id="tourSearchInput" class="form-control border-start-0"
-                           placeholder="@Localizer["Public.Filter.tours.on.this.page"]">
+                                <!-- Desktop panel header -->
+                                <div class="d-none d-lg-flex align-items-center justify-content-between mb-3">
+                                    <span class="h5 mb-0"><i class="bi bi-sliders me-2" aria-hidden="true"></i>@Localizer["Public.Filters"]</span>
+                                    <a class="small fw-semibold text-primary text-decoration-none" href="@clearUrl">@Localizer["Public.Filter.ClearAll"]</a>
+                                </div>
+
+                                @if (Model.Categories.Count > 0)
+                                {
+                                    <!-- Category quick-picks (client-side highlight only; no backend categoryId filter) -->
+                                    <fieldset class="mb-4">
+                                        <legend class="form-label fw-semibold fs-6">@Localizer["Public.Filter.Category"]</legend>
+                                        <div class="d-flex flex-column gap-1" id="categoryChips">
+                                            <button type="button" class="yj-filter-check js-category-chip active" data-category="">
+                                                <span class="yj-check-box"><i class="bi bi-check-lg" aria-hidden="true"></i></span>@Localizer["Public.All"]
+                                            </button>
+                                            @foreach (var cat in Model.Categories)
+                                            {
+                                                <button type="button" class="yj-filter-check js-category-chip" data-category="@cat.Slug">
+                                                    <span class="yj-check-box"><i class="bi bi-check-lg" aria-hidden="true"></i></span>@cat.Name
+                                                </button>
+                                            }
+                                        </div>
+                                    </fieldset>
+                                }
+
+                                <!-- Price range -->
+                                <fieldset class="mb-4">
+                                    <legend class="form-label fw-semibold fs-6">@Localizer["Public.Filter.Price"]</legend>
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <span class="small text-body-secondary">0</span>
+                                        <span class="small fw-semibold text-primary" id="priceRangeLabel" data-any-text="@Localizer["Public.Difficulty.Any"]"></span>
+                                    </div>
+                                    <input type="range" class="form-range mb-2" id="priceRange" min="0" max="300" step="5" aria-label="@Localizer["Public.Filter.PriceMax"]" />
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="form-label small text-body-secondary" for="filterPriceMin">@Localizer["Public.Filter.PriceMin"]</label>
+                                            <input type="number" class="form-control" id="filterPriceMin" name="priceMin" min="0" step="1" inputmode="numeric" value="@(f.PriceMin?.ToString("0.##"))" />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small text-body-secondary" for="filterPriceMax">@Localizer["Public.Filter.PriceMax"]</label>
+                                            <input type="number" class="form-control" id="filterPriceMax" name="priceMax" min="0" step="1" inputmode="numeric" value="@(f.PriceMax?.ToString("0.##"))" />
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <!-- Difficulty -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold fs-6" for="filterDifficulty">@Localizer["Public.Filter.Difficulty"]</label>
+                                    <select class="form-select" id="filterDifficulty" name="difficulty">
+                                        <option value="" selected="@(string.IsNullOrEmpty(f.Difficulty))">@Localizer["Public.Difficulty.Any"]</option>
+                                        <option value="easy" selected="@(f.Difficulty == "easy")">@Localizer["Public.Difficulty.Easy"]</option>
+                                        <option value="moderate" selected="@(f.Difficulty == "moderate")">@Localizer["Public.Difficulty.Moderate"]</option>
+                                        <option value="hard" selected="@(f.Difficulty == "hard")">@Localizer["Public.Difficulty.Hard"]</option>
+                                        <option value="expert" selected="@(f.Difficulty == "expert")">@Localizer["Public.Difficulty.Expert"]</option>
+                                    </select>
+                                </div>
+
+                                <!-- Duration -->
+                                <fieldset class="mb-4">
+                                    <legend class="form-label fw-semibold fs-6">@Localizer["Public.Filter.Duration"]</legend>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="form-label small text-body-secondary" for="filterDurationMin">@Localizer["Public.Filter.DurationMin"]</label>
+                                            <select class="form-select" id="filterDurationMin" name="durationMin">
+                                                <option value="" selected="@(f.DurationMin is null)">@Localizer["Public.Difficulty.Any"]</option>
+                                                <option value="60" selected="@(f.DurationMin == 60)">@string.Format(Localizer["Public.HoursShort"].Value, 1)</option>
+                                                <option value="120" selected="@(f.DurationMin == 120)">@string.Format(Localizer["Public.HoursShort"].Value, 2)</option>
+                                                <option value="240" selected="@(f.DurationMin == 240)">@string.Format(Localizer["Public.HoursShort"].Value, 4)</option>
+                                                <option value="480" selected="@(f.DurationMin == 480)">@string.Format(Localizer["Public.HoursShort"].Value, 8)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small text-body-secondary" for="filterDurationMax">@Localizer["Public.Filter.DurationMax"]</label>
+                                            <select class="form-select" id="filterDurationMax" name="durationMax">
+                                                <option value="" selected="@(f.DurationMax is null)">@Localizer["Public.Difficulty.Any"]</option>
+                                                <option value="120" selected="@(f.DurationMax == 120)">@string.Format(Localizer["Public.HoursShort"].Value, 2)</option>
+                                                <option value="240" selected="@(f.DurationMax == 240)">@string.Format(Localizer["Public.HoursShort"].Value, 4)</option>
+                                                <option value="480" selected="@(f.DurationMax == 480)">@string.Format(Localizer["Public.HoursShort"].Value, 8)</option>
+                                                <option value="1440" selected="@(f.DurationMax == 1440)">@string.Format(Localizer["Public.HoursShort"].Value, 24)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <!-- Minimum rating (pill radio group) -->
+                                <fieldset class="mb-4">
+                                    <legend class="form-label fw-semibold fs-6">@Localizer["Public.Filter.MinRating"]</legend>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <input type="radio" class="btn-check" name="minRating" id="rateAny" value="" checked="@(f.MinRating is null)" autocomplete="off">
+                                        <label class="btn btn-sm yj-chip" for="rateAny">@Localizer["Public.Difficulty.Any"]</label>
+
+                                        <input type="radio" class="btn-check" name="minRating" id="rate3" value="3" checked="@(f.MinRating == 3)" autocomplete="off">
+                                        <label class="btn btn-sm yj-chip" for="rate3"><i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>@string.Format(Localizer["Public.StarsPlus"].Value, 3)</label>
+
+                                        <input type="radio" class="btn-check" name="minRating" id="rate4" value="4" checked="@(f.MinRating == 4)" autocomplete="off">
+                                        <label class="btn btn-sm yj-chip" for="rate4"><i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>@string.Format(Localizer["Public.StarsPlus"].Value, 4)</label>
+
+                                        <input type="radio" class="btn-check" name="minRating" id="rate45" value="4.5" checked="@(f.MinRating == 4.5m)" autocomplete="off">
+                                        <label class="btn btn-sm yj-chip" for="rate45"><i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>@string.Format(Localizer["Public.StarsPlus"].Value, 4.5)</label>
+                                    </div>
+                                </fieldset>
+
+                                <!-- Feature toggles -->
+                                <fieldset class="mb-2">
+                                    <legend class="form-label fw-semibold fs-6">@Localizer["Public.Filter.Preferences"]</legend>
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="filterChildFriendly" name="childFriendly" value="true" checked="@(f.ChildFriendly == true)">
+                                        <label class="form-check-label" for="filterChildFriendly">@Localizer["Public.Filter.ChildFriendly"]</label>
+                                    </div>
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="filterAccessible" name="accessible" value="true" checked="@(f.Accessible == true)">
+                                        <label class="form-check-label" for="filterAccessible">@Localizer["Public.Filter.Accessible"]</label>
+                                    </div>
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="filterInstantBooking" name="instantBooking" value="true" checked="@(f.InstantBooking == true)">
+                                        <label class="form-check-label" for="filterInstantBooking">@Localizer["Public.Filter.InstantBooking"]</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="filterHasDiscount" name="hasDiscount" value="true" checked="@(f.HasDiscount == true)">
+                                        <label class="form-check-label" for="filterHasDiscount">@Localizer["Public.Filter.HasDiscount"]</label>
+                                    </div>
+                                </fieldset>
+
+                                <!-- Sticky apply footer -->
+                                <div class="yj-filter-apply d-grid gap-1">
+                                    <button type="submit" class="btn btn-primary rounded-pill">@Localizer["Public.Filter.Apply"]</button>
+                                    <a class="btn btn-link btn-sm d-lg-none" href="@clearUrl">@Localizer["Public.Filter.ClearAll"]</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </aside>
+            <!-- ======================= Filter sidebar END -->
 
-            <!-- Server-side sort (carries active filters as hidden inputs so sorting keeps them) -->
-            <div class="col-sm-6 col-xl-3">
-                <form method="get" asp-area="Public" asp-controller="Tours" asp-action="Index" id="sortForm">
-                    @if (!string.IsNullOrWhiteSpace(Model.Query))
-                    {
-                        <input type="hidden" name="q" value="@Model.Query" />
-                    }
-                    @if (Model.PlaceId is not null)
-                    {
-                        <input type="hidden" name="placeId" value="@Model.PlaceId" />
-                    }
-                    @if (f.PriceMin is not null) { <input type="hidden" name="priceMin" value="@f.PriceMin" /> }
-                    @if (f.PriceMax is not null) { <input type="hidden" name="priceMax" value="@f.PriceMax" /> }
-                    @if (!string.IsNullOrEmpty(f.Difficulty)) { <input type="hidden" name="difficulty" value="@f.Difficulty" /> }
-                    @if (f.DurationMin is not null) { <input type="hidden" name="durationMin" value="@f.DurationMin" /> }
-                    @if (f.DurationMax is not null) { <input type="hidden" name="durationMax" value="@f.DurationMax" /> }
-                    @if (f.ChildFriendly == true) { <input type="hidden" name="childFriendly" value="true" /> }
-                    @if (f.Accessible == true) { <input type="hidden" name="accessible" value="true" /> }
-                    @if (f.InstantBooking == true) { <input type="hidden" name="instantBooking" value="true" /> }
-                    @if (f.HasDiscount == true) { <input type="hidden" name="hasDiscount" value="true" /> }
-                    @if (f.MinRating is not null) { <input type="hidden" name="minRating" value="@f.MinRating" /> }
-                    <select name="sort" class="form-select" onchange="document.getElementById('sortForm').submit();" aria-label="@Localizer["Public.Sort.tours"]">
+            <!-- ======================= Results column START -->
+            <div class="col-lg-9">
+                <!-- Toolbar: mobile filter trigger + client-side search + server-side sort -->
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill d-lg-none position-relative"
+                            data-bs-toggle="offcanvas" data-bs-target="#tourFilters" aria-controls="tourFilters">
+                        <i class="bi bi-sliders me-1" aria-hidden="true"></i>@Localizer["Public.Filters"]
+                        @if (f.ActiveCount > 0)
+                        {
+                            <span class="badge text-bg-primary ms-1">@f.ActiveCount</span>
+                        }
+                    </button>
+
+                    <!-- Client-side text search over the loaded cards -->
+                    <div class="input-group yj-search-pill yj-toolbar-search">
+                        <span class="input-group-text bg-body border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" id="tourSearchInput" class="form-control border-start-0"
+                               placeholder="@Localizer["Public.Filter.tours.on.this.page"]">
+                    </div>
+
+                    <!-- Server-side sort (carries active filters as hidden inputs so sorting keeps them) -->
+                    <form method="get" asp-area="Public" asp-controller="Tours" asp-action="Index" id="sortForm" class="ms-auto d-flex align-items-center gap-2 mb-0">
                         @if (!string.IsNullOrWhiteSpace(Model.Query))
                         {
-                            <option value="relevance" selected="@(Model.Sort == "relevance")">@Localizer["Public.Most.relevant"]</option>
+                            <input type="hidden" name="q" value="@Model.Query" />
                         }
-                        <option value="popularity_desc" selected="@(Model.Sort == "popularity_desc")">@Localizer["Public.Most.popular"]</option>
-                        <option value="newest" selected="@(Model.Sort == "newest")">@Localizer["Public.Newest"]</option>
-                        <option value="rating_desc" selected="@(Model.Sort == "rating_desc")">@Localizer["Public.Top.rated"]</option>
-                        <option value="price_asc" selected="@(Model.Sort == "price_asc")">@Localizer["Public.Price.low.to.high"]</option>
-                        <option value="price_desc" selected="@(Model.Sort == "price_desc")">@Localizer["Public.Price.high.to.low"]</option>
-                    </select>
-                </form>
-            </div>
-        </div>
-        <!-- Filter bar END -->
-
-        @if (Model.Categories.Count > 0)
-        {
-            <!-- Client-side category chips -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <ul class="list-inline mb-0" id="categoryChips">
-                        <li class="list-inline-item mb-2">
-                            <button type="button" class="btn btn-sm btn-primary js-category-chip active" data-category="">@Localizer["Public.All"]</button>
-                        </li>
-                        @foreach (var cat in Model.Categories)
+                        @if (Model.PlaceId is not null)
                         {
-                            <li class="list-inline-item mb-2">
-                                <button type="button" class="btn btn-sm btn-light js-category-chip" data-category="@cat.Slug">@cat.Name</button>
-                            </li>
+                            <input type="hidden" name="placeId" value="@Model.PlaceId" />
                         }
-                    </ul>
+                        @if (f.PriceMin is not null) { <input type="hidden" name="priceMin" value="@f.PriceMin" /> }
+                        @if (f.PriceMax is not null) { <input type="hidden" name="priceMax" value="@f.PriceMax" /> }
+                        @if (!string.IsNullOrEmpty(f.Difficulty)) { <input type="hidden" name="difficulty" value="@f.Difficulty" /> }
+                        @if (f.DurationMin is not null) { <input type="hidden" name="durationMin" value="@f.DurationMin" /> }
+                        @if (f.DurationMax is not null) { <input type="hidden" name="durationMax" value="@f.DurationMax" /> }
+                        @if (f.ChildFriendly == true) { <input type="hidden" name="childFriendly" value="true" /> }
+                        @if (f.Accessible == true) { <input type="hidden" name="accessible" value="true" /> }
+                        @if (f.InstantBooking == true) { <input type="hidden" name="instantBooking" value="true" /> }
+                        @if (f.HasDiscount == true) { <input type="hidden" name="hasDiscount" value="true" /> }
+                        @if (f.MinRating is not null) { <input type="hidden" name="minRating" value="@f.MinRating" /> }
+                        <label for="tourSort" class="small text-body-secondary text-nowrap d-none d-sm-inline mb-0">@Localizer["Public.SortLabel"]</label>
+                        <select name="sort" id="tourSort" class="form-select rounded-pill w-auto" onchange="document.getElementById('sortForm').submit();" aria-label="@Localizer["Public.Sort.tours"]">
+                            @if (!string.IsNullOrWhiteSpace(Model.Query))
+                            {
+                                <option value="relevance" selected="@(Model.Sort == "relevance")">@Localizer["Public.Most.relevant"]</option>
+                            }
+                            <option value="popularity_desc" selected="@(Model.Sort == "popularity_desc")">@Localizer["Public.Most.popular"]</option>
+                            <option value="newest" selected="@(Model.Sort == "newest")">@Localizer["Public.Newest"]</option>
+                            <option value="rating_desc" selected="@(Model.Sort == "rating_desc")">@Localizer["Public.Top.rated"]</option>
+                            <option value="price_asc" selected="@(Model.Sort == "price_asc")">@Localizer["Public.Price.low.to.high"]</option>
+                            <option value="price_desc" selected="@(Model.Sort == "price_desc")">@Localizer["Public.Price.high.to.low"]</option>
+                        </select>
+                    </form>
+                </div>
+
+                <!-- Results region: swapped via AJAX by tours-index.js (UI-UX-S1); full page render works without JS (PE1) -->
+                <div id="tourResults"
+                     data-yj-component="tour-results"
+                     aria-live="polite"
+                     aria-busy="false"
+                     data-error-text="@Localizer["Public.Results.Error"]"
+                     data-retry-text="@Localizer["Public.Retry"]"
+                     data-loading-text="@Localizer["Public.Loading"]">
+                    <partial name="_TourResults" model="Model" />
                 </div>
             </div>
-        }
-
-        <!-- Results region: swapped via AJAX by tours-index.js (UI-UX-S1); full page render works without JS (PE1) -->
-        <div id="tourResults"
-             data-yj-component="tour-results"
-             aria-live="polite"
-             aria-busy="false"
-             data-error-text="@Localizer["Public.Results.Error"]"
-             data-retry-text="@Localizer["Public.Retry"]"
-             data-loading-text="@Localizer["Public.Loading"]">
-            <partial name="_TourResults" model="Model" />
+            <!-- ======================= Results column END -->
         </div>
     </div>
 </section>
 <!-- ======================= Tour grid END -->
 
-<!-- ======================= Filters offcanvas START (UI-UX-D4/S3; bottom sheet on mobile via site.css) -->
-<div class="offcanvas offcanvas-end filter-offcanvas" tabindex="-1" id="tourFilters" aria-labelledby="tourFiltersLabel">
-    <div class="offcanvas-header border-bottom">
-        <h5 class="offcanvas-title" id="tourFiltersLabel">@Localizer["Public.Filters"]</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="@Localizer["Search.Overlay.Close"]"></button>
+<!-- ======================= Feature strip START (brand refresh) -->
+<section class="pb-5 pt-2">
+    <div class="container">
+        <div class="yj-feature-strip p-4 p-md-5">
+            <div class="row g-4">
+                <div class="col-sm-6 col-xl-3 d-flex align-items-start gap-3">
+                    <span class="yj-feature-icon yj-fi-green"><i class="bi bi-shield-lock" aria-hidden="true"></i></span>
+                    <div>
+                        <h3 class="h6 mb-1">@Localizer["Home.Strip.SecureTitle"]</h3>
+                        <p class="small text-body-secondary mb-0">@Localizer["Home.Strip.SecureText"]</p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3 d-flex align-items-start gap-3">
+                    <span class="yj-feature-icon yj-fi-gold"><i class="bi bi-person-badge" aria-hidden="true"></i></span>
+                    <div>
+                        <h3 class="h6 mb-1">@Localizer["Home.Strip.ExpertsTitle"]</h3>
+                        <p class="small text-body-secondary mb-0">@Localizer["Home.Strip.ExpertsText"]</p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3 d-flex align-items-start gap-3">
+                    <span class="yj-feature-icon yj-fi-red"><i class="bi bi-bookmark-star" aria-hidden="true"></i></span>
+                    <div>
+                        <h3 class="h6 mb-1">@Localizer["Home.Strip.HandpickedTitle"]</h3>
+                        <p class="small text-body-secondary mb-0">@Localizer["Home.Strip.HandpickedText"]</p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3 d-flex align-items-start gap-3">
+                    <span class="yj-feature-icon yj-fi-red"><i class="bi bi-headset" aria-hidden="true"></i></span>
+                    <div>
+                        <h3 class="h6 mb-1">@Localizer["Home.Strip.SupportTitle"]</h3>
+                        <p class="small text-body-secondary mb-0">@Localizer["Home.Strip.SupportText"]</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <form method="get" asp-area="Public" asp-controller="Tours" asp-action="Index" id="tourFiltersForm" class="d-flex flex-column flex-grow-1 overflow-hidden">
-        @if (!string.IsNullOrWhiteSpace(Model.Query))
-        {
-            <input type="hidden" name="q" value="@Model.Query" />
-        }
-        @if (Model.PlaceId is not null)
-        {
-            <input type="hidden" name="placeId" value="@Model.PlaceId" />
-        }
-        @if (!string.IsNullOrWhiteSpace(Model.Sort))
-        {
-            <input type="hidden" name="sort" value="@Model.Sort" />
-        }
-        <div class="offcanvas-body">
-            <!-- Price range -->
-            <fieldset class="mb-4">
-                <legend class="form-label fw-semibold fs-6">@Localizer["Public.Filter.Price"]</legend>
-                <div class="row g-2">
-                    <div class="col-6">
-                        <label class="form-label small text-body-secondary" for="filterPriceMin">@Localizer["Public.Filter.PriceMin"]</label>
-                        <input type="number" class="form-control" id="filterPriceMin" name="priceMin" min="0" step="1" inputmode="numeric" value="@(f.PriceMin?.ToString("0.##"))" />
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small text-body-secondary" for="filterPriceMax">@Localizer["Public.Filter.PriceMax"]</label>
-                        <input type="number" class="form-control" id="filterPriceMax" name="priceMax" min="0" step="1" inputmode="numeric" value="@(f.PriceMax?.ToString("0.##"))" />
-                    </div>
-                </div>
-            </fieldset>
-
-            <!-- Difficulty -->
-            <div class="mb-4">
-                <label class="form-label fw-semibold fs-6" for="filterDifficulty">@Localizer["Public.Filter.Difficulty"]</label>
-                <select class="form-select" id="filterDifficulty" name="difficulty">
-                    <option value="" selected="@(string.IsNullOrEmpty(f.Difficulty))">@Localizer["Public.Difficulty.Any"]</option>
-                    <option value="easy" selected="@(f.Difficulty == "easy")">@Localizer["Public.Difficulty.Easy"]</option>
-                    <option value="moderate" selected="@(f.Difficulty == "moderate")">@Localizer["Public.Difficulty.Moderate"]</option>
-                    <option value="hard" selected="@(f.Difficulty == "hard")">@Localizer["Public.Difficulty.Hard"]</option>
-                    <option value="expert" selected="@(f.Difficulty == "expert")">@Localizer["Public.Difficulty.Expert"]</option>
-                </select>
-            </div>
-
-            <!-- Duration -->
-            <fieldset class="mb-4">
-                <legend class="form-label fw-semibold fs-6">@Localizer["Public.Filter.Duration"]</legend>
-                <div class="row g-2">
-                    <div class="col-6">
-                        <label class="form-label small text-body-secondary" for="filterDurationMin">@Localizer["Public.Filter.DurationMin"]</label>
-                        <select class="form-select" id="filterDurationMin" name="durationMin">
-                            <option value="" selected="@(f.DurationMin is null)">@Localizer["Public.Difficulty.Any"]</option>
-                            <option value="60" selected="@(f.DurationMin == 60)">@string.Format(Localizer["Public.HoursShort"].Value, 1)</option>
-                            <option value="120" selected="@(f.DurationMin == 120)">@string.Format(Localizer["Public.HoursShort"].Value, 2)</option>
-                            <option value="240" selected="@(f.DurationMin == 240)">@string.Format(Localizer["Public.HoursShort"].Value, 4)</option>
-                            <option value="480" selected="@(f.DurationMin == 480)">@string.Format(Localizer["Public.HoursShort"].Value, 8)</option>
-                        </select>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small text-body-secondary" for="filterDurationMax">@Localizer["Public.Filter.DurationMax"]</label>
-                        <select class="form-select" id="filterDurationMax" name="durationMax">
-                            <option value="" selected="@(f.DurationMax is null)">@Localizer["Public.Difficulty.Any"]</option>
-                            <option value="120" selected="@(f.DurationMax == 120)">@string.Format(Localizer["Public.HoursShort"].Value, 2)</option>
-                            <option value="240" selected="@(f.DurationMax == 240)">@string.Format(Localizer["Public.HoursShort"].Value, 4)</option>
-                            <option value="480" selected="@(f.DurationMax == 480)">@string.Format(Localizer["Public.HoursShort"].Value, 8)</option>
-                            <option value="1440" selected="@(f.DurationMax == 1440)">@string.Format(Localizer["Public.HoursShort"].Value, 24)</option>
-                        </select>
-                    </div>
-                </div>
-            </fieldset>
-
-            <!-- Minimum rating -->
-            <div class="mb-4">
-                <label class="form-label fw-semibold fs-6" for="filterMinRating">@Localizer["Public.Filter.MinRating"]</label>
-                <select class="form-select" id="filterMinRating" name="minRating">
-                    <option value="" selected="@(f.MinRating is null)">@Localizer["Public.Difficulty.Any"]</option>
-                    <option value="3" selected="@(f.MinRating == 3)">@string.Format(Localizer["Public.StarsPlus"].Value, 3)</option>
-                    <option value="4" selected="@(f.MinRating == 4)">@string.Format(Localizer["Public.StarsPlus"].Value, 4)</option>
-                    <option value="4.5" selected="@(f.MinRating == 4.5m)">@string.Format(Localizer["Public.StarsPlus"].Value, 4.5)</option>
-                </select>
-            </div>
-
-            <!-- Feature toggles -->
-            <fieldset class="mb-2">
-                <div class="form-check form-switch mb-2">
-                    <input class="form-check-input" type="checkbox" id="filterChildFriendly" name="childFriendly" value="true" checked="@(f.ChildFriendly == true)">
-                    <label class="form-check-label" for="filterChildFriendly">@Localizer["Public.Filter.ChildFriendly"]</label>
-                </div>
-                <div class="form-check form-switch mb-2">
-                    <input class="form-check-input" type="checkbox" id="filterAccessible" name="accessible" value="true" checked="@(f.Accessible == true)">
-                    <label class="form-check-label" for="filterAccessible">@Localizer["Public.Filter.Accessible"]</label>
-                </div>
-                <div class="form-check form-switch mb-2">
-                    <input class="form-check-input" type="checkbox" id="filterInstantBooking" name="instantBooking" value="true" checked="@(f.InstantBooking == true)">
-                    <label class="form-check-label" for="filterInstantBooking">@Localizer["Public.Filter.InstantBooking"]</label>
-                </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="filterHasDiscount" name="hasDiscount" value="true" checked="@(f.HasDiscount == true)">
-                    <label class="form-check-label" for="filterHasDiscount">@Localizer["Public.Filter.HasDiscount"]</label>
-                </div>
-            </fieldset>
-        </div>
-        <!-- Sticky apply footer (UI-UX-D4) -->
-        <div class="border-top p-3 d-flex gap-2 align-items-center">
-            <button type="submit" class="btn btn-primary flex-grow-1">@Localizer["Public.Filter.Apply"]</button>
-            <a class="btn btn-link" href="@Url.Action("Index", "Tours", new { area = "Public", q = Model.Query, placeId = Model.PlaceId, sort = Model.Sort })">@Localizer["Public.Filter.ClearAll"]</a>
-        </div>
-    </form>
-</div>
-<!-- ======================= Filters offcanvas END -->
+</section>
+<!-- ======================= Feature strip END -->
 
 @section Scripts {
     <script src="~/assets/js/tours-index.js" asp-append-version="true"></script>

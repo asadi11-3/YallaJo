@@ -9,51 +9,34 @@
 /* Self-hosted web fonts (replaces Google Fonts CDN per UI-PERF-A5/V3) */
 /* ------------------------------------------------------------------ */
 
-/* DM Sans — variable font, latin subset */
+/* Montserrat — variable font, latin subset (body / subheadings EN) */
 @font-face {
-    font-family: 'DM Sans';
+    font-family: 'Montserrat';
     font-style: normal;
     font-weight: 400 700;
     font-display: swap;
-    src: url('../../fonts/dm-sans-latin.woff2') format('woff2');
+    src: url('../../fonts/montserrat-latin.woff2') format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* Poppins — static weights, latin subset */
+/* Playfair Display — variable font, latin subset (headings EN) */
 @font-face {
-    font-family: 'Poppins';
+    font-family: 'Playfair Display';
     font-style: normal;
-    font-weight: 400;
+    font-weight: 400 700;
     font-display: swap;
-    src: url('../../fonts/poppins-latin-400.woff2') format('woff2');
+    src: url('../../fonts/playfair-display-latin.woff2') format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* Cairo — variable font, arabic subset (headings AR) */
 @font-face {
-    font-family: 'Poppins';
+    font-family: 'Cairo';
     font-style: normal;
-    font-weight: 500;
+    font-weight: 400 700;
     font-display: swap;
-    src: url('../../fonts/poppins-latin-500.woff2') format('woff2');
-    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
-    font-family: 'Poppins';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url('../../fonts/poppins-latin-600.woff2') format('woff2');
-    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
-    font-family: 'Poppins';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('../../fonts/poppins-latin-700.woff2') format('woff2');
-    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    src: url('../../fonts/cairo-arabic.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
 }
 
 /* IBM Plex Sans Arabic — static weights, arabic subset (RTL cultures) */
@@ -87,14 +70,14 @@
 /* Arabic UI: prepend the Arabic family so Arabic glyphs render with it
    while Latin glyphs keep using the theme fonts (unicode-range scoped). */
 html[lang="ar"] body {
-    font-family: 'IBM Plex Sans Arabic', 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-family: 'IBM Plex Sans Arabic', 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3,
 html[lang="ar"] h4, html[lang="ar"] h5, html[lang="ar"] h6,
 html[lang="ar"] .h1, html[lang="ar"] .h2, html[lang="ar"] .h3,
 html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
-    font-family: 'IBM Plex Sans Arabic', 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-family: 'Cairo', 'IBM Plex Sans Arabic', 'Playfair Display', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 /* ------------------------------------------------------------------ */
@@ -128,6 +111,32 @@ html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
 .lang-toggle-btn.active {
     background-color: var(--bs-dark, #14191e);
     color: #fff;
+}
+
+/* ------------------------------------------------------------------ */
+/* Header: navbar avatar (broken-image containment)                    */
+/* The theme's .avatar is a fixed box (2.5rem for .avatar-sm) but does  */
+/* not clip its child. When a profile photo URL 404s, the browser draws */
+/* the broken-image glyph plus the alt text ("الحساب" / display name)   */
+/* at intrinsic size, which spills out of the box and over the navbar.  */
+/* Clip the box and let the image fill it so a broken/slow src can never */
+/* break the bar in either direction (RTL or LTR).                      */
+/* ------------------------------------------------------------------ */
+
+.navbar .avatar {
+    overflow: hidden;
+}
+
+.navbar .avatar > .avatar-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Hide the alt text + broken-image label when the src fails to load,
+       so only the empty avatar box remains instead of overflowing text. */
+    color: transparent;
+    font-size: 0;
+    background-color: var(--bs-secondary-bg, #e9ecef);
 }
 
 /* ------------------------------------------------------------------ */
@@ -335,5 +344,431 @@ details.card > summary { cursor: pointer; list-style-position: inside; }
     .yj-chart-host-300 .placeholder,
     .yj-chart-host-320 .placeholder {
         animation: none;
+    }
+}
+
+/* ---- Public Home redesign (brand refresh) -------------------------------
+   Warm-sand canvas, eyebrow section headers, split hero with floating badge
+   and circular destination thumbs, white feature strip.
+   Logical properties only (RTL1); honors prefers-reduced-motion (M3). */
+
+/* Page canvas: warm sand behind the transparent sticky header too.
+   .yj-sand-page is the generic alias used by other public pages (Tours index). */
+.yj-home-page,
+.yj-sand-page {
+    background-color: #f6f1e8;
+}
+
+[data-bs-theme=dark] .yj-home-page,
+[data-bs-theme=dark] .yj-sand-page {
+    background-color: var(--bs-body-bg);
+}
+
+/* Eyebrow label: letterspaced uppercase with a leading dash. */
+.yj-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-family: "Montserrat", sans-serif;
+    font-size: .8125rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--bs-primary);
+}
+
+.yj-eyebrow::before {
+    content: "";
+    inline-size: 1.5rem;
+    block-size: 2px;
+    background-color: currentColor;
+    border-radius: 1px;
+}
+
+.yj-eyebrow-gold {
+    color: #c9a24b;
+}
+
+/* Hero heading scale (Playfair Display comes from the global heading stack). */
+.yj-hero-title {
+    font-size: clamp(2.25rem, 4.5vw, 3.5rem);
+    line-height: 1.12;
+}
+
+/* Hero media: rounded portrait photo + floating badge + circular thumbs. */
+.yj-hero-media {
+    position: relative;
+    margin-block-end: 3rem; /* room for the overflowing thumbs */
+}
+
+.yj-hero-img {
+    inline-size: 100%;
+    aspect-ratio: 5 / 6;
+    max-block-size: 560px;
+    object-fit: cover;
+    border-radius: 1.5rem;
+}
+
+.yj-float-badge {
+    position: absolute;
+    inset-block-start: 1.5rem;
+    inset-inline-end: -.75rem;
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    padding: .625rem 1rem;
+    background-color: var(--bs-body-bg);
+    border-radius: 1rem;
+    box-shadow: 0 .5rem 1.5rem rgba(17, 17, 17, .12);
+}
+
+.yj-float-badge .yj-badge-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border-radius: 50%;
+    background-color: rgba(176, 42, 42, .1);
+    color: var(--bs-primary);
+    font-size: 1.125rem;
+}
+
+.yj-hero-thumbs {
+    position: absolute;
+    inset-block-end: -2.25rem;
+    inset-inline-start: 1.5rem;
+    display: flex;
+    gap: 1.25rem;
+}
+
+.yj-hero-thumb {
+    text-align: center;
+}
+
+.yj-hero-thumb img {
+    inline-size: 4rem;
+    block-size: 4rem;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 .25rem .75rem rgba(17, 17, 17, .18);
+}
+
+.yj-hero-thumb .yj-thumb-label {
+    display: inline-block;
+    margin-block-start: .375rem;
+    padding: .125rem .625rem;
+    font-size: .75rem;
+    font-weight: 600;
+    background-color: var(--bs-body-bg);
+    color: var(--bs-heading-color);
+    border-radius: 50rem;
+    box-shadow: 0 .125rem .375rem rgba(17, 17, 17, .1);
+}
+
+/* Overlapping avatars for the trust row. */
+.yj-avatar-group {
+    display: flex;
+}
+
+.yj-avatar-group img {
+    inline-size: 2.375rem;
+    block-size: 2.375rem;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+
+.yj-avatar-group img + img {
+    margin-inline-start: -.625rem;
+}
+
+/* White feature strip with thin-outline circular icons. */
+.yj-feature-strip {
+    background-color: var(--bs-body-bg);
+    border-radius: 1.25rem;
+    box-shadow: 0 .5rem 1.5rem rgba(17, 17, 17, .06);
+}
+
+.yj-feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 3.5rem;
+    block-size: 3.5rem;
+    border-radius: 50%;
+    border: 1.5px solid;
+    font-size: 1.375rem;
+    flex-shrink: 0;
+}
+
+.yj-fi-red {
+    color: var(--bs-primary);
+    border-color: rgba(176, 42, 42, .35);
+}
+
+.yj-fi-green {
+    color: #3e6b4a;
+    border-color: rgba(62, 107, 74, .35);
+}
+
+.yj-fi-gold {
+    color: #c9a24b;
+    border-color: rgba(201, 162, 75, .4);
+}
+
+/* Subtle desert-gold compass ornament on the sand canvas. */
+.yj-ornament {
+    position: absolute;
+    color: #c9a24b;
+    opacity: .35;
+    pointer-events: none;
+}
+
+@media (max-width: 991.98px) {
+    .yj-float-badge {
+        inset-inline-end: .75rem;
+    }
+
+    .yj-ornament {
+        display: none;
+    }
+}
+
+/* ---- Public Tours index redesign (brand refresh) -------------------------
+   Full-bleed photo banner with a sand gradient scrim, pill category chips,
+   and softened tour cards with an inset media frame.
+   Logical properties only (RTL1); gradient direction flipped for RTL. */
+
+/* Rounded page banner: photo right, sand scrim carrying the copy left. */
+.yj-page-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-block-size: 300px;
+    border-radius: 1.5rem;
+    overflow: hidden;
+}
+
+.yj-page-hero-img {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: 75% center;
+}
+
+.yj-page-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right,
+        #f0e0c8 0%,
+        #f0e0c8 36%,
+        rgba(240, 224, 200, .92) 52%,
+        rgba(240, 224, 200, 0) 80%);
+}
+
+[dir="rtl"] .yj-page-hero-overlay {
+    background: linear-gradient(to left,
+        #f0e0c8 0%,
+        #f0e0c8 36%,
+        rgba(240, 224, 200, .92) 52%,
+        rgba(240, 224, 200, 0) 80%);
+}
+
+.yj-page-hero-content {
+    position: relative;
+    z-index: 1;
+    max-inline-size: 36rem;
+    padding: 2.5rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .yj-page-hero-content {
+        padding: 3.5rem 3rem;
+    }
+}
+
+/* Small desert-gold "✦" divider flanked by short dashes. */
+.yj-divider-star {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    color: #c9a24b;
+    font-size: .875rem;
+    line-height: 1;
+}
+
+.yj-divider-star::before,
+.yj-divider-star::after {
+    content: "";
+    inline-size: 1.25rem;
+    block-size: 2px;
+    border-radius: 1px;
+    background-color: currentColor;
+    opacity: .7;
+}
+
+/* Category chips: white pills; .active turns brand red (toggled by tours-index.js). */
+.yj-chip {
+    --bs-btn-color: var(--bs-heading-color);
+    --bs-btn-bg: var(--bs-body-bg);
+    --bs-btn-border-color: var(--bs-border-color);
+    --bs-btn-hover-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--bs-body-bg);
+    --bs-btn-hover-border-color: var(--bs-primary);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--bs-primary);
+    --bs-btn-active-border-color: var(--bs-primary);
+    border-radius: 50rem;
+    padding-inline: 1rem;
+    font-weight: 500;
+}
+
+/* Tour card: soft rounded shell with an inset, framed photo. */
+.yj-tour-card {
+    border: 0;
+    border-radius: 1.25rem;
+    box-shadow: 0 .375rem 1.25rem rgba(17, 17, 17, .06);
+}
+
+.yj-tour-card .yj-card-media {
+    padding: .625rem .625rem 0;
+}
+
+.yj-tour-card .yj-card-media .card-img-top {
+    border-radius: .875rem;
+}
+
+.yj-tour-card .card-title a {
+    font-family: "Montserrat", system-ui, sans-serif;
+    font-weight: 700;
+}
+
+/* ---- Tours filter sidebar (brand refresh) ----
+   Desktop: white rounded panel in a sticky left column.
+   Mobile (<lg): same markup collapses into an offcanvas bottom sheet. */
+
+/* Checkbox-style category rows (decorative chips driven by tours-index.js .active toggle) */
+.yj-filter-check {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    inline-size: 100%;
+    padding: .5rem .75rem;
+    border: 0;
+    background-color: transparent;
+    border-radius: .625rem;
+    color: var(--bs-heading-color);
+    font-weight: 500;
+    text-align: start;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.yj-filter-check:hover {
+    background-color: rgba(17, 17, 17, .04);
+}
+
+[data-bs-theme=dark] .yj-filter-check:hover {
+    background-color: rgba(255, 255, 255, .06);
+}
+
+.yj-check-box {
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--bs-border-color);
+    border-radius: .3125rem;
+    font-size: .75rem;
+    color: #fff;
+    flex-shrink: 0;
+    transition: background-color .15s ease, border-color .15s ease;
+}
+
+.yj-check-box .bi {
+    opacity: 0;
+}
+
+.yj-filter-check.active {
+    background-color: rgba(176, 42, 42, .08);
+    color: var(--bs-primary);
+}
+
+.yj-filter-check.active .yj-check-box {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.yj-filter-check.active .yj-check-box .bi {
+    opacity: 1;
+}
+
+/* Sticky apply footer inside the filter form */
+.yj-filter-apply {
+    position: sticky;
+    inset-block-end: 0;
+    background-color: var(--bs-body-bg);
+    padding-block: .75rem;
+    margin-block-start: .5rem;
+}
+
+/* Desktop: card-like panel that sticks below the navbar */
+@media (min-width: 992px) {
+    .yj-filter-sticky {
+        position: sticky;
+        inset-block-start: 5.75rem;
+    }
+
+    .yj-filter-panel {
+        background-color: var(--bs-body-bg);
+        border-radius: 1.25rem;
+        box-shadow: 0 .375rem 1.25rem rgba(17, 17, 17, .06);
+        padding: 1.5rem;
+    }
+}
+
+/* Pill-shaped search input (logical radii = RTL-safe) */
+.yj-search-pill .input-group-text {
+    border-start-start-radius: 50rem;
+    border-end-start-radius: 50rem;
+}
+
+.yj-search-pill .form-control {
+    border-start-end-radius: 50rem;
+    border-end-end-radius: 50rem;
+}
+
+.yj-toolbar-search {
+    max-inline-size: 20rem;
+    flex: 1 1 14rem;
+}
+
+/* Mobile bottom sheet for the responsive offcanvas variant (offcanvas-lg) */
+@media (max-width: 767.98px) {
+    .filter-offcanvas.offcanvas-lg.offcanvas-end {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: auto;
+        max-height: 85vh;
+        border-left: 0;
+        border-top-left-radius: 1rem;
+        border-top-right-radius: 1rem;
+        transform: translateY(100%);
+    }
+
+    .filter-offcanvas.offcanvas-lg.offcanvas-end.show,
+    .filter-offcanvas.offcanvas-lg.offcanvas-end.showing {
+        transform: none;
+    }
+
+    .filter-offcanvas.offcanvas-lg.offcanvas-end.hiding {
+        transform: translateY(100%);
     }
 }

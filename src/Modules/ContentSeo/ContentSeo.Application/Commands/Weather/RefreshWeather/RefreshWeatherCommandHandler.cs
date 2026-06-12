@@ -55,12 +55,13 @@ public sealed class RefreshWeatherCommandHandler(
 
             var snapshot = await provider.FetchAsync(request.Latitude, request.Longitude, ct);
 
-            // Validate 7-day forecast horizon (PDF §11).
-            if (snapshot.DailyForecasts.Count != 7)
+            // Forecast horizon is plan-dependent (WeatherAPI.com free = 3 days, paid = up to 365).
+            // Only an empty forecast is an actual error; a shorter-than-requested horizon is valid.
+            if (snapshot.DailyForecasts.Count == 0)
             {
                 logger.LogWarning(
-                    "Weather provider returned {Count} daily forecasts; expected 7. PlaceId={PlaceId}",
-                    snapshot.DailyForecasts.Count, request.PlaceId);
+                    "Weather provider returned no daily forecasts. PlaceId={PlaceId}",
+                    request.PlaceId);
             }
 
             var forecastJson = System.Text.Json.JsonSerializer.Serialize(snapshot.DailyForecasts);

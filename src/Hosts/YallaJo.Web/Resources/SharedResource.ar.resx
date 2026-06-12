@@ -62,7 +62,7 @@
     <value>الحياة مغامرة، اكتشفها</value>
   </data>
   <data name="Home.Hero.Lead" xml:space="preserve">
-    <value>اكتشف جولات مختارة بعناية وتجارب مع مرشدين وأماكن لا تُنسى.</value>
+    <value>اكتشف تجارب أصيلة في جميع أنحاء الأردن — جولات ومرشدون محليون وأماكن خفية ومغامرات لا تُنسى، كل ذلك في مكان واحد.</value>
   </data>
   <data name="Home.Search.Label" xml:space="preserve">
     <value>ابحث عن الجولات</value>
@@ -7250,7 +7250,7 @@
     <value>إنشاء حساب عبر جوجل</value>
   </data>
   <data name="Auth.Social.FacebookSignup" xml:space="preserve">
-    <value>Oï¿½U+O'OOï¿½ O-O3OO" O1O"Oï¿½ U?USO3O"U^Uï¿½</value>
+    <value>إنشاء حساب عبر فيسبوك</value>
   </data>
   <data name="Creator.Nav.Greeting" xml:space="preserve">
     <value>مرحبًا،</value>
@@ -12584,13 +12584,100 @@
 <value>الجولات في الأردن</value>
 </data>
 <data name="Home.Hero.Cta" xml:space="preserve">
-<value>اكتشف الآن</value>
+<value>استكشف الجولات</value>
 </data>
 <data name="Home.Hero.Watch" xml:space="preserve">
 <value>شاهد قصتنا</value>
 </data>
 <data name="Home.Hero.SupportBadge" xml:space="preserve">
 <value>دعم</value>
+</data>
+<data name="Home.Hero.Eyebrow" xml:space="preserve">
+<value>اكتشف الأردن</value>
+</data>
+<data name="Home.Hero.Title1" xml:space="preserve">
+<value>اكتشف</value>
+</data>
+<data name="Home.Hero.TitleAccent" xml:space="preserve">
+<value>الأردن</value>
+</data>
+<data name="Home.Hero.Title2" xml:space="preserve">
+<value>رحلة واحدة في كل مرة</value>
+</data>
+<data name="Home.Hero.ImageAlt" xml:space="preserve">
+<value>الخزنة في البتراء، الأردن</value>
+</data>
+<data name="Home.Hero.Thumb1" xml:space="preserve">
+<value>وادي رم</value>
+</data>
+<data name="Home.Hero.Thumb2" xml:space="preserve">
+<value>البحر الميت</value>
+</data>
+<data name="Home.Strip.HandpickedTitle" xml:space="preserve">
+<value>جولات مختارة بعناية</value>
+</data>
+<data name="Home.Strip.HandpickedText" xml:space="preserve">
+<value>كل تجربة منتقاة ومدققة الجودة.</value>
+</data>
+<data name="Home.Strip.SecureTitle" xml:space="preserve">
+<value>حجز آمن</value>
+</data>
+<data name="Home.Strip.SecureText" xml:space="preserve">
+<value>مدفوعات مشفّرة وتأكيد فوري.</value>
+</data>
+<data name="Home.Strip.ExpertsTitle" xml:space="preserve">
+<value>خبراء محليون</value>
+</data>
+<data name="Home.Strip.ExpertsText" xml:space="preserve">
+<value>مرشدون يعرفون الأردن عن ظهر قلب.</value>
+</data>
+<data name="Home.Strip.SupportTitle" xml:space="preserve">
+<value>دعم على مدار الساعة</value>
+</data>
+<data name="Home.Strip.SupportText" xml:space="preserve">
+<value>أشخاص حقيقيون متى احتجت إلينا.</value>
+</data>
+<data name="Home.Featured.Eyebrow" xml:space="preserve">
+<value>مختارة بعناية</value>
+</data>
+<data name="Home.Places.Eyebrow" xml:space="preserve">
+<value>أبرز الوجهات</value>
+</data>
+<data name="Home.Places.TitleLead" xml:space="preserve">
+<value>اكتشف</value>
+</data>
+<data name="Home.Places.TitleAccent" xml:space="preserve">
+<value>أجمل وجهات الأردن</value>
+</data>
+<data name="Home.Popular.Eyebrow" xml:space="preserve">
+<value>المفضلة لدى المسافرين</value>
+</data>
+<data name="Home.Businesses.Eyebrow" xml:space="preserve">
+<value>اختيارات محلية</value>
+</data>
+<data name="Home.Categories.Eyebrow" xml:space="preserve">
+<value>تصفح حسب الاهتمام</value>
+</data>
+<data name="Public.Tours.Hero.Title1" xml:space="preserve">
+<value>استكشف</value>
+</data>
+<data name="Public.Tours.Hero.TitleAccent" xml:space="preserve">
+<value>الأردن</value>
+</data>
+<data name="Public.Tours.Hero.Title2" xml:space="preserve">
+<value>عبر تجارب أصيلة</value>
+</data>
+<data name="Public.SortLabel" xml:space="preserve">
+<value>ترتيب</value>
+</data>
+<data name="Public.Filter.Category" xml:space="preserve">
+<value>الفئة</value>
+</data>
+<data name="Public.Filter.Preferences" xml:space="preserve">
+<value>التفضيلات</value>
+</data>
+<data name="Public.Breadcrumb.Home" xml:space="preserve">
+<value>الرئيسية</value>
 </data>
 <data name="Home.Search.Where" xml:space="preserve">
 <value>إلى أين؟</value>
@@ -12683,7 +12770,7 @@
 <value>عرض كل الجولات</value>
 </data>
 <data name="Home.BrowseAllPlaces" xml:space="preserve">
-<value>تصفح كل الأماكن</value>
+<value>عرض كل الوجهات</value>
 </data>
 <data name="Home.SeeAllBusinesses" xml:space="preserve">
 <value>عرض كل المنشآت</value>

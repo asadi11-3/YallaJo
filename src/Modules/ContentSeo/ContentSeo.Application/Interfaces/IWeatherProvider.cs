@@ -14,8 +14,9 @@ public interface IWeatherProvider
     bool IsAvailable { get; }
 
     /// <summary>
-    /// Fetches current conditions + a 7-day forecast for the given coordinates.
-    /// PDF §11: forecast horizon is exactly 7 days from today.
+    /// Fetches current conditions + a multi-day forecast for the given coordinates.
+    /// The forecast horizon is plan-dependent and controlled by WeatherOptions.ForecastDays
+    /// (WeatherAPI.com free plan caps at 3 days; paid plans allow up to 365).
     /// </summary>
     Task<WeatherSnapshot> FetchAsync(decimal latitude, decimal longitude, CancellationToken ct);
 }

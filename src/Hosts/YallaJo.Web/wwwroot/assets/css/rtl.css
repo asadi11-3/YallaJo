@@ -101,6 +101,20 @@
     margin-right: 0 !important;
     margin-left: 1rem !important;
 }
+
+/* Collapsed (mobile) navbar dropdown caret. The LTR theme pins the caret with
+   `.navbar-expand-* .navbar-collapse .navbar-nav .dropdown-toggle::after
+   { position:absolute; right:25px }` across every breakpoint (style.css
+   L17667/17862/18057/18252/18447/18639). In RTL the menu text is right-
+   aligned, so a caret anchored 25px from the RIGHT edge lands ON TOP of the
+   label (استكشف، المزيد …). Flip it to the logical-left edge. The theme
+   selectors carry 4 classes + a pseudo-element, so !important is required for
+   this shorter selector to win the cascade. */
+[dir="rtl"] .navbar-nav .dropdown-toggle::after {
+    right: auto !important;
+    left: 25px !important;
+}
+
 [dir="rtl"] .notif-badge {
     right: auto;
     left: 0.5rem;
@@ -108,6 +122,15 @@
 
 /* Search input clear/icon button pinned to the logical end */
 [dir="rtl"] .top-bar form.position-relative .btn.end-0 {
+    right: auto;
+    left: 0;
+}
+
+/* Password show/hide eye toggle: Bootstrap's .end-0 is hardcoded right:0 (LTR
+   build), so in RTL it must be flipped to the logical end (left) to sit at the
+   inner edge of the password field. The toggle <span> is the adjacent sibling
+   of the .fakepassword input, so this targets it precisely without :has(). */
+[dir="rtl"] .fakepassword + .position-absolute.end-0 {
     right: auto;
     left: 0;
 }
@@ -226,4 +249,57 @@
     left: auto;
     right: 0;
     margin-left: 0;
+}
+
+/* ------------------------------------------------------------------
+   10. Input groups (search overlay) — border-radius mirroring (RTL1).
+       The site ships the LTR Bootstrap build, which rounds the FIRST
+       input-group child's left corners and the LAST child's right
+       corners. In RTL the first child (the bi-search icon span) sits
+       at the visual right and the last child (the "بحث"/Search button)
+       sits at the visual left, so the LTR rounding lands on the wrong
+       (inner) edges — producing the notched/broken look in the search
+       overlay. Mirror the corner rounding so the rounded corners hug
+       the outer edges of the group again. Negative inter-cell margins
+       use logical margin-inline already in BS5.3 utilities, so only the
+       border-radius needs flipping here.
+   ------------------------------------------------------------------ */
+
+/* The LTR Bootstrap build squares corners with high-specificity rules:
+   `.input-group:not(.has-validation) > :not(:last-child):not(.dropdown-toggle)
+   :not(.dropdown-menu):not(.form-floating)` (squares the RIGHT corners) and
+   `.input-group > :not(:first-child):not(...)` (squares the LEFT corners).
+   Those carry 1 class + several :not() pseudo-classes, so plain [dir=rtl]
+   mirroring loses the cascade. We therefore use !important to guarantee the
+   flip regardless of specificity. The middle cell (the search <input>) is
+   both :not(:first-child) AND :not(:last-child), so it stays square on both
+   inner edges automatically — we only round the two OUTER cells. */
+
+/* First child = visual RIGHT edge in RTL → round its right corners,
+   keep its (inner) left corners square. */
+[dir="rtl"] .input-group > :first-child {
+    border-top-right-radius: var(--bs-border-radius) !important;
+    border-bottom-right-radius: var(--bs-border-radius) !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+/* Last child = visual LEFT edge in RTL → round its left corners,
+   keep its (inner) right corners square. */
+[dir="rtl"] .input-group > :last-child {
+    border-top-left-radius: var(--bs-border-radius) !important;
+    border-bottom-left-radius: var(--bs-border-radius) !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+/* The search overlay uses .input-group-lg → use the larger radius token so
+   the mirrored corners match the control size. */
+[dir="rtl"] .input-group-lg > :first-child {
+    border-top-right-radius: var(--bs-border-radius-lg) !important;
+    border-bottom-right-radius: var(--bs-border-radius-lg) !important;
+}
+[dir="rtl"] .input-group-lg > :last-child {
+    border-top-left-radius: var(--bs-border-radius-lg) !important;
+    border-bottom-left-radius: var(--bs-border-radius-lg) !important;
 }

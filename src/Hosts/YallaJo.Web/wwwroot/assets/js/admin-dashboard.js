@@ -165,7 +165,7 @@
             renderChart(revenueEl, {
                 chart: { type: "area", height: 300, toolbar: { show: false }, fontFamily: "inherit", animations: animations },
                 series: [{ name: labels.revenue || "", data: revenueData }],
-                colors: ["#5143d9"],
+                colors: ["#b02a2a"],
                 dataLabels: { enabled: false },
                 stroke: { curve: "smooth", width: 2 },
                 fill: { type: "gradient", gradient: { opacityFrom: 0.25, opacityTo: 0.02 } },
@@ -186,7 +186,7 @@
                 chart: { type: "donut", height: 300, fontFamily: "inherit", animations: animations },
                 series: bookingsData,
                 labels: [labels.completed || "", labels.cancelled || "", labels.other || ""],
-                colors: ["#0cbc87", "#d6293e", "#4f9ef8"],
+                colors: ["#3e6b4a", "#d6293e", "#4f9ef8"],
                 legend: { position: "bottom", labels: { colors: ink } },
                 dataLabels: { enabled: true }
             });

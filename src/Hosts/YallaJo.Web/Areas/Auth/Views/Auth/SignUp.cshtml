@@ -64,12 +64,14 @@
                                     </div>
 
                                     <!-- Password -->
-                                    <div class="mb-3 position-relative">
+                                    <div class="mb-3">
                                         <label asp-for="Password" class="form-label">@Localizer["Auth.Field.Password"]</label>
-                                        <input asp-for="Password" class="form-control fakepassword" id="psw-input" type="password" autocomplete="new-password" data-psw-meter="#pswMeter" aria-describedby="pswHint" />
-                                        <span class="position-absolute top-50 end-0 translate-middle-y p-0 mt-3">
-                                            <i class="fakepasswordicon fas fa-eye-slash cursor-pointer p-2"></i>
-                                        </span>
+                                        <div class="position-relative">
+                                            <input asp-for="Password" class="form-control fakepassword" id="psw-input" type="password" autocomplete="new-password" data-psw-meter="#pswMeter" aria-describedby="pswHint" />
+                                            <span class="position-absolute top-50 end-0 translate-middle-y p-0 me-1">
+                                                <i class="fakepasswordicon fas fa-eye-slash cursor-pointer p-2"></i>
+                                            </span>
+                                        </div>
                                         <span asp-validation-for="Password" class="text-danger small"></span>
                                         <!-- Password strength meter (shared partial, F3) -->
                                         <partial name="_PasswordMeterField" view-data='new ViewDataDictionary(ViewData) { ["MeterId"] = "pswMeter", ["HintKey"] = "Auth.SignUp.PasswordHint", ["HintId"] = "pswHint" }' />

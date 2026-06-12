@@ -31,8 +31,12 @@ public sealed class WeatherOptions
     /// </summary>
     public string BaseUrl { get; set; } = "https://api.weatherapi.com/v1";
 
-    /// <summary>Forecast horizon requested from WeatherAPI.com. YallaJo requires 7 days.</summary>
-    public int ForecastDays { get; set; } = 7;
+    /// <summary>
+    /// Forecast horizon requested from WeatherAPI.com. The Free plan caps the
+    /// forecast at 3 days; requesting more is silently truncated by the upstream API.
+    /// Raise this only on a paid plan (Starter = 7 days, Pro+ = 300 days).
+    /// </summary>
+    public int ForecastDays { get; set; } = 3;
 
     /// <summary>
     /// HTTP timeout for upstream calls, in seconds.
@@ -41,7 +45,11 @@ public sealed class WeatherOptions
 
     /// <summary>
     /// Maximum number of upstream calls allowed per UTC day, enforced by the
-    /// pre-fetch background service. Defaults to 1000 (matches free-tier ceiling).
+    /// budget gate / pre-fetch background service. The WeatherAPI.com Free plan
+    /// allows 100,000 calls per month (reset midnight UTC on the 1st); 1000/day
+    /// (~30,000/month) stays comfortably under that ceiling. Going over the
+    /// monthly quota stops data for the rest of the month, so keep daily * ~31
+    /// below 100,000 on the Free plan.
     /// </summary>
     public int DailyBudget { get; set; } = 1000;
 

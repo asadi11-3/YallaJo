@@ -35,6 +35,8 @@ internal sealed class WeatherApiComProvider : IWeatherProvider, IDisposable
             throw new InvalidOperationException("WeatherAPI.com provider is not configured.");
         }
 
+        // Free plan caps forecast at 3 days; paid plans go higher. Clamp to a
+        // sane upper bound but otherwise honour the configured horizon.
         var days = Math.Clamp(options.ForecastDays, 1, 10);
         var path = $"forecast.json?key={Uri.EscapeDataString(options.ApiKey)}&q={latitude},{longitude}&days={days}&aqi=no&alerts=no";
 
@@ -82,7 +84,6 @@ internal sealed class WeatherApiComProvider : IWeatherProvider, IDisposable
         var current = payload.Current ?? throw new InvalidOperationException("Weather provider returned no current conditions.");
         var forecastDays = payload.Forecast?.ForecastDays ?? [];
         var daily = forecastDays
-            .Take(7)
             .Select(day => new DailyForecast(
                 day.Date,
                 day.Day?.MaxTempC ?? 0m,

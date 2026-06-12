@@ -29,7 +29,7 @@
         theme: { mode: isDark ? "dark" : "light" },
         series: values,
         labels: labels,
-        colors: ["#f7c32e", "#0cbc87", "#066ac9", "#6c757d", "#d6293e"],
+        colors: ["#c9a24b", "#3e6b4a", "#066ac9", "#6c757d", "#d6293e"],
         legend: { show: false },
         dataLabels: { enabled: false },
         stroke: { width: 0 },

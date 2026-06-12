@@ -144,7 +144,7 @@
                 chart: { type: "donut", height: 320, fontFamily: "inherit", animations: animations },
                 series: typeCounts,
                 labels: typeLabels,
-                colors: ["#5143d9", "#0cbc87", "#4f9ef8", "#f7c32e", "#d6293e"],
+                colors: ["#b02a2a", "#3e6b4a", "#4f9ef8", "#c9a24b", "#d6293e"],
                 legend: { position: "bottom", labels: { colors: ink } },
                 dataLabels: { enabled: true }
             });

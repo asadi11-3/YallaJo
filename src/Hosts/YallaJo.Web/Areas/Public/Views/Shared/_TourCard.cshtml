@@ -14,8 +14,8 @@
     var dataTitle = ViewData["dataTitle"] as string;
 }
 <div class="@colClass" data-title="@dataTitle">
-    <div class="card card-hover-shadow h-100">
-        <div class="position-relative">
+    <div class="card card-hover-shadow yj-tour-card h-100">
+        <div class="yj-card-media position-relative">
             @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
             {
                 <img src="@Model.ImageUrl" class="card-img-top object-cover card-img-h220" alt="@Model.Name" loading="lazy" />
@@ -33,7 +33,7 @@
                 }
                 @if (Model.IsFeatured)
                 {
-                    <span class="badge text-bg-dark">@Localizer["Public.Featured"]</span>
+                    <span class="badge text-bg-primary">@Localizer["Public.Featured"]</span>
                 }
             </div>
             <div class="position-absolute top-0 end-0 p-3 z-index-2">
@@ -63,14 +63,15 @@
             </ul>
             <div class="mt-auto d-flex align-items-end justify-content-between pt-2">
                 <div>
-                    <span class="h5 fw-normal text-success mb-0">@($"{Model.EffectivePrice:N0} {Model.Currency}")</span>
+                    <small class="text-body-secondary text-uppercase d-block lh-1">@Localizer["Public.From"]</small>
+                    <span class="fs-5 fw-bold text-body-emphasis mb-0">@($"{Model.EffectivePrice:N0} {Model.Currency}")</span>
                     <small class="text-body-secondary"> @Localizer["Public.per.person"]</small>
                     @if (Model.HasDiscount)
                     {
                         <small class="text-decoration-line-through text-body-secondary d-block">@($"{Model.BasePrice:N0} {Model.Currency}")</small>
                     }
                 </div>
-                <a class="btn btn-sm btn-primary z-index-2 position-relative"
+                <a class="btn btn-sm btn-primary rounded-pill px-3 z-index-2 position-relative"
                    asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug">@Localizer["Public.View.Details"]</a>
             </div>
         </div>

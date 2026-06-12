@@ -171,7 +171,7 @@
             var qs = params.toString();
             var url = form.getAttribute("action") || window.location.pathname;
             url = qs ? url + "?" + qs : url;
-            var offcanvasEl = form.closest(".offcanvas");
+            var offcanvasEl = form.closest(".offcanvas, .offcanvas-lg");
             var oc = null;
             if (offcanvasEl && window.bootstrap && window.bootstrap.Offcanvas) {
                 oc = window.bootstrap.Offcanvas.getInstance(offcanvasEl);
@@ -184,6 +184,55 @@
     }
     interceptForm(document.getElementById("sortForm"));
     interceptForm(document.getElementById("tourFiltersForm"));
+
+    // Desktop sidebar: apply filters immediately on change (mobile keeps the
+    // explicit Apply button so the bottom sheet doesn't close on every toggle).
+    var filtersForm = document.getElementById("tourFiltersForm");
+    if (filtersForm) {
+        filtersForm.addEventListener("change", function () {
+            if (!window.matchMedia("(min-width: 992px)").matches) {
+                return;
+            }
+            if (typeof filtersForm.requestSubmit === "function") {
+                filtersForm.requestSubmit();
+            } else {
+                filtersForm.submit();
+            }
+        });
+    }
+
+    // Price slider (sidebar): UI proxy for the #filterPriceMax input.
+    // It has no name attribute so it is never submitted itself; at max it means "any price".
+    var priceRange = document.getElementById("priceRange");
+    var priceMaxInput = document.getElementById("filterPriceMax");
+    var priceLabel = document.getElementById("priceRangeLabel");
+    function syncPriceUi(fromSlider) {
+        if (!priceRange || !priceMaxInput || !priceLabel) {
+            return;
+        }
+        var v;
+        if (fromSlider) {
+            v = parseInt(priceRange.value, 10);
+            priceMaxInput.value = v >= parseInt(priceRange.max, 10) ? "" : String(v);
+        } else {
+            v = parseFloat(priceMaxInput.value);
+            priceRange.value = isNaN(v) ? priceRange.max : Math.min(v, parseFloat(priceRange.max));
+        }
+        priceLabel.textContent = priceMaxInput.value === ""
+            ? (priceLabel.getAttribute("data-any-text") || "")
+            : "\u2264 " + priceMaxInput.value;
+    }
+    if (priceRange) {
+        priceRange.addEventListener("input", function () {
+            syncPriceUi(true);
+        });
+        if (priceMaxInput) {
+            priceMaxInput.addEventListener("input", function () {
+                syncPriceUi(false);
+            });
+        }
+        syncPriceUi(false);
+    }
 
     // Back/forward restores results (UI-UX-S1).
     window.addEventListener("popstate", function () {
