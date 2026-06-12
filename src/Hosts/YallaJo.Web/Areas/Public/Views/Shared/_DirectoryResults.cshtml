@@ -1,5 +1,6 @@
 @model YallaJo.Web.Areas.Public.Models.Directory.DirectoryVm
 @using Microsoft.Extensions.Localization
+@using YallaJo.Web.Infrastructure.Maps
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @*
     Phase 7: results fragment for the business directory listing.
@@ -10,6 +11,20 @@
     var isAuthed = User.Identity?.IsAuthenticated == true;
     var firstResult = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
     var lastResult = Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount);
+
+    // V13 maps: pins for every business on this page that exposes coordinates.
+    // Lives inside the fragment so AJAX swaps refresh the map with the results.
+    var mapMarkers = Model.Businesses
+        .Where(b => b.Latitude.HasValue && b.Longitude.HasValue)
+        .Select(b => new Dictionary<string, object?>
+        {
+            ["lat"] = b.Latitude!.Value,
+            ["lng"] = b.Longitude!.Value,
+            ["label"] = b.Name,
+            ["url"] = Url.Action("Detail", "Directory", new { area = "Public", id = b.Id })
+        })
+        .ToList();
+    var mapMarkersJson = mapMarkers.Count > 0 ? System.Text.Json.JsonSerializer.Serialize(mapMarkers) : null;
 }
 <div class="d-sm-flex justify-content-between align-items-center mb-4">
     <h5 class="mb-2 mb-sm-0">
@@ -34,6 +49,11 @@
 }
 else
 {
+    @if (mapMarkersJson is not null)
+    {
+        <partial name="_Map" model='new MapVm { Mode = "pins", MarkersJson = mapMarkersJson, CssClass = "yj-map-short mb-4" }' />
+    }
+
     <div class="row g-4">
         @foreach (var biz in Model.Businesses)
         {

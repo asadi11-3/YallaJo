@@ -12679,6 +12679,21 @@
 <data name="Public.Breadcrumb.Home" xml:space="preserve">
 <value>الرئيسية</value>
 </data>
+<data name="Map.Aria" xml:space="preserve">
+<value>خريطة تفاعلية</value>
+</data>
+<data name="Map.OpenInGoogleMaps" xml:space="preserve">
+<value>افتح في خرائط جوجل</value>
+</data>
+<data name="Map.MeetingPoint" xml:space="preserve">
+<value>نقطة اللقاء</value>
+</data>
+<data name="Map.PickerHint" xml:space="preserve">
+<value>انقر على الخريطة أو اسحب الدبوس لتحديد الإحداثيات.</value>
+</data>
+<data name="Public.UvIndex" xml:space="preserve">
+<value>مؤشر UV {0}</value>
+</data>
 <data name="Home.Search.Where" xml:space="preserve">
 <value>إلى أين؟</value>
 </data>

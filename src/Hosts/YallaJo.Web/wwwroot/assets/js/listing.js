@@ -57,6 +57,8 @@
             if (token !== loadToken) { return; }
             root.innerHTML = html;
             root.setAttribute("aria-busy", "false");
+            // V13 maps: boot any map containers that arrived with the swapped fragment.
+            if (window.YallaJo.maps) { window.YallaJo.maps.scan(); }
             if (push) { window.history.pushState({ yjListing: true }, "", url); }
             var top = root.getBoundingClientRect().top + window.pageYOffset - 80;
             window.scrollTo({ top: top > 0 ? top : 0, behavior: "smooth" });

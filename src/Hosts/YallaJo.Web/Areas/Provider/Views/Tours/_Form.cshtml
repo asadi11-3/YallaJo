@@ -1,3 +1,4 @@
+@using YallaJo.Web.Infrastructure.Maps
 @model YallaJo.Web.Areas.Provider.Models.Tours.ProviderTourFormVm
 @{
     string DiffLabel(string d) => Localizer["Provider.TourForm.Difficulty." + d];
@@ -71,6 +72,14 @@
         <span asp-validation-for="Longitude" class="text-danger small" role="alert"></span>
     </div>
 
+    <div class="col-12">
+        @* V13 maps: click-to-set tour location picker (renders nothing when Mapbox is disabled). (0,0) = unset. *@
+        @{
+            var hasPin = Model.Latitude != 0 || Model.Longitude != 0;
+        }
+        <partial name="_Map" model='new MapVm { Mode = "picker", Latitude = hasPin ? Model.Latitude : (decimal?)null, Longitude = hasPin ? Model.Longitude : (decimal?)null, InputLatSelector = "#Latitude", InputLngSelector = "#Longitude", CssClass = "yj-map-short" }' />
+    </div>
+
     <div class="col-md-6">
         <label asp-for="MeetingPointLatitude" class="form-label">@Localizer["Provider.TourForm.MeetingLat"]</label>
         <input asp-for="MeetingPointLatitude" type="number" step="any" dir="ltr" class="form-control font-data" />
@@ -81,6 +90,14 @@
         <input asp-for="MeetingPointLongitude" type="number" step="any" dir="ltr" class="form-control font-data" aria-describedby="tour-meeting-help" />
         <span asp-validation-for="MeetingPointLongitude" class="text-danger small" role="alert"></span>
         <div id="tour-meeting-help" class="form-text">@Localizer["Provider.TourForm.MeetingHelp"]</div>
+    </div>
+
+    <div class="col-12">
+        @* V13 maps: meeting-point picker writing into the nullable MeetingPoint inputs. *@
+        @{
+            var hasMeetingPin = Model.MeetingPointLatitude.HasValue && Model.MeetingPointLongitude.HasValue;
+        }
+        <partial name="_Map" model='new MapVm { Mode = "picker", Latitude = hasMeetingPin ? Model.MeetingPointLatitude : null, Longitude = hasMeetingPin ? Model.MeetingPointLongitude : null, InputLatSelector = "#MeetingPointLatitude", InputLngSelector = "#MeetingPointLongitude", CssClass = "yj-map-short" }' />
     </div>
 
     <div class="col-md-12">

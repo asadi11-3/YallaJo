@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Business.Models.MyBusinesses
 @using YallaJo.Web.Areas.Business.Shared
+@using YallaJo.Web.Infrastructure.Maps
 @model RegisterBusinessVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -98,6 +99,14 @@
                                     </div>
 
                                     <div class="col-12">
+                                        @* V13 maps: click-to-set location picker (renders nothing when Mapbox is disabled). (0,0) = unset. *@
+                                        @{
+                                            var hasPin = Model.Form.Latitude != 0 || Model.Form.Longitude != 0;
+                                        }
+                                        <partial name="_Map" model='new MapVm { Mode = "picker", Latitude = hasPin ? Model.Form.Latitude : (decimal?)null, Longitude = hasPin ? Model.Form.Longitude : (decimal?)null, InputLatSelector = "#Form_Latitude", InputLngSelector = "#Form_Longitude", CssClass = "yj-map-short" }' />
+                                    </div>
+
+                                    <div class="col-12">
                                         <label asp-for="Form.Description" class="form-label">@Localizer["Business.Register.Description"]</label>
                                         <textarea asp-for="Form.Description" class="form-control" rows="3"></textarea>
                                         <span asp-validation-for="Form.Description" class="text-danger small" role="alert"></span>
@@ -180,4 +189,5 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/assets/js/business-register.js" asp-append-version="true" defer></script>
+    <script src="~/assets/js/yj-map.js" asp-append-version="true"></script>
 }

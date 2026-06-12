@@ -275,6 +275,8 @@ public sealed class DirectoryFacade
             ImageUrl = imageUrl,
             BusinessType = b.BusinessType,
             Location = JoinLocation(b.City, b.Country),
+            Latitude = b.Lat,
+            Longitude = b.Lng,
             AverageRating = b.AverageRating,
             ReviewCount = b.ReviewCount,
             IsVerified = b.IsVerified,

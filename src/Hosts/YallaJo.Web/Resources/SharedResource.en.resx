@@ -12679,6 +12679,21 @@
 <data name="Public.Breadcrumb.Home" xml:space="preserve">
 <value>Home</value>
 </data>
+<data name="Map.Aria" xml:space="preserve">
+<value>Interactive map</value>
+</data>
+<data name="Map.OpenInGoogleMaps" xml:space="preserve">
+<value>Open in Google Maps</value>
+</data>
+<data name="Map.MeetingPoint" xml:space="preserve">
+<value>Meeting point</value>
+</data>
+<data name="Map.PickerHint" xml:space="preserve">
+<value>Click the map or drag the pin to set the coordinates.</value>
+</data>
+<data name="Public.UvIndex" xml:space="preserve">
+<value>UV {0}</value>
+</data>
 <data name="Home.Search.Where" xml:space="preserve">
 <value>Where to?</value>
 </data>

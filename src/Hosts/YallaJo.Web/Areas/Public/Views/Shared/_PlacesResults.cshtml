@@ -1,5 +1,6 @@
 @model YallaJo.Web.Areas.Public.Models.Places.PlacesGridVm
 @using Microsoft.Extensions.Localization
+@using YallaJo.Web.Infrastructure.Maps
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @*
     Phase 7: results fragment for the places listing.
@@ -27,6 +28,21 @@
     if (!string.IsNullOrWhiteSpace(Model.Filters.Country)) { chips.Add(($"{Localizer["Public.Country"]}: {Model.Filters.Country}", "country")); }
     if (Model.Filters.EffectiveRatingMin is int rm) { chips.Add((Localizer["Public.StarsPlus", rm].Value, "ratingMin")); }
     if (Model.Filters.HasActiveTours) { chips.Add((Localizer["Public.Has.active.tours"].Value, "hasActiveTours")); }
+
+    // V13 maps: marker payload for the destinations pins map. Lives inside the fragment so
+    // AJAX swaps (listing.js -> window.YallaJo.maps.scan()) refresh the map with the new page.
+    // Coordinates are non-nullable on PlaceCardVm; (0,0) pairs are treated as "not set".
+    var mapMarkers = Model.Places
+        .Where(p => p.Latitude != 0 || p.Longitude != 0)
+        .Select(p => new Dictionary<string, object?>
+        {
+            ["lat"] = p.Latitude,
+            ["lng"] = p.Longitude,
+            ["label"] = p.Name,
+            ["url"] = Url.Action("Details", "Places", new { area = "Public", slug = p.Slug }),
+        })
+        .ToList();
+    var mapMarkersJson = mapMarkers.Count > 0 ? System.Text.Json.JsonSerializer.Serialize(mapMarkers) : null;
 }
 <div class="row mb-4">
     <div class="col-12">
@@ -70,6 +86,11 @@
 }
 else
 {
+    @if (mapMarkersJson is not null)
+    {
+        @* V13 maps: pins overview of the current results page (renders nothing when Mapbox is disabled). *@
+        <partial name="_Map" model='new MapVm { Mode = "pins", MarkersJson = mapMarkersJson, CssClass = "yj-map-short mb-4" }' />
+    }
     <div class="row g-4">
         @foreach (var place in Model.Places)
         {

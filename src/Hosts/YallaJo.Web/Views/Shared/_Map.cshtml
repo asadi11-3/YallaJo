@@ -1,0 +1,33 @@
+@* Shared Mapbox GL map container (V13 maps).
+   Renders NOTHING when no public token is configured, so every page keeps its
+   text-only location fallback. The heavy vendor js/css is not referenced here —
+   yj-map.js lazy-loads it from assets/vendor/mapbox-gl/ the first time a map
+   container nears the viewport. Pages must include yj-map.js in their Scripts
+   section. All numerics use the invariant culture (Arabic UI safety). *@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@using YallaJo.Web.Infrastructure.Maps
+@model YallaJo.Web.Infrastructure.Maps.MapVm
+@inject IMapboxScriptService Mapbox
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@if (Mapbox.IsEnabled && Model is not null)
+{
+    var inv = CultureInfo.InvariantCulture;
+    <div class="yj-map @Model.CssClass"
+         data-yj-map="@Model.Mode"
+         data-token="@Mapbox.AccessToken"
+         data-vendor="@Url.Content("~/assets/vendor/mapbox-gl/")"
+         data-zoom="@Model.Zoom.ToString(inv)"
+         data-lat="@(Model.Latitude?.ToString(inv))"
+         data-lng="@(Model.Longitude?.ToString(inv))"
+         data-label="@Model.Label"
+         data-markers="@Model.MarkersJson"
+         data-input-lat="@Model.InputLatSelector"
+         data-input-lng="@Model.InputLngSelector"
+         aria-label="@(string.IsNullOrWhiteSpace(Model.Label) ? Localizer["Map.Aria"].Value : Model.Label)"></div>
+    @if (Model.Mode == "picker")
+    {
+        @* Picker forms: tell the user the map writes into the lat/lng inputs. *@
+        <div class="form-text">@Localizer["Map.PickerHint"]</div>
+    }
+}

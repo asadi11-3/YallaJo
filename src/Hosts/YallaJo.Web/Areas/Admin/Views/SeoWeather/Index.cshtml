@@ -3,6 +3,7 @@
 @using YallaJo.Web.Areas.Admin.Models.SeoWeather
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Admin.Models.Shared
+@using YallaJo.Web.Infrastructure.Maps
 @model SeoWeatherVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -141,6 +142,13 @@
                             <i class="fa-solid fa-arrows-rotate fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.SeoWeather.RefreshNow"]
                         </button>
                     </div>
+                    <div class="col-12">
+                        @* V13 maps: pick the refresh coordinates on a map (renders nothing when Mapbox is disabled). (0,0) = unset. *@
+                        @{
+                            var hasPin = Model.RefreshForm.Latitude != 0 || Model.RefreshForm.Longitude != 0;
+                        }
+                        <partial name="_Map" model='new MapVm { Mode = "picker", Latitude = hasPin ? Model.RefreshForm.Latitude : (decimal?)null, Longitude = hasPin ? Model.RefreshForm.Longitude : (decimal?)null, InputLatSelector = "#weather-lat", InputLngSelector = "#weather-lng", CssClass = "yj-map-short" }' />
+                    </div>
                 </form>
             </div>
         </section>
@@ -174,4 +182,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/yj-map.js" asp-append-version="true"></script>
 }

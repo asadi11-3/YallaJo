@@ -1,5 +1,6 @@
 @model YallaJo.Web.Areas.Public.Models.Tours.TourDetailVm
 @using YallaJo.Web.Infrastructure.Seo
+@using YallaJo.Web.Infrastructure.Maps
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
@@ -51,6 +52,35 @@
 
     var showItinerary = Model.Waypoints.Count > 0;
     var showPricing = Model.PricingTiers.Count > 0 || Model.Schedules.Count > 0;
+
+    // Map data (Mapbox — rendered only when a token is configured; see _Map partial).
+    // The meeting point wins over the general tour location for the single-pin map.
+    var hasMeetingPoint = Model.MeetingPointLatitude.HasValue && Model.MeetingPointLongitude.HasValue;
+    var mapLat = hasMeetingPoint ? Model.MeetingPointLatitude : Model.Latitude;
+    var mapLng = hasMeetingPoint ? Model.MeetingPointLongitude : Model.Longitude;
+    var showLocationMap = mapLat.HasValue && mapLng.HasValue;
+    var mapLabel = hasMeetingPoint ? Localizer["Map.MeetingPoint"].Value : Model.Name;
+
+    // Itinerary route map: ordered waypoints that carry coordinates (+ meeting point flag).
+    var routeStops = Model.Waypoints
+        .Where(w => w.Latitude.HasValue && w.Longitude.HasValue)
+        .Select(w => new Dictionary<string, object?> { ["lat"] = w.Latitude, ["lng"] = w.Longitude, ["label"] = w.Name })
+        .ToList();
+    string? routeMarkersJson = null;
+    if (routeStops.Count > 0)
+    {
+        if (hasMeetingPoint)
+        {
+            routeStops.Insert(0, new Dictionary<string, object?>
+            {
+                ["lat"] = Model.MeetingPointLatitude,
+                ["lng"] = Model.MeetingPointLongitude,
+                ["label"] = Localizer["Map.MeetingPoint"].Value,
+                ["type"] = "meeting"
+            });
+        }
+        routeMarkersJson = System.Text.Json.JsonSerializer.Serialize(routeStops);
+    }
 }
 
 @Html.AntiForgeryToken()
@@ -266,6 +296,19 @@
                                 </ul>
                             </div>
                         </div>
+
+                        @if (showLocationMap)
+                        {
+                            <!-- Tour location / meeting point map (Mapbox; hidden when no token configured) -->
+                            <div class="card border mt-4">
+                                <div class="card-header border-bottom">
+                                    <h4 class="card-header-title"><i class="bi bi-geo-alt me-2" aria-hidden="true"></i>@(hasMeetingPoint ? Localizer["Map.MeetingPoint"] : Localizer["Public.Location"])</h4>
+                                </div>
+                                <div class="card-body">
+                                    <partial name="_Map" model='new MapVm { Mode = "pin", Latitude = (decimal)mapLat!.Value, Longitude = (decimal)mapLng!.Value, Label = mapLabel, Zoom = 13 }' />
+                                </div>
+                            </div>
+                        }
                     </div>
 
                     <!-- Itinerary -->
@@ -277,6 +320,11 @@
                                     <h4 class="card-header-title">@Localizer["Public.Itinerary"]</h4>
                                 </div>
                                 <div class="card-body">
+                                    @if (routeMarkersJson is not null)
+                                    {
+                                        <!-- Waypoint route map (numbered stops + meeting-point flag; Mapbox) -->
+                                        <partial name="_Map" model='new MapVm { Mode = "route", MarkersJson = routeMarkersJson, CssClass = "yj-map-tall mb-4" }' />
+                                    }
                                     <div class="accordion accordion-icon accordion-bg-light" id="itineraryAccordion">
                                         @{ var wi = 0; }
                                         @foreach (var wp in Model.Waypoints)
@@ -707,6 +755,10 @@
 @section Scripts {
     <script src="~/assets/js/tours-detail.js" asp-append-version="true"></script>
     <script src="~/assets/js/reviews.js" asp-append-version="true"></script>
+    @if (showLocationMap || routeMarkersJson is not null)
+    {
+        <script src="~/assets/js/yj-map.js" asp-append-version="true"></script>
+    }
     @if (Model.HasJoinSlots && !string.IsNullOrEmpty(apiBaseUrl))
     {
         @* UI-PERF S2: the ONE public-page SignalR hub. Self-hosted client (CSP-friendly: external

@@ -1,3 +1,4 @@
+@using YallaJo.Web.Infrastructure.Maps
 @model YallaJo.Web.Areas.Provider.Models.TourWaypoints.TourWaypointFormVm
 
 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
@@ -36,5 +37,13 @@
         <label asp-for="StopDurationMinutes" class="form-label">@Localizer["Provider.TourWaypoints.FormStopDuration"]</label>
         <input asp-for="StopDurationMinutes" class="form-control" type="number" min="0" dir="ltr" inputmode="numeric" />
         <span asp-validation-for="StopDurationMinutes" class="text-danger small" role="alert"></span>
+    </div>
+
+    <div class="col-12">
+        @* V13 maps: click-to-set waypoint picker (renders nothing when Mapbox is disabled). (0,0) = unset. *@
+        @{
+            var hasPin = Model.Latitude != 0 || Model.Longitude != 0;
+        }
+        <partial name="_Map" model='new MapVm { Mode = "picker", Latitude = hasPin ? (decimal)Model.Latitude : (decimal?)null, Longitude = hasPin ? (decimal)Model.Longitude : (decimal?)null, InputLatSelector = "#Latitude", InputLngSelector = "#Longitude", CssClass = "yj-map-short" }' />
     </div>
 </div>

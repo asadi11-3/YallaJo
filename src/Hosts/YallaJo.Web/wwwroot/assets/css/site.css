@@ -772,3 +772,59 @@ details.card > summary { cursor: pointer; list-style-position: inside; }
         transform: translateY(100%);
     }
 }
+
+/* ---- Mapbox maps (brand refresh) ----
+   Containers rendered by Views/Shared/_Map.cshtml and booted by yj-map.js.
+   Logical properties keep everything RTL-safe. */
+.yj-map {
+    position: relative;
+    inline-size: 100%;
+    min-block-size: 16rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    background-color: var(--bs-tertiary-bg, #ece7de); /* skeleton tint while tiles load */
+}
+
+.yj-map-tall { min-block-size: 22rem; }
+.yj-map-short { min-block-size: 12rem; }
+
+.yj-map .mapboxgl-canvas { outline: none; }
+
+/* Brand pin marker (inline SVG injected by yj-map.js) */
+.yj-map-marker {
+    cursor: pointer;
+    line-height: 0;
+    filter: drop-shadow(0 2px 3px rgba(17, 17, 17, .35));
+}
+
+/* Popup skin: Montserrat + soft brand shadow */
+.yj-map-popup .mapboxgl-popup-content {
+    font-family: "Montserrat", system-ui, sans-serif;
+    font-size: .8125rem;
+    border-radius: .75rem;
+    box-shadow: 0 .375rem 1.25rem rgba(17, 17, 17, .18);
+    padding: .625rem .875rem;
+}
+
+.yj-map-popup-link {
+    color: var(--bs-heading-color);
+    text-decoration: none;
+}
+
+.yj-map-popup-link:hover { color: var(--bs-primary); }
+
+/* Route mode: numbered stop bubbles; the meeting point goes Jordan-green */
+.yj-map-stop {
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    border-radius: 50%;
+    background-color: #b02a2a;
+    color: #fff;
+    font: 700 .8125rem/1.5rem "Montserrat", system-ui, sans-serif;
+    text-align: center;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(17, 17, 17, .35);
+    cursor: pointer;
+}
+
+.yj-map-stop-meeting { background-color: #3e6b4a; }

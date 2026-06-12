@@ -22,6 +22,14 @@ public sealed class ApiAssetUrlResolver : IApiAssetUrlResolver
             return url;
         }
 
+        // Web-host static assets (theme images, seeded placeholder galleries such as
+        // "/assets/images/gallery/01.jpg") live in THIS app's wwwroot — never prefix
+        // them with the API origin or they 404 on the API host (prod bug).
+        if (url.StartsWith("/assets/", StringComparison.OrdinalIgnoreCase))
+        {
+            return url;
+        }
+
         // No API base configured — preserve legacy behavior.
         if (string.IsNullOrEmpty(_apiBaseUrl)) return url;
 

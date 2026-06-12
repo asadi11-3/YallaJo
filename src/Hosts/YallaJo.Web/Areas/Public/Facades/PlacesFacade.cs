@@ -64,6 +64,8 @@ public sealed class PlacesFacade
                 Slug          = p.Slug,
                 ImageUrl      = PublicImagePlaceholder.ResolvePlaceImage(p.Id),
                 PlaceType     = p.PlaceType,
+                Latitude      = p.Latitude,
+                Longitude     = p.Longitude,
                 City          = p.City,
                 Country       = p.Country,
                 AverageRating = p.AverageRating,

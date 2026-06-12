@@ -1,5 +1,7 @@
 @model YallaJo.Web.Areas.Public.Models.Directory.BusinessDetailVm
 @using YallaJo.Web.Infrastructure.Seo
+@using YallaJo.Web.Infrastructure.Maps
+@using System.Globalization
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -288,6 +290,14 @@
                                 <li class="list-group-item d-flex px-0"><i class="bi bi-globe text-primary me-2"></i><a class="text-reset" href="@Model.Website" target="_blank" rel="noopener">@Localizer["Public.Visit.website"]</a></li>
                             }
                         </ul>
+                        @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+                        {
+                            <partial name="_Map" model='new MapVm { Mode = "pin", Latitude = (decimal)Model.Latitude.Value, Longitude = (decimal)Model.Longitude.Value, Label = Model.Name, Zoom = 14, CssClass = "mt-2" }' />
+                            <a class="btn btn-sm btn-outline-secondary rounded-pill mt-3" target="_blank" rel="noopener"
+                               href="https://www.google.com/maps/search/?api=1&amp;query=@(Model.Latitude.Value.ToString(CultureInfo.InvariantCulture)),@(Model.Longitude.Value.ToString(CultureInfo.InvariantCulture))">
+                                <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>@Localizer["Map.OpenInGoogleMaps"]
+                            </a>
+                        }
                     </div>
                 </div>
 
@@ -460,4 +470,5 @@
 @section Scripts {
     <script src="~/assets/js/directory-detail.js" asp-append-version="true"></script>
     <script src="~/assets/js/reviews.js" asp-append-version="true"></script>
+    <script src="~/assets/js/yj-map.js" asp-append-version="true"></script>
 }

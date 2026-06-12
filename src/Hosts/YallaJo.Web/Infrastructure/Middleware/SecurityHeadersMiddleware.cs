@@ -102,14 +102,20 @@ public sealed class SecurityHeadersMiddleware
                 "https://code.jquery.com https://cdn.jsdelivr.net https://www.google.com https://www.gstatic.com";
             headers["Content-Security-Policy"] =
                 "default-src 'self'; " +
-                "img-src 'self' data: https:; " +
+                "img-src 'self' data: blob: https:; " +
                 $"script-src 'self' 'unsafe-inline' {scriptCdns}; " +
                 // Fonts are self-hosted (V3/A5) — no Google Fonts stylesheet; 'unsafe-inline' kept for the template's inline styles.
                 "style-src 'self' 'unsafe-inline'; " +
                 // Self-hosted font files + base64 data: fonts (no fonts.gstatic.com — fonts are self-hosted).
                 "font-src 'self' data:; " +
+                // Mapbox GL JS (V13 maps): the library spawns its web worker from a
+                // blob: URL (worker-src / child-src fallback). The library itself is
+                // self-hosted under assets/vendor/mapbox-gl.
+                "worker-src 'self' blob:; " +
+                "child-src blob:; " +
                 // SignalR live-slots (§2.5): allow the cross-origin API host + its wss:// origin.
-                $"connect-src 'self' {apiConnectSources}; " +
+                // Mapbox origins: vector tiles, glyphs/sprites + telemetry (required by GL JS ToS).
+                $"connect-src 'self' {apiConnectSources} https://api.mapbox.com https://*.tiles.mapbox.com https://events.mapbox.com; " +
                 // reCAPTCHA challenge iframe.
                 "frame-src https://www.google.com; " +
                 "frame-ancestors 'none'; " +

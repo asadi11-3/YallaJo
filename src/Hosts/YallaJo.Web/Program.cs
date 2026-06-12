@@ -52,6 +52,15 @@ builder.Services.Configure<RecaptchaOptions>(
     builder.Configuration.GetSection(RecaptchaOptions.SectionName));
 builder.Services.AddSingleton<IRecaptchaScriptService, RecaptchaScriptService>();
 
+// Mapbox GL JS maps (V13). Views render maps via the shared _Map partial which
+// pulls IMapboxScriptService; with no public token configured maps are skipped
+// entirely and pages keep their text-only location fallback.
+builder.Services.Configure<YallaJo.Web.Infrastructure.Maps.MapboxOptions>(
+    builder.Configuration.GetSection(YallaJo.Web.Infrastructure.Maps.MapboxOptions.SectionName));
+builder.Services.AddSingleton<
+    YallaJo.Web.Infrastructure.Maps.IMapboxScriptService,
+    YallaJo.Web.Infrastructure.Maps.MapboxScriptService>();
+
 builder.Services.AddAuthorization();
 
 // ── HttpClient → API (BFF pattern) ───────────────────────────────────────────

@@ -8,6 +8,9 @@ public sealed class BusinessCardVm
     public string? ImageUrl { get; init; }
     public string? BusinessType { get; init; }
     public string? Location { get; init; }
+    /// <summary>Coordinates for the directory results map (V13 maps). Null when the API omits them.</summary>
+    public double? Latitude { get; init; }
+    public double? Longitude { get; init; }
     public decimal AverageRating { get; init; }
     public int ReviewCount { get; init; }
     public bool IsVerified { get; init; }

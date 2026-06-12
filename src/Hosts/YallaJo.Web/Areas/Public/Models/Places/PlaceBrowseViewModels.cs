@@ -13,6 +13,9 @@ public sealed class PlaceCardVm
     public string  Slug          { get; init; } = string.Empty;
     public string? ImageUrl      { get; init; }
     public string  PlaceType     { get; init; } = string.Empty;
+    /// <summary>Coordinates for the destinations results map (V13 maps).</summary>
+    public decimal Latitude      { get; init; }
+    public decimal Longitude     { get; init; }
     public string? City          { get; init; }
     public string? Country       { get; init; }
     public decimal AverageRating { get; init; }

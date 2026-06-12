@@ -222,6 +222,10 @@ public sealed class ToursFacade
             IsChildFriendly = d.IsChildFriendly,
             IsAccessible = d.IsAccessible,
             CancellationPolicyHours = d.CancellationPolicyHours,
+            Latitude = d.Latitude,
+            Longitude = d.Longitude,
+            MeetingPointLatitude = d.MeetingPointLatitude,
+            MeetingPointLongitude = d.MeetingPointLongitude,
             PlaceId = d.PlaceId,
             ImageUrls = imageUrls,
             Waypoints = waypointsTask.Result
@@ -230,6 +234,8 @@ public sealed class ToursFacade
                 {
                     Name = w.Name,
                     Description = w.Description,
+                    Latitude = w.Latitude,
+                    Longitude = w.Longitude,
                     SortOrder = w.SortOrder,
                     DurationMinutes = w.DurationMinutes,
                     WaypointType = w.WaypointType,

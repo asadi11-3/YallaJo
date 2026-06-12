@@ -1,5 +1,7 @@
 @model YallaJo.Web.Areas.Public.Models.Places.PlaceDetailVm
 @using YallaJo.Web.Infrastructure.Seo
+@using YallaJo.Web.Infrastructure.Maps
+@using System.Globalization
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -136,6 +138,11 @@
                                 <span class="text-body" dir="ltr">@Model.Latitude.ToString("0.0000"), @Model.Longitude.ToString("0.0000")</span>
                             </li>
                         </ul>
+                        <partial name="_Map" model='new MapVm { Mode = "pin", Latitude = Model.Latitude, Longitude = Model.Longitude, Label = Model.Name, Zoom = 13, CssClass = "mt-2" }' />
+                        <a class="btn btn-sm btn-outline-secondary rounded-pill mt-3" target="_blank" rel="noopener"
+                           href="https://www.google.com/maps/search/?api=1&amp;query=@(Model.Latitude.ToString(CultureInfo.InvariantCulture)),@(Model.Longitude.ToString(CultureInfo.InvariantCulture))">
+                            <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>@Localizer["Map.OpenInGoogleMaps"]
+                        </a>
                     </div>
                 </div>
 
@@ -147,7 +154,25 @@
                             <div>
                                 @if (weather.HasTemperature)
                                 {
-                                    <span class="h3 mb-0"><bdi dir="ltr" class="font-data">@weather.Temperature.GetValueOrDefault().ToString("0")&deg;C</bdi></span>
+                                    <div class="d-flex align-items-center gap-1">
+                                        @{
+                                            // Only render the provider icon when it is an actual URL. Seeded/dev rows may
+                                            // store bare condition codes (e.g. "clear-day") which would 404 as <img src>.
+                                            var rawIcon = weather.Icon?.Trim();
+                                            var weatherIconUrl = rawIcon switch
+                                            {
+                                                null or "" => null,
+                                                var i when i.StartsWith("//") => $"https:{i}",
+                                                var i when i.StartsWith("https://") || i.StartsWith("http://") => i,
+                                                _ => null
+                                            };
+                                        }
+                                        @if (weatherIconUrl is not null)
+                                        {
+                                            <img src="@weatherIconUrl" alt="" width="44" height="44" loading="lazy" />
+                                        }
+                                        <span class="h3 mb-0"><bdi dir="ltr" class="font-data">@weather.Temperature.GetValueOrDefault().ToString("0")&deg;C</bdi></span>
+                                    </div>
                                 }
                                 @if (!string.IsNullOrWhiteSpace(weather.Condition))
                                 {
@@ -170,6 +195,10 @@
                                 @if (weather.WindSpeed.HasValue)
                                 {
                                     <li><i class="bi bi-wind me-1" aria-hidden="true"></i>@Localizer["Public.KmPerHour", weather.WindSpeed.Value.ToString("0.#")]</li>
+                                }
+                                @if (weather.UvIndex.HasValue)
+                                {
+                                    <li><i class="bi bi-sun me-1" aria-hidden="true"></i>@Localizer["Public.UvIndex", weather.UvIndex.Value.ToString("0.#")]</li>
                                 }
                             </ul>
                         </div>
@@ -487,4 +516,5 @@
 @section Scripts {
     <script src="~/assets/js/places-details.js" asp-append-version="true"></script>
     <script src="~/assets/js/reviews.js" asp-append-version="true"></script>
+    <script src="~/assets/js/yj-map.js" asp-append-version="true"></script>
 }

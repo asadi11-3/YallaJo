@@ -92,7 +92,10 @@ public sealed class ContentSeoDbInitializer(ContentSeoDbContext dbContext) : IMo
         SetProperty(weather, nameof(WeatherCache.WindSpeed), 14.2m);
         SetProperty(weather, nameof(WeatherCache.WindDirection), 265);
         SetProperty(weather, nameof(WeatherCache.Condition), "Clear");
-        SetProperty(weather, nameof(WeatherCache.Icon), "clear-day");
+        // Real WeatherAPI.com icon URL (code 113 = Sunny/Clear) so the public weather
+        // card can render the thumbnail. Bare codes (e.g. "clear-day") are not URLs
+        // and the view skips them.
+        SetProperty(weather, nameof(WeatherCache.Icon), "//cdn.weatherapi.com/weather/64x64/day/113.png");
         SetProperty(weather, nameof(WeatherCache.UvIndex), 7.4m);
         SetProperty(weather, nameof(WeatherCache.ForecastJson), "[]");
         SetProperty(weather, nameof(WeatherCache.FetchedAt), DateTime.UtcNow.AddMinutes(-20));

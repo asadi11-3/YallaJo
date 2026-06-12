@@ -25,6 +25,13 @@ public sealed class TourDetailVm
     public bool IsAccessible { get; init; }
     public int? CancellationPolicyHours { get; init; }
 
+    // Geographic data for the detail map (Mapbox). Mirrors the API TourDetailResponse;
+    // the meeting point takes priority over the general tour location when both exist.
+    public double? Latitude { get; init; }
+    public double? Longitude { get; init; }
+    public double? MeetingPointLatitude { get; init; }
+    public double? MeetingPointLongitude { get; init; }
+
     public Guid? PlaceId { get; init; }
     public string? PlaceName { get; set; }
     public string? PlaceCity { get; set; }
@@ -71,6 +78,8 @@ public sealed class TourWaypointVm
 {
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
+    public double? Latitude { get; init; }
+    public double? Longitude { get; init; }
     public int SortOrder { get; init; }
     public int? DurationMinutes { get; init; }
     public string? WaypointType { get; init; }

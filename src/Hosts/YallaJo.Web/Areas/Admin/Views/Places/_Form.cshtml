@@ -1,5 +1,6 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Places
+@using YallaJo.Web.Infrastructure.Maps
 @model PlaceFormVm
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 
@@ -42,6 +43,14 @@
         <label asp-for="Longitude" class="form-label">@Localizer["Admin.PlaceForm.Longitude"]</label>
         <input asp-for="Longitude" type="number" step="any" class="form-control" dir="ltr" />
         <span asp-validation-for="Longitude" class="text-danger" role="alert"></span>
+    </div>
+
+    <div class="col-12">
+        @* V13 maps: click-to-set location picker (renders nothing when Mapbox is disabled). (0,0) = unset. *@
+        @{
+            var hasPin = Model.Latitude != 0 || Model.Longitude != 0;
+        }
+        <partial name="_Map" model='new MapVm { Mode = "picker", Latitude = hasPin ? Model.Latitude : (decimal?)null, Longitude = hasPin ? Model.Longitude : (decimal?)null, InputLatSelector = "#Latitude", InputLngSelector = "#Longitude", CssClass = "yj-map-short" }' />
     </div>
 
     <div class="col-12">
