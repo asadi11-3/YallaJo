@@ -23,6 +23,7 @@ using ContentBlogs.Application.Queries.BlogTranslation.Dtos;
 using ContentBlogs.Application.Queries.BlogTranslation.GetBlogTranslations;
 using ContentBlogs.Application.Queries.BlogTranslation.GetBlogTranslationByLanguage;
 using ContentBlogs.Application.Queries.Blog.GetAdminBlogById;
+using ContentBlogs.Application.Queries.Blog.GetAdminBlogDrafts;
 using ContentBlogs.Application.Queries.Blog.GetAdminBlogQueue;
 using ContentBlogs.Application.Queries.Blog.GetBlogById;
 using ContentBlogs.Application.Queries.Blog.GetBlogBySlug;
@@ -557,6 +558,26 @@ internal static class BlogEndpoints
         })
         .WithName("GetAdminBlogQueue")
         .WithSummary("Admin — view PendingReview blog moderation queue")
+        .Produces<PaginatedResult<BlogSummaryDto>>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.AdminBlogQueue, AppAction.Read));
+
+        // ── Admin: GET /admin/drafts ──────────────────────────────────────
+        group.MapGet("/admin/drafts", async (
+            int? page,
+            int? pageSize,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new GetAdminBlogDraftsQuery(Page: page ?? 1, PageSize: pageSize ?? 20),
+                ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetAdminBlogDrafts")
+        .WithSummary("Admin — view Draft blogs")
         .Produces<PaginatedResult<BlogSummaryDto>>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)

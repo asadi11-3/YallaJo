@@ -1,6 +1,6 @@
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Events;
-using ContentCore.Domain.Repositories;
+using ContentCore.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -12,11 +12,16 @@ namespace ContentCore.Infrastructure.EventHandlers;
 /// <summary>
 /// Handles TagCreatedDomainEvent:
 /// Auto-translates the tag name to all active languages (mirrors CategoryCreatedDomainEventHandler).
-/// Translation failure is non-fatal — logged and skipped per-language.
+/// Translation failure is non-fatal — logged and skipped.
 /// </summary>
+/// <remarks>
+/// Domain events are dispatched before SaveChanges, so the new Tag is still tracked as <c>Added</c>
+/// and not yet queryable from the database. We resolve it from the change tracker (DbSet.Local)
+/// rather than via a repository query (which would return null pre-save and skip translation).
+/// </remarks>
 public sealed class TagCreatedDomainEventHandler(
     IEntityTranslationOrchestrator orchestrator,
-    ITagRepository tagRepository,
+    ContentCoreDbContext dbContext,
     ILogger<TagCreatedDomainEventHandler> logger)
     : INotificationHandler<DomainEventNotification<TagCreatedDomainEvent>>
 {
@@ -26,48 +31,59 @@ public sealed class TagCreatedDomainEventHandler(
     {
         var evt = notification.Event;
 
-        var tag = await tagRepository.GetAsync(
-            t => t.Id == evt.TagId,
-            include: q => q.Include(t => t.Translations),
-            asNoTracking: false,
-            ct: ct);
+        // Resolve the just-created aggregate from the change tracker (state = Added).
+        var tag = dbContext.Set<Tag>().Local.FirstOrDefault(t => t.Id == evt.TagId);
 
         if (tag is null)
         {
             logger.LogWarning(
-                "TagCreatedDomainEvent: Tag {TagId} not found; skipping translation.",
+                "TagCreatedDomainEvent: Tag {TagId} not tracked; skipping translation.",
                 evt.TagId);
             return;
         }
 
-        var fields = new Dictionary<string, string> { ["Name"] = evt.Name };
-
-        var translationSets = await orchestrator.TranslateToAllActiveLanguagesAsync(
-            fields,
-            evt.SourceLanguageCode,
-            ct);
-
-        var addedTranslations = 0;
-
-        foreach (var set in translationSets)
+        try
         {
-            if (tag.Translations.Any(t => t.LanguageId == set.LanguageId))
-                continue;
+            var fields = new Dictionary<string, string> { ["Name"] = evt.Name };
 
-            if (!set.Fields.TryGetValue("Name", out var translatedName) || string.IsNullOrWhiteSpace(translatedName))
-                continue;
+            var translationSets = await orchestrator.TranslateToAllActiveLanguagesAsync(
+                fields,
+                evt.SourceLanguageCode,
+                ct).ConfigureAwait(false);
 
-            tag.AddTranslation(
-                set.LanguageId,
-                translatedName,
-                Tag.GenerateSlug(translatedName));
+            var addedTranslations = 0;
 
-            addedTranslations++;
+            foreach (var set in translationSets)
+            {
+                if (tag.Translations.Any(t => t.LanguageId == set.LanguageId))
+                    continue;
+
+                if (!set.Fields.TryGetValue("Name", out var translatedName) || string.IsNullOrWhiteSpace(translatedName))
+                    continue;
+
+                tag.AddTranslation(
+                    set.LanguageId,
+                    translatedName,
+                    Tag.GenerateSlug(translatedName));
+
+                addedTranslations++;
+            }
+
+            logger.LogInformation(
+                "TagCreatedDomainEvent: Added {TranslationCount} translations for tag {TagId}.",
+                addedTranslations,
+                tag.Id);
         }
-
-        logger.LogInformation(
-            "TagCreatedDomainEvent: Added {TranslationCount} translations for tag {TagId}.",
-            addedTranslations,
-            tag.Id);
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(
+                ex,
+                "TagCreatedDomainEvent: translation failed for tag {TagId}; created with source language only.",
+                evt.TagId);
+        }
     }
 }

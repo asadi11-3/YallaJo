@@ -69,6 +69,7 @@ public sealed class BlogsFacade
         return tab switch
         {
             BlogAdminTab.Queue   => await GetQueueListAsync(page, pageSize, ct),
+            BlogAdminTab.Drafts  => await GetDraftsListAsync(page, pageSize, ct),
             BlogAdminTab.Deleted => await GetDeletedListAsync(page, pageSize, search, ct),
             _                    => await GetPublishedListAsync(page, pageSize, search, isFeatured, ct),
         };
@@ -104,6 +105,26 @@ public sealed class BlogsFacade
         });
 
         return ApiResult<BlogListVm>.Ok(ToListVm(BlogAdminTab.Queue, result.Data, rows, null, null));
+    }
+
+    private async Task<ApiResult<BlogListVm>> GetDraftsListAsync(int page, int pageSize, CancellationToken ct)
+    {
+        var result = await _api.ListDraftsAsync(page, pageSize, ct);
+        if (result.IsUnauthorized) return ApiResult<BlogListVm>.ForceSignOut();
+        if (!result.IsSuccess || result.Data is null)
+            return ApiResult<BlogListVm>.Fail(result.StatusCode, result.Error ?? "Could not load draft blogs.");
+
+        var rows = result.Data.Items.Select(r =>
+        {
+            var vm = BlogsMapper.ToRowVm(r);
+            return new BlogRowVm
+            {
+                Id = vm.Id, Title = vm.Title, Slug = vm.Slug, StatusLabel = "Draft",
+                PublishedAt = vm.PublishedAt, ViewCount = vm.ViewCount, IsFeatured = vm.IsFeatured, PlaceId = vm.PlaceId,
+            };
+        });
+
+        return ApiResult<BlogListVm>.Ok(ToListVm(BlogAdminTab.Drafts, result.Data, rows, null, null));
     }
 
     private async Task<ApiResult<BlogListVm>> GetDeletedListAsync(

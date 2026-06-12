@@ -71,6 +71,12 @@ public interface IBlogRepository : IRepository<Blog, Guid>
         int pageSize,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Admin drafts list — returns Draft blogs, paginated.</summary>
+    Task<PaginatedResult<Blog>> GetAdminDraftsAsync(
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Returns all non-deleted blogs authored by a specific user (for "My Blogs" view).</summary>
     Task<PaginatedResult<Blog>> GetByAuthorIdAsync(
         Guid authorId,

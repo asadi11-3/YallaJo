@@ -6,6 +6,7 @@ public enum BlogAdminTab
     Published = 0,
     Queue = 1,
     Deleted = 2,
+    Drafts = 3,
 }
 
 /// <summary>Top-level view model for the admin blog list (<c>/admin/blogs</c>).</summary>

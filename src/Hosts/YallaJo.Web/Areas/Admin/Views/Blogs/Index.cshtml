@@ -56,6 +56,9 @@
         <a class="nav-link @(Model.Tab == BlogAdminTab.Queue ? "active" : "")" href="@TabUrl(BlogAdminTab.Queue)">@Localizer["Admin.Blogs.TabQueue"]</a>
     </li>
     <li class="nav-item">
+        <a class="nav-link @(Model.Tab == BlogAdminTab.Drafts ? "active" : "")" href="@TabUrl(BlogAdminTab.Drafts)">@Localizer["Admin.Blogs.TabDrafts"]</a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link @(Model.Tab == BlogAdminTab.Deleted ? "active" : "")" href="@TabUrl(BlogAdminTab.Deleted)">@Localizer["Admin.Blogs.TabDeleted"]</a>
     </li>
 </ul>

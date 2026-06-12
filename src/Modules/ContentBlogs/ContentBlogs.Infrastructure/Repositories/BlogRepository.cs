@@ -217,6 +217,26 @@ public class BlogRepository(ContentBlogsDbContext context)
         return new PaginatedResult<Blog>(items, total, page, pageSize);
     }
 
+    public async Task<PaginatedResult<Blog>> GetAdminDraftsAsync(
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = context.Set<Blog>()
+            .AsNoTracking()
+            .Where(b => b.Status == BlogStatus.Draft && !b.IsDeleted)
+            .OrderByDescending(b => b.UpdatedAt);
+
+        var total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new PaginatedResult<Blog>(items, total, page, pageSize);
+    }
+
     public async Task<PaginatedResult<Blog>> GetByAuthorIdAsync(
         Guid authorId,
         int page,

@@ -21,6 +21,7 @@ public sealed class CreateBlogCommandHandler(
     IContentBlogsUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
+    IEntityTranslationOrchestrator translationOrchestrator,
     ILogger<CreateBlogCommandHandler> logger)
     : ICommandHandler<CreateBlogCommand, CreateBlogResult>
 {
@@ -131,6 +132,59 @@ public sealed class CreateBlogCommandHandler(
                 content:    blog.Content,
                 summary:    blog.Summary);
             blog.AddTranslation(sourceTranslation);
+
+            // ── Auto-translate into all other active languages (e.g. Arabic) ──
+            // Best-effort: a translation-provider failure must NOT block blog
+            // creation. The source-language translation is always persisted; any
+            // missing locales can still be added later (manual upsert, or the
+            // language-activation backfill handler).
+            try
+            {
+                var fieldsToTranslate = new Dictionary<string, string>
+                {
+                    ["Title"]   = blog.Title,
+                    ["Content"] = blog.Content,
+                    ["Summary"] = blog.Summary ?? string.Empty
+                };
+
+                var translatedSets = await translationOrchestrator
+                    .TranslateToAllActiveLanguagesAsync(fieldsToTranslate, sourceLanguageCode, cancellationToken)
+                    .ConfigureAwait(false);
+
+                foreach (var set in translatedSets)
+                {
+                    // Defensive: the orchestrator already excludes the source
+                    // language, but skip any locale already present so we never
+                    // trip BlogTranslation's duplicate-language guard.
+                    if (blog.BlogTranslations.Any(t => t.LanguageId == set.LanguageId))
+                        continue;
+
+                    var translatedSummary = set.Fields.TryGetValue("Summary", out var summaryText)
+                        && !string.IsNullOrWhiteSpace(summaryText)
+                            ? summaryText
+                            : null;
+
+                    blog.AddTranslation(BlogTranslationEntity.Create(
+                        blogId:     blog.Id,
+                        languageId: set.LanguageId,
+                        title:      set.Fields["Title"],
+                        content:    set.Fields["Content"],
+                        summary:    translatedSummary));
+                }
+
+                logger.LogInformation(
+                    "Blog {BlogId}: auto-created {Count} translation(s) from source language '{Source}'.",
+                    blog.Id, translatedSets.Count, sourceLanguageCode);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogError(
+                    ex,
+                    "Blog {BlogId}: automatic translation failed; blog will be created with the " +
+                    "source-language version only. Missing locales can be added manually or via " +
+                    "the language-activation backfill.",
+                    blog.Id);
+            }
 
             await blogRepository.AddAsync(blog, cancellationToken).ConfigureAwait(false);
 

@@ -36,6 +36,12 @@ public sealed class BlogsApiClient
         => _api.GetAsync<PaginatedResponse<BlogSummaryResponse>>(
             $"/api/v1/blogs/admin/queue?page={page}&pageSize={pageSize}", ct);
 
+    // GET /api/v1/blogs/admin/drafts  (Draft)
+    public Task<ApiResult<PaginatedResponse<BlogSummaryResponse>>> ListDraftsAsync(
+        int page, int pageSize, CancellationToken ct = default)
+        => _api.GetAsync<PaginatedResponse<BlogSummaryResponse>>(
+            $"/api/v1/blogs/admin/drafts?page={page}&pageSize={pageSize}", ct);
+
     // GET /api/v1/blogs/admin/deleted  (soft-deleted)
     public Task<ApiResult<PaginatedResponse<AdminDeletedBlogResponse>>> ListDeletedAsync(
         int page, int pageSize, string? search, CancellationToken ct = default)

@@ -82,6 +82,10 @@ public static class ContentBlogsCacheKeys
     public static string AdminBlogQueue(int page, int size) => $"cb:admin:blog:queue:{page}:{size}";
     public const string AdminBlogQueueTag = "admin:blog:queue:tag";
 
+    // ── Admin Blog Drafts Cache Keys ─────────────────────────────────────
+    public static string AdminBlogDrafts(int page, int size) => $"cb:admin:blog:drafts:{page}:{size}";
+    public const string AdminBlogDraftsTag = "admin:blog:drafts:tag";
+
     // ── My Blogs (author) Cache Keys ─────────────────────────────────────
     // The key must include every effective query parameter (user, page, size, status)
     // so different status filters never collide on the same cache entry.

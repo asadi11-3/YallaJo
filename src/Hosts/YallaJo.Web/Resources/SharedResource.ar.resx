@@ -3640,6 +3640,9 @@
   <data name="Admin.Blogs.TabQueue" xml:space="preserve">
     <value>قائمة المراجعة</value>
   </data>
+  <data name="Admin.Blogs.TabDrafts" xml:space="preserve">
+    <value>المسودات</value>
+  </data>
   <data name="Admin.Blogs.TabDeleted" xml:space="preserve">
     <value>المحذوفة</value>
   </data>
