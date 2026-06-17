@@ -1,9 +1,7 @@
 using Accounts.Application.Commands.Admin.RejectProvider;
 using Accounts.Application.Commands.Admin.RequestMoreDocs;
 using Accounts.Application.Commands.Admin.SuspendProvider;
-using Accounts.Application.Commands.Provider.AddDocument;
 using Accounts.Application.Commands.Provider.RegisterProvider;
-using Accounts.Application.Commands.Provider.ReplaceDocument;
 using Accounts.Domain.Enums;
 using FluentAssertions;
 
@@ -94,102 +92,6 @@ public sealed class ProviderCommandValidatorTests
         var result = RegisterValidator.Validate(cmd);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Type");
-    }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // AddProviderDocumentCommandValidator
-    // ──────────────────────────────────────────────────────────────────────────
-
-    private static readonly AddProviderDocumentCommandValidator AddDocValidator = new();
-
-    private static AddProviderDocumentCommand ValidAddDocCommand() => new(
-        DocumentType:  DocumentType.BusinessLicense,
-        FileUrl:       "https://storage.example.com/docs/license.pdf",
-        FileName:      "license.pdf",
-        FileSizeBytes: 1024 * 512,
-        ExpiresAt:     DateTime.UtcNow.AddYears(1));
-
-    [Fact]
-    public void AddDocValidator_ValidCommand_IsValid()
-    {
-        var result = AddDocValidator.Validate(ValidAddDocCommand());
-        result.IsValid.Should().BeTrue();
-    }
-
-    [Fact]
-    public void AddDocValidator_EmptyFileUrl_IsInvalid()
-    {
-        var cmd = ValidAddDocCommand() with { FileUrl = "" };
-        var result = AddDocValidator.Validate(cmd);
-        result.IsValid.Should().BeFalse();
-    }
-
-    [Fact]
-    public void AddDocValidator_EmptyFileName_IsInvalid()
-    {
-        var cmd = ValidAddDocCommand() with { FileName = "" };
-        var result = AddDocValidator.Validate(cmd);
-        result.IsValid.Should().BeFalse();
-    }
-
-    [Fact]
-    public void AddDocValidator_FileSizeZero_IsInvalid()
-    {
-        var cmd = ValidAddDocCommand() with { FileSizeBytes = 0 };
-        var result = AddDocValidator.Validate(cmd);
-        result.IsValid.Should().BeFalse();
-    }
-
-    [Fact]
-    public void AddDocValidator_FileSizeExceeds10MB_IsInvalid()
-    {
-        var cmd = ValidAddDocCommand() with { FileSizeBytes = 10 * 1024 * 1024 + 1 };
-        var result = AddDocValidator.Validate(cmd);
-        result.IsValid.Should().BeFalse("file size must not exceed 10 MB");
-    }
-
-    [Fact]
-    public void AddDocValidator_InvalidDocumentType_IsInvalid()
-    {
-        var cmd = ValidAddDocCommand() with { DocumentType = (DocumentType)99 };
-        var result = AddDocValidator.Validate(cmd);
-        result.IsValid.Should().BeFalse();
-    }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // ReplaceProviderDocumentCommandValidator
-    // ──────────────────────────────────────────────────────────────────────────
-
-    private static readonly ReplaceProviderDocumentCommandValidator ReplaceDocValidator = new();
-
-    private static ReplaceProviderDocumentCommand ValidReplaceDocCommand() => new(
-        DocumentId:    Guid.NewGuid(),
-        FileUrl:       "https://storage.example.com/docs/new-license.pdf",
-        FileName:      "new-license.pdf",
-        FileSizeBytes: 1024 * 256,
-        ExpiresAt:     null);
-
-    [Fact]
-    public void ReplaceDocValidator_ValidCommand_IsValid()
-    {
-        var result = ReplaceDocValidator.Validate(ValidReplaceDocCommand());
-        result.IsValid.Should().BeTrue();
-    }
-
-    [Fact]
-    public void ReplaceDocValidator_EmptyDocumentId_IsInvalid()
-    {
-        var cmd = ValidReplaceDocCommand() with { DocumentId = Guid.Empty };
-        var result = ReplaceDocValidator.Validate(cmd);
-        result.IsValid.Should().BeFalse();
-    }
-
-    [Fact]
-    public void ReplaceDocValidator_EmptyFileUrl_IsInvalid()
-    {
-        var cmd = ValidReplaceDocCommand() with { FileUrl = "" };
-        var result = ReplaceDocValidator.Validate(cmd);
-        result.IsValid.Should().BeFalse();
     }
 
     // ──────────────────────────────────────────────────────────────────────────

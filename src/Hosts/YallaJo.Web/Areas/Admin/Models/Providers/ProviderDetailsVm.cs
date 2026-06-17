@@ -54,7 +54,12 @@ public sealed class ProviderDocumentVm
     public Guid DocumentId { get; init; }
     public string DocumentTypeLabel { get; init; } = string.Empty;
     public string FileName { get; init; } = string.Empty;
-    public string FileUrl { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Authorized MVC download link (<c>/admin/providers/documents/{id}/download</c>) that proxies the
+    /// API stream endpoint. Replaces the legacy on-disk FileUrl (404'd by the API static-file middleware).
+    /// </summary>
+    public string DownloadUrl { get; init; } = string.Empty;
     public long FileSizeBytes { get; init; }
     public DateTime UploadedAt { get; init; }
     public DateTime? ExpiresAt { get; init; }

@@ -79,6 +79,27 @@ public sealed class ProvidersController : BaseController
         return View(result.Data);
     }
 
+    // ── GET /admin/providers/documents/{documentId}/download ──────────────────────────
+    // Proxies the authorized API download endpoint so reviewers can open a provider's
+    // document without exposing the on-disk URL/StorageKey. The API enforces owner/admin-tier
+    // access; nothing here logs or returns a physical path.
+    [HttpGet("admin/providers/documents/{documentId:guid}/download")]
+    [RequirePermission(WebPermission.AdminProviderQueue.Read)]
+    public async Task<IActionResult> DownloadDocument(Guid documentId, CancellationToken ct)
+    {
+        var result = await _facade.DownloadDocumentAsync(documentId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            SetError(result.Error ?? _localizer["Admin.ProviderDetails.DownloadFailed"].Value);
+            return RedirectToAction(nameof(Index));
+        }
+
+        var file = result.Data;
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+
     // ── POST /admin/providers/{id}/approve ──────────────────────────────────────────
     [HttpPost("admin/providers/{id:guid}/approve")]
     [ValidateAntiForgeryToken]

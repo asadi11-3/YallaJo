@@ -57,12 +57,6 @@ public sealed class ProviderApiClient
             ct: ct);
     }
 
-    // PUT /api/v1/provider/documents/{id}  (replace an existing document's stored reference)
-    public Task<ApiResult<ReplaceProviderDocumentResponse>> ReplaceDocumentAsync(
-        Guid documentId, ReplaceProviderDocumentRequest request, CancellationToken ct = default)
-        => _api.PutAsync<ReplaceProviderDocumentResponse>(
-            $"/api/v1/provider/documents/{documentId}", request, ct);
-
     // POST /api/v1/provider/documents/{id}/replace-upload — multipart replacement (real file upload).
     public Task<ApiResult<ReplaceProviderDocumentResponse>> ReplaceDocumentUploadAsync(
         Guid documentId,

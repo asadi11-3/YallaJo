@@ -150,7 +150,8 @@ public static class ProvidersMapper
         DocumentId        = d.DocumentId,
         DocumentTypeLabel = Humanize(d.DocumentType),
         FileName          = d.FileName,
-        FileUrl           = d.FileUrl,
+        // Patch 2F: route through the authorized MVC download proxy instead of the legacy on-disk FileUrl.
+        DownloadUrl       = $"/admin/providers/documents/{d.DocumentId}/download",
         FileSizeBytes     = d.FileSizeBytes,
         UploadedAt        = d.UploadedAt,
         ExpiresAt         = d.ExpiresAt,

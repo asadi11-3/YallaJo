@@ -5,8 +5,9 @@ namespace Accounts.Application.Commands.Provider.ReplaceDocumentUpload;
 
 /// <summary>
 /// Replaces an application document with an actual uploaded file (multipart).
-/// Additive sibling of <see cref="ReplaceDocument.ReplaceProviderDocumentCommand"/>, which
-/// expects a pre-existing URL; this command stores the file first, then swaps the document.
+/// Stores the file first (with signature validation + FileAsset materialization), then swaps
+/// the document. This is the only supported replace path; the legacy URL-based JSON command was
+/// removed in Patch 2F.
 /// </summary>
 public sealed record ReplaceProviderDocumentUploadCommand(
     Guid DocumentId,

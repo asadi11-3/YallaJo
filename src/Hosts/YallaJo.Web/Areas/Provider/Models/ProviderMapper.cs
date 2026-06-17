@@ -72,7 +72,6 @@ public static class ProviderMapper
         DocumentId        = d.DocumentId,
         DocumentTypeLabel = Humanize(d.DocumentType),
         FileName          = d.FileName,
-        FileUrl           = d.FileUrl,
         ExpiresAt         = d.ExpiresAt,
     };
 

@@ -82,26 +82,6 @@ public static class ProviderEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Submit))
         .RequireAuthorization();
 
-        // POST /api/v1/provider/documents — add a document
-        group.MapPost("/documents", async (AddProviderDocumentRequest req, ISender sender, CancellationToken ct) =>
-        {
-            var result = await sender.Send(new AddProviderDocumentCommand(
-                req.DocumentType,
-                req.FileUrl,
-                req.FileName,
-                req.FileSizeBytes,
-                req.ExpiresAt), ct);
-            return result.ToApiResult();
-        })
-        .WithName("AddProviderDocument")
-        .Produces<AddProviderDocumentResult>(StatusCodes.Status201Created)
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .ProducesProblem(StatusCodes.Status404NotFound)
-        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
-        .WithSummary("Add a document to provider application")
-        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Create))
-        .RequireAuthorization();
-
         // POST /api/v1/provider/documents/upload — upload a document file (multipart)
         group.MapPost("/documents/upload", async (
             [FromForm] UploadProviderDocumentRequest req, ISender sender, CancellationToken ct) =>
@@ -158,7 +138,6 @@ public static class ProviderEndpoints
         .RequireAuthorization();
 
         // POST /api/v1/provider/documents/{id}/replace-upload — replace a document with an uploaded file (multipart).
-        // Additive: keeps the URL-based PUT route below intact for existing consumers.
         group.MapPost("/documents/{id:guid}/replace-upload", async (
             Guid id, [FromForm] ReplaceProviderDocumentUploadRequest req, ISender sender, CancellationToken ct) =>
         {
@@ -190,26 +169,6 @@ public static class ProviderEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Update))
         .RequireAuthorization()
         .DisableAntiforgery();
-
-        // PUT /api/v1/provider/documents/{id} — replace a document
-        group.MapPut("/documents/{id:guid}", async (Guid id, ReplaceProviderDocumentRequest req, ISender sender, CancellationToken ct) =>
-        {
-            var result = await sender.Send(new ReplaceProviderDocumentCommand(
-                id,
-                req.FileUrl,
-                req.FileName,
-                req.FileSizeBytes,
-                req.ExpiresAt), ct);
-            return result.ToApiResult();
-        })
-        .WithName("ReplaceProviderDocument")
-        .Produces<ReplaceProviderDocumentResult>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .ProducesProblem(StatusCodes.Status404NotFound)
-        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
-        .WithSummary("Replace a provider document")
-        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Update))
-        .RequireAuthorization();
 
         // GET /api/v1/provider/dashboard/overview — provider dashboard overview
         group.MapGet("/dashboard/overview", async (ISender sender, CancellationToken ct) =>
@@ -296,16 +255,3 @@ public sealed record RegisterProviderRequest(
     string Address,
     string Description,
     string? TypeSpecificDataJson);
-
-public sealed record AddProviderDocumentRequest(
-    DocumentType DocumentType,
-    string FileUrl,
-    string FileName,
-    long FileSizeBytes,
-    DateTime? ExpiresAt);
-
-public sealed record ReplaceProviderDocumentRequest(
-    string FileUrl,
-    string FileName,
-    long FileSizeBytes,
-    DateTime? ExpiresAt);

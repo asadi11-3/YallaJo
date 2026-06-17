@@ -62,4 +62,11 @@ public sealed class ProvidersApiClient
     // POST /api/v1/admin/providers/{id}/reinstate
     public Task<ApiResult> ReinstateAsync(Guid id, CancellationToken ct = default)
         => _api.PostAsync($"{Base}/{id}/reinstate", body: null, ct);
+
+    // GET /api/v1/provider/documents/{documentId}/download
+    // Authorized streaming download of a provider application document. Note this targets the
+    // provider route (not the admin base): the API endpoint enforces owner/admin-tier access and
+    // never exposes StorageKey or physical path. The admin's bearer (wildcard permission) authorizes the call.
+    public Task<ApiResult<ApiStream>> DownloadDocumentAsync(Guid documentId, CancellationToken ct = default)
+        => _api.GetStreamAsync($"/api/v1/provider/documents/{documentId}/download", ct);
 }

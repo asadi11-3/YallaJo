@@ -73,6 +73,19 @@ public sealed class ProvidersFacade
     public Task<ApiResult> ReinstateAsync(Guid id, CancellationToken ct = default)
         => Normalize(_api.ReinstateAsync(id, ct), "Could not reinstate the provider.");
 
+    public async Task<ApiResult<ApiStream>> DownloadDocumentAsync(Guid documentId, CancellationToken ct = default)
+    {
+        var result = await _api.DownloadDocumentAsync(documentId, ct);
+
+        if (result.IsUnauthorized) return ApiResult<ApiStream>.ForceSignOut();
+        if (result.IsNotFound) return ApiResult<ApiStream>.Fail(404, "Provider document not found.");
+        if (!result.IsSuccess || result.Data is null)
+            return ApiResult<ApiStream>.Fail(
+                result.StatusCode, result.Error ?? "Could not download the document.");
+
+        return ApiResult<ApiStream>.Ok(result.Data);
+    }
+
     private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
     {
         var result = await call;

@@ -128,9 +128,9 @@
                                         <td><bdi class="font-data">@Day(doc.UploadedAt)</bdi></td>
                                         <td><bdi class="font-data">@Day(doc.ExpiresAt)</bdi></td>
                                         <td class="text-end">
-                                            @if (!string.IsNullOrWhiteSpace(doc.FileUrl))
+                                            @if (!string.IsNullOrWhiteSpace(doc.DownloadUrl))
                                             {
-                                                <a href="@doc.FileUrl" target="_blank" rel="noopener noreferrer"
+                                                <a href="@doc.DownloadUrl" target="_blank" rel="noopener noreferrer"
                                                    class="btn btn-sm btn-outline-primary">
                                                     <i class="fa-solid fa-arrow-up-right-from-square fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.ProviderDetails.OpenDoc"]
                                                 </a>

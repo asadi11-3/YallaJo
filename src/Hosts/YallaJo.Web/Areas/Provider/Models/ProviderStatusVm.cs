@@ -66,6 +66,5 @@ public sealed class ProviderDocumentVm
     public Guid DocumentId { get; init; }
     public string DocumentTypeLabel { get; init; } = string.Empty;
     public string FileName { get; init; } = string.Empty;
-    public string FileUrl { get; init; } = string.Empty;
     public DateTime? ExpiresAt { get; init; }
 }
