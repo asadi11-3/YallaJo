@@ -1,7 +1,9 @@
 using Accounts.Application.Caching;
 using Accounts.Application.Commands.Provider.AddDocument;
 using Accounts.Application.Commands.Provider.Shared;
+using Accounts.Application.Interfaces;
 using Accounts.Domain.Errors;
+using ContentCore.Contracts.Storage;
 using Accounts.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -16,6 +18,8 @@ namespace Accounts.Application.Commands.Provider.UploadDocument;
 public sealed class UploadProviderDocumentCommandHandler(
     IProviderApplicationRepository providerApplicationRepository,
     IFileStorageService fileStorageService,
+    IFileAssetRegistrar fileAssetRegistrar,
+    IProviderDocumentFileWriter providerDocumentFileWriter,
     IAccountsUnitOfWork unitOfWork,
     ICurrentUser currentUser,
     HybridCache cache,
@@ -111,6 +115,41 @@ public sealed class UploadProviderDocumentCommandHandler(
             {
                 await TryCleanupOrphanedFileAsync(uploaded.Url, cancellationToken);
                 throw;
+            }
+
+            // Patch 2D: materialize the FileAsset V2 row + ProviderDocumentFile link so the new
+            // document immediately serves via the FileAsset read path (Patch 2C). Best-effort:
+            // never fail the upload if this step fails — the legacy FileUrl path still serves.
+            try
+            {
+                var seed = new FileAssetSeed(
+                    StorageProvider: "Local",
+                    StorageKey: uploaded.StorageKey,
+                    OriginalFileName: request.FileName,
+                    SafeFileName: SafeFileNameSanitizer.Sanitize(request.FileName, $"document-{addResult.Value.Id:N}"),
+                    ContentType: request.ContentType,
+                    Extension: Path.GetExtension(request.FileName ?? string.Empty).ToLowerInvariant(),
+                    SizeBytes: fileSizeBytes,
+                    UploadedByUserId: userId);
+
+                var registrarResult = await fileAssetRegistrar.GetOrAddByStorageKeyAsync(seed, dryRun: false, cancellationToken);
+                if (registrarResult.IsSuccess && registrarResult.Value is not null)
+                {
+                    await providerDocumentFileWriter.UpsertLinkAsync(
+                        addResult.Value.Id, registrarResult.Value.Id, request.DocumentType, cancellationToken);
+                }
+                else
+                {
+                    logger.LogWarning(
+                        "Patch 2D: could not register FileAsset for provider document {DocumentId}; legacy FileUrl path remains in effect.",
+                        addResult.Value.Id);
+                }
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogWarning(ex,
+                    "Patch 2D: FileAsset/link materialization failed for provider document {DocumentId}; legacy FileUrl path remains in effect.",
+                    addResult.Value.Id);
             }
 
             await cache.RemoveByTagAsync(AccountsCacheKeys.MyApplicationStatusTag(userId), cancellationToken);

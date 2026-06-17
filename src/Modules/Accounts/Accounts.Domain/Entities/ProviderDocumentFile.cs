@@ -50,4 +50,19 @@ public sealed class ProviderDocumentFile : BaseEntity
             DocumentType       = documentType,
         };
     }
+
+    /// <summary>
+    /// Patch 2D: repoints this link to a new current FileAsset (used by the replace-upload
+    /// write path). One provider document always maps to exactly one current FileAsset, so this
+    /// updates the existing link in place rather than inserting a second row.
+    /// </summary>
+    public void UpdateFileAsset(Guid newFileAssetId)
+    {
+        if (newFileAssetId == Guid.Empty)
+        {
+            throw new ArgumentException("File asset id is required.", nameof(newFileAssetId));
+        }
+
+        FileAssetId = newFileAssetId;
+    }
 }

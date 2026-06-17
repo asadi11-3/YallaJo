@@ -1,8 +1,10 @@
 using Accounts.Application.Caching;
 using Accounts.Application.Commands.Provider.ReplaceDocument;
 using Accounts.Application.Commands.Provider.Shared;
+using Accounts.Application.Interfaces;
 using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
+using ContentCore.Contracts.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
@@ -20,6 +22,8 @@ namespace Accounts.Application.Commands.Provider.ReplaceDocumentUpload;
 public sealed class ReplaceProviderDocumentUploadCommandHandler(
     IProviderApplicationRepository providerApplicationRepository,
     IFileStorageService fileStorageService,
+    IFileAssetRegistrar fileAssetRegistrar,
+    IProviderDocumentFileWriter providerDocumentFileWriter,
     IAccountsUnitOfWork unitOfWork,
     ICurrentUser currentUser,
     HybridCache cache,
@@ -110,6 +114,47 @@ public sealed class ReplaceProviderDocumentUploadCommandHandler(
             {
                 await TryCleanupOrphanedFileAsync(uploaded.Url, cancellationToken);
                 throw;
+            }
+
+            // Patch 2D: materialize the FileAsset V2 row + repoint the ProviderDocumentFile link so the
+            // replaced document immediately serves via the FileAsset read path (Patch 2C). Best-effort:
+            // never fail the replace if this step fails — the legacy FileUrl path still serves.
+            try
+            {
+                var seed = new FileAssetSeed(
+                    StorageProvider: "Local",
+                    StorageKey: uploaded.StorageKey,
+                    OriginalFileName: request.FileName,
+                    SafeFileName: SafeFileNameSanitizer.Sanitize(request.FileName, $"document-{request.DocumentId:N}"),
+                    ContentType: request.ContentType,
+                    Extension: Path.GetExtension(request.FileName ?? string.Empty).ToLowerInvariant(),
+                    SizeBytes: fileSizeBytes,
+                    UploadedByUserId: userId);
+
+                // The replaced document keeps its original DocumentType — resolve it from the
+                // already-loaded aggregate (the replace does not change the document's type).
+                var documentType = application.Documents
+                    .First(d => d.Id == request.DocumentId)
+                    .DocumentType;
+
+                var registrarResult = await fileAssetRegistrar.GetOrAddByStorageKeyAsync(seed, dryRun: false, cancellationToken);
+                if (registrarResult.IsSuccess && registrarResult.Value is not null)
+                {
+                    await providerDocumentFileWriter.UpsertLinkAsync(
+                        request.DocumentId, registrarResult.Value.Id, documentType, cancellationToken);
+                }
+                else
+                {
+                    logger.LogWarning(
+                        "Patch 2D: could not register FileAsset for replaced provider document {DocumentId}; legacy FileUrl path remains in effect.",
+                        request.DocumentId);
+                }
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogWarning(ex,
+                    "Patch 2D: FileAsset/link materialization failed for replaced provider document {DocumentId}; legacy FileUrl path remains in effect.",
+                    request.DocumentId);
             }
 
             await cache.RemoveByTagAsync(AccountsCacheKeys.MyApplicationStatusTag(userId), cancellationToken);

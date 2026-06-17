@@ -54,6 +54,12 @@ public static class DependencyInjection
         // and IFileAssetRegistrar are registered in ContentCore.Infrastructure.
         services.AddScoped<IProviderDocumentBackfillStore, ProviderDocumentBackfillStore>();
 
+        // Patch 2D: runtime write port that links a ProviderDocument to its current
+        // FileAsset (accounts.ProviderDocumentFiles) on upload/replace. Separate from the
+        // backfill store (maintenance) — the FileAsset row itself is created via
+        // IFileAssetRegistrar, which is registered in ContentCore.Infrastructure.
+        services.AddScoped<IProviderDocumentFileWriter, ProviderDocumentFileWriter>();
+
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<AccountsDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<AccountsDbContext>>();
