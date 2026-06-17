@@ -15,6 +15,7 @@ public sealed class ContentCoreDbContext : DbContext, IDbContext
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<TagTranslation> TagTranslations => Set<TagTranslation>();
     public DbSet<Attachment> Attachments => Set<Attachment>();
+    public DbSet<FileAsset> FileAssets => Set<FileAsset>();
     public DbSet<EntityImage> EntityImages => Set<EntityImage>();
     public DbSet<EntityCategory> EntityCategories => Set<EntityCategory>();
     public DbSet<EntityTag> EntityTags => Set<EntityTag>();
