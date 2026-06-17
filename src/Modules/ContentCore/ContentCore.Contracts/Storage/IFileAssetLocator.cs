@@ -24,6 +24,19 @@ public interface IFileAssetLocator
     /// <param name="fileAssetId">FileAsset primary key.</param>
     /// <param name="ct">Cancellation token.</param>
     Task<Result<FileAssetView>> GetByIdAsync(Guid fileAssetId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Batch-resolves a set of FileAsset ids to their <see cref="FileAssetView"/>
+    /// projections in a single round-trip (Patch 2E list/index read-model switch).
+    /// Returns a map keyed by FileAsset id; ids that do not resolve (missing or
+    /// soft-deleted) are simply absent from the map. Empty input returns an empty map.
+    /// This avoids N+1 lookups when rendering a list of provider documents.
+    /// </summary>
+    /// <param name="fileAssetIds">FileAsset primary keys to resolve.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<IReadOnlyDictionary<Guid, FileAssetView>> GetByIdsAsync(
+        IReadOnlyCollection<Guid> fileAssetIds,
+        CancellationToken ct = default);
 }
 
 /// <summary>

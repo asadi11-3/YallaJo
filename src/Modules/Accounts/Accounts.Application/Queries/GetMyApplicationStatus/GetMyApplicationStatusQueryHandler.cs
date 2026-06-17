@@ -1,5 +1,6 @@
 using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
+using ContentCore.Contracts.Storage;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -9,6 +10,7 @@ namespace Accounts.Application.Queries.GetMyApplicationStatus;
 
 public sealed class GetMyApplicationStatusQueryHandler(
     IProviderApplicationRepository providerApplicationRepository,
+    IFileAssetLocator fileAssetLocator,
     ICurrentUser currentUser,
     ILogger<GetMyApplicationStatusQueryHandler> logger)
     : IQueryHandler<GetMyApplicationStatusQuery, GetMyApplicationStatusResult>
@@ -30,8 +32,30 @@ public sealed class GetMyApplicationStatusQueryHandler(
             return Result<GetMyApplicationStatusResult>.Failure(
                 ProviderApplicationErrors.NotFound, Outcome.NotFound);
 
-        var docs = application.Documents.Select(d => new DocumentSummary(
-            d.Id, d.DocumentType, d.FileUrl, d.FileName, d.ExpiresAt)).ToList();
+        // Patch 2E expand-and-contract: prefer FileAsset V2 metadata (OriginalFileName)
+        // when a ProviderDocumentFile link exists, else fall back to the legacy
+        // ProviderDocument.FileName. Two batched round-trips keep this N+1-free.
+        // Response shape is unchanged; FileUrl stays the legacy contract field and
+        // StorageKey is never exposed.
+        var documentIds = application.Documents.Select(d => d.Id).ToList();
+        var docToFileAssetId = await providerApplicationRepository
+            .GetFileAssetIdsByDocumentIdsAsync(documentIds, cancellationToken);
+        var fileAssetViews = await fileAssetLocator
+            .GetByIdsAsync(docToFileAssetId.Values.ToList(), cancellationToken);
+
+        var docs = application.Documents
+            .Select(d =>
+            {
+                var fileName = d.FileName;
+                if (docToFileAssetId.TryGetValue(d.Id, out var fileAssetId)
+                    && fileAssetViews.TryGetValue(fileAssetId, out var view))
+                {
+                    fileName = view.OriginalFileName;
+                }
+
+                return new DocumentSummary(d.Id, d.DocumentType, d.FileUrl, fileName, d.ExpiresAt);
+            })
+            .ToList();
 
         logger.LogDebug("Fetched application status for user {UserId}, status: {Status}",
             request.UserId, application.Status);

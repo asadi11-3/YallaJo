@@ -1,5 +1,6 @@
 using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
+using ContentCore.Contracts.Storage;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -8,6 +9,7 @@ namespace Accounts.Application.Queries.GetAdminProviderApplicationById;
 
 public sealed class GetAdminProviderApplicationByIdQueryHandler(
     IProviderApplicationRepository providerApplicationRepository,
+    IFileAssetLocator fileAssetLocator,
     ILogger<GetAdminProviderApplicationByIdQueryHandler> logger)
     : IQueryHandler<GetAdminProviderApplicationByIdQuery, AdminProviderApplicationDetailsResult>
 {
@@ -22,15 +24,38 @@ public sealed class GetAdminProviderApplicationByIdQueryHandler(
             return Result<AdminProviderApplicationDetailsResult>.Failure(
                 ProviderApplicationErrors.NotFound, Outcome.NotFound);
 
+        // Patch 2E expand-and-contract: prefer FileAsset V2 metadata when a
+        // ProviderDocumentFile link exists, else fall back to legacy ProviderDocument
+        // fields. Two batched round-trips (doc->fileAssetId map, then fileAssetId->view
+        // map) keep this N+1-free regardless of document count. StorageKey is never
+        // projected into the DTO; FileUrl remains the existing legacy contract field.
+        var documentIds = application.Documents.Select(d => d.Id).ToList();
+        var docToFileAssetId = await providerApplicationRepository
+            .GetFileAssetIdsByDocumentIdsAsync(documentIds, cancellationToken);
+        var fileAssetViews = await fileAssetLocator
+            .GetByIdsAsync(docToFileAssetId.Values.ToList(), cancellationToken);
+
         var documents = application.Documents
-            .Select(d => new AdminProviderDocumentDto(
-                DocumentId: d.Id,
-                DocumentType: d.DocumentType,
-                FileUrl: d.FileUrl,
-                FileName: d.FileName,
-                FileSizeBytes: d.FileSizeBytes,
-                UploadedAt: d.UploadedAt,
-                ExpiresAt: d.ExpiresAt))
+            .Select(d =>
+            {
+                var fileName = d.FileName;
+                var fileSizeBytes = d.FileSizeBytes;
+                if (docToFileAssetId.TryGetValue(d.Id, out var fileAssetId)
+                    && fileAssetViews.TryGetValue(fileAssetId, out var view))
+                {
+                    fileName = view.OriginalFileName;
+                    fileSizeBytes = view.SizeBytes;
+                }
+
+                return new AdminProviderDocumentDto(
+                    DocumentId: d.Id,
+                    DocumentType: d.DocumentType,
+                    FileUrl: d.FileUrl,
+                    FileName: fileName,
+                    FileSizeBytes: fileSizeBytes,
+                    UploadedAt: d.UploadedAt,
+                    ExpiresAt: d.ExpiresAt);
+            })
             .ToList();
 
         logger.LogDebug("Admin fetched provider application {ApplicationId} (status {Status}, {DocCount} docs)",

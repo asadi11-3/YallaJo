@@ -140,4 +140,27 @@ public sealed class ProviderApplicationRepository(AccountsDbContext context)
             .Select(f => (Guid?)f.FileAssetId)
             .FirstOrDefaultAsync(ct);
     }
+
+    public async Task<IReadOnlyDictionary<Guid, Guid>> GetFileAssetIdsByDocumentIdsAsync(
+        IReadOnlyCollection<Guid> documentIds,
+        CancellationToken ct = default)
+    {
+        // Patch 2E list/index switch: single batched AsNoTracking lookup against the
+        // accounts.ProviderDocumentFiles link table for the whole document set, to avoid
+        // N+1 when projecting a document list. Documents without a link row are simply
+        // absent from the result (caller falls back to legacy ProviderDocument metadata).
+        // UX_ProviderDocumentFiles_ProviderDocumentId guarantees one FileAssetId per doc,
+        // so ToDictionary cannot collide. FileAssetId is opaque; no DB FK to FileAssets.
+        var ids = documentIds.Where(id => id != Guid.Empty).Distinct().ToArray();
+        if (ids.Length == 0)
+            return new Dictionary<Guid, Guid>();
+
+        var rows = await context.Set<ProviderDocumentFile>()
+            .AsNoTracking()
+            .Where(f => ids.Contains(f.ProviderDocumentId))
+            .Select(f => new { f.ProviderDocumentId, f.FileAssetId })
+            .ToListAsync(ct);
+
+        return rows.ToDictionary(x => x.ProviderDocumentId, x => x.FileAssetId);
+    }
 }

@@ -51,4 +51,39 @@ internal sealed class FileAssetLocator(ContentCoreDbContext dbContext) : IFileAs
 
         return Result<FileAssetView>.Success(view);
     }
+
+    public async Task<IReadOnlyDictionary<Guid, FileAssetView>> GetByIdsAsync(
+        IReadOnlyCollection<Guid> fileAssetIds,
+        CancellationToken ct = default)
+    {
+        // Patch 2E: single batched AsNoTracking projection for a set of ids so the
+        // list/index read-model resolves all linked FileAssets in one round-trip
+        // (no N+1). Distinct non-empty ids only; the FileAsset global query filter
+        // (!IsDeleted) auto-applies, so soft-deleted rows are simply absent.
+        var ids = fileAssetIds
+            .Where(id => id != Guid.Empty)
+            .Distinct()
+            .ToArray();
+
+        if (ids.Length == 0)
+        {
+            return new Dictionary<Guid, FileAssetView>();
+        }
+
+        var views = await dbContext.FileAssets
+            .AsNoTracking()
+            .Where(f => ids.Contains(f.Id))
+            .Select(f => new FileAssetView(
+                f.Id,
+                f.StorageProvider,
+                f.StorageKey,
+                f.ContentType,
+                f.Extension,
+                f.OriginalFileName,
+                f.SafeFileName,
+                f.SizeBytes))
+            .ToListAsync(ct);
+
+        return views.ToDictionary(v => v.Id);
+    }
 }

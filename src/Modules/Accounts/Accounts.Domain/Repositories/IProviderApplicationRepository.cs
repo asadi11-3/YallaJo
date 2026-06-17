@@ -80,4 +80,19 @@ public interface IProviderApplicationRepository : IRepository<ProviderApplicatio
     Task<Guid?> GetFileAssetIdByDocumentIdAsync(
         Guid providerDocumentId,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Batch variant of <see cref="GetFileAssetIdByDocumentIdAsync"/> (Patch 2E list/index
+    /// read-model switch). Returns a map of provider-document id to its linked FileAssetId
+    /// via the <c>accounts.ProviderDocumentFiles</c> table, for the subset of the supplied
+    /// <paramref name="documentIds"/> that have a link row. Documents without a link are
+    /// simply absent from the map (caller falls back to legacy ProviderDocument metadata).
+    /// Executes a single round-trip to avoid N+1 when projecting a document list. The
+    /// unique index <c>UX_ProviderDocumentFiles_ProviderDocumentId</c> guarantees at most
+    /// one FileAssetId per document. The FileAssetId is an opaque cross-module reference
+    /// into <c>content_core.FileAssets</c> (no DB FK by design, module boundary).
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, Guid>> GetFileAssetIdsByDocumentIdsAsync(
+        IReadOnlyCollection<Guid> documentIds,
+        CancellationToken ct = default);
 }
