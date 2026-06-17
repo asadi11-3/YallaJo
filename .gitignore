@@ -398,3 +398,4 @@ FodyWeavers.xsd
 # uses them to hold real values outside of user-secrets.
 appsettings.*.local.json
 appsettings.Secrets.json
+/src/Hosts/YallaJo.Api/nul
