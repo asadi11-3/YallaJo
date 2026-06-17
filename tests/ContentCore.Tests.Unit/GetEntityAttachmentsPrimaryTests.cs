@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using ContentCore.Application.Authorization;
 using ContentCore.Application.Queries.Attachment.GetEntityAttachments;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Enums;
@@ -6,6 +7,7 @@ using ContentCore.Domain.Repositories;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentCore.Tests.Unit;
 
@@ -19,6 +21,19 @@ public sealed class GetEntityAttachmentsPrimaryTests
     private static Attachment NewImage(Guid entityId) =>
         Attachment.Create(EntityType.Blog, entityId, AttachmentType.Image,
             $"https://cdn/app/{Guid.NewGuid():N}.jpg", Guid.NewGuid());
+
+    // Patch 1B added an IOwnershipGuard ownership check to the handler. These tests
+    // assert the primary-flag projection on the authorized (owner) path, so the
+    // guard is stubbed to allow access.
+    private static IOwnershipGuard AllowingGuard()
+    {
+        var guard = Substitute.For<IOwnershipGuard>();
+        guard.AuthorizeAsync(
+                Arg.Any<EntityType>(), Arg.Any<Guid>(), Arg.Any<string>(),
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(Result.Success()));
+        return guard;
+    }
 
     [Fact]
     public async Task Marks_only_the_primary_attachment_as_primary()
@@ -47,7 +62,7 @@ public sealed class GetEntityAttachmentsPrimaryTests
             });
 
         var handler = new GetEntityAttachmentsQueryHandler(
-            repo, NullLogger<GetEntityAttachmentsQueryHandler>.Instance);
+            repo, AllowingGuard(), NullLogger<GetEntityAttachmentsQueryHandler>.Instance);
 
         var result = await handler.Handle(
             new GetEntityAttachmentsQuery(EntityType.Blog, entityId), CancellationToken.None);
@@ -78,7 +93,7 @@ public sealed class GetEntityAttachmentsPrimaryTests
             .Returns(new List<EntityImage>());
 
         var handler = new GetEntityAttachmentsQueryHandler(
-            repo, NullLogger<GetEntityAttachmentsQueryHandler>.Instance);
+            repo, AllowingGuard(), NullLogger<GetEntityAttachmentsQueryHandler>.Instance);
 
         var result = await handler.Handle(
             new GetEntityAttachmentsQuery(EntityType.Blog, entityId), CancellationToken.None);

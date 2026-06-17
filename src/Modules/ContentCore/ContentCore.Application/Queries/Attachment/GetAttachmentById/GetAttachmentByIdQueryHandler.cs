@@ -1,3 +1,4 @@
+using ContentCore.Application.Authorization;
 using ContentCore.Application.Queries.Attachment.Common;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ namespace ContentCore.Application.Queries.Attachment.GetAttachmentById;
 
 public sealed class GetAttachmentByIdQueryHandler(
     IAttachmentRepository attachmentRepository,
+    IOwnershipGuard ownershipGuard,
     ILogger<GetAttachmentByIdQueryHandler> logger)
     : IQueryHandler<GetAttachmentByIdQuery, AttachmentDto>
 {
@@ -23,6 +25,24 @@ public sealed class GetAttachmentByIdQueryHandler(
 
             if (attachment is null)
             {
+                return Result<AttachmentDto>.NotFound(
+                    $"Attachment '{request.AttachmentId}' not found.");
+            }
+
+            // Read-side IDOR guard (Patch 1B): admin-tier bypass + ownership check on the
+            // owning entity. Any denial (Forbidden / unsupported / deleted / target-not-found)
+            // is mapped to NotFound so a non-owner cannot distinguish "exists but forbidden"
+            // from "does not exist" — prevents attachment existence enumeration by GUID.
+            var authResult = await ownershipGuard.AuthorizeAsync(
+                attachment.EntityType, attachment.EntityId, "Attachment",
+                ct: cancellationToken);
+
+            if (!authResult.IsSuccess)
+            {
+                logger.LogInformation(
+                    "GetAttachmentById: access denied for {AttachmentId} (returned as NotFound)",
+                    request.AttachmentId);
+
                 return Result<AttachmentDto>.NotFound(
                     $"Attachment '{request.AttachmentId}' not found.");
             }

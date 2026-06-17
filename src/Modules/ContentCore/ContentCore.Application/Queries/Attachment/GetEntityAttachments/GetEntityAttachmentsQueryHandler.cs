@@ -1,3 +1,4 @@
+using ContentCore.Application.Authorization;
 using ContentCore.Application.Queries.Attachment.Common;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ namespace ContentCore.Application.Queries.Attachment.GetEntityAttachments;
 
 public sealed class GetEntityAttachmentsQueryHandler(
     IAttachmentRepository attachmentRepository,
+    IOwnershipGuard ownershipGuard,
     ILogger<GetEntityAttachmentsQueryHandler> logger)
     : IQueryHandler<GetEntityAttachmentsQuery, IReadOnlyList<AttachmentDto>>
 {
@@ -18,6 +20,25 @@ public sealed class GetEntityAttachmentsQueryHandler(
     {
         try
         {
+            // Read-side IDOR guard (Patch 1B): admin-tier bypass + ownership check on the
+            // target entity BEFORE listing its attachments. Any denial is mapped to NotFound
+            // so a non-owner cannot enumerate which entities have attachments. Public
+            // published tour/blog images are served by a separate path (PublicEntityImageReader)
+            // and are unaffected by this owner/admin-scoped management endpoint.
+            var authResult = await ownershipGuard.AuthorizeAsync(
+                request.EntityType, request.EntityId, "Attachment",
+                ct: cancellationToken);
+
+            if (!authResult.IsSuccess)
+            {
+                logger.LogInformation(
+                    "GetEntityAttachments: access denied for {EntityType}/{EntityId} (returned as NotFound)",
+                    request.EntityType, request.EntityId);
+
+                return Result<IReadOnlyList<AttachmentDto>>.NotFound(
+                    $"No attachments found for the specified entity.");
+            }
+
             var attachments = await attachmentRepository.GetAllAsync(
                 filter: x => x.EntityType == request.EntityType && x.EntityId == request.EntityId,
                 orderBy: q => q.OrderBy(x => x.SortOrder),
