@@ -390,3 +390,11 @@ FodyWeavers.xsd
 
 
 .sisyphus/
+
+
+# Local secret overrides — never commit (Patch 0A)
+# Secrets live in user-secrets (dev) or environment variables / key vault (prod).
+# These optional local override files are ignored defensively in case a developer
+# uses them to hold real values outside of user-secrets.
+appsettings.*.local.json
+appsettings.Secrets.json

@@ -191,6 +191,7 @@ public sealed class CreatorAudienceFlowSmokeTests
         {
             builder.UseEnvironment("Development");
             builder.UseSetting("Api:BaseUrl", "http://127.0.0.1:1");
+            builder.UseFakeTestSecrets(); // Patch 0A.2: boot host without ambient user-secrets
 
             builder.ConfigureServices(services =>
             {
@@ -237,6 +238,7 @@ public sealed class CreatorAudienceFlowSmokeTests
         {
             builder.UseEnvironment("Development");
             builder.UseSetting("Api:BaseUrl", "http://127.0.0.1:1");
+            builder.UseFakeTestSecrets(); // Patch 0A.2: boot host without ambient user-secrets
         }
     }
 

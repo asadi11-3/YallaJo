@@ -15,6 +15,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
+using YallaJo.SharedKernel.Application.Abstractions.Translation;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.Event;
 
@@ -44,10 +45,13 @@ public sealed class TourPricingTierCommandHandlerTests
         var outbox = Substitute.For<IContentToursOutboxWriter>();
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
+        var translationOrchestrator = Substitute.For<IEntityTranslationOrchestrator>();
+        var tierTranslationRepo = Substitute.For<ITourPricingTierTranslationRepository>();
         var logger = Substitute.For<ILogger<CreateTourPricingTierCommandHandler>>();
 
         var handler = new CreateTourPricingTierCommandHandler(
-            tourRepo, tierRepo, uow, outbox, cache, currentUser, logger);
+            tourRepo, tierRepo, uow, outbox, cache, currentUser,
+            translationOrchestrator, tierTranslationRepo, logger);
         return (handler, tourRepo, tierRepo, uow, outbox, currentUser);
     }
 

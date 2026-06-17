@@ -33,6 +33,7 @@ using Messaging.Infrastructure;
 using Messaging.Presentation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Security.Application;
@@ -160,9 +161,18 @@ builder.AddYallaJoOpenTelemetry();
 // ── Health Checks ─────────────────────────────────────────────────────────
 builder.Services.AddYallaJoHealthChecks(builder.Configuration);
 
+// ── Secret / transport fail-fast validation (Patch 0A) ────────────────────
+// Secrets are no longer stored in appsettings; they MUST be supplied via
+// user-secrets (dev) or environment variables / key vault (prod). Fail fast
+// with a clear message if a required secret is missing or blank, and refuse to
+// start in Production unless the SQL connection enforces transport encryption.
+StartupSecretGuards.Validate(builder.Configuration, builder.Environment);
+
 // ── Authentication & Authorization ────────────────────────────────────────
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+    throw new InvalidOperationException(
+        "Jwt:Key is not configured. Supply it via user-secrets (dev) or the Jwt__Key environment variable (prod).");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"]
     ?? throw new InvalidOperationException("Jwt:Issuer is not configured.");
 var jwtAudience = builder.Configuration["Jwt:Audience"]
@@ -301,6 +311,21 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 // ── Problem Details (RFC 7807) ────────────────────────────────────────────
 builder.Services.AddProblemDetails();
 
+// ── Forwarded headers (Patch 0A) ──────────────────────────────────────────
+// The API runs behind a reverse proxy / hosting platform (runasp.net). Honour
+// X-Forwarded-For / X-Forwarded-Proto so Request.Scheme reflects the original
+// HTTPS request and rate-limiter IP partitioning keys on the real client IP
+// (not the proxy). KnownNetworks/KnownProxies are cleared because the upstream
+// proxy set is not statically known on the hosting platform; trust is bounded
+// by the platform terminating TLS in front of the app.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
 await app.UseDataSeedingAsync();
@@ -323,6 +348,11 @@ using (var scope = app.Services.CreateScope())
 
 // ── Middleware pipeline (ORDER IS MANDATORY) ──────────────────────────────
 
+// 0. Forwarded headers (Patch 0A) — MUST be first so every downstream component
+// (HTTPS redirect, HSTS, rate limiter IP partition, CORS, auth) sees the
+// original client scheme/IP rather than the reverse proxy's.
+app.UseForwardedHeaders();
+
 // 1. Global exception handler — must be first so it wraps all downstream errors
 app.UseExceptionHandler();
 app.UseStatusCodePages();
@@ -338,16 +368,21 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 // 2. Serilog request logging — early to capture full request lifecycle
 app.UseYallaJoSerilogRequestLogging();
 
-// 3. Swagger — enabled in all environments.
+// 3. Swagger — gated to non-Production (Patch 0A). Exposing the full API
+// surface, schemas and operation list anonymously in production is an
+// information-disclosure / attack-surface-mapping aid, so it is disabled there.
 // CORS opened for /swagger/* so the JSON doc loads from any browser origin.
 // SecurityHeadersMiddleware already relaxes CSP for /swagger paths.
-app.UseWhen(
-    ctx => ctx.Request.Path.StartsWithSegments("/swagger"),
-    branch => branch.UseCors("SwaggerDocs"));
+if (!app.Environment.IsProduction())
+{
+    app.UseWhen(
+        ctx => ctx.Request.Path.StartsWithSegments("/swagger"),
+        branch => branch.UseCors("SwaggerDocs"));
 
-app.UseSwagger();
-app.UseSwaggerUI(ui =>
-    ui.SwaggerEndpoint("/swagger/v1/swagger.json", "YallaJo API v1"));
+    app.UseSwagger();
+    app.UseSwaggerUI(ui =>
+        ui.SwaggerEndpoint("/swagger/v1/swagger.json", "YallaJo API v1"));
+}
 
 // Dev-only: CORS for /api so Swagger "Try it out" works cross-port locally.
 // Not needed in Production (same-origin). Must run before rate limiter /
@@ -404,12 +439,15 @@ app.MapTrackingEndpoints();
 app.MapOpsEndpoints();
 
 // ── Infrastructure endpoints ──────────────────────────────────────────────
+// Swagger is only mounted outside Production (see step 3), so the docs link is
+// advertised only when it actually exists.
+var swaggerDocsLink = app.Environment.IsProduction() ? null : "/swagger";
 app.MapGet("/", () => Results.Ok(new
 {
     service = "YallaJo API",
     status = "running",
     health = "/health",
-    docs = "/swagger",
+    docs = swaggerDocsLink,
 }))
     .AllowAnonymous()
     .WithTags("Infrastructure")

@@ -1181,6 +1181,7 @@ public sealed class BlogLifecycleCommandHandlerTests
             unitOfWork:               UnitOfWork(dbContext),
             cache:                    cache ?? Substitute.For<HybridCache>(),
             currentUser:              CurrentUser((userId ?? DefaultUser).Value),
+            translationOrchestrator:  Substitute.For<IEntityTranslationOrchestrator>(),
             logger:                   NullLogger<CreateBlogCommandHandler>.Instance);
 
     /// <summary>

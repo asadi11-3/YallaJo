@@ -260,6 +260,10 @@ public sealed class UploadEndpointFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
         builder.UseSetting("Seeding:Enabled", "false");
 
+        // Patch 0A.2: supply fake test secrets so StartupSecretGuards passes
+        // without relying on developer-machine user-secrets.
+        builder.UseFakeTestSecrets();
+
         builder.ConfigureTestServices(services =>
         {
             // ── Auth: replace every scheme with our test scheme ────────────

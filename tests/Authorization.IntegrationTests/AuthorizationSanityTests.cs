@@ -20,11 +20,11 @@ namespace YallaJo.Authorization.IntegrationTests;
 /// from the default CI run until the cleanup sprint ships.
 /// </summary>
 [Trait("Category", "authorization-debt")]
-public sealed class AuthorizationSanityTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class AuthorizationSanityTests : IClassFixture<SecretsAwareApiFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly SecretsAwareApiFactory _factory;
 
-    public AuthorizationSanityTests(WebApplicationFactory<Program> factory)
+    public AuthorizationSanityTests(SecretsAwareApiFactory factory)
     {
         _factory = factory;
     }

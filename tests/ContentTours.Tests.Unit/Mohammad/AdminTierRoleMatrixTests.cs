@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
+using YallaJo.SharedKernel.Application.Abstractions.Translation;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentTours.Tests.Unit.Mohammad;
@@ -76,10 +77,13 @@ public sealed class AdminTierRoleMatrixTests
         var outbox = Substitute.For<IContentToursOutboxWriter>();
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
+        var translationOrchestrator = Substitute.For<IEntityTranslationOrchestrator>();
+        var tierTranslationRepo = Substitute.For<ITourPricingTierTranslationRepository>();
         var logger = Substitute.For<ILogger<CreateTourPricingTierCommandHandler>>();
 
         var handler = new CreateTourPricingTierCommandHandler(
-            tourRepo, tierRepo, uow, outbox, cache, currentUser, logger);
+            tourRepo, tierRepo, uow, outbox, cache, currentUser,
+            translationOrchestrator, tierTranslationRepo, logger);
 
         tierRepo.GetAllAsync(
                 filter:       Arg.Any<Expression<Func<TourPricingTier, bool>>>(),
