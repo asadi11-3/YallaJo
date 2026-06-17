@@ -104,4 +104,24 @@ public sealed class ProviderApplicationRepository(AccountsDbContext context)
             .Where(a => a.Documents.Any(d => d.ExpiresAt.HasValue && d.ExpiresAt.Value <= expiryThreshold))
             .AsNoTracking()
             .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<ProviderDocument>> GetDocumentsForBackfillAsync(
+        Guid afterId,
+        int take,
+        CancellationToken ct = default)
+    {
+        // Keyset pagination on Id (GUIDv7 monotonic). The HasQueryFilter on
+        // ProviderDocument (!Application.IsDeleted) auto-applies via the navigation
+        // include. AsNoTracking: the backfill never mutates ProviderDocument.
+        if (take <= 0)
+            return Array.Empty<ProviderDocument>();
+
+        return await context.ProviderDocuments
+            .AsNoTracking()
+            .Include(d => d.Application)
+            .Where(d => d.Id.CompareTo(afterId) > 0)
+            .OrderBy(d => d.Id)
+            .Take(take)
+            .ToListAsync(ct);
+    }
 }

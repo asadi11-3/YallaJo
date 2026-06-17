@@ -54,4 +54,17 @@ public interface IProviderApplicationRepository : IRepository<ProviderApplicatio
     Task<IReadOnlyList<ProviderApplication>> GetApprovedWithExpiringDocumentsAsync(
         DateTime expiryThreshold,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Streams a keyset-paged page of non-deleted provider documents (with their parent
+    /// application eager-loaded) ordered by document id, for the FileAsset backfill
+    /// (Patch 2B). Pass <see cref="Guid.Empty"/> as <paramref name="afterId"/> to start
+    /// from the beginning. The existing soft-delete query filter
+    /// <c>!d.Application.IsDeleted</c> applies automatically. The repository caller is
+    /// responsible for capping <paramref name="take"/>; recommended batch size is 100.
+    /// </summary>
+    Task<IReadOnlyList<ProviderDocument>> GetDocumentsForBackfillAsync(
+        Guid afterId,
+        int take,
+        CancellationToken ct = default);
 }

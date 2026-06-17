@@ -1,3 +1,4 @@
+using Accounts.Application.Commands.Provider.Shared;
 using Accounts.Domain.Entities;
 using Accounts.Domain.Repositories;
 using Microsoft.Extensions.Logging;
@@ -95,17 +96,5 @@ public sealed class DownloadProviderDocumentQueryHandler(
     /// directory components and invalid characters. Never exposes the storage key/path.
     /// </summary>
     private static string BuildSafeDownloadName(ProviderDocument document)
-    {
-        var raw = document.FileName;
-        if (string.IsNullOrWhiteSpace(raw))
-            return $"document-{document.Id:N}";
-
-        // Drop any path components a malicious original name might carry.
-        var name = Path.GetFileName(raw.Trim());
-
-        foreach (var invalid in Path.GetInvalidFileNameChars())
-            name = name.Replace(invalid, '_');
-
-        return string.IsNullOrWhiteSpace(name) ? $"document-{document.Id:N}" : name;
-    }
+        => SafeFileNameSanitizer.Sanitize(document.FileName, $"document-{document.Id:N}");
 }

@@ -1,5 +1,6 @@
 using ContentCore.Contracts.Attachments;
 using ContentCore.Contracts.Authorization;
+using ContentCore.Contracts.Storage;
 using ContentCore.Application.Authorization;
 using ContentCore.Application.Interfaces;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -110,6 +111,15 @@ public static class DependencyInjection
 
         // ── File Storage ─────────────────────────────────────────────────────
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
+
+        // ── FileAsset Registrar (Patch 2B) ──────────────────────────────────
+        // Cross-module port: callers (e.g. Accounts backfill) never touch
+        // ContentCoreDbContext directly. Idempotent on UX_FileAssets_StorageKey.
+        services.AddScoped<IFileAssetRegistrar, FileAssetRegistrar>();
+
+        // Cross-module pre-flight migration probe used by Patch 2B backfills
+        // to verify the AddFileAssets migration is applied on content_core.
+        services.AddScoped<IBackfillContentCoreMigrationsProbe, BackfillContentCoreMigrationsProbe>();
 
         // ── Media Processing (background jobs) ─────────────────────────────
         services.AddSingleton<MediaProcessingQueue>();

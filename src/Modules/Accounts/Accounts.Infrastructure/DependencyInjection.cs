@@ -49,6 +49,11 @@ public static class DependencyInjection
         services.AddScoped<IAccountsInboxStore, AccountsInboxStore>();
         services.AddScoped<IAgencyAffiliationReadService, AgencyAffiliationReadService>();
 
+        // Patch 2B: provider-document backfill port (no Accounts.Infrastructure
+        // dependency in Accounts.Application). The IBackfillContentCoreMigrationsProbe
+        // and IFileAssetRegistrar are registered in ContentCore.Infrastructure.
+        services.AddScoped<IProviderDocumentBackfillStore, ProviderDocumentBackfillStore>();
+
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<AccountsDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<AccountsDbContext>>();
