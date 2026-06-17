@@ -13,6 +13,8 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageReference Include="FluentAssertions" Version="7.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.15" />
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.15" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,6 +26,7 @@
     <ProjectReference Include="..\..\src\Modules\Accounts\Accounts.Application\Accounts.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Accounts\Accounts.Contracts\Accounts.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Modules\Accounts\Accounts.Infrastructure\Accounts.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Hosts\YallaJo.Api\YallaJo.Api.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 

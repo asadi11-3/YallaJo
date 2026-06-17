@@ -401,6 +401,11 @@ public sealed class UploadEndpointFactory : WebApplicationFactory<Program>
             => Task.FromResult(true);
         public Task<string> GetAccessUrlAsync(string fileUrl, TimeSpan? expiry = null, CancellationToken ct = default)
             => Task.FromResult(fileUrl);
+
+        // Patch 1A: this test exercises uploads only; the new download method is
+        // unused here, so return a NotFound result rather than streaming anything.
+        public Task<Result<FileDownload>> OpenReadAsync(string fileUrl, CancellationToken ct = default)
+            => Task.FromResult(Result<FileDownload>.Failure(Error.NotFound("File"), Outcome.NotFound));
     }
 
 }

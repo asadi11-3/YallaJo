@@ -28,6 +28,11 @@ public sealed class ProviderApplicationRepository(AccountsDbContext context)
             .Include(a => a.Documents)
             .FirstOrDefaultAsync(a => a.UserId == userId, ct);
 
+    public async Task<ProviderApplication?> GetWithDocumentsByDocumentIdAsync(Guid documentId, CancellationToken ct = default)
+        => await context.ProviderApplications
+            .Include(a => a.Documents)
+            .FirstOrDefaultAsync(a => a.Documents.Any(d => d.Id == documentId), ct);
+
     public async Task<bool> ExistsApprovedForUserAsync(Guid userId, CancellationToken ct = default)
         => await context.ProviderApplications
             .AnyAsync(a => a.UserId == userId && a.Status == ProviderApplicationStatus.Approved, ct);

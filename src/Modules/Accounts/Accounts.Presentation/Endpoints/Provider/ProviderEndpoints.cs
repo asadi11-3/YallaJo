@@ -4,6 +4,7 @@ using Accounts.Application.Commands.Provider.RegisterProvider;
 using Accounts.Application.Commands.Provider.ReplaceDocument;
 using Accounts.Application.Commands.Provider.SubmitApplication;
 using Accounts.Application.Queries.Dashboard;
+using Accounts.Application.Queries.DownloadProviderDocument;
 using Accounts.Application.Queries.GetMyApplicationStatus;
 using Accounts.Contracts.Authorization;
 using Accounts.Domain.Enums;
@@ -133,6 +134,28 @@ public static class ProviderEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Create))
         .RequireAuthorization()
         .DisableAntiforgery();
+
+        // GET /api/v1/provider/documents/{documentId}/download — authorized, server-mediated download.
+        // Streams the file bytes only after verifying the caller owns the parent application
+        // (or is admin-tier). The physical path / storage key is never exposed to the client.
+        group.MapGet("/documents/{documentId:guid}/download", async (
+            Guid documentId, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new DownloadProviderDocumentQuery(documentId), ct);
+            if (result.IsFailure || result.Value is null)
+                return result.ToApiResult();
+
+            var download = result.Value;
+            // Results.File takes ownership of the stream and disposes it after the response is written.
+            return Results.File(download.Content, download.ContentType, download.FileName);
+        })
+        .WithName("DownloadProviderApplicationDocument")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Download a provider application document (owner or admin only)")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Read))
+        .RequireAuthorization();
 
         // POST /api/v1/provider/documents/{id}/replace-upload — replace a document with an uploaded file (multipart).
         // Additive: keeps the URL-based PUT route below intact for existing consumers.

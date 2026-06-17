@@ -31,6 +31,25 @@ public interface IFileStorageService
     Task<bool> DeleteAsync(string fileUrl, CancellationToken ct = default);
 
     /// <summary>
+    /// Open a readable stream for a previously stored file, identified by the same
+    /// URL/storage key that <see cref="UploadAsync"/> returned.
+    /// <para>
+    /// This is intended for AUTHORIZED, server-mediated downloads: the caller (an
+    /// application/handler that has already verified the requester's ownership or
+    /// permission) streams the bytes back to the client WITHOUT exposing the
+    /// physical path or storage key. Implementations MUST guard against path
+    /// traversal and MUST NOT serve content outside their configured storage root.
+    /// </para>
+    /// </summary>
+    /// <param name="fileUrl">The stored file URL/key (as returned by <see cref="UploadAsync"/>).</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// A successful result carrying the open <see cref="FileDownload"/> (caller owns/disposes the stream),
+    /// or a failure result (NotFound / Invalid) — never an exception for the expected "missing file" case.
+    /// </returns>
+    Task<Result<FileDownload>> OpenReadAsync(string fileUrl, CancellationToken ct = default);
+
+    /// <summary>
     /// Generate a time-limited access URL for a file (useful for private storage providers like Cloudinary signed URLs).
     /// For public storage (e.g. local disk), this simply returns the original URL.
     /// </summary>
@@ -47,3 +66,16 @@ public sealed record FileUploadResult(
     string StorageKey,
     /// <summary>File size in bytes.</summary>
     long FileSize);
+
+/// <summary>
+/// An open, readable handle to a stored file for an authorized, server-mediated download.
+/// The <see cref="Content"/> stream is owned by the caller and must be disposed.
+/// No physical path or storage key is exposed.
+/// </summary>
+public sealed record FileDownload(
+    /// <summary>Readable content stream (caller disposes).</summary>
+    Stream Content,
+    /// <summary>Best-known MIME type for the file (may be a generic fallback).</summary>
+    string ContentType,
+    /// <summary>File size in bytes, or null if not cheaply known.</summary>
+    long? FileSize);

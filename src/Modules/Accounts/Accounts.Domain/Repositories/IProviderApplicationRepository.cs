@@ -14,6 +14,14 @@ public interface IProviderApplicationRepository : IRepository<ProviderApplicatio
 
     Task<ProviderApplication?> GetWithDocumentsByUserIdAsync(Guid userId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Loads the provider application (including its documents) that OWNS the given
+    /// document id, regardless of which user it belongs to. Read-only lookup used by
+    /// the authorized document-download path for admin-tier callers. Returns null when
+    /// no non-deleted application contains a document with that id.
+    /// </summary>
+    Task<ProviderApplication?> GetWithDocumentsByDocumentIdAsync(Guid documentId, CancellationToken ct = default);
+
     Task<bool> ExistsApprovedForUserAsync(Guid userId, CancellationToken ct = default);
 
     /// <summary>

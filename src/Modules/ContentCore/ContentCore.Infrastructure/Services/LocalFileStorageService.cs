@@ -88,9 +88,12 @@ internal sealed class LocalFileStorageService : IFileStorageService
         if (string.IsNullOrWhiteSpace(fileUrl))
             return Task.FromResult(false);
 
-        // Convert URL back to file path
-        var relativePath = fileUrl.Replace(_baseUrl, string.Empty).TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-        var fullPath = Path.Combine(_basePath, relativePath);
+        // Resolve the stored URL to a physical path, guarding against traversal.
+        if (!TryResolvePhysicalPath(fileUrl, out var fullPath))
+        {
+            _logger.LogWarning("Rejected delete for URL resolving outside storage root.");
+            return Task.FromResult(false);
+        }
 
         if (!File.Exists(fullPath))
         {
@@ -107,5 +110,122 @@ internal sealed class LocalFileStorageService : IFileStorageService
     {
         // Local storage is always public — return the URL as-is
         return Task.FromResult(fileUrl);
+    }
+
+    public Task<Result<FileDownload>> OpenReadAsync(string fileUrl, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(fileUrl))
+            return Task.FromResult(Result<FileDownload>.Failure(
+                new Error("FileStorage.MissingUrl", "File URL is required."),
+                Outcome.Invalid));
+
+        // Resolve the stored URL to a physical path INSIDE the storage root.
+        // Any URL that canonicalizes outside the root (path traversal) is rejected
+        // as Invalid — we never reveal whether such a path exists.
+        if (!TryResolvePhysicalPath(fileUrl, out var fullPath))
+        {
+            _logger.LogWarning("Rejected read for URL resolving outside storage root.");
+            return Task.FromResult(Result<FileDownload>.Failure(
+                new Error("FileStorage.InvalidPath", "The requested file path is invalid."),
+                Outcome.Invalid));
+        }
+
+        if (!File.Exists(fullPath))
+        {
+            // NotFound: the storage row points to a missing blob (e.g. cleaned up).
+            return Task.FromResult(Result<FileDownload>.Failure(
+                new Error("FileStorage.NotFound", "The requested file was not found."),
+                Outcome.NotFound));
+        }
+
+        FileStream stream;
+        long length;
+        try
+        {
+            var info = new FileInfo(fullPath);
+            length = info.Length;
+            // Caller OWNS and disposes this stream. Read-share so concurrent reads work.
+            stream = new FileStream(
+                fullPath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true);
+        }
+        catch (IOException ex)
+        {
+            _logger.LogWarning(ex, "Failed to open stored file for reading.");
+            return Task.FromResult(Result<FileDownload>.Failure(
+                new Error("FileStorage.ReadFailed", "The requested file could not be read."),
+                Outcome.NotFound));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Access denied opening stored file for reading.");
+            return Task.FromResult(Result<FileDownload>.Failure(
+                new Error("FileStorage.ReadFailed", "The requested file could not be read."),
+                Outcome.NotFound));
+        }
+
+        var contentType = ResolveContentType(fullPath);
+        return Task.FromResult(Result<FileDownload>.Success(
+            new FileDownload(stream, contentType, length)));
+    }
+
+    /// <summary>
+    /// Converts a stored relative web URL (e.g. <c>/uploads/folder/file.ext</c>) into a
+    /// physical path and verifies the result stays inside the configured storage root.
+    /// Returns <c>false</c> when the path canonicalizes outside the root (traversal attempt).
+    /// Never throws and never exposes the resolved path to callers.
+    /// </summary>
+    private bool TryResolvePhysicalPath(string fileUrl, out string fullPath)
+    {
+        fullPath = string.Empty;
+
+        var relativePath = fileUrl
+            .Replace(_baseUrl, string.Empty)
+            .TrimStart('/')
+            .Replace('/', Path.DirectorySeparatorChar);
+
+        // Reject obvious traversal tokens early; the canonical-root check below is authoritative.
+        if (relativePath.Contains("..", StringComparison.Ordinal))
+            return false;
+
+        var candidate = Path.GetFullPath(Path.Combine(_basePath, relativePath));
+        var root = Path.GetFullPath(_basePath);
+
+        // Ensure the root comparison includes a trailing separator so that
+        // "/uploads-evil" cannot masquerade as being under "/uploads".
+        var rootWithSeparator = root.EndsWith(Path.DirectorySeparatorChar)
+            ? root
+            : root + Path.DirectorySeparatorChar;
+
+        if (!candidate.StartsWith(rootWithSeparator, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        fullPath = candidate;
+        return true;
+    }
+
+    /// <summary>
+    /// Best-effort MIME inference from extension. Defaults to a safe generic type.
+    /// No external package dependency.
+    /// </summary>
+    private static string ResolveContentType(string path)
+    {
+        var ext = Path.GetExtension(path).ToLowerInvariant();
+        return ext switch
+        {
+            ".pdf" => "application/pdf",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            ".bmp" => "image/bmp",
+            ".tif" or ".tiff" => "image/tiff",
+            ".txt" => "text/plain",
+            ".csv" => "text/csv",
+            ".doc" => "application/msword",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".xls" => "application/vnd.ms-excel",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            _ => "application/octet-stream",
+        };
     }
 }
