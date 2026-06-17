@@ -1,5 +1,6 @@
 using Accounts.Application.Caching;
 using Accounts.Application.Commands.Provider.AddDocument;
+using Accounts.Application.Commands.Provider.Shared;
 using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -50,6 +51,19 @@ public sealed class UploadProviderDocumentCommandHandler(
                 bufferedStream.Position = 0;
                 uploadStream = bufferedStream;
             }
+
+            // Patch 1C — magic-byte/signature validation for sensitive provider documents.
+            // The real file content must be an allowed format (PDF/JPEG/PNG) AND agree with
+            // the declared content type and extension. Rejects spoofed/mismatched uploads
+            // BEFORE anything is written to storage. The inspector rewinds the stream.
+            var contentValidation = await ProviderDocumentContentInspector.ValidateAsync(
+                uploadStream, request.ContentType, request.FileName, cancellationToken);
+            if (contentValidation.IsFailure)
+                return Result<AddProviderDocumentResult>.Failure(
+                    contentValidation.Errors.Count > 0
+                        ? contentValidation.Errors[0]
+                        : Error.Validation("file", "Invalid document content."),
+                    Outcome.Invalid);
 
             var uploadResponse = await fileStorageService.UploadAsync(
                 uploadStream, request.FileName, request.ContentType, StorageFolder, cancellationToken);

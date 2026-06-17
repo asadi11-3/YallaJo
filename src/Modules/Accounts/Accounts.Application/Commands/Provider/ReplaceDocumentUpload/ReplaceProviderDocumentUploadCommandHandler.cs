@@ -1,5 +1,6 @@
 using Accounts.Application.Caching;
 using Accounts.Application.Commands.Provider.ReplaceDocument;
+using Accounts.Application.Commands.Provider.Shared;
 using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -54,6 +55,18 @@ public sealed class ReplaceProviderDocumentUploadCommandHandler(
                 bufferedStream.Position = 0;
                 uploadStream = bufferedStream;
             }
+
+            // Patch 1C — magic-byte/signature validation for sensitive provider documents.
+            // Rejects spoofed/mismatched replacement uploads BEFORE writing to storage.
+            // The inspector rewinds the stream so storage reads from the start.
+            var contentValidation = await ProviderDocumentContentInspector.ValidateAsync(
+                uploadStream, request.ContentType, request.FileName, cancellationToken);
+            if (contentValidation.IsFailure)
+                return Result<ReplaceProviderDocumentResult>.Failure(
+                    contentValidation.Errors.Count > 0
+                        ? contentValidation.Errors[0]
+                        : Error.Validation("file", "Invalid document content."),
+                    Outcome.Invalid);
 
             var uploadResponse = await fileStorageService.UploadAsync(
                 uploadStream, request.FileName, request.ContentType, StorageFolder, cancellationToken);
