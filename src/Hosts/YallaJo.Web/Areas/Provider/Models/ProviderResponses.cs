@@ -19,12 +19,11 @@ public sealed class ProviderStatusResponse
     public List<ProviderDocumentResponse> Documents { get; init; } = [];
 }
 
-/// <summary>Mirrors <c>DocumentSummary</c>.</summary>
+/// <summary>Mirrors <c>DocumentSummary</c>. Patch 2G: FileUrl removed (V2 breaking change).</summary>
 public sealed class ProviderDocumentResponse
 {
     public Guid DocumentId { get; init; }
     public string DocumentType { get; init; } = string.Empty;
-    public string FileUrl { get; init; } = string.Empty;
     public string FileName { get; init; } = string.Empty;
     public DateTime? ExpiresAt { get; init; }
 }
@@ -35,19 +34,24 @@ public sealed class RegisterProviderResponse
     public Guid ApplicationId { get; init; }
 }
 
-/// <summary>Mirrors <c>AddProviderDocumentResult</c> from <c>POST /api/v1/provider/documents/upload</c>.</summary>
+/// <summary>
+/// Mirrors <c>AddProviderDocumentResult</c> from <c>POST /api/v1/provider/documents/upload</c>.
+/// Patch 2G: FileUrl removed (V2 breaking change).
+/// </summary>
 public sealed class AddProviderDocumentResponse
 {
     public Guid DocumentId { get; init; }
     public string DocumentType { get; init; } = string.Empty;
-    public string FileUrl { get; init; } = string.Empty;
 }
 
-/// <summary>Mirrors <c>ReplaceProviderDocumentResult</c> from <c>PUT /api/v1/provider/documents/{id}</c>.</summary>
+/// <summary>
+/// Mirrors <c>ReplaceProviderDocumentResult</c> from
+/// <c>POST /api/v1/provider/documents/{id}/replace-upload</c>.
+/// Patch 2G: NewFileUrl removed (V2 breaking change).
+/// </summary>
 public sealed class ReplaceProviderDocumentResponse
 {
     public Guid DocumentId { get; init; }
-    public string NewFileUrl { get; init; } = string.Empty;
 }
 
 /// <summary>

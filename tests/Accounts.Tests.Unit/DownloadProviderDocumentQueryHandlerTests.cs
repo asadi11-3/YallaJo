@@ -15,22 +15,24 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace Accounts.Tests.Unit;
 
 /// <summary>
-/// Patch 2C handler-level tests covering: FileAsset path is preferred when a
-/// ProviderDocumentFile link exists; graceful fall-through to the legacy
-/// FileUrl path when no link / locator NotFound / OpenReadByStorageKeyAsync
-/// fails; both paths fail -> NotFound (anti-enumeration); preserved Patch 1A
-/// authorization (cross-provider 404, anonymous 401, admin allowed); and the
-/// "no PII/StorageKey/FileUrl at Information level or above" log contract.
+/// Patch 2G handler-level tests. FileAsset V2 is now the ONLY authoritative read
+/// source: download succeeds strictly via ProviderDocument -> ProviderDocumentFile
+/// -> FileAsset -> StorageKey. The legacy ProviderDocument.FileUrl fallback (Patch
+/// 2C) has been removed, so any of "no link row", "FileAsset locator NotFound", or
+/// "OpenReadByStorageKeyAsync fails" now resolves to NotFound (anti-enumeration).
+/// Preserved Patch 1A authorization (cross-provider 404, anonymous 401, admin
+/// allowed) and the "no PII/StorageKey at Information level or above" log contract
+/// are also covered. The legacy OpenReadAsync(fileUrl) API must never be called.
 /// </summary>
 public sealed class DownloadProviderDocumentQueryHandlerTests
 {
-    // ── (a) FileAsset path is preferred when a link exists ────────────────────
+    // ── (a) FileAsset path streams when a link + asset + blob resolve ─────────
     [Fact]
-    public async Task FileAsset_path_is_preferred_when_link_exists()
+    public async Task FileAsset_path_streams_when_link_exists()
     {
         var ownerUserId = Guid.CreateVersion7();
-        var doc = BuildDoc(ownerUserId, fileUrl: "/uploads/provider-application-documents/legacy.pdf");
-        var (handler, repo, locator, storage, currentUser, _) = BuildHandler(ownerUserId, isAdmin: false);
+        var doc = BuildDoc(ownerUserId);
+        var (handler, repo, locator, storage, _, _) = BuildHandler(ownerUserId, isAdmin: false);
 
         StubOwnerLookup(repo, ownerUserId, doc);
 
@@ -62,41 +64,39 @@ public sealed class DownloadProviderDocumentQueryHandlerTests
         result.Value.ContentType.Should().Be("application/pdf");
         result.Value.FileSize.Should().Be(4242);
 
-        // Legacy path must NOT have been touched.
+        // Legacy FileUrl path must NOT exist / be touched.
         await storage.DidNotReceiveWithAnyArgs().OpenReadAsync(default!, default);
     }
 
-    // ── (b) No link row -> falls back to legacy FileUrl path ──────────────────
+    // ── (b) No link row -> NotFound (no legacy fallback in Patch 2G) ──────────
     [Fact]
-    public async Task Falls_back_to_legacy_path_when_no_link_exists()
+    public async Task Returns_NotFound_when_no_link_exists()
     {
         var ownerUserId = Guid.CreateVersion7();
-        var doc = BuildDoc(ownerUserId, fileUrl: "/uploads/provider-application-documents/legacy.pdf");
+        var doc = BuildDoc(ownerUserId);
         var (handler, repo, locator, storage, _, _) = BuildHandler(ownerUserId, isAdmin: false);
 
         StubOwnerLookup(repo, ownerUserId, doc);
         repo.GetFileAssetIdByDocumentIdAsync(doc.Id, Arg.Any<CancellationToken>()).ReturnsNull();
 
-        var legacyStream = new MemoryStream(new byte[] { 9, 9 });
-        storage.OpenReadAsync(doc.FileUrl, Arg.Any<CancellationToken>())
-               .Returns(Result<FileDownload>.Success(new FileDownload(legacyStream, "application/pdf", 2)));
-
         var result = await handler.Handle(
             new DownloadProviderDocumentQuery(doc.Id), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value!.Content.Should().BeSameAs(legacyStream);
+        result.IsFailure.Should().BeTrue();
+        result.Outcome.Should().Be(Outcome.NotFound);
 
+        // No FileAsset lookup, and the removed legacy path must never be invoked.
         await locator.DidNotReceiveWithAnyArgs().GetByIdAsync(default, default);
         await storage.DidNotReceiveWithAnyArgs().OpenReadByStorageKeyAsync(default!, default);
+        await storage.DidNotReceiveWithAnyArgs().OpenReadAsync(default!, default);
     }
 
-    // ── (c) Locator NotFound -> falls back to legacy FileUrl path ─────────────
+    // ── (c) Locator NotFound -> NotFound (no legacy fallback) ─────────────────
     [Fact]
-    public async Task Falls_back_to_legacy_path_when_locator_returns_not_found()
+    public async Task Returns_NotFound_when_locator_returns_not_found()
     {
         var ownerUserId = Guid.CreateVersion7();
-        var doc = BuildDoc(ownerUserId, fileUrl: "/uploads/provider-application-documents/legacy.pdf");
+        var doc = BuildDoc(ownerUserId);
         var (handler, repo, locator, storage, _, _) = BuildHandler(ownerUserId, isAdmin: false);
 
         StubOwnerLookup(repo, ownerUserId, doc);
@@ -107,24 +107,21 @@ public sealed class DownloadProviderDocumentQueryHandlerTests
         locator.GetByIdAsync(fileAssetId, Arg.Any<CancellationToken>())
                .Returns(Result<FileAssetView>.Failure(Error.NotFound("FileAsset"), Outcome.NotFound));
 
-        var legacyStream = new MemoryStream(new byte[] { 7 });
-        storage.OpenReadAsync(doc.FileUrl, Arg.Any<CancellationToken>())
-               .Returns(Result<FileDownload>.Success(new FileDownload(legacyStream, "application/pdf", 1)));
-
         var result = await handler.Handle(
             new DownloadProviderDocumentQuery(doc.Id), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value!.Content.Should().BeSameAs(legacyStream);
+        result.IsFailure.Should().BeTrue();
+        result.Outcome.Should().Be(Outcome.NotFound);
         await storage.DidNotReceiveWithAnyArgs().OpenReadByStorageKeyAsync(default!, default);
+        await storage.DidNotReceiveWithAnyArgs().OpenReadAsync(default!, default);
     }
 
-    // ── (d) OpenReadByStorageKeyAsync fails -> falls back to legacy path ─────
+    // ── (d) OpenReadByStorageKeyAsync fails -> NotFound (no legacy fallback) ──
     [Fact]
-    public async Task Falls_back_to_legacy_path_when_storage_by_key_fails()
+    public async Task Returns_NotFound_when_storage_by_key_fails()
     {
         var ownerUserId = Guid.CreateVersion7();
-        var doc = BuildDoc(ownerUserId, fileUrl: "/uploads/provider-application-documents/legacy.pdf");
+        var doc = BuildDoc(ownerUserId);
         var (handler, repo, locator, storage, _, _) = BuildHandler(ownerUserId, isAdmin: false);
 
         StubOwnerLookup(repo, ownerUserId, doc);
@@ -141,39 +138,15 @@ public sealed class DownloadProviderDocumentQueryHandlerTests
         storage.OpenReadByStorageKeyAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
                .Returns(Result<FileDownload>.Failure(Error.NotFound("File"), Outcome.NotFound));
 
-        var legacyStream = new MemoryStream(new byte[] { 4 });
-        storage.OpenReadAsync(doc.FileUrl, Arg.Any<CancellationToken>())
-               .Returns(Result<FileDownload>.Success(new FileDownload(legacyStream, "application/pdf", 1)));
-
-        var result = await handler.Handle(
-            new DownloadProviderDocumentQuery(doc.Id), CancellationToken.None);
-
-        result.IsSuccess.Should().BeTrue();
-        result.Value!.Content.Should().BeSameAs(legacyStream);
-    }
-
-    // ── (e) Both paths fail -> NotFound ───────────────────────────────────────
-    [Fact]
-    public async Task Returns_NotFound_when_both_paths_fail()
-    {
-        var ownerUserId = Guid.CreateVersion7();
-        var doc = BuildDoc(ownerUserId, fileUrl: "/uploads/provider-application-documents/missing.pdf");
-        var (handler, repo, locator, storage, _, _) = BuildHandler(ownerUserId, isAdmin: false);
-
-        StubOwnerLookup(repo, ownerUserId, doc);
-        repo.GetFileAssetIdByDocumentIdAsync(doc.Id, Arg.Any<CancellationToken>()).ReturnsNull();
-
-        storage.OpenReadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-               .Returns(Result<FileDownload>.Failure(Error.NotFound("File"), Outcome.NotFound));
-
         var result = await handler.Handle(
             new DownloadProviderDocumentQuery(doc.Id), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Outcome.Should().Be(Outcome.NotFound);
+        await storage.DidNotReceiveWithAnyArgs().OpenReadAsync(default!, default);
     }
 
-    // ── (f) Cross-provider request -> 404 even if a link would resolve ───────
+    // ── (e) Cross-provider request -> 404 even if a link would resolve ───────
     [Fact]
     public async Task Cross_provider_request_returns_NotFound_and_never_touches_storage()
     {
@@ -191,12 +164,11 @@ public sealed class DownloadProviderDocumentQueryHandlerTests
         result.Outcome.Should().Be(Outcome.NotFound);
 
         await locator.DidNotReceiveWithAnyArgs().GetByIdAsync(default, default);
-        await storage.DidNotReceiveWithAnyArgs().OpenReadAsync(default!, default);
         await storage.DidNotReceiveWithAnyArgs().OpenReadByStorageKeyAsync(default!, default);
         await repo.DidNotReceiveWithAnyArgs().GetFileAssetIdByDocumentIdAsync(default, default);
     }
 
-    // ── (g) Anonymous caller -> 401 without touching any I/O ─────────────────
+    // ── (f) Anonymous caller -> 401 without touching any I/O ─────────────────
     [Fact]
     public async Task Anonymous_caller_returns_Unauthorized_without_touching_io()
     {
@@ -213,18 +185,17 @@ public sealed class DownloadProviderDocumentQueryHandlerTests
         await repo.DidNotReceiveWithAnyArgs().GetWithDocumentsByUserIdAsync(default, default);
         await repo.DidNotReceiveWithAnyArgs().GetFileAssetIdByDocumentIdAsync(default, default);
         await locator.DidNotReceiveWithAnyArgs().GetByIdAsync(default, default);
-        await storage.DidNotReceiveWithAnyArgs().OpenReadAsync(default!, default);
         await storage.DidNotReceiveWithAnyArgs().OpenReadByStorageKeyAsync(default!, default);
     }
 
-    // ── (h) Admin-tier caller -> FileAsset path works for foreign documents ─
+    // ── (g) Admin-tier caller -> FileAsset path works for foreign documents ─
     [Fact]
     public async Task Admin_tier_caller_uses_FileAsset_path_for_foreign_document()
     {
         var ownerUserId = Guid.CreateVersion7();
         var adminUserId = Guid.CreateVersion7();
-        var doc = BuildDoc(ownerUserId, fileUrl: "/uploads/provider-application-documents/legacy.pdf");
-        var (handler, repo, locator, storage, currentUser, _) = BuildHandler(adminUserId, isAdmin: true);
+        var doc = BuildDoc(ownerUserId);
+        var (handler, repo, locator, storage, _, _) = BuildHandler(adminUserId, isAdmin: true);
 
         // Admin's own application lookup returns null (admin is not the owner).
         repo.GetWithDocumentsByUserIdAsync(adminUserId, Arg.Any<CancellationToken>()).ReturnsNull();
@@ -255,16 +226,15 @@ public sealed class DownloadProviderDocumentQueryHandlerTests
         result.Value.FileSize.Should().Be(16);
     }
 
-    // ── (i) PII-no-leak contract via captured ILogger ─────────────────────────
+    // ── (h) PII-no-leak contract via captured ILogger ─────────────────────────
     [Fact]
     public async Task No_PII_appears_in_Information_or_higher_log_messages()
     {
         var secretFileName = "TOP_SECRET_LICENSE.pdf";
-        var secretFileUrl = "/uploads/provider-application-documents/SECRET-ABC.pdf";
         var secretStorageKey = "provider-application-documents/SECRET-ABC.pdf";
 
         var ownerUserId = Guid.CreateVersion7();
-        var doc = BuildDoc(ownerUserId, fileUrl: secretFileUrl, fileName: secretFileName);
+        var doc = BuildDoc(ownerUserId);
         var captured = new List<CapturedLog>();
         var (handler, repo, locator, storage, _, _) = BuildHandler(ownerUserId, isAdmin: false, sharedLogs: captured);
 
@@ -288,7 +258,6 @@ public sealed class DownloadProviderDocumentQueryHandlerTests
         var leakable = new[]
         {
             secretFileName,
-            secretFileUrl,
             secretStorageKey,
             "/uploads/provider-application-documents/"
         };
@@ -338,10 +307,7 @@ public sealed class DownloadProviderDocumentQueryHandlerTests
             .Returns(application);
     }
 
-    private static ProviderDocument BuildDoc(
-        Guid ownerUserId,
-        string fileUrl,
-        string fileName = "license.pdf")
+    private static ProviderDocument BuildDoc(Guid ownerUserId)
     {
         var application = ProviderApplication.Register(
             userId:              ownerUserId,
@@ -353,11 +319,8 @@ public sealed class DownloadProviderDocumentQueryHandlerTests
             description:         "Premium tour operator in Egypt",
             typeSpecificDataJson: null).Value!;
 
-        var addResult = application.AddDocument(
-            documentType: DocumentType.BusinessLicense,
-            fileUrl:       fileUrl,
-            fileName:      fileName,
-            fileSizeBytes: 1024);
+        // Patch 2G: AddDocument no longer carries file metadata (FileAsset is authoritative).
+        var addResult = application.AddDocument(documentType: DocumentType.BusinessLicense);
         var doc = addResult.Value!;
 
         // Wire the back-navigation EF would normally populate.

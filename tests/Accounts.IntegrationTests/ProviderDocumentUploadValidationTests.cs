@@ -3,10 +3,13 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 
+using Accounts.Application.Interfaces;
 using Accounts.Contracts.Authorization;
 using Accounts.Domain.Entities;
 using Accounts.Domain.Enums;
 using Accounts.Domain.Repositories;
+
+using ContentCore.Contracts.Storage;
 
 using FluentAssertions;
 
@@ -257,6 +260,31 @@ public sealed class ProviderDocumentUploadValidationTests
                     var uow = Substitute.For<IAccountsUnitOfWork>();
                     uow.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(1);
                     return uow;
+                });
+
+                // Patch 2G: FileAsset registration + ProviderDocumentFile link are now
+                // REQUIRED for an accepted upload. These validation tests only assert the
+                // magic-byte inspector behaviour, so stub both so a valid upload reaches
+                // 201 without needing the real FileAsset/link infrastructure or a database.
+                services.RemoveAll<IFileAssetRegistrar>();
+                services.AddSingleton<IFileAssetRegistrar>(_ =>
+                {
+                    var registrar = Substitute.For<IFileAssetRegistrar>();
+                    registrar
+                        .GetOrAddByStorageKeyAsync(Arg.Any<FileAssetSeed>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+                        .Returns(_ => Task.FromResult(Result<FileAssetRecord>.Success(
+                            new FileAssetRecord(Guid.Parse("fa000000-0000-0000-0000-0000000000c1"), WasReused: false))));
+                    return registrar;
+                });
+
+                services.RemoveAll<IProviderDocumentFileWriter>();
+                services.AddSingleton<IProviderDocumentFileWriter>(_ =>
+                {
+                    var writer = Substitute.For<IProviderDocumentFileWriter>();
+                    writer
+                        .UpsertLinkAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<DocumentType>(), Arg.Any<CancellationToken>())
+                        .Returns(Task.CompletedTask);
+                    return writer;
                 });
             });
         }

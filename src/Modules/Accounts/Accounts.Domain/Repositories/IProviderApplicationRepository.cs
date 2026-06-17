@@ -56,19 +56,6 @@ public interface IProviderApplicationRepository : IRepository<ProviderApplicatio
         CancellationToken ct = default);
 
     /// <summary>
-    /// Streams a keyset-paged page of non-deleted provider documents (with their parent
-    /// application eager-loaded) ordered by document id, for the FileAsset backfill
-    /// (Patch 2B). Pass <see cref="Guid.Empty"/> as <paramref name="afterId"/> to start
-    /// from the beginning. The existing soft-delete query filter
-    /// <c>!d.Application.IsDeleted</c> applies automatically. The repository caller is
-    /// responsible for capping <paramref name="take"/>; recommended batch size is 100.
-    /// </summary>
-    Task<IReadOnlyList<ProviderDocument>> GetDocumentsForBackfillAsync(
-        Guid afterId,
-        int take,
-        CancellationToken ct = default);
-
-    /// <summary>
     /// Returns the FileAssetId linked to the given <paramref name="providerDocumentId"/>
     /// via the <c>accounts.ProviderDocumentFiles</c> table (Patch 2C download switch),
     /// or <c>null</c> when no link row exists yet (e.g. the Patch 2B backfill has not

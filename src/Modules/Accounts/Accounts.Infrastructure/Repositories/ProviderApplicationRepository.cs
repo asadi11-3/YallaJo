@@ -105,35 +105,16 @@ public sealed class ProviderApplicationRepository(AccountsDbContext context)
             .AsNoTracking()
             .ToListAsync(ct);
 
-    public async Task<IReadOnlyList<ProviderDocument>> GetDocumentsForBackfillAsync(
-        Guid afterId,
-        int take,
-        CancellationToken ct = default)
-    {
-        // Keyset pagination on Id (GUIDv7 monotonic). The HasQueryFilter on
-        // ProviderDocument (!Application.IsDeleted) auto-applies via the navigation
-        // include. AsNoTracking: the backfill never mutates ProviderDocument.
-        if (take <= 0)
-            return Array.Empty<ProviderDocument>();
-
-        return await context.ProviderDocuments
-            .AsNoTracking()
-            .Include(d => d.Application)
-            .Where(d => d.Id.CompareTo(afterId) > 0)
-            .OrderBy(d => d.Id)
-            .Take(take)
-            .ToListAsync(ct);
-    }
-
     public async Task<Guid?> GetFileAssetIdByDocumentIdAsync(
         Guid providerDocumentId,
         CancellationToken ct = default)
     {
-        // Patch 2C download switch: single projected AsNoTracking lookup against the
+        // Patch 2G download path: single projected AsNoTracking lookup against the
         // accounts.ProviderDocumentFiles link table (unique on ProviderDocumentId per
         // UX_ProviderDocumentFiles_ProviderDocumentId). Returns null when no link row
-        // exists yet — the caller falls back to the legacy ProviderDocument.FileUrl
-        // path. The FileAssetId is opaque here; no DB FK to content_core.FileAssets.
+        // exists — the caller returns NotFound (the legacy ProviderDocument.FileUrl
+        // fallback was removed in Patch 2G). The FileAssetId is opaque here; no DB FK
+        // to content_core.FileAssets.
         return await context.Set<ProviderDocumentFile>()
             .AsNoTracking()
             .Where(f => f.ProviderDocumentId == providerDocumentId)
@@ -148,7 +129,8 @@ public sealed class ProviderApplicationRepository(AccountsDbContext context)
         // Patch 2E list/index switch: single batched AsNoTracking lookup against the
         // accounts.ProviderDocumentFiles link table for the whole document set, to avoid
         // N+1 when projecting a document list. Documents without a link row are simply
-        // absent from the result (caller falls back to legacy ProviderDocument metadata).
+        // absent from the result; the caller renders empty display metadata (the legacy
+        // ProviderDocument metadata fallback was removed in Patch 2G).
         // UX_ProviderDocumentFiles_ProviderDocumentId guarantees one FileAssetId per doc,
         // so ToDictionary cannot collide. FileAssetId is opaque; no DB FK to FileAssets.
         var ids = documentIds.Where(id => id != Guid.Empty).Distinct().ToArray();

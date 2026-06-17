@@ -49,11 +49,6 @@ public static class DependencyInjection
         services.AddScoped<IAccountsInboxStore, AccountsInboxStore>();
         services.AddScoped<IAgencyAffiliationReadService, AgencyAffiliationReadService>();
 
-        // Patch 2B: provider-document backfill port (no Accounts.Infrastructure
-        // dependency in Accounts.Application). The IBackfillContentCoreMigrationsProbe
-        // and IFileAssetRegistrar are registered in ContentCore.Infrastructure.
-        services.AddScoped<IProviderDocumentBackfillStore, ProviderDocumentBackfillStore>();
-
         // Patch 2D: runtime write port that links a ProviderDocument to its current
         // FileAsset (accounts.ProviderDocumentFiles) on upload/replace. Separate from the
         // backfill store (maintenance) — the FileAsset row itself is created via

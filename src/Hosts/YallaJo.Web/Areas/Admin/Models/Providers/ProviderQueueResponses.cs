@@ -67,12 +67,11 @@ public sealed class AdminProviderApplicationDetailsResponse
     public List<AdminProviderDocumentResponse> Documents { get; init; } = [];
 }
 
-/// <summary>Mirrors <c>AdminProviderDocumentDto</c>.</summary>
+/// <summary>Mirrors <c>AdminProviderDocumentDto</c>. Patch 2G: FileUrl removed (V2 breaking change).</summary>
 public sealed class AdminProviderDocumentResponse
 {
     public Guid DocumentId { get; init; }
     public string DocumentType { get; init; } = string.Empty;
-    public string FileUrl { get; init; } = string.Empty;
     public string FileName { get; init; } = string.Empty;
     public long FileSizeBytes { get; init; }
     public DateTime UploadedAt { get; init; }

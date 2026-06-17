@@ -46,8 +46,7 @@ public sealed class ProviderApplicationTests
             DocumentType.InsuranceCertificate
         })
         {
-            app.AddDocument(docType, $"https://storage.example.com/docs/{docType}.pdf",
-                $"{docType}.pdf", 1024 * 512, expiresAt: DateTime.UtcNow.AddYears(1));
+            app.AddDocument(docType, expiresAt: DateTime.UtcNow.AddYears(1));
         }
     }
 
@@ -429,9 +428,6 @@ public sealed class ProviderApplicationTests
 
         var result = app.AddDocument(
             documentType: DocumentType.BusinessLicense,
-            fileUrl:       "https://storage/business-license.pdf",
-            fileName:      "business-license.pdf",
-            fileSizeBytes: 1024 * 500,
             expiresAt:     DateTime.UtcNow.AddYears(1));
 
         result.IsSuccess.Should().BeTrue();
@@ -443,9 +439,9 @@ public sealed class ProviderApplicationTests
     public void AddDocument_SameType_Twice_ReturnsFailure()
     {
         var app = CreateDraft();
-        app.AddDocument(DocumentType.BusinessLicense, "https://s/1.pdf", "1.pdf", 1024, null);
+        app.AddDocument(DocumentType.BusinessLicense);
 
-        var result = app.AddDocument(DocumentType.BusinessLicense, "https://s/2.pdf", "2.pdf", 1024, null);
+        var result = app.AddDocument(DocumentType.BusinessLicense);
 
         result.IsFailure.Should().BeTrue("duplicate document type is not allowed; use ReplaceDocument instead");
     }
@@ -459,11 +455,11 @@ public sealed class ProviderApplicationTests
         var types = Enum.GetValues<DocumentType>().Take(10).ToArray();
         foreach (var type in types)
         {
-            app.AddDocument(type, $"https://s/{type}.pdf", $"{type}.pdf", 1024, null).IsSuccess.Should().BeTrue();
+            app.AddDocument(type).IsSuccess.Should().BeTrue();
         }
 
         // 11th document should fail
-        var result = app.AddDocument(DocumentType.AffiliatedGuidesList, "https://s/extra.pdf", "extra.pdf", 1024, null);
+        var result = app.AddDocument(DocumentType.AffiliatedGuidesList);
         result.IsFailure.Should().BeTrue("max 10 documents per application");
     }
 
@@ -471,13 +467,15 @@ public sealed class ProviderApplicationTests
     public void ReplaceDocument_UpdatesExistingDocument()
     {
         var app = CreateDraft();
-        app.AddDocument(DocumentType.BusinessLicense, "https://s/old.pdf", "old.pdf", 1024, null);
+        app.AddDocument(DocumentType.BusinessLicense);
         var docId = app.Documents.Single().Id;
+        var newExpiry = DateTime.UtcNow.AddYears(2);
 
-        var result = app.ReplaceDocument(docId, "https://s/new.pdf", "new.pdf", 2048, null);
+        var result = app.ReplaceDocument(docId, expiresAt: newExpiry);
 
         result.IsSuccess.Should().BeTrue();
-        app.Documents.Single().FileUrl.Should().Be("https://s/new.pdf");
+        app.Documents.Single().Id.Should().Be(docId);
+        app.Documents.Single().ExpiresAt.Should().BeCloseTo(newExpiry, TimeSpan.FromSeconds(1));
     }
 
     [Fact]
@@ -485,7 +483,7 @@ public sealed class ProviderApplicationTests
     {
         var app = CreateDraft();
 
-        var result = app.ReplaceDocument(Guid.NewGuid(), "https://s/new.pdf", "new.pdf", 1024, null);
+        var result = app.ReplaceDocument(Guid.NewGuid());
 
         result.IsFailure.Should().BeTrue();
     }

@@ -32,11 +32,10 @@ public sealed class GetMyApplicationStatusQueryHandler(
             return Result<GetMyApplicationStatusResult>.Failure(
                 ProviderApplicationErrors.NotFound, Outcome.NotFound);
 
-        // Patch 2E expand-and-contract: prefer FileAsset V2 metadata (OriginalFileName)
-        // when a ProviderDocumentFile link exists, else fall back to the legacy
-        // ProviderDocument.FileName. Two batched round-trips keep this N+1-free.
-        // Response shape is unchanged; FileUrl stays the legacy contract field and
-        // StorageKey is never exposed.
+        // Patch 2G: FileAsset V2 is now the only source of document display metadata.
+        // The document file name is read from the linked FileAsset (OriginalFileName);
+        // if no ProviderDocumentFile link exists yet the file name is empty. Two batched
+        // round-trips keep this N+1-free. StorageKey / physical path are never exposed.
         var documentIds = application.Documents.Select(d => d.Id).ToList();
         var docToFileAssetId = await providerApplicationRepository
             .GetFileAssetIdsByDocumentIdsAsync(documentIds, cancellationToken);
@@ -46,14 +45,14 @@ public sealed class GetMyApplicationStatusQueryHandler(
         var docs = application.Documents
             .Select(d =>
             {
-                var fileName = d.FileName;
+                var fileName = string.Empty;
                 if (docToFileAssetId.TryGetValue(d.Id, out var fileAssetId)
                     && fileAssetViews.TryGetValue(fileAssetId, out var view))
                 {
                     fileName = view.OriginalFileName;
                 }
 
-                return new DocumentSummary(d.Id, d.DocumentType, d.FileUrl, fileName, d.ExpiresAt);
+                return new DocumentSummary(d.Id, d.DocumentType, fileName, d.ExpiresAt);
             })
             .ToList();
 

@@ -24,11 +24,10 @@ public sealed class GetAdminProviderApplicationByIdQueryHandler(
             return Result<AdminProviderApplicationDetailsResult>.Failure(
                 ProviderApplicationErrors.NotFound, Outcome.NotFound);
 
-        // Patch 2E expand-and-contract: prefer FileAsset V2 metadata when a
-        // ProviderDocumentFile link exists, else fall back to legacy ProviderDocument
-        // fields. Two batched round-trips (doc->fileAssetId map, then fileAssetId->view
-        // map) keep this N+1-free regardless of document count. StorageKey is never
-        // projected into the DTO; FileUrl remains the existing legacy contract field.
+        // Patch 2G: FileAsset V2 is now the only source of document display metadata.
+        // Two batched round-trips (doc->fileAssetId map, then fileAssetId->view map) keep
+        // this N+1-free regardless of document count. StorageKey / physical path / internal
+        // FileAsset id are never projected into the DTO.
         var documentIds = application.Documents.Select(d => d.Id).ToList();
         var docToFileAssetId = await providerApplicationRepository
             .GetFileAssetIdsByDocumentIdsAsync(documentIds, cancellationToken);
@@ -38,8 +37,8 @@ public sealed class GetAdminProviderApplicationByIdQueryHandler(
         var documents = application.Documents
             .Select(d =>
             {
-                var fileName = d.FileName;
-                var fileSizeBytes = d.FileSizeBytes;
+                var fileName = string.Empty;
+                long fileSizeBytes = 0;
                 if (docToFileAssetId.TryGetValue(d.Id, out var fileAssetId)
                     && fileAssetViews.TryGetValue(fileAssetId, out var view))
                 {
@@ -50,7 +49,6 @@ public sealed class GetAdminProviderApplicationByIdQueryHandler(
                 return new AdminProviderDocumentDto(
                     DocumentId: d.Id,
                     DocumentType: d.DocumentType,
-                    FileUrl: d.FileUrl,
                     FileName: fileName,
                     FileSizeBytes: fileSizeBytes,
                     UploadedAt: d.UploadedAt,

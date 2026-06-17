@@ -61,7 +61,6 @@ public sealed class ProvidersDocumentDownloadLinkMapperTests
             {
                 DocumentId = documentId,
                 DocumentType = "GovernmentId",
-                FileUrl = LegacyOnDiskUrl,
                 FileName = "national-id.pdf",
                 FileSizeBytes = 4242,
                 UploadedAt = new DateTime(2026, 4, 26, 12, 0, 0, DateTimeKind.Utc),

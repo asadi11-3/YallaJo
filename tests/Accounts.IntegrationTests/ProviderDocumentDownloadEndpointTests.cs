@@ -60,6 +60,19 @@ public sealed class ProviderDocumentDownloadEndpointTests
         // Build the owner's application with one document; capture its id.
         var (ownerApp, documentId) = BuildApplicationWithDocument(OwnerUserId);
 
+        // Patch 2G: the only download source is the FileAsset path, so the owner's
+        // document must have a materialized ProviderDocumentFile -> FileAsset link.
+        var fileAssetId = Guid.Parse("0d000000-0000-0000-0000-0000000000b1");
+        var assetView = new FileAssetView(
+            Id: fileAssetId,
+            StorageProvider: "Local",
+            StorageKey: "provider-application-documents/owner-license.pdf",
+            ContentType: KnownContentType,
+            Extension: ".pdf",
+            OriginalFileName: KnownFileName,
+            SafeFileName: KnownFileName,
+            SizeBytes: FileAssetBytes.Length);
+
         await using var factory = new DownloadFactory
         {
             CallerUserId = OwnerUserId,
@@ -67,6 +80,9 @@ public sealed class ProviderDocumentDownloadEndpointTests
             // Owner path: repo finds the application by the caller's user id.
             ByUserId = ownerApp,
             ByDocumentId = null,
+            LinkedFileAssetId = fileAssetId,
+            FileAssetViewResult = assetView,
+            FileAssetBytes = FileAssetBytes,
         };
 
         using var client = factory.CreateClient();
@@ -76,7 +92,7 @@ public sealed class ProviderDocumentDownloadEndpointTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         response.Content.Headers.ContentType!.MediaType.Should().Be(KnownContentType);
         var body = await response.Content.ReadAsByteArrayAsync();
-        body.Should().Equal(KnownBytes);
+        body.Should().Equal(FileAssetBytes);
     }
 
     [Fact]
@@ -108,6 +124,18 @@ public sealed class ProviderDocumentDownloadEndpointTests
     {
         var (ownerApp, documentId) = BuildApplicationWithDocument(OwnerUserId);
 
+        // Patch 2G: admin download also flows through the FileAsset path.
+        var fileAssetId = Guid.Parse("0d000000-0000-0000-0000-0000000000b2");
+        var assetView = new FileAssetView(
+            Id: fileAssetId,
+            StorageProvider: "Local",
+            StorageKey: "provider-application-documents/admin-view-license.pdf",
+            ContentType: KnownContentType,
+            Extension: ".pdf",
+            OriginalFileName: KnownFileName,
+            SafeFileName: KnownFileName,
+            SizeBytes: FileAssetBytes.Length);
+
         await using var factory = new DownloadFactory
         {
             CallerUserId = AdminUserId,
@@ -116,6 +144,9 @@ public sealed class ProviderDocumentDownloadEndpointTests
             ByUserId = null,
             // …but the admin path resolves the owning application by document id.
             ByDocumentId = ownerApp,
+            LinkedFileAssetId = fileAssetId,
+            FileAssetViewResult = assetView,
+            FileAssetBytes = FileAssetBytes,
         };
 
         using var client = factory.CreateClient();
@@ -124,7 +155,7 @@ public sealed class ProviderDocumentDownloadEndpointTests
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await response.Content.ReadAsByteArrayAsync();
-        body.Should().Equal(KnownBytes);
+        body.Should().Equal(FileAssetBytes);
     }
 
     [Fact]
@@ -190,15 +221,14 @@ public sealed class ProviderDocumentDownloadEndpointTests
     }
 
     [Fact]
-    public async Task Legacy_FileUrl_path_serves_bytes_when_no_link_exists()
+    public async Task Download_returns_NotFound_when_no_FileAsset_link_exists()
     {
         var (ownerApp, documentId) = BuildApplicationWithDocument(OwnerUserId);
 
-        // No LinkedFileAssetId / FileAssetViewResult / FileAssetBytes set:
+        // Patch 2G: the legacy OpenReadAsync(doc.FileUrl) fallback is REMOVED. With no
+        // LinkedFileAssetId / FileAssetViewResult / FileAssetBytes set:
         // - repo.GetFileAssetIdByDocumentIdAsync returns null,
-        // - locator.GetByIdAsync would return NotFound,
-        // - storage.OpenReadByStorageKeyAsync would return NotFound,
-        // -> handler falls back to OpenReadAsync(doc.FileUrl) which yields KnownBytes.
+        // -> the handler returns NotFound (there is no longer any legacy file path).
         await using var factory = new DownloadFactory
         {
             CallerUserId = OwnerUserId,
@@ -211,9 +241,7 @@ public sealed class ProviderDocumentDownloadEndpointTests
 
         var response = await client.GetAsync($"/api/v1/provider/documents/{documentId}/download");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var body = await response.Content.ReadAsByteArrayAsync();
-        body.Should().Equal(KnownBytes);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -320,11 +348,7 @@ public sealed class ProviderDocumentDownloadEndpointTests
         register.IsSuccess.Should().BeTrue();
         var app = register.Value!;
 
-        var add = app.AddDocument(
-            DocumentType.BusinessLicense,
-            fileUrl: "/uploads/provider-application-documents/00000000-0000-0000-0000-0000000000aa.pdf",
-            fileName: KnownFileName,
-            fileSizeBytes: KnownBytes.Length);
+        var add = app.AddDocument(DocumentType.BusinessLicense);
 
         add.IsSuccess.Should().BeTrue();
         return (app, add.Value!.Id);

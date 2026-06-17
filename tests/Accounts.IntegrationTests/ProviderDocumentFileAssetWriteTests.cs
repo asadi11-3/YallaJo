@@ -25,12 +25,12 @@ using YallaJo.SharedKernel.Presentation.Authorization;
 namespace YallaJo.Accounts.IntegrationTests;
 
 /// <summary>
-/// Patch 2D write-path tests: verify that uploading or replacing a provider document
-/// also materializes a FileAsset (via <see cref="IFileAssetRegistrar"/>) and a
-/// ProviderDocumentFile link (via <see cref="IProviderDocumentFileWriter"/>), while the
-/// legacy ProviderDocument.FileUrl write and the public response shape stay unchanged.
-/// A failure in the FileAsset/link materialization must NOT fail the upload/replace
-/// (best-effort; the Patch 2C download fallback still serves via FileUrl).
+/// Patch 2G write-path tests: uploading or replacing a provider document MUST materialize
+/// a FileAsset (via <see cref="IFileAssetRegistrar"/>) and a ProviderDocumentFile link
+/// (via <see cref="IProviderDocumentFileWriter"/>). Both are now REQUIRED — the legacy
+/// ProviderDocument.FileUrl/FileName/FileSizeBytes columns are gone and there is no
+/// best-effort fallback. If FileAsset registration or the link upsert fails, the
+/// upload/replace operation MUST fail and the uploaded physical file MUST be cleaned up.
 /// </summary>
 public sealed class ProviderDocumentFileAssetWriteTests
 {
@@ -68,10 +68,42 @@ public sealed class ProviderDocumentFileAssetWriteTests
             KnownFileAssetId,
             DocumentType.BusinessLicense,
             Arg.Any<CancellationToken>());
+
+        // Happy path leaves the physical file in place — no cleanup.
+        factory.Storage.DeletedUrls.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task Upload_still_succeeds_when_FileAsset_materialization_fails()
+    public async Task Upload_fails_and_cleans_up_file_when_FileAsset_registration_fails()
+    {
+        var ownerApp = BuildOwnerApplication(OwnerUserId);
+
+        await using var factory = new WriteFactory
+        {
+            CallerUserId = OwnerUserId,
+            RequiredAction = AppAction.Create,
+            OwnerApplication = ownerApp,
+            RegistrarFails = true,
+        };
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsync(
+            "/api/v1/provider/documents/upload",
+            BuildUploadContent(ValidPdf(), "doc.pdf", "application/pdf"));
+
+        // Patch 2G: FileAsset registration is REQUIRED — its failure fails the upload.
+        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+
+        // The link writer must NOT be invoked once registration has already failed.
+        await factory.Writer.DidNotReceive().UpsertLinkAsync(
+            Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<DocumentType>(), Arg.Any<CancellationToken>());
+
+        // The orphaned physical file must have been cleaned up.
+        factory.Storage.DeletedUrls.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task Upload_fails_and_cleans_up_file_when_link_upsert_fails()
     {
         var ownerApp = BuildOwnerApplication(OwnerUserId);
 
@@ -88,23 +120,21 @@ public sealed class ProviderDocumentFileAssetWriteTests
             "/api/v1/provider/documents/upload",
             BuildUploadContent(ValidPdf(), "doc.pdf", "application/pdf"));
 
-        // Best-effort materialization: even though the link writer throws, the upload
-        // succeeds (legacy FileUrl is still written and serves via the Patch 2C fallback).
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        // Patch 2G: the ProviderDocumentFile link is REQUIRED — its failure fails the upload.
+        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
 
         await factory.Writer.Received(1).UpsertLinkAsync(
             Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<DocumentType>(), Arg.Any<CancellationToken>());
+
+        // The orphaned physical file must have been cleaned up.
+        factory.Storage.DeletedUrls.Should().ContainSingle();
     }
 
     [Fact]
     public async Task Replace_updates_existing_link_in_place()
     {
         var ownerApp = BuildOwnerApplication(OwnerUserId);
-        var addResult = ownerApp.AddDocument(
-            DocumentType.BusinessLicense,
-            "/uploads/provider-application-documents/old.pdf",
-            "old.pdf",
-            1024);
+        var addResult = ownerApp.AddDocument(DocumentType.BusinessLicense);
         addResult.IsSuccess.Should().BeTrue();
         var existingDoc = addResult.Value!;
         var documentId = existingDoc.Id;
@@ -185,9 +215,13 @@ public sealed class ProviderDocumentFileAssetWriteTests
 
         public bool WriterThrows { get; init; }
 
+        public bool RegistrarFails { get; init; }
+
         public IFileAssetRegistrar Registrar { get; } = Substitute.For<IFileAssetRegistrar>();
 
         public IProviderDocumentFileWriter Writer { get; } = Substitute.For<IProviderDocumentFileWriter>();
+
+        public RecordingFileStorage Storage { get; } = new();
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -196,10 +230,21 @@ public sealed class ProviderDocumentFileAssetWriteTests
             builder.UseSetting("Jwt:Key", FakeJwtKey);
             builder.UseSetting("ExternalAuth:SigningKey", FakeExternalAuthSigningKey);
 
-            Registrar
-                .GetOrAddByStorageKeyAsync(Arg.Any<FileAssetSeed>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
-                .Returns(_ => Task.FromResult(
-                    Result<FileAssetRecord>.Success(new FileAssetRecord(KnownFileAssetId, WasReused: false))));
+            if (RegistrarFails)
+            {
+                Registrar
+                    .GetOrAddByStorageKeyAsync(Arg.Any<FileAssetSeed>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+                    .Returns(_ => Task.FromResult(
+                        Result<FileAssetRecord>.Failure(
+                            Error.Failure("FileAsset.Register", "simulated registration failure"), Outcome.ServerError)));
+            }
+            else
+            {
+                Registrar
+                    .GetOrAddByStorageKeyAsync(Arg.Any<FileAssetSeed>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+                    .Returns(_ => Task.FromResult(
+                        Result<FileAssetRecord>.Success(new FileAssetRecord(KnownFileAssetId, WasReused: false))));
+            }
 
             if (WriterThrows)
             {
@@ -237,7 +282,7 @@ public sealed class ProviderDocumentFileAssetWriteTests
                 services.AddScoped(_ => repo);
 
                 services.RemoveAll<IFileStorageService>();
-                services.AddSingleton<IFileStorageService>(new StubFileStorage());
+                services.AddSingleton<IFileStorageService>(Storage);
 
                 services.RemoveAll<IAccountsUnitOfWork>();
                 var uow = Substitute.For<IAccountsUnitOfWork>();
@@ -284,17 +329,27 @@ public sealed class ProviderDocumentFileAssetWriteTests
         }
     }
 
-    private sealed class StubFileStorage : IFileStorageService
+    /// <summary>
+    /// In-memory storage stub that records every <see cref="DeleteAsync"/> call so tests can
+    /// assert that orphaned-file cleanup was attempted on the Patch 2G failure paths.
+    /// </summary>
+    private sealed class RecordingFileStorage : IFileStorageService
     {
+        public List<string> DeletedUrls { get; } = new();
+
         public Task<Result<FileUploadResult>> UploadAsync(
-            Stream stream, string fileName, string folder, string contentType, CancellationToken ct = default)
+            Stream stream, string fileName, string contentType, string folder, CancellationToken ct = default)
         {
             var length = stream.CanSeek ? stream.Length : 0;
             return Task.FromResult(Result<FileUploadResult>.Success(
                 new FileUploadResult($"/uploads/{folder}/x.bin", $"{folder}/x.bin", length)));
         }
 
-        public Task<bool> DeleteAsync(string fileUrl, CancellationToken ct = default) => Task.FromResult(true);
+        public Task<bool> DeleteAsync(string fileUrl, CancellationToken ct = default)
+        {
+            DeletedUrls.Add(fileUrl);
+            return Task.FromResult(true);
+        }
 
         public Task<string> GetAccessUrlAsync(string fileUrl, TimeSpan? expiresIn = null, CancellationToken ct = default)
             => Task.FromResult(fileUrl);

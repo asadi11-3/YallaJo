@@ -13,26 +13,24 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace Accounts.Tests.Unit;
 
 /// <summary>
-/// Patch 2E read-model tests for the two provider-document list/index handlers
-/// (admin application details + my-application status). They verify that each
-/// handler prefers FileAsset V2 metadata when a ProviderDocumentFile link exists,
-/// falls back to legacy ProviderDocument fields when no link exists, never leaks
-/// the internal StorageKey, preserves authorization, and batches the cross-module
-/// reads (no N+1).
+/// Patch 2G read-model tests for the two provider-document list/index handlers
+/// (admin application details + my-application status). FileAsset V2 is now the
+/// ONLY source of document display metadata: each handler reads FileName/SizeBytes
+/// from the linked FileAsset when a ProviderDocumentFile link exists, and renders
+/// EMPTY metadata (no legacy ProviderDocument.FileName/FileSizeBytes fallback) when
+/// no link exists. The internal StorageKey is never projected, FileUrl no longer
+/// exists on the DTOs, authorization is preserved, and the cross-module reads are
+/// batched (no N+1).
 /// </summary>
 public sealed class ProviderDocumentListReadModelTests
 {
-    private const string LegacyFileName = "legacy.pdf";
-    private const long LegacyFileSizeBytes = 1000;
-    private const string LegacyFileUrl = "/uploads/provider-application-documents/legacy.pdf";
-
     private const string FileAssetOriginalName = "RealOriginal.pdf";
     private const long FileAssetSizeBytes = 4242;
     private const string FileAssetStorageKey = "provider-application-documents/secret.pdf";
 
-    // ── Admin details: FileAsset metadata is preferred when a link exists ──────
+    // ── Admin details: FileAsset metadata is used when a link exists ──────────
     [Fact]
-    public async Task Admin_details_prefer_FileAsset_metadata_when_link_exists()
+    public async Task Admin_details_use_FileAsset_metadata_when_link_exists()
     {
         var ownerUserId = Guid.CreateVersion7();
         var (app, doc) = BuildApplicationWithDocument(ownerUserId);
@@ -52,7 +50,6 @@ public sealed class ProviderDocumentListReadModelTests
         var projected = result.Value!.Documents.Single();
         projected.FileName.Should().Be(FileAssetOriginalName);
         projected.FileSizeBytes.Should().Be(FileAssetSizeBytes);
-        projected.FileUrl.Should().Be(LegacyFileUrl);
 
         // Batched once -> no N+1.
         await repo.Received(1).GetFileAssetIdsByDocumentIdsAsync(
@@ -62,9 +59,9 @@ public sealed class ProviderDocumentListReadModelTests
         _ = fileAssetId;
     }
 
-    // ── Admin details: legacy fallback when no link exists ────────────────────
+    // ── Admin details: empty metadata when no link exists (no legacy fallback) ─
     [Fact]
-    public async Task Admin_details_fall_back_to_legacy_metadata_when_no_link_exists()
+    public async Task Admin_details_render_empty_metadata_when_no_link_exists()
     {
         var ownerUserId = Guid.CreateVersion7();
         var (app, _) = BuildApplicationWithDocument(ownerUserId);
@@ -82,14 +79,13 @@ public sealed class ProviderDocumentListReadModelTests
 
         result.IsSuccess.Should().BeTrue();
         var projected = result.Value!.Documents.Single();
-        projected.FileName.Should().Be(LegacyFileName);
-        projected.FileSizeBytes.Should().Be(LegacyFileSizeBytes);
-        projected.FileUrl.Should().Be(LegacyFileUrl);
+        projected.FileName.Should().BeEmpty();
+        projected.FileSizeBytes.Should().Be(0);
     }
 
-    // ── Status: FileAsset metadata is preferred when a link exists ────────────
+    // ── Status: FileAsset metadata is used when a link exists ─────────────────
     [Fact]
-    public async Task Status_prefers_FileAsset_metadata_when_link_exists()
+    public async Task Status_uses_FileAsset_metadata_when_link_exists()
     {
         var ownerUserId = Guid.CreateVersion7();
         var (app, doc) = BuildApplicationWithDocument(ownerUserId);
@@ -109,7 +105,6 @@ public sealed class ProviderDocumentListReadModelTests
         result.IsSuccess.Should().BeTrue();
         var projected = result.Value!.Documents.Single();
         projected.FileName.Should().Be(FileAssetOriginalName);
-        projected.FileUrl.Should().Be(LegacyFileUrl);
 
         await repo.Received(1).GetFileAssetIdsByDocumentIdsAsync(
             Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>());
@@ -117,9 +112,9 @@ public sealed class ProviderDocumentListReadModelTests
             Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>());
     }
 
-    // ── Status: legacy fallback when no link exists ───────────────────────────
+    // ── Status: empty metadata when no link exists (no legacy fallback) ───────
     [Fact]
-    public async Task Status_falls_back_to_legacy_metadata_when_no_link_exists()
+    public async Task Status_renders_empty_metadata_when_no_link_exists()
     {
         var ownerUserId = Guid.CreateVersion7();
         var (app, _) = BuildApplicationWithDocument(ownerUserId);
@@ -137,7 +132,7 @@ public sealed class ProviderDocumentListReadModelTests
             new GetMyApplicationStatusQuery(ownerUserId), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Documents.Single().FileName.Should().Be(LegacyFileName);
+        result.Value!.Documents.Single().FileName.Should().BeEmpty();
     }
 
     // ── No StorageKey/physical path leak in projected DTOs ────────────────────
@@ -160,10 +155,10 @@ public sealed class ProviderDocumentListReadModelTests
 
         result.IsSuccess.Should().BeTrue();
         var d = result.Value!.Documents.Single();
-        d.FileUrl.Should().NotContain(FileAssetStorageKey);
-        d.FileName.Should().NotBe(FileAssetStorageKey);
-        // FileUrl remains the public /uploads web URL, never the storage key.
-        d.FileUrl.Should().Be(LegacyFileUrl);
+        // The display name is the FileAsset's human-readable original name, never the
+        // internal storage key / physical path.
+        d.FileName.Should().Be(FileAssetOriginalName);
+        d.FileName.Should().NotContain(FileAssetStorageKey);
     }
 
     // ── Authorization preserved: anonymous -> Unauthorized, no I/O ────────────
@@ -279,11 +274,8 @@ public sealed class ProviderDocumentListReadModelTests
             description:          "Tours",
             typeSpecificDataJson: null).Value!;
 
-        var addResult = application.AddDocument(
-            documentType: DocumentType.BusinessLicense,
-            fileUrl:       LegacyFileUrl,
-            fileName:      LegacyFileName,
-            fileSizeBytes: LegacyFileSizeBytes);
+        // Patch 2G: AddDocument no longer carries file metadata (FileAsset is authoritative).
+        var addResult = application.AddDocument(documentType: DocumentType.BusinessLicense);
         var doc = addResult.Value!;
 
         var navProperty = typeof(ProviderDocument).GetProperty(nameof(ProviderDocument.Application));

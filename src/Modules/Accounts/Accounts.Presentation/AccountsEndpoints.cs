@@ -1,4 +1,3 @@
-using Accounts.Presentation.Endpoints.Admin;
 using Accounts.Presentation.Endpoints.Agency;
 using Accounts.Presentation.Endpoints.Profile;
 using Accounts.Presentation.Endpoints.Provider;
@@ -42,11 +41,9 @@ public static class AccountsEndpoints
 
         GuideAgencyEndpoints.MapGuideAgencyEndpoints(guidesGroup);
 
-        // Admin maintenance endpoints (Patch 2B+). Permission-gated.
-        var adminMaintenanceGroup = endpoints.MapGroup("/api/v1/admin/maintenance")
-            .WithTags("Accounts | Admin Maintenance");
-
-        MaintenanceEndpoints.MapMaintenanceEndpoints(adminMaintenanceGroup);
+        // Patch 2G: the Patch 2B provider-document backfill maintenance endpoint was removed
+        // because the ProviderDocument legacy file columns no longer exist; the backfill source
+        // it parsed (ProviderDocument.FileUrl) is gone, and V2 deploys against a fresh database.
 
         return endpoints;
     }

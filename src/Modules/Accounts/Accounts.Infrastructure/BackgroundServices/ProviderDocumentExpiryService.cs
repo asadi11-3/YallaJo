@@ -69,11 +69,13 @@ internal sealed class ProviderDocumentExpiryService(
             {
                 if (doc.ExpiresAt!.Value < nowUtc)
                 {
-                    // Already expired — log warning
+                    // Already expired — log warning. Patch 2G: ProviderDocument no longer
+                    // carries a file name (it now lives on the linked FileAsset); the document
+                    // type is the stable human-readable identifier for expiry notifications.
                     expiredCount++;
                     logger.LogWarning(
-                        "Provider {UserId} document {DocType} ({FileName}) expired on {ExpiresAt}",
-                        application.UserId, doc.DocumentType, doc.FileName, doc.ExpiresAt.Value);
+                        "Provider {UserId} document {DocType} expired on {ExpiresAt}",
+                        application.UserId, doc.DocumentType, doc.ExpiresAt.Value);
                 }
                 else if (doc.ExpiresAt.Value <= notifyThreshold)
                 {
@@ -81,11 +83,14 @@ internal sealed class ProviderDocumentExpiryService(
                     expiringCount++;
                     var daysUntilExpiry = (int)(doc.ExpiresAt.Value - nowUtc).TotalDays;
 
+                    // Patch 2G: the file name moved to the FileAsset V2 model. The expiry
+                    // notification identifies the document by its type (the FileAsset is not
+                    // loaded in this background scan), which is also more meaningful to providers.
                     await outboxWriter.WriteAsync(new ProviderDocumentExpiringIntegrationEvent(
                         ApplicationId: application.Id,
                         UserId: application.UserId,
                         DocumentType: doc.DocumentType.ToString(),
-                        DocumentFileName: doc.FileName,
+                        DocumentFileName: doc.DocumentType.ToString(),
                         ExpiresAt: doc.ExpiresAt.Value,
                         DaysUntilExpiry: daysUntilExpiry), ct);
                 }

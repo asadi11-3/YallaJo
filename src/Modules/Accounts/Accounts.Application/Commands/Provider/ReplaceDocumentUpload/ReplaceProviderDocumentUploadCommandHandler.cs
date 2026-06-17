@@ -85,12 +85,46 @@ public sealed class ReplaceProviderDocumentUploadCommandHandler(
             var uploaded = uploadResponse.Value;
             var fileSizeBytes = uploaded.FileSize > 0 ? uploaded.FileSize : request.FileSizeBytes;
 
-            var replaceResult = application.ReplaceDocument(
-                request.DocumentId,
-                uploaded.Url,
-                request.FileName,
-                fileSizeBytes,
-                request.ExpiresAt);
+            // The replaced document keeps its original DocumentType — resolve it from the
+            // already-loaded aggregate before any mutation (replace does not change the type).
+            var existingDocument = application.Documents.FirstOrDefault(d => d.Id == request.DocumentId);
+            if (existingDocument is null)
+            {
+                await TryCleanupOrphanedFileAsync(uploaded.Url, cancellationToken);
+                return Result<ReplaceProviderDocumentResult>.Failure(
+                    ProviderApplicationErrors.DocumentNotFound, Outcome.NotFound);
+            }
+
+            var documentType = existingDocument.DocumentType;
+
+            // Patch 2G: FileAsset registration + ProviderDocumentFile link are REQUIRED (no longer
+            // best-effort). Register the FileAsset for the NEW blob FIRST. If it fails, clean up the
+            // new blob and abort — the prior document/link/FileAsset remain intact and consistent.
+            var seed = new FileAssetSeed(
+                StorageProvider: "Local",
+                StorageKey: uploaded.StorageKey,
+                OriginalFileName: request.FileName,
+                SafeFileName: SafeFileNameSanitizer.Sanitize(request.FileName, $"document-{request.DocumentId:N}"),
+                ContentType: request.ContentType,
+                Extension: Path.GetExtension(request.FileName ?? string.Empty).ToLowerInvariant(),
+                SizeBytes: fileSizeBytes,
+                UploadedByUserId: userId);
+
+            var registrarResult = await fileAssetRegistrar.GetOrAddByStorageKeyAsync(seed, dryRun: false, cancellationToken);
+            if (registrarResult.IsFailure || registrarResult.Value is null)
+            {
+                await TryCleanupOrphanedFileAsync(uploaded.Url, cancellationToken);
+                logger.LogError(
+                    "Patch 2G: FileAsset registration failed for replaced provider document {DocumentId}; replacement aborted, prior file unchanged.",
+                    request.DocumentId);
+                return Result<ReplaceProviderDocumentResult>.Failure(
+                    registrarResult.Errors.Count > 0
+                        ? registrarResult.Errors[0]
+                        : Error.Failure("ProviderDocument.FileAssetFailed", "Failed to register the replacement file metadata."),
+                    Outcome.ServerError);
+            }
+
+            var replaceResult = application.ReplaceDocument(request.DocumentId, request.ExpiresAt);
 
             if (replaceResult.IsFailure)
             {
@@ -116,45 +150,23 @@ public sealed class ReplaceProviderDocumentUploadCommandHandler(
                 throw;
             }
 
-            // Patch 2D: materialize the FileAsset V2 row + repoint the ProviderDocumentFile link so the
-            // replaced document immediately serves via the FileAsset read path (Patch 2C). Best-effort:
-            // never fail the replace if this step fails — the legacy FileUrl path still serves.
+            // Repoint the ProviderDocumentFile link to the newly registered FileAsset. If this fails,
+            // clean up the new blob and fail — the link still points at the prior FileAsset, so the
+            // document remains downloadable and consistent (no document compensation required).
             try
             {
-                var seed = new FileAssetSeed(
-                    StorageProvider: "Local",
-                    StorageKey: uploaded.StorageKey,
-                    OriginalFileName: request.FileName,
-                    SafeFileName: SafeFileNameSanitizer.Sanitize(request.FileName, $"document-{request.DocumentId:N}"),
-                    ContentType: request.ContentType,
-                    Extension: Path.GetExtension(request.FileName ?? string.Empty).ToLowerInvariant(),
-                    SizeBytes: fileSizeBytes,
-                    UploadedByUserId: userId);
-
-                // The replaced document keeps its original DocumentType — resolve it from the
-                // already-loaded aggregate (the replace does not change the document's type).
-                var documentType = application.Documents
-                    .First(d => d.Id == request.DocumentId)
-                    .DocumentType;
-
-                var registrarResult = await fileAssetRegistrar.GetOrAddByStorageKeyAsync(seed, dryRun: false, cancellationToken);
-                if (registrarResult.IsSuccess && registrarResult.Value is not null)
-                {
-                    await providerDocumentFileWriter.UpsertLinkAsync(
-                        request.DocumentId, registrarResult.Value.Id, documentType, cancellationToken);
-                }
-                else
-                {
-                    logger.LogWarning(
-                        "Patch 2D: could not register FileAsset for replaced provider document {DocumentId}; legacy FileUrl path remains in effect.",
-                        request.DocumentId);
-                }
+                await providerDocumentFileWriter.UpsertLinkAsync(
+                    request.DocumentId, registrarResult.Value.Id, documentType, cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogWarning(ex,
-                    "Patch 2D: FileAsset/link materialization failed for replaced provider document {DocumentId}; legacy FileUrl path remains in effect.",
+                await TryCleanupOrphanedFileAsync(uploaded.Url, cancellationToken);
+                logger.LogError(ex,
+                    "Patch 2G: FileAsset link repoint failed for replaced provider document {DocumentId}; replacement aborted, prior link retained.",
                     request.DocumentId);
+                return Result<ReplaceProviderDocumentResult>.Failure(
+                    Error.Failure("ProviderDocument.LinkFailed", "Failed to link the replacement document to its stored file."),
+                    Outcome.ServerError);
             }
 
             await cache.RemoveByTagAsync(AccountsCacheKeys.MyApplicationStatusTag(userId), cancellationToken);
@@ -164,7 +176,7 @@ public sealed class ReplaceProviderDocumentUploadCommandHandler(
                 request.DocumentId, application.Id, userId, fileSizeBytes);
 
             return Result<ReplaceProviderDocumentResult>.Success(
-                new ReplaceProviderDocumentResult(request.DocumentId, uploaded.Url));
+                new ReplaceProviderDocumentResult(request.DocumentId));
         }
         finally
         {

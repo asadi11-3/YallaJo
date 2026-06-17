@@ -20,16 +20,9 @@ public sealed class ProviderDocumentConfiguration : IEntityTypeConfiguration<Pro
             .HasMaxLength(100)
             .HasConversion<string>();
 
-        builder.Property(d => d.FileUrl)
-            .IsRequired()
-            .HasMaxLength(2048);
-
-        builder.Property(d => d.FileName)
-            .IsRequired()
-            .HasMaxLength(500);
-
-        builder.Property(d => d.FileSizeBytes).IsRequired();
-
+        // Patch 2G: the physical file metadata (URL / name / size) moved to the FileAsset V2
+        // model (content_core.FileAssets) linked via accounts.ProviderDocumentFiles. The legacy
+        // FileUrl / FileName / FileSizeBytes columns are dropped from accounts.ProviderDocuments.
         builder.Property(d => d.ExpiresAt).IsRequired(false);
 
         builder.Property(d => d.UploadedAt).IsRequired();

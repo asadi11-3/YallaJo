@@ -11,9 +11,10 @@ namespace Accounts.Application.Interfaces;
 /// is stored, so that the Patch 2C download read path immediately prefers the FileAsset source.
 /// </para>
 /// <para>
-/// This is deliberately separate from <see cref="IProviderDocumentBackfillStore"/>: backfill is a
-/// one-off maintenance concern, whereas this is a per-request runtime concern. Keeping it in
-/// Accounts.Application keeps the handlers free of Infrastructure / EF Core / SqlClient references.
+/// Keeping this port in Accounts.Application keeps the upload/replace handlers free of
+/// Infrastructure / EF Core / SqlClient references. (The Patch 2B backfill store that was
+/// the historical other implementer of cross-module link writes was removed in Patch 2G
+/// when the legacy ProviderDocument file columns were dropped.)
 /// </para>
 /// </summary>
 public interface IProviderDocumentFileWriter

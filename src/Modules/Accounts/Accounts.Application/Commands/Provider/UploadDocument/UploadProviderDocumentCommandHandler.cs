@@ -84,12 +84,9 @@ public sealed class UploadProviderDocumentCommandHandler(
             // Use the authoritative stored size when available; fall back to client-reported size.
             var fileSizeBytes = uploaded.FileSize > 0 ? uploaded.FileSize : request.FileSizeBytes;
 
-            var addResult = application.AddDocument(
-                request.DocumentType,
-                uploaded.Url,
-                request.FileName,
-                fileSizeBytes,
-                request.ExpiresAt);
+            // Patch 2G: ProviderDocument carries only business metadata now. The physical file
+            // (URL / name / size) lives in the FileAsset V2 model.
+            var addResult = application.AddDocument(request.DocumentType, request.ExpiresAt);
 
             if (addResult.IsFailure || addResult.Value is null)
             {
@@ -98,6 +95,33 @@ public sealed class UploadProviderDocumentCommandHandler(
                 return Result<AddProviderDocumentResult>.Failure(
                     addResult.Error ?? Error.Failure("ProviderDocument.Add", "Unknown error occurred while adding document."),
                     Outcome.UnprocessableEntity);
+            }
+
+            // Patch 2G: FileAsset registration is now REQUIRED (no longer best-effort). Register the
+            // physical file as a FileAsset BEFORE persisting the document so that a registration
+            // failure leaves nothing in the database — only the uploaded blob, which we clean up.
+            var seed = new FileAssetSeed(
+                StorageProvider: "Local",
+                StorageKey: uploaded.StorageKey,
+                OriginalFileName: request.FileName,
+                SafeFileName: SafeFileNameSanitizer.Sanitize(request.FileName, $"document-{addResult.Value.Id:N}"),
+                ContentType: request.ContentType,
+                Extension: Path.GetExtension(request.FileName ?? string.Empty).ToLowerInvariant(),
+                SizeBytes: fileSizeBytes,
+                UploadedByUserId: userId);
+
+            var registrarResult = await fileAssetRegistrar.GetOrAddByStorageKeyAsync(seed, dryRun: false, cancellationToken);
+            if (registrarResult.IsFailure || registrarResult.Value is null)
+            {
+                await TryCleanupOrphanedFileAsync(uploaded.Url, cancellationToken);
+                logger.LogError(
+                    "Patch 2G: FileAsset registration failed for provider document {DocumentId}; upload aborted.",
+                    addResult.Value.Id);
+                return Result<AddProviderDocumentResult>.Failure(
+                    registrarResult.Errors.Count > 0
+                        ? registrarResult.Errors[0]
+                        : Error.Failure("ProviderDocument.FileAssetFailed", "Failed to register the uploaded document's file metadata."),
+                    Outcome.ServerError);
             }
 
             try
@@ -117,39 +141,36 @@ public sealed class UploadProviderDocumentCommandHandler(
                 throw;
             }
 
-            // Patch 2D: materialize the FileAsset V2 row + ProviderDocumentFile link so the new
-            // document immediately serves via the FileAsset read path (Patch 2C). Best-effort:
-            // never fail the upload if this step fails — the legacy FileUrl path still serves.
+            // Patch 2G: the ProviderDocumentFile link is now REQUIRED. If it fails, fail the upload,
+            // clean up the blob, and compensate by removing the (now link-less, undownloadable)
+            // document that was just persisted.
             try
             {
-                var seed = new FileAssetSeed(
-                    StorageProvider: "Local",
-                    StorageKey: uploaded.StorageKey,
-                    OriginalFileName: request.FileName,
-                    SafeFileName: SafeFileNameSanitizer.Sanitize(request.FileName, $"document-{addResult.Value.Id:N}"),
-                    ContentType: request.ContentType,
-                    Extension: Path.GetExtension(request.FileName ?? string.Empty).ToLowerInvariant(),
-                    SizeBytes: fileSizeBytes,
-                    UploadedByUserId: userId);
-
-                var registrarResult = await fileAssetRegistrar.GetOrAddByStorageKeyAsync(seed, dryRun: false, cancellationToken);
-                if (registrarResult.IsSuccess && registrarResult.Value is not null)
-                {
-                    await providerDocumentFileWriter.UpsertLinkAsync(
-                        addResult.Value.Id, registrarResult.Value.Id, request.DocumentType, cancellationToken);
-                }
-                else
-                {
-                    logger.LogWarning(
-                        "Patch 2D: could not register FileAsset for provider document {DocumentId}; legacy FileUrl path remains in effect.",
-                        addResult.Value.Id);
-                }
+                await providerDocumentFileWriter.UpsertLinkAsync(
+                    addResult.Value.Id, registrarResult.Value.Id, request.DocumentType, cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogWarning(ex,
-                    "Patch 2D: FileAsset/link materialization failed for provider document {DocumentId}; legacy FileUrl path remains in effect.",
+                await TryCleanupOrphanedFileAsync(uploaded.Url, cancellationToken);
+
+                try
+                {
+                    application.RemoveDocument(addResult.Value.Id);
+                    await unitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                catch (Exception compensationEx) when (compensationEx is not OperationCanceledException)
+                {
+                    logger.LogError(compensationEx,
+                        "Patch 2G: compensation removal of unlinked provider document {DocumentId} failed; manual cleanup may be required.",
+                        addResult.Value.Id);
+                }
+
+                logger.LogError(ex,
+                    "Patch 2G: FileAsset link creation failed for provider document {DocumentId}; upload aborted.",
                     addResult.Value.Id);
+                return Result<AddProviderDocumentResult>.Failure(
+                    Error.Failure("ProviderDocument.LinkFailed", "Failed to link the uploaded document to its stored file."),
+                    Outcome.ServerError);
             }
 
             await cache.RemoveByTagAsync(AccountsCacheKeys.MyApplicationStatusTag(userId), cancellationToken);
@@ -159,7 +180,7 @@ public sealed class UploadProviderDocumentCommandHandler(
                 request.DocumentType, application.Id, userId, fileSizeBytes);
 
             return Result<AddProviderDocumentResult>.Created(
-                new AddProviderDocumentResult(addResult.Value.Id, addResult.Value.DocumentType, addResult.Value.FileUrl));
+                new AddProviderDocumentResult(addResult.Value.Id, addResult.Value.DocumentType));
         }
         finally
         {

@@ -24,16 +24,11 @@ namespace Accounts.Application.Queries.DownloadProviderDocument;
 /// </list>
 /// </para>
 /// <para>
-/// Read-source preference (Patch 2C expand-and-contract):
-/// <list type="number">
-/// <item>If a ProviderDocumentFile link row exists for this document and the linked
-/// FileAsset is found and the blob is readable by its storage key, stream via the
-/// FileAsset V2 path (the new authoritative source).</item>
-/// <item>Otherwise fall back to the legacy ProviderDocument.FileUrl path, kept until
-/// the Patch 2B backfill has been verified complete and FileUrl is dropped (Patch 2G).</item>
-/// </list>
-/// In neither case does StorageKey / FileUrl / physical path leak to the API client
-/// or to information-level logs.
+/// Read source (Patch 2G — FileAsset V2 is now the only authoritative source):
+/// the document is streamed via ProviderDocument -> ProviderDocumentFile -> FileAsset
+/// -> StorageKey. If no link row / FileAsset / readable blob exists, the handler returns
+/// NotFound. The legacy ProviderDocument.FileUrl fallback (Patch 2C) was removed here.
+/// StorageKey / physical path never leak to the API client or to information-level logs.
 /// </para>
 /// </summary>
 public sealed class DownloadProviderDocumentQueryHandler(
@@ -111,38 +106,13 @@ public sealed class DownloadProviderDocumentQueryHandler(
             }
         }
 
-        // 5) Patch 2C expand-and-contract: legacy FileUrl path retained as fallback
-        //    for ProviderDocument rows that the Patch 2B backfill has not yet linked
-        //    into FileAssets. This branch will be removed in Patch 2G after backfill
-        //    is verified complete and FileUrl is dropped.
-        var openResult = await fileStorageService.OpenReadAsync(document.FileUrl, cancellationToken);
-        if (openResult.IsFailure || openResult.Value is null)
-        {
-            logger.LogWarning(
-                "Provider document blob unavailable on both FileAsset and legacy paths. DocumentId={DocumentId}, Outcome={Outcome}",
-                request.DocumentId, openResult.Outcome);
-            return Result<DownloadProviderDocumentResult>.Failure(
-                Error.NotFound("ProviderDocument"), Outcome.NotFound);
-        }
-
-        var download = openResult.Value;
-        var safeFileName = BuildSafeDownloadName(document);
-
+        // 5) Patch 2G: FileAsset V2 is the only authoritative source. If no link row /
+        //    FileAsset / readable blob was resolved above, the document is not downloadable.
         logger.LogInformation(
-            "Provider document streamed via legacy FileUrl path. DocumentId={DocumentId}, RequestedBy={UserId}, AdminTier={IsAdminTier}",
+            "Provider document has no resolvable FileAsset. DocumentId={DocumentId}, RequestedBy={UserId}, AdminTier={IsAdminTier}",
             request.DocumentId, userId, isAdminTier);
 
-        return Result<DownloadProviderDocumentResult>.Success(new DownloadProviderDocumentResult(
-            Content: download.Content,
-            ContentType: download.ContentType,
-            FileName: safeFileName,
-            FileSize: download.FileSize));
+        return Result<DownloadProviderDocumentResult>.Failure(
+            Error.NotFound("ProviderDocument"), Outcome.NotFound);
     }
-
-    /// <summary>
-    /// Produces a safe download file name from the stored original name, stripping any
-    /// directory components and invalid characters. Never exposes the storage key/path.
-    /// </summary>
-    private static string BuildSafeDownloadName(ProviderDocument document)
-        => SafeFileNameSanitizer.Sanitize(document.FileName, $"document-{document.Id:N}");
 }

@@ -190,11 +190,11 @@ public sealed class ProviderApplication : AuditableEntity, IAggregateRoot
     }
 
     // ── Document management ───────────────────────────────────────────────────
+    // Patch 2G: the physical file (StorageKey/OriginalFileName/SizeBytes) now lives in the
+    // FileAsset V2 model, linked via ProviderDocumentFiles. ProviderDocument carries only the
+    // business metadata (DocumentType / UploadedAt / ExpiresAt).
     public Result<ProviderDocument> AddDocument(
         DocumentType documentType,
-        string fileUrl,
-        string fileName,
-        long fileSizeBytes,
         DateTime? expiresAt = null)
     {
         if (_documents.Count >= MaxDocuments)
@@ -203,7 +203,7 @@ public sealed class ProviderApplication : AuditableEntity, IAggregateRoot
         if (_documents.Any(d => d.DocumentType == documentType))
             return Result.Failure<ProviderDocument>(ProviderApplicationErrors.DuplicateDocumentType);
 
-        var doc = ProviderDocument.Create(Id, documentType, fileUrl, fileName, fileSizeBytes, expiresAt);
+        var doc = ProviderDocument.Create(Id, documentType, expiresAt);
         _documents.Add(doc);
         MarkUpdated();
         return Result.Success(doc);
@@ -211,16 +211,29 @@ public sealed class ProviderApplication : AuditableEntity, IAggregateRoot
 
     public Result ReplaceDocument(
         Guid documentId,
-        string fileUrl,
-        string fileName,
-        long fileSizeBytes,
         DateTime? expiresAt = null)
     {
         var doc = _documents.FirstOrDefault(d => d.Id == documentId);
         if (doc is null)
             return Result.Failure(ProviderApplicationErrors.DocumentNotFound);
 
-        doc.Replace(fileUrl, fileName, fileSizeBytes, expiresAt);
+        doc.Replace(expiresAt);
+        MarkUpdated();
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Patch 2G: removes a document from the application. Used as compensation when the
+    /// FileAsset link materialization fails after the document row was persisted, so an
+    /// undownloadable (link-less) document is not left behind.
+    /// </summary>
+    public Result RemoveDocument(Guid documentId)
+    {
+        var doc = _documents.FirstOrDefault(d => d.Id == documentId);
+        if (doc is null)
+            return Result.Failure(ProviderApplicationErrors.DocumentNotFound);
+
+        _documents.Remove(doc);
         MarkUpdated();
         return Result.Success();
     }
