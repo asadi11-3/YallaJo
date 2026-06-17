@@ -7,6 +7,8 @@ using Accounts.Domain.Entities;
 using Accounts.Domain.Enums;
 using Accounts.Domain.Repositories;
 
+using ContentCore.Contracts.Storage;
+
 using FluentAssertions;
 
 using Microsoft.AspNetCore.Authentication;
@@ -146,7 +148,163 @@ public sealed class ProviderDocumentDownloadEndpointTests
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
+    // ── Patch 2C: read-source preference (FileAsset path vs legacy fallback) ──
+
+    [Fact]
+    public async Task FileAsset_path_serves_FileAsset_bytes_when_link_exists()
+    {
+        var (ownerApp, documentId) = BuildApplicationWithDocument(OwnerUserId);
+
+        var fileAssetId = Guid.Parse("0d000000-0000-0000-0000-0000000000a1");
+        var assetView = new FileAssetView(
+            Id: fileAssetId,
+            StorageProvider: "Local",
+            StorageKey: "provider-application-documents/asset-abc.pdf",
+            ContentType: KnownContentType,
+            Extension: ".pdf",
+            OriginalFileName: "Renamed License.pdf",
+            SafeFileName: "RenamedLicense.pdf",
+            SizeBytes: FileAssetBytes.Length);
+
+        await using var factory = new DownloadFactory
+        {
+            CallerUserId = OwnerUserId,
+            IsAdmin = false,
+            ByUserId = ownerApp,
+            ByDocumentId = null,
+            LinkedFileAssetId = fileAssetId,
+            FileAssetViewResult = assetView,
+            FileAssetBytes = FileAssetBytes,
+        };
+
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/v1/provider/documents/{documentId}/download");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.Content.Headers.ContentType!.MediaType.Should().Be(KnownContentType);
+        var body = await response.Content.ReadAsByteArrayAsync();
+        // Must come from the FileAsset path, not the legacy KnownBytes path.
+        body.Should().Equal(FileAssetBytes);
+        body.Should().NotEqual(KnownBytes);
+    }
+
+    [Fact]
+    public async Task Legacy_FileUrl_path_serves_bytes_when_no_link_exists()
+    {
+        var (ownerApp, documentId) = BuildApplicationWithDocument(OwnerUserId);
+
+        // No LinkedFileAssetId / FileAssetViewResult / FileAssetBytes set:
+        // - repo.GetFileAssetIdByDocumentIdAsync returns null,
+        // - locator.GetByIdAsync would return NotFound,
+        // - storage.OpenReadByStorageKeyAsync would return NotFound,
+        // -> handler falls back to OpenReadAsync(doc.FileUrl) which yields KnownBytes.
+        await using var factory = new DownloadFactory
+        {
+            CallerUserId = OwnerUserId,
+            IsAdmin = false,
+            ByUserId = ownerApp,
+            ByDocumentId = null,
+        };
+
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/v1/provider/documents/{documentId}/download");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsByteArrayAsync();
+        body.Should().Equal(KnownBytes);
+    }
+
+    [Fact]
+    public async Task Response_does_not_leak_StorageKey_FileUrl_or_physical_paths()
+    {
+        var (ownerApp, documentId) = BuildApplicationWithDocument(OwnerUserId);
+
+        var fileAssetId = Guid.Parse("0d000000-0000-0000-0000-0000000000a2");
+        // Deliberately distinctive markers so the assertion proves nothing leaked.
+        const string SecretStorageKey = "provider-application-documents/SECRET-2c-asset.pdf";
+        const string SecretOriginalFileName = "TOP_SECRET_2C_LICENSE.pdf";
+        const string SecretFileUrl = "/uploads/provider-application-documents/SECRET-2C-LEGACY.pdf";
+
+        // Mutate the application's document so FileUrl is the SECRET marker.
+        // (BuildApplicationWithDocument already created a doc, we use that path
+        // implicitly via the legacy stub; for the FileAsset path the markers are
+        // injected through the view + storage stub key arguments.)
+        var assetView = new FileAssetView(
+            Id: fileAssetId,
+            StorageProvider: "Local",
+            StorageKey: SecretStorageKey,
+            ContentType: KnownContentType,
+            Extension: ".pdf",
+            OriginalFileName: SecretOriginalFileName,
+            SafeFileName: "safe-name.pdf",
+            SizeBytes: FileAssetBytes.Length);
+
+        await using var factory = new DownloadFactory
+        {
+            CallerUserId = OwnerUserId,
+            IsAdmin = false,
+            ByUserId = ownerApp,
+            ByDocumentId = null,
+            LinkedFileAssetId = fileAssetId,
+            FileAssetViewResult = assetView,
+            FileAssetBytes = FileAssetBytes,
+        };
+
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/v1/provider/documents/{documentId}/download");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Storage internals (key, legacy URL, physical paths) must NEVER appear
+        // anywhere in the response. OriginalFileName is intentionally NOT in this
+        // list — it is the user-supplied download name and is legitimately
+        // surfaced (sanitized) via Content-Disposition. That is the same Patch 1A
+        // behavior preserved by Patch 2C.
+        var leakable = new[]
+        {
+            SecretStorageKey,
+            SecretFileUrl,
+            "/uploads/provider-application-documents/",
+        };
+
+        foreach (var header in response.Headers.Concat(response.Content.Headers))
+        {
+            foreach (var value in header.Value)
+            {
+                foreach (var needle in leakable)
+                {
+                    value.Should().NotContain(needle,
+                        $"response header '{header.Key}' leaked '{needle}'");
+                }
+            }
+        }
+
+        // The body is the FileAsset bytes themselves (binary PDF marker), so it
+        // trivially cannot contain ASCII secrets unless one of our markers is a
+        // substring of those bytes — but we still verify defensively.
+        var bodyText = await response.Content.ReadAsStringAsync();
+        foreach (var needle in leakable)
+        {
+            bodyText.Should().NotContain(needle, $"response body leaked '{needle}'");
+        }
+
+        // Positive contract: the user's OriginalFileName (sanitized) IS expected
+        // to surface as the Content-Disposition download name — confirming the
+        // FileAsset path correctly drove the response (vs the legacy FileUrl
+        // fallback, which would surface KnownFileName instead).
+        response.Content.Headers.ContentDisposition.Should().NotBeNull();
+        var disposition = response.Content.Headers.ContentDisposition!.ToString();
+        disposition.Should().Contain(SecretOriginalFileName,
+            "Content-Disposition should reflect the FileAsset OriginalFileName when the FileAsset path served the response");
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────────
+
+    // Patch 2C: distinct bytes for the FileAsset path so tests can prove which
+    // branch served the response.
+    private static readonly byte[] FileAssetBytes = [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF];
 
     private static (ProviderApplication App, Guid DocumentId) BuildApplicationWithDocument(Guid ownerUserId)
     {
@@ -196,6 +354,25 @@ public sealed class ProviderDocumentDownloadEndpointTests
         /// <summary>Application returned by GetWithDocumentsByDocumentIdAsync(anyId).</summary>
         public ProviderApplication? ByDocumentId { get; init; }
 
+        /// <summary>
+        /// Patch 2C: optional FileAsset link. When set (and not Guid.Empty), the
+        /// stubbed <see cref="IProviderApplicationRepository.GetFileAssetIdByDocumentIdAsync"/>
+        /// returns it; when null (default), no link exists and the handler must fall
+        /// back to the legacy <c>FileUrl</c> path.
+        /// </summary>
+        public Guid? LinkedFileAssetId { get; init; }
+
+        /// <summary>
+        /// Patch 2C: optional FileAsset view. When set, the stubbed
+        /// <see cref="IFileAssetLocator"/> returns it; otherwise it returns NotFound.
+        /// </summary>
+        public FileAssetView? FileAssetViewResult { get; init; }
+
+        /// <summary>
+        /// Patch 2C: bytes the FileAsset path streams via OpenReadByStorageKeyAsync.
+        /// </summary>
+        public byte[]? FileAssetBytes { get; init; }
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Testing");
@@ -232,12 +409,29 @@ public sealed class ProviderDocumentDownloadEndpointTests
                         .Returns(_ => Task.FromResult(ByUserId));
                     repo.GetWithDocumentsByDocumentIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
                         .Returns(_ => Task.FromResult(ByDocumentId));
+                    // Patch 2C: by default no link exists -> handler uses legacy path.
+                    repo.GetFileAssetIdByDocumentIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+                        .Returns(_ => Task.FromResult(LinkedFileAssetId));
                     return repo;
+                });
+
+                // Patch 2C: stub the FileAsset locator so no ContentCoreDbContext is
+                // required. Default: NotFound -> handler falls back to legacy path.
+                services.RemoveAll<IFileAssetLocator>();
+                services.AddSingleton<IFileAssetLocator>(_ =>
+                {
+                    var locator = Substitute.For<IFileAssetLocator>();
+                    locator.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+                           .Returns(_ => FileAssetViewResult is null
+                               ? Task.FromResult(Result<FileAssetView>.Failure(
+                                     Error.NotFound("FileAsset"), Outcome.NotFound))
+                               : Task.FromResult(Result<FileAssetView>.Success(FileAssetViewResult)));
+                    return locator;
                 });
 
                 // Stub storage so OpenReadAsync streams the known bytes without disk I/O.
                 services.RemoveAll<IFileStorageService>();
-                services.AddSingleton<IFileStorageService>(_ => new StubFileStorage());
+                services.AddSingleton<IFileStorageService>(_ => new StubFileStorage(FileAssetBytes));
             });
         }
     }
@@ -285,6 +479,13 @@ public sealed class ProviderDocumentDownloadEndpointTests
 
     private sealed class StubFileStorage : IFileStorageService
     {
+        private readonly byte[]? _fileAssetBytes;
+
+        public StubFileStorage(byte[]? fileAssetBytes = null)
+        {
+            _fileAssetBytes = fileAssetBytes;
+        }
+
         public Task<Result<FileUploadResult>> UploadAsync(
             Stream stream, string fileName, string contentType, string folder, CancellationToken ct = default)
             => Task.FromResult(Result<FileUploadResult>.Success(
@@ -299,6 +500,18 @@ public sealed class ProviderDocumentDownloadEndpointTests
         public Task<Result<FileDownload>> OpenReadAsync(string fileUrl, CancellationToken ct = default)
             => Task.FromResult(Result<FileDownload>.Success(
                 new FileDownload(new MemoryStream(KnownBytes, writable: false), KnownContentType, KnownBytes.Length)));
+
+        // Patch 2C: when the factory supplies FileAssetBytes, this stub honors the
+        // FileAsset-path read by streaming them back; otherwise it returns NotFound
+        // so the handler is forced to fall back to OpenReadAsync(fileUrl).
+        public Task<Result<FileDownload>> OpenReadByStorageKeyAsync(string storageKey, CancellationToken ct = default)
+            => _fileAssetBytes is null
+                ? Task.FromResult(Result<FileDownload>.Failure(Error.NotFound("File"), Outcome.NotFound))
+                : Task.FromResult(Result<FileDownload>.Success(
+                    new FileDownload(
+                        new MemoryStream(_fileAssetBytes, writable: false),
+                        KnownContentType,
+                        _fileAssetBytes.Length)));
     }
 }
 

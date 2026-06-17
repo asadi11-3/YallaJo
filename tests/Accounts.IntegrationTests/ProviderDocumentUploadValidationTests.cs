@@ -311,5 +311,10 @@ public sealed class ProviderDocumentUploadValidationTests
         public Task<Result<FileDownload>> OpenReadAsync(string fileUrl, CancellationToken ct = default)
             => Task.FromResult(Result<FileDownload>.Success(
                 new FileDownload(new MemoryStream([0x25, 0x50, 0x44, 0x46], writable: false), "application/pdf", 4)));
+
+        // Patch 2C: upload-validation tests don't exercise the FileAsset V2 read
+        // path. Return NotFound to keep the stub honest.
+        public Task<Result<FileDownload>> OpenReadByStorageKeyAsync(string storageKey, CancellationToken ct = default)
+            => Task.FromResult(Result<FileDownload>.Failure(Error.NotFound("File"), Outcome.NotFound));
     }
 }

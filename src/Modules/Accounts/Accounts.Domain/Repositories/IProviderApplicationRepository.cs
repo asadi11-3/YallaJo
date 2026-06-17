@@ -67,4 +67,17 @@ public interface IProviderApplicationRepository : IRepository<ProviderApplicatio
         Guid afterId,
         int take,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns the FileAssetId linked to the given <paramref name="providerDocumentId"/>
+    /// via the <c>accounts.ProviderDocumentFiles</c> table (Patch 2C download switch),
+    /// or <c>null</c> when no link row exists yet (e.g. the Patch 2B backfill has not
+    /// linked this document). The FileAssetId is an opaque cross-module reference into
+    /// <c>content_core.FileAssets</c>; resolution to a usable <c>FileAssetView</c> is
+    /// performed via <c>IFileAssetLocator</c>. No FK is enforced at the database level
+    /// by design (module boundary, see m0336 / Patch 2A).
+    /// </summary>
+    Task<Guid?> GetFileAssetIdByDocumentIdAsync(
+        Guid providerDocumentId,
+        CancellationToken ct = default);
 }

@@ -124,4 +124,20 @@ public sealed class ProviderApplicationRepository(AccountsDbContext context)
             .Take(take)
             .ToListAsync(ct);
     }
+
+    public async Task<Guid?> GetFileAssetIdByDocumentIdAsync(
+        Guid providerDocumentId,
+        CancellationToken ct = default)
+    {
+        // Patch 2C download switch: single projected AsNoTracking lookup against the
+        // accounts.ProviderDocumentFiles link table (unique on ProviderDocumentId per
+        // UX_ProviderDocumentFiles_ProviderDocumentId). Returns null when no link row
+        // exists yet — the caller falls back to the legacy ProviderDocument.FileUrl
+        // path. The FileAssetId is opaque here; no DB FK to content_core.FileAssets.
+        return await context.Set<ProviderDocumentFile>()
+            .AsNoTracking()
+            .Where(f => f.ProviderDocumentId == providerDocumentId)
+            .Select(f => (Guid?)f.FileAssetId)
+            .FirstOrDefaultAsync(ct);
+    }
 }

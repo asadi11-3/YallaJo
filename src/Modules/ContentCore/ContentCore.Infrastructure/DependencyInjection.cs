@@ -117,6 +117,13 @@ public static class DependencyInjection
         // ContentCoreDbContext directly. Idempotent on UX_FileAssets_StorageKey.
         services.AddScoped<IFileAssetRegistrar, FileAssetRegistrar>();
 
+        // ── FileAsset Locator (Patch 2C) ───────────────────────────────────
+        // Cross-module read port for the FileAsset V2 download path. Callers
+        // (e.g. Accounts provider-document download) get a server-internal
+        // FileAssetView that includes StorageKey for feeding into
+        // IFileStorageService.OpenReadByStorageKeyAsync — never client-exposed.
+        services.AddScoped<IFileAssetLocator, FileAssetLocator>();
+
         // Cross-module pre-flight migration probe used by Patch 2B backfills
         // to verify the AddFileAssets migration is applied on content_core.
         services.AddScoped<IBackfillContentCoreMigrationsProbe, BackfillContentCoreMigrationsProbe>();

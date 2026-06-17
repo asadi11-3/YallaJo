@@ -130,12 +130,48 @@ internal sealed class LocalFileStorageService : IFileStorageService
                 Outcome.Invalid));
         }
 
+        return Task.FromResult(OpenResolvedPath(fullPath));
+    }
+
+    /// <summary>
+    /// Patch 2C — open a stored file by its provider-relative storage key
+    /// (e.g. <c>provider-application-documents/{guid}.pdf</c>), without any
+    /// public base-URL prefix. Used by the FileAsset V2 read path so callers
+    /// never see the physical layout. Same path-traversal guard as
+    /// <see cref="OpenReadAsync"/>.
+    /// </summary>
+    public Task<Result<FileDownload>> OpenReadByStorageKeyAsync(string storageKey, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(storageKey))
+            return Task.FromResult(Result<FileDownload>.Failure(
+                new Error("FileStorage.MissingStorageKey", "Storage key is required."),
+                Outcome.Invalid));
+
+        if (!TryResolvePhysicalPathFromStorageKey(storageKey, out var fullPath))
+        {
+            _logger.LogWarning("Rejected read for storage key resolving outside storage root.");
+            return Task.FromResult(Result<FileDownload>.Failure(
+                new Error("FileStorage.InvalidPath", "The requested file path is invalid."),
+                Outcome.Invalid));
+        }
+
+        return Task.FromResult(OpenResolvedPath(fullPath));
+    }
+
+    /// <summary>
+    /// Shared core for both <see cref="OpenReadAsync"/> and
+    /// <see cref="OpenReadByStorageKeyAsync"/>: at this point the caller's
+    /// input has already been canonicalized to a physical path inside the
+    /// storage root.
+    /// </summary>
+    private Result<FileDownload> OpenResolvedPath(string fullPath)
+    {
         if (!File.Exists(fullPath))
         {
             // NotFound: the storage row points to a missing blob (e.g. cleaned up).
-            return Task.FromResult(Result<FileDownload>.Failure(
+            return Result<FileDownload>.Failure(
                 new Error("FileStorage.NotFound", "The requested file was not found."),
-                Outcome.NotFound));
+                Outcome.NotFound);
         }
 
         FileStream stream;
@@ -151,21 +187,20 @@ internal sealed class LocalFileStorageService : IFileStorageService
         catch (IOException ex)
         {
             _logger.LogWarning(ex, "Failed to open stored file for reading.");
-            return Task.FromResult(Result<FileDownload>.Failure(
+            return Result<FileDownload>.Failure(
                 new Error("FileStorage.ReadFailed", "The requested file could not be read."),
-                Outcome.NotFound));
+                Outcome.NotFound);
         }
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogWarning(ex, "Access denied opening stored file for reading.");
-            return Task.FromResult(Result<FileDownload>.Failure(
+            return Result<FileDownload>.Failure(
                 new Error("FileStorage.ReadFailed", "The requested file could not be read."),
-                Outcome.NotFound));
+                Outcome.NotFound);
         }
 
         var contentType = ResolveContentType(fullPath);
-        return Task.FromResult(Result<FileDownload>.Success(
-            new FileDownload(stream, contentType, length)));
+        return Result<FileDownload>.Success(new FileDownload(stream, contentType, length));
     }
 
     /// <summary>
@@ -192,6 +227,41 @@ internal sealed class LocalFileStorageService : IFileStorageService
 
         // Ensure the root comparison includes a trailing separator so that
         // "/uploads-evil" cannot masquerade as being under "/uploads".
+        var rootWithSeparator = root.EndsWith(Path.DirectorySeparatorChar)
+            ? root
+            : root + Path.DirectorySeparatorChar;
+
+        if (!candidate.StartsWith(rootWithSeparator, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        fullPath = candidate;
+        return true;
+    }
+
+    /// <summary>
+    /// Patch 2C — converts a provider-relative storage key (e.g. <c>folder/{guid}.ext</c>)
+    /// directly into a physical path under the configured storage root. The key does
+    /// NOT include any public base-URL prefix. Same canonicalization +
+    /// outside-the-root rejection as <see cref="TryResolvePhysicalPath"/>.
+    /// </summary>
+    private bool TryResolvePhysicalPathFromStorageKey(string storageKey, out string fullPath)
+    {
+        fullPath = string.Empty;
+
+        // Treat the key as already provider-relative: no _baseUrl strip step.
+        var relativePath = storageKey
+            .TrimStart('/')
+            .Replace('/', Path.DirectorySeparatorChar);
+
+        if (relativePath.Length == 0)
+            return false;
+
+        if (relativePath.Contains("..", StringComparison.Ordinal))
+            return false;
+
+        var candidate = Path.GetFullPath(Path.Combine(_basePath, relativePath));
+        var root = Path.GetFullPath(_basePath);
+
         var rootWithSeparator = root.EndsWith(Path.DirectorySeparatorChar)
             ? root
             : root + Path.DirectorySeparatorChar;

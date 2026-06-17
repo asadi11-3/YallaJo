@@ -50,6 +50,32 @@ public interface IFileStorageService
     Task<Result<FileDownload>> OpenReadAsync(string fileUrl, CancellationToken ct = default);
 
     /// <summary>
+    /// Open a readable stream for a previously stored file, identified by its
+    /// provider-relative <paramref name="storageKey"/> (the value returned as
+    /// <see cref="FileUploadResult.StorageKey"/> from <see cref="UploadAsync"/>).
+    /// <para>
+    /// Unlike <see cref="OpenReadAsync"/>, this overload accepts the raw
+    /// provider-relative key (e.g. <c>provider-application-documents/{guid}.pdf</c>)
+    /// without any public base-URL prefix. It is intended for the Patch 2C
+    /// FileAsset V2 read path, where authorized handlers resolve a
+    /// <c>FileAsset.StorageKey</c> internally and stream the bytes back without
+    /// ever exposing the key to the API client.
+    /// </para>
+    /// <para>
+    /// Implementations MUST apply the same path-traversal guard /
+    /// canonicalization as <see cref="OpenReadAsync"/> and MUST NOT serve
+    /// content outside their configured storage root.
+    /// </para>
+    /// </summary>
+    /// <param name="storageKey">Provider-relative storage key (no scheme, no base URL).</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// A successful result carrying the open <see cref="FileDownload"/> (caller owns/disposes the stream),
+    /// or a failure result (NotFound / Invalid) — never an exception for the expected "missing file" case.
+    /// </returns>
+    Task<Result<FileDownload>> OpenReadByStorageKeyAsync(string storageKey, CancellationToken ct = default);
+
+    /// <summary>
     /// Generate a time-limited access URL for a file (useful for private storage providers like Cloudinary signed URLs).
     /// For public storage (e.g. local disk), this simply returns the original URL.
     /// </summary>

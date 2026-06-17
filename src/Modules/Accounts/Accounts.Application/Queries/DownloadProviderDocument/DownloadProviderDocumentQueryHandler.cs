@@ -1,6 +1,7 @@
 using Accounts.Application.Commands.Provider.Shared;
 using Accounts.Domain.Entities;
 using Accounts.Domain.Repositories;
+using ContentCore.Contracts.Storage;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -13,7 +14,7 @@ namespace Accounts.Application.Queries.DownloadProviderDocument;
 /// <summary>
 /// Authorizes and streams a provider application document.
 /// <para>
-/// Authorization rules:
+/// Authorization rules (Patch 1A, preserved byte-for-byte by Patch 2C):
 /// <list type="bullet">
 /// <item>Anonymous / unauthenticated -> Unauthorized.</item>
 /// <item>The owner of the document's parent application -> allowed.</item>
@@ -22,10 +23,23 @@ namespace Accounts.Application.Queries.DownloadProviderDocument;
 /// "exists but not yours" from "does not exist" to prevent document-id enumeration).</item>
 /// </list>
 /// </para>
+/// <para>
+/// Read-source preference (Patch 2C expand-and-contract):
+/// <list type="number">
+/// <item>If a ProviderDocumentFile link row exists for this document and the linked
+/// FileAsset is found and the blob is readable by its storage key, stream via the
+/// FileAsset V2 path (the new authoritative source).</item>
+/// <item>Otherwise fall back to the legacy ProviderDocument.FileUrl path, kept until
+/// the Patch 2B backfill has been verified complete and FileUrl is dropped (Patch 2G).</item>
+/// </list>
+/// In neither case does StorageKey / FileUrl / physical path leak to the API client
+/// or to information-level logs.
+/// </para>
 /// </summary>
 public sealed class DownloadProviderDocumentQueryHandler(
     IProviderApplicationRepository providerApplicationRepository,
     IFileStorageService fileStorageService,
+    IFileAssetLocator fileAssetLocator,
     ICurrentUser currentUser,
     ILogger<DownloadProviderDocumentQueryHandler> logger)
     : IQueryHandler<DownloadProviderDocumentQuery, DownloadProviderDocumentResult>
@@ -65,23 +79,57 @@ public sealed class DownloadProviderDocumentQueryHandler(
                 Error.NotFound("ProviderDocument"), Outcome.NotFound);
         }
 
-        // 4) Open the underlying file. Storage guards path traversal and returns
-        //    a failure result (NotFound/Invalid) rather than throwing.
+        // 4) Preferred path: resolve via ProviderDocumentFile -> FileAsset -> StorageKey.
+        //    The link is an opaque cross-module reference (no DB FK by design).
+        var fileAssetId = await providerApplicationRepository
+            .GetFileAssetIdByDocumentIdAsync(document.Id, cancellationToken);
+
+        if (fileAssetId.HasValue)
+        {
+            var viewResult = await fileAssetLocator.GetByIdAsync(fileAssetId.Value, cancellationToken);
+            if (viewResult.IsSuccess && viewResult.Value is not null)
+            {
+                var view = viewResult.Value;
+                var openByKeyResult = await fileStorageService.OpenReadByStorageKeyAsync(
+                    view.StorageKey, cancellationToken);
+
+                if (openByKeyResult.IsSuccess && openByKeyResult.Value is not null)
+                {
+                    var fileAssetDownload = openByKeyResult.Value;
+
+                    logger.LogInformation(
+                        "Provider document streamed via FileAsset path. DocumentId={DocumentId}, FileAssetId={FileAssetId}, RequestedBy={UserId}, AdminTier={IsAdminTier}",
+                        request.DocumentId, fileAssetId.Value, userId, isAdminTier);
+
+                    return Result<DownloadProviderDocumentResult>.Success(new DownloadProviderDocumentResult(
+                        Content: fileAssetDownload.Content,
+                        ContentType: view.ContentType,
+                        FileName: SafeFileNameSanitizer.Sanitize(
+                            view.OriginalFileName, $"document-{document.Id:N}"),
+                        FileSize: view.SizeBytes));
+                }
+            }
+        }
+
+        // 5) Patch 2C expand-and-contract: legacy FileUrl path retained as fallback
+        //    for ProviderDocument rows that the Patch 2B backfill has not yet linked
+        //    into FileAssets. This branch will be removed in Patch 2G after backfill
+        //    is verified complete and FileUrl is dropped.
         var openResult = await fileStorageService.OpenReadAsync(document.FileUrl, cancellationToken);
-        if (openResult.IsFailure)
+        if (openResult.IsFailure || openResult.Value is null)
         {
             logger.LogWarning(
-                "Provider document blob unavailable. DocumentId={DocumentId}, Outcome={Outcome}",
+                "Provider document blob unavailable on both FileAsset and legacy paths. DocumentId={DocumentId}, Outcome={Outcome}",
                 request.DocumentId, openResult.Outcome);
             return Result<DownloadProviderDocumentResult>.Failure(
                 Error.NotFound("ProviderDocument"), Outcome.NotFound);
         }
 
-        var download = openResult.Value!;
+        var download = openResult.Value;
         var safeFileName = BuildSafeDownloadName(document);
 
         logger.LogInformation(
-            "Provider document streamed. DocumentId={DocumentId}, RequestedBy={UserId}, AdminTier={IsAdminTier}",
+            "Provider document streamed via legacy FileUrl path. DocumentId={DocumentId}, RequestedBy={UserId}, AdminTier={IsAdminTier}",
             request.DocumentId, userId, isAdminTier);
 
         return Result<DownloadProviderDocumentResult>.Success(new DownloadProviderDocumentResult(

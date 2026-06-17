@@ -406,6 +406,11 @@ public sealed class UploadEndpointFactory : WebApplicationFactory<Program>
         // unused here, so return a NotFound result rather than streaming anything.
         public Task<Result<FileDownload>> OpenReadAsync(string fileUrl, CancellationToken ct = default)
             => Task.FromResult(Result<FileDownload>.Failure(Error.NotFound("File"), Outcome.NotFound));
+
+        // Patch 2C: same rationale — uploads-focused tests don't exercise the
+        // FileAsset V2 read-by-storage-key path. Return NotFound.
+        public Task<Result<FileDownload>> OpenReadByStorageKeyAsync(string storageKey, CancellationToken ct = default)
+            => Task.FromResult(Result<FileDownload>.Failure(Error.NotFound("File"), Outcome.NotFound));
     }
 
 }
