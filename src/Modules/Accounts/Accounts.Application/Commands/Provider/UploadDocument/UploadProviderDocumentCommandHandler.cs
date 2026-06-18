@@ -1,5 +1,4 @@
 using Accounts.Application.Caching;
-using Accounts.Application.Commands.Provider.AddDocument;
 using Accounts.Application.Commands.Provider.Shared;
 using Accounts.Application.Interfaces;
 using Accounts.Domain.Errors;

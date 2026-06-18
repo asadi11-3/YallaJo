@@ -1,8 +1,8 @@
-using Accounts.Application.Commands.Provider.AddDocument;
 using Accounts.Application.Commands.Provider.ReapplyProvider;
 using Accounts.Application.Commands.Provider.RegisterProvider;
 using Accounts.Application.Commands.Provider.ReplaceDocument;
 using Accounts.Application.Commands.Provider.SubmitApplication;
+using Accounts.Application.Commands.Provider.UploadDocument;
 using Accounts.Application.Queries.Dashboard;
 using Accounts.Application.Queries.DownloadProviderDocument;
 using Accounts.Application.Queries.GetMyApplicationStatus;
