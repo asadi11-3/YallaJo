@@ -399,17 +399,24 @@ app.UseHttpsRedirection();
 
 // 5. Static files — serve uploaded files from wwwroot/uploads
 //
-// SECURITY: provider application documents (national IDs, business licenses, etc.) are
-// private PII. They must NEVER be served anonymously via the static-file middleware.
-// This short-circuit runs BEFORE UseStaticFiles and returns 404 for any request under
-// /uploads/provider-application-documents, so the bytes are unreachable by URL. Those
-// documents are only obtainable through the authorized, ownership-checked download
-// endpoint (GET /api/v1/provider/documents/{documentId}/download). Public images such as
-// avatars and tour/blog media (other /uploads subfolders) remain served normally.
+// SECURITY: provider documents (national IDs, business/tourism licenses, insurance
+// certificates, etc.) are private PII. They must NEVER be served anonymously via the
+// static-file middleware. This short-circuit runs BEFORE UseStaticFiles and returns 404
+// for any request under the protected provider-document folders, so the bytes are
+// unreachable by URL:
+//   • /uploads/provider-application-documents — Accounts provider-application documents
+//     (authorized download: GET /api/v1/provider/documents/{documentId}/download).
+//   • /uploads/provider-documents — Booking provider documents (authorized download:
+//     GET /api/v1/booking/provider/documents/{id}/download).
+// StartsWithSegments matches whole path segments, so e.g. "/uploads/provider-documents-x"
+// is unaffected. Public images such as avatars and tour/blog media (other /uploads
+// subfolders) remain served normally.
 app.Use(async (context, next) =>
 {
     if (context.Request.Path.StartsWithSegments(
-            "/uploads/provider-application-documents", StringComparison.OrdinalIgnoreCase))
+            "/uploads/provider-application-documents", StringComparison.OrdinalIgnoreCase)
+        || context.Request.Path.StartsWithSegments(
+            "/uploads/provider-documents", StringComparison.OrdinalIgnoreCase))
     {
         context.Response.StatusCode = StatusCodes.Status404NotFound;
         return;

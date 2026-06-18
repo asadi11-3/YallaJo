@@ -10,7 +10,6 @@ public static class ProviderDocumentsMapper
         Type            = d.Type,
         TypeLabel       = Humanize(d.Type.ToString()),
         FileName        = d.FileName,
-        DocumentUrl     = d.DocumentUrl,
         ExpiresAt       = d.ExpiresAt,
         Status          = d.Status,
         RejectionReason = d.RejectionReason,

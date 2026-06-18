@@ -54,4 +54,9 @@ public sealed class ProviderDocumentsApiClient
             $"{Base}/{id}", fileStream, fileName, contentType,
             formFields: fields, formFieldName: "file", ct: ct);
     }
+
+    // GET /api/v1/booking/provider/documents/{id}/download — authorized, server-mediated download.
+    // The API enforces owner/admin access; the on-disk URL/path is never exposed to the browser.
+    public Task<ApiResult<ApiFile>> DownloadAsync(Guid id, CancellationToken ct = default)
+        => _api.GetFileAsync($"{Base}/{id}/download", ct);
 }

@@ -112,7 +112,6 @@ public sealed class UploadProviderDocumentHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Outcome.Should().Be(Outcome.Created);
         result.Value!.Type.Should().Be(DocumentType.MoTALicense);
-        result.Value.DocumentUrl.Should().Be("/uploads/provider-documents/mota.pdf");
         result.Value.Status.Should().Be(DocumentStatus.Pending);
         await uow.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
         await repo.Received(1).AddAsync(Arg.Any<Booking.Domain.Entities.ProviderDocument>(), Arg.Any<CancellationToken>());

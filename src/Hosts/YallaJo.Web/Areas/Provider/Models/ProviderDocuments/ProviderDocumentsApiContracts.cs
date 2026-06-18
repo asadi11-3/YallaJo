@@ -42,7 +42,6 @@ public sealed class ProviderDocumentResponse
     public Guid? BusinessId { get; init; }
     public DocumentType Type { get; init; }
     public string? FileName { get; init; }
-    public string DocumentUrl { get; init; } = "";
     public DateTime? ExpiresAt { get; init; }
     public DocumentStatus Status { get; init; }
     public DateTime? ReviewedAt { get; init; }

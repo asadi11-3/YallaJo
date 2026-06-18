@@ -189,7 +189,6 @@ public sealed class UploadProviderDocumentCommandHandler(
             BusinessId: document.BusinessId,
             Type: document.DocumentType,
             FileName: document.OriginalFileName,
-            DocumentUrl: document.DocumentUrl,
             ExpiresAt: document.ExpiresAt,
             Status: document.Status,
             ReviewedAt: document.ReviewedAt,

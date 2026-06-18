@@ -47,6 +47,18 @@ public sealed class ProviderDocumentsFacade
         return Normalize(result, "Could not replace the document.");
     }
 
+    // GET /api/v1/booking/provider/documents/{id}/download — server-mediated, authorized download.
+    // The API enforces owner/admin access and never exposes the on-disk URL/StorageKey.
+    public async Task<ApiResult<ApiFile>> DownloadAsync(Guid id, CancellationToken ct = default)
+    {
+        var result = await _api.DownloadAsync(id, ct);
+        if (result.IsUnauthorized) return ApiResult<ApiFile>.ForceSignOut();
+        if (!result.IsSuccess || result.Data is null)
+            return ApiResult<ApiFile>.Fail(result.StatusCode, result.Error ?? "Could not download the document.");
+
+        return ApiResult<ApiFile>.Ok(result.Data);
+    }
+
     private static ApiResult Normalize<T>(ApiResult<T> result, string fallback)
     {
         if (result.IsSuccess) return ApiResult.Ok();

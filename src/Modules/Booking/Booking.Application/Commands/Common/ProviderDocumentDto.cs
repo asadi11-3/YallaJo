@@ -8,7 +8,6 @@ public sealed record ProviderDocumentDto(
     Guid? BusinessId,
     DocumentType Type,
     string? FileName,
-    string DocumentUrl,
     DateTime? ExpiresAt,
     DocumentStatus Status,
     DateTime? ReviewedAt,

@@ -72,6 +72,26 @@ public sealed class ProviderDocumentsController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
+    // ── GET /provider/documents/{id}/download ─────────────────────────────────────
+    // Proxies the authorized API download endpoint so providers can open their own
+    // document without exposing the on-disk URL/StorageKey. The API enforces
+    // owner/admin access; a missing or foreign document returns 404 there.
+    [HttpGet("provider/documents/{id:guid}/download")]
+    public async Task<IActionResult> Download(Guid id, CancellationToken ct = default)
+    {
+        var result = await _facade.DownloadAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            SetError(result.Error ?? L["Provider.Flash.CouldNotDownloadDocument"].Value);
+            return RedirectToAction(nameof(Index));
+        }
+
+        var file = result.Data;
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+
     private async Task<IActionResult> ReloadAsync(UploadProviderDocumentFormVm form, CancellationToken ct)
     {
         var result = await _facade.GetAsync(ct);

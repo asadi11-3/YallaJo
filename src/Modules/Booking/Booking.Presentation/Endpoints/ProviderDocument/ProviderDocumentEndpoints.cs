@@ -1,4 +1,5 @@
 using Booking.Application.Commands.Common;
+using Booking.Application.Queries.DownloadProviderDocument;
 using Booking.Application.Queries.GetProviderDocumentById;
 using Booking.Application.Queries.GetProviderDocuments;
 using Booking.Contracts.Authorization;
@@ -25,6 +26,7 @@ internal static class ProviderDocumentEndpoints
         MapUpdateEndpoint(docs);
         MapListEndpoint(docs);
         MapGetByIdEndpoint(docs);
+        MapDownloadEndpoint(docs);
     }
 
     private static void MapUploadEndpoint(RouteGroupBuilder docs)
@@ -138,6 +140,35 @@ internal static class ProviderDocumentEndpoints
             .WithName("GetProviderDocumentById")
             .WithSummary("Get a single provider document by id (provider self OR admin).")
             .Produces<ProviderDocumentDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.ProviderDocument, AppAction.Read))
+            .RequireAuthorization();
+    }
+
+    private static void MapDownloadEndpoint(RouteGroupBuilder docs)
+    {
+        // GET /api/v1/booking/provider/documents/{id}/download — authorized, server-mediated download.
+        // Streams the file bytes only after verifying the caller owns the document (or is admin-tier).
+        // The physical path / storage URL is never exposed to the client.
+        docs.MapGet("/{id:guid}/download", async (
+                Guid id,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(new DownloadProviderDocumentQuery(id), cancellationToken);
+                if (result.IsFailure || result.Value is null)
+                {
+                    return result.ToApiResult();
+                }
+
+                var download = result.Value;
+                // Results.File takes ownership of the stream and disposes it after the response is written.
+                return Results.File(download.Content, download.ContentType, download.FileName);
+            })
+            .WithName("DownloadProviderDocument")
+            .WithSummary("Download a provider document file (provider self OR admin only).")
+            .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.ProviderDocument, AppAction.Read))

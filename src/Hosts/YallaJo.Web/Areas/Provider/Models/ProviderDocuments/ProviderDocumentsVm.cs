@@ -17,7 +17,6 @@ public sealed class ProviderDocumentRowVm
     public DocumentType Type { get; init; }
     public string TypeLabel { get; init; } = "";
     public string? FileName { get; init; }
-    public string DocumentUrl { get; init; } = "";
     public DateTime? ExpiresAt { get; init; }
     public DocumentStatus Status { get; init; }
     public string? RejectionReason { get; init; }
