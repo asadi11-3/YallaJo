@@ -15790,6 +15790,9 @@
 <data name="Provider.Flash.CouldNotDownloadInvoice" xml:space="preserve">
 <value>تعذّر تنزيل الفاتورة.</value>
 </data>
+<data name="Provider.Flash.CouldNotDownloadDocument" xml:space="preserve">
+<value>تعذر تحميل المستند. يرجى المحاولة مرة أخرى.</value>
+</data>
 <data name="Provider.Flash.FixHighlighted" xml:space="preserve">
 <value>يرجى تصحيح الحقول المحددة والمحاولة مرة أخرى.</value>
 </data>

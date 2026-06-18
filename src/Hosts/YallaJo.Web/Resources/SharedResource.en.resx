@@ -15790,6 +15790,9 @@
 <data name="Provider.Flash.CouldNotDownloadInvoice" xml:space="preserve">
 <value>Could not download the invoice.</value>
 </data>
+<data name="Provider.Flash.CouldNotDownloadDocument" xml:space="preserve">
+<value>Could not download the document. Please try again.</value>
+</data>
 <data name="Provider.Flash.FixHighlighted" xml:space="preserve">
 <value>Please correct the highlighted fields and try again.</value>
 </data>
