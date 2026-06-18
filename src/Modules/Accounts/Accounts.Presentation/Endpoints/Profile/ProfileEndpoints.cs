@@ -1,3 +1,4 @@
+using System.IO;
 using Accounts.Application.Commands.DeleteAvatar;
 using Accounts.Application.Commands.DeleteProfile;
 using Accounts.Application.Commands.RestoreProfile;
@@ -84,9 +85,38 @@ internal static class ProfileEndpoints
                    new Dictionary<string, string[]> { { "file", ["An image file is required."] } });
             }
 
-            await using var stream = file.OpenReadStream();
+            // Enforce a 5 MB max avatar size before buffering anything.
+            const long maxAvatarBytes = 5 * 1024 * 1024;
+            if (file.Length > maxAvatarBytes)
+            {
+                return Results.ValidationProblem(
+                    new Dictionary<string, string[]> { { "file", ["The avatar image must be 5 MB or smaller."] } },
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+
+            // Buffer into a seekable stream so magic-byte detection can read the signature.
+            using var buffered = new MemoryStream();
+            await using (var source = file.OpenReadStream())
+            {
+                await source.CopyToAsync(buffered, ct);
+            }
+            buffered.Position = 0;
+
+            // Validate extension + content type + magic bytes BEFORE uploading anything.
+            var validation = AvatarFileValidator.Validate(buffered, file.ContentType, file.FileName);
+            if (!validation.IsValid)
+            {
+                return Results.ValidationProblem(
+                    new Dictionary<string, string[]>
+                    {
+                        { validation.Field ?? "file", [validation.Message ?? "Invalid image file."] },
+                    },
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+
+            buffered.Position = 0;
             var upload = await fileStorage.UploadAsync(
-                stream, file.FileName, file.ContentType, "avatars", ct);
+                buffered, file.FileName, file.ContentType, "avatars", ct);
 
             if (upload.IsFailure)
                 return Results.Problem(statusCode: StatusCodes.Status500InternalServerError,
