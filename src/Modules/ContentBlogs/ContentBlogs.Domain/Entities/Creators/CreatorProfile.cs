@@ -311,6 +311,13 @@ public sealed class CreatorProfile : AuditableEntity, IAggregateRoot
         MarkUpdated();
     }
 
+    /// <summary>Clears the avatar URL (used by the dedicated avatar delete endpoint).</summary>
+    public void ClearAvatar()
+    {
+        AvatarUrl = null;
+        MarkUpdated();
+    }
+
     // ─── Provider Cross-link ────────────────────────────────────────────────
 
     /// <summary>Links this creator profile to a service provider profile.</summary>

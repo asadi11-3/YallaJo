@@ -1,3 +1,4 @@
+using ContentBlogs.Application.Commands.Creator.ClearAvatar;
 using ContentBlogs.Application.Commands.Creator.CreateApplication;
 using ContentBlogs.Application.Commands.Creator.FollowCreator;
 using ContentBlogs.Application.Commands.Creator.RedeemInvitation;
@@ -7,6 +8,7 @@ using ContentBlogs.Application.Commands.Creator.UnfollowCreator;
 using ContentBlogs.Application.Commands.Creator.UpdateApplication;
 using ContentBlogs.Application.Commands.Creator.UpdateAvatar;
 using ContentBlogs.Application.Commands.Creator.UpdateProfile;
+using ContentBlogs.Application.Commands.Creator.UploadAvatar;
 using ContentBlogs.Application.Queries.Blog.GetCreatorBlogs;
 using ContentBlogs.Application.Queries.Blog.GetCreatorBlogsBySlug;
 using ContentBlogs.Application.Queries.Creator.GetCreatorProfileBySlug;
@@ -23,6 +25,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
@@ -303,6 +306,92 @@ internal static class CreatorEndpoints
         .WithSummary("Update creator avatar URL")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Creator, AppAction.Update));
+
+        // ── POST /api/v1/blogs/creators/profile/mine/avatar/upload ───────
+        group.MapPost("/profile/mine/avatar/upload", async (
+            IFormFile file,
+            ISender sender,
+            IFileStorageService fileStorage,
+            CancellationToken ct) =>
+        {
+            if (file is null || file.Length == 0)
+            {
+                return Results.ValidationProblem(
+                    new Dictionary<string, string[]> { { "file", ["An image file is required."] } });
+            }
+
+            // Enforce a 5 MB max avatar size before buffering anything.
+            const long maxAvatarBytes = 5 * 1024 * 1024;
+            if (file.Length > maxAvatarBytes)
+            {
+                return Results.ValidationProblem(
+                    new Dictionary<string, string[]> { { "file", ["The avatar image must be 5 MB or smaller."] } },
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+
+            // Buffer into a seekable stream so magic-byte detection can read the signature.
+            using var buffered = new MemoryStream();
+            await using (var source = file.OpenReadStream())
+            {
+                await source.CopyToAsync(buffered, ct);
+            }
+            buffered.Position = 0;
+
+            // Validate extension + content type + magic bytes BEFORE uploading anything.
+            var validation = CreatorAvatarFileValidator.Validate(buffered, file.ContentType, file.FileName);
+            if (!validation.IsValid)
+            {
+                return Results.ValidationProblem(
+                    new Dictionary<string, string[]>
+                    {
+                        { validation.Field ?? "file", [validation.Message ?? "Invalid image file."] },
+                    },
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+
+            buffered.Position = 0;
+            var upload = await fileStorage.UploadAsync(
+                buffered, file.FileName, file.ContentType, "creators/avatars", ct);
+
+            if (upload.IsFailure)
+            {
+                return Results.Problem(
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    detail: upload.Errors.FirstOrDefault()?.Message ?? "File upload failed.");
+            }
+
+            var result = await sender.Send(new UploadCreatorAvatarCommand(upload.Value.Url), ct);
+
+            // Compensate: if persisting the URL failed, delete the just-uploaded blob.
+            if (!result.IsSuccess)
+            {
+                await fileStorage.DeleteAsync(upload.Value.Url, ct);
+            }
+
+            return result.ToApiResult();
+        })
+        .WithName("UploadCreatorAvatar")
+        .WithSummary("Upload and set the creator avatar image (managed public media)")
+        .Accepts<IFormFile>("multipart/form-data")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Creator, AppAction.Update))
+        .DisableAntiforgery();
+
+        // ── DELETE /api/v1/blogs/creators/profile/mine/avatar ────────────
+        group.MapDelete("/profile/mine/avatar", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new ClearCreatorAvatarCommand(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ClearCreatorAvatar")
+        .WithSummary("Clear the creator avatar and best-effort delete the old local file")
+        .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Creator, AppAction.Update));
