@@ -109,21 +109,6 @@ public sealed class ProfileController : GuideBaseController
         return HandleMutation(result, L["Guide.Flash.AvatarUpdated"]);
     }
 
-    [HttpPost("guide/profile/cover")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UploadCover(IFormFile? file, CancellationToken ct = default)
-    {
-        if (!TryValidateImage(file, out var error))
-        {
-            SetError(error);
-            return RedirectToAction(nameof(Index));
-        }
-
-        await using var stream = file!.OpenReadStream();
-        var result = await _profile.UploadCoverAsync(stream, file.FileName, file.ContentType, ct);
-        return HandleMutation(result, L["Guide.Flash.CoverUpdated"]);
-    }
-
     // POST /guide/profile/deactivate — self-deactivate the guide profile (DELETE /guides/me).
     [HttpPost("guide/profile/deactivate")]
     [ValidateAntiForgeryToken]

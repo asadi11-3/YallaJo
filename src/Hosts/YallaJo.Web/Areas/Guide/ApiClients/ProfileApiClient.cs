@@ -57,10 +57,6 @@ public sealed class ProfileApiClient
     public Task<ApiResult> UpdateAvatarAsync(string avatarUrl, CancellationToken ct = default)
         => _api.PutAsync($"{GuidesBase}/me/avatar", new UpdateGuideAvatarRequest(avatarUrl), ct);
 
-    // PUT /api/v1/guides/me/cover-image (persists a URL only)
-    public Task<ApiResult> UpdateCoverImageAsync(string coverImageUrl, CancellationToken ct = default)
-        => _api.PutAsync($"{GuidesBase}/me/cover-image", new UpdateGuideCoverImageRequest(coverImageUrl), ct);
-
     // POST multipart /api/v1/content-core/attachments (returns persisted URL)
     public Task<ApiResult<UploadAttachmentResponse>> UploadImageAsync(
         Guid guideId, Stream fileStream, string fileName, string contentType, CancellationToken ct = default)

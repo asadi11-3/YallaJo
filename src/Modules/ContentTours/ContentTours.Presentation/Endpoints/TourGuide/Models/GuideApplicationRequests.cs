@@ -12,8 +12,6 @@ internal sealed record RejectGuideApplicationRequest(string Reason);
 
 internal sealed record UpdateGuideAvatarRequest(string AvatarUrl);
 
-internal sealed record UpdateGuideCoverImageRequest(string? CoverImageUrl);
-
 internal sealed record SuspendTourGuideRequest(string Reason);
 
 public sealed record CreateGuideAvailabilityBlockRequest(DateOnly StartDate, DateOnly EndDate, string? Reason)

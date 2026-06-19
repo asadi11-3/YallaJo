@@ -6,7 +6,6 @@ using ContentTours.Application.Commands.TourGuides.DeactivateGuide;
 using ContentTours.Application.Commands.TourGuides.RemoveLanguage;
 using ContentTours.Application.Commands.TourGuides.RemoveSpecialization;
 using ContentTours.Application.Commands.TourGuides.UpdateAvatar;
-using ContentTours.Application.Commands.TourGuides.UpdateCoverImage;
 using ContentTours.Application.Commands.TourGuides.UpdateProfile;
 using ContentTours.Application.Queries.GuideAvailabilityBlock;
 using ContentTours.Application.Queries.TourGuide.Analytics;
@@ -267,24 +266,6 @@ internal static class TourGuideProfileEndpoints
         })
         .WithName("UpdateGuideAvatar")
         .WithSummary("Update own tour guide avatar")
-        .Produces(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status403Forbidden)
-        .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Update))
-        .RequireAuthorization();
-
-        // PUT /guides/me/cover-image — guide updates own cover image
-        group.MapPut("/me/cover-image", async (
-            UpdateGuideCoverImageRequest request,
-            ISender sender,
-            CancellationToken ct) =>
-        {
-            var cmd = new UpdateGuideCoverImageCommand(request.CoverImageUrl);
-            var result = await sender.Send(cmd, ct);
-            return result.ToApiResult();
-        })
-        .WithName("UpdateGuideCoverImage")
-        .WithSummary("Update own tour guide cover image")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)

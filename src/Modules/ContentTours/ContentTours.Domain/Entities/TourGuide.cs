@@ -22,7 +22,6 @@ public sealed class TourGuide : AuditableEntity, IAggregateRoot
     public string Slug { get; private set; } = string.Empty;
     public string DisplayName { get; private set; } = string.Empty;
     public string? AvatarUrl { get; private set; }
-    public string? CoverImageUrl { get; private set; }
 
     // Cross-module links
     public Guid? ApplicationId { get; private set; }
@@ -131,17 +130,6 @@ public sealed class TourGuide : AuditableEntity, IAggregateRoot
             return Result.Failure(new Error("TourGuide.InvalidAvatarUrl", "AvatarUrl is required."));
 
         AvatarUrl = avatarUrl.Trim();
-        MarkUpdated();
-        return Result.Success();
-    }
-
-    public Result UpdateCoverImage(string? coverImageUrl)
-    {
-        var activeError = EnsureActive();
-        if (activeError is not null)
-            return Result.Failure(activeError);
-
-        CoverImageUrl = string.IsNullOrWhiteSpace(coverImageUrl) ? null : coverImageUrl.Trim();
         MarkUpdated();
         return Result.Success();
     }

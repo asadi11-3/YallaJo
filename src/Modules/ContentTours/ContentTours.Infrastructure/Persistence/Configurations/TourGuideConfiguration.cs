@@ -18,7 +18,6 @@ public sealed class TourGuideConfiguration : IEntityTypeConfiguration<TourGuide>
         builder.Property(guide => guide.DisplayName).IsRequired().HasMaxLength(256);
         builder.Property(guide => guide.Bio).IsRequired().HasMaxLength(2000);
         builder.Property(guide => guide.AvatarUrl).IsRequired(false).HasMaxLength(500);
-        builder.Property(guide => guide.CoverImageUrl).IsRequired(false).HasMaxLength(500);
         builder.Property(guide => guide.ApplicationId).IsRequired(false);
         builder.Property(guide => guide.LinkedProviderId).IsRequired(false);
         builder.Property(guide => guide.TrustTier).IsRequired().HasConversion<int>();

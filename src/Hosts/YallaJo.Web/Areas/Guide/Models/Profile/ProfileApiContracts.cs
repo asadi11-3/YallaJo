@@ -26,11 +26,6 @@ public sealed record AddTourGuideSpecializationRequest(Guid SpecializationId);
 public sealed record UpdateGuideAvatarRequest(string AvatarUrl);
 
 /// <summary>
-/// Request body for PUT /api/v1/guides/me/cover-image (persists a previously uploaded URL).
-/// </summary>
-public sealed record UpdateGuideCoverImageRequest(string CoverImageUrl);
-
-/// <summary>
 /// GET /api/v1/content-core/specializations?activeOnly=true item.
 /// </summary>
 public sealed record SpecializationResponse(

@@ -169,16 +169,8 @@ public sealed class GuideProfileFacade
     public Task<ApiResult> DeactivateAsync(CancellationToken ct = default)
         => _api.DeactivateAsync(ct);
 
-    public Task<ApiResult> UploadAvatarAsync(
+    public async Task<ApiResult> UploadAvatarAsync(
         Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
-        => UploadAndPersistAsync(fileStream, fileName, contentType, isAvatar: true, ct);
-
-    public Task<ApiResult> UploadCoverAsync(
-        Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
-        => UploadAndPersistAsync(fileStream, fileName, contentType, isAvatar: false, ct);
-
-    private async Task<ApiResult> UploadAndPersistAsync(
-        Stream fileStream, string fileName, string contentType, bool isAvatar, CancellationToken ct)
     {
         var guideId = await ResolveGuideIdAsync(ct);
         if (guideId is null)
@@ -199,11 +191,8 @@ public sealed class GuideProfileFacade
                 : ApiResult.Fail(upload.StatusCode, upload.Error ?? "Image upload failed.");
         }
 
-        var url = upload.Data.Url!;
-        var persist = isAvatar
-            ? await _api.UpdateAvatarAsync(url, ct)
-            : await _api.UpdateCoverImageAsync(url, ct);
-        if (persist.IsSuccess && isAvatar)
+        var persist = await _api.UpdateAvatarAsync(upload.Data.Url!, ct);
+        if (persist.IsSuccess)
         {
             // Avatar feeds the cached sidebar identity — drop the stale entry.
             _guideId.Invalidate();
