@@ -39,10 +39,10 @@ public sealed class CreatorProfileVm
     [Display(Name = "Profile URL slug")]
     public string? NewSlug { get; set; }
 
-    /// <summary>Current avatar URL (also editable inline on the profile form).</summary>
-    [StringLength(500, ErrorMessage = "Avatar URL must be 500 characters or fewer.")]
-    [Url(ErrorMessage = "Avatar URL must be a valid URL.")]
-    [Display(Name = "Avatar URL")]
+    /// <summary>
+    /// Current avatar URL for display/preview only (CA-3). The avatar is changed solely
+    /// via the managed upload/remove actions; it is never edited through the profile form.
+    /// </summary>
     public string? AvatarUrl { get; set; }
 
     // ── View convenience ──────────────────────────────────────────────────────
@@ -50,14 +50,4 @@ public sealed class CreatorProfileVm
     public bool HasProfile => !string.IsNullOrWhiteSpace(Status);
 
     public bool IsActive => string.Equals(Status, "Active", StringComparison.OrdinalIgnoreCase);
-}
-
-/// <summary>View model for the dedicated avatar-URL update form (PUT /avatar).</summary>
-public sealed class UpdateAvatarVm
-{
-    [Required(ErrorMessage = "Please enter an avatar URL.")]
-    [StringLength(500, ErrorMessage = "Avatar URL must be 500 characters or fewer.")]
-    [Url(ErrorMessage = "Avatar URL must be a valid URL.")]
-    [Display(Name = "Avatar URL")]
-    public string AvatarUrl { get; set; } = string.Empty;
 }

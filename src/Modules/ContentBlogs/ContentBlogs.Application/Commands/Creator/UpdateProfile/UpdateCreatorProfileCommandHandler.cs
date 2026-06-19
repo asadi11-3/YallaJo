@@ -36,12 +36,15 @@ public sealed class UpdateCreatorProfileCommandHandler(
             }
 
             // ── Update basic fields ─────────────────────────────────────────
-            if (request.DisplayName is not null || request.Bio is not null || request.AvatarUrl is not null)
+            // AvatarUrl is intentionally NOT accepted from profile-update input.
+            // The managed avatar upload/clear endpoints are the only self-service
+            // way to change a creator avatar, so the existing value is preserved.
+            if (request.DisplayName is not null || request.Bio is not null)
             {
                 var updateResult = profile.UpdateProfile(
                     request.DisplayName ?? profile.DisplayName,
                     request.Bio,
-                    request.AvatarUrl);
+                    profile.AvatarUrl);
 
                 if (updateResult.IsFailure)
                     return Result.Failure(updateResult.Errors.FirstOrDefault()!, Outcome.UnprocessableEntity);

@@ -34,18 +34,15 @@ public static class CreatorProfileMapper
 
     /// <summary>
     /// Edit form → PUT /profile/mine body. A blank <see cref="CreatorProfileVm.NewSlug"/>
-    /// is sent as null so the backend keeps the existing slug; a blank avatar is sent
-    /// as null (cleared) only when the user explicitly empties it.
+    /// is sent as null so the backend keeps the existing slug. AvatarUrl is intentionally
+    /// NOT sent: the avatar can only be changed via the managed upload/clear endpoints, so
+    /// a normal profile save preserves the current avatar server-side (CA-3).
     /// </summary>
     public static UpdateCreatorProfileRequestBody ToUpdateBody(CreatorProfileVm form)
         => new(
             DisplayName: form.DisplayName.Trim(),
             Bio: Trimmed(form.Bio),
-            AvatarUrl: Trimmed(form.AvatarUrl),
             NewSlug: Trimmed(form.NewSlug));
-
-    public static UpdateCreatorAvatarRequestBody ToAvatarBody(UpdateAvatarVm form)
-        => new(form.AvatarUrl.Trim());
 
     private static string? Trimmed(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

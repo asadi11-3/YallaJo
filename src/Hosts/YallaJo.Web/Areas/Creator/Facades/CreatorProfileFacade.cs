@@ -12,8 +12,8 @@ namespace YallaJo.Web.Areas.Creator.Facades;
 /// Avatar file upload posts the image directly to the ContentBlogs-owned managed avatar
 /// endpoint (POST /profile/mine/avatar/upload), which validates, stores, and persists the
 /// avatar in one round-trip and cleans up the previous file. Avatar removal calls the
-/// managed clear endpoint (DELETE /profile/mine/avatar). The legacy URL-only PUT endpoint
-/// remains available for back-compat but is no longer the primary UI flow.
+/// managed clear endpoint (DELETE /profile/mine/avatar). There is no URL-only avatar
+/// write path: the avatar can only be changed by a managed upload or clear (CA-3).
 /// </para>
 /// </summary>
 public sealed class CreatorProfileFacade
@@ -47,11 +47,6 @@ public sealed class CreatorProfileFacade
         => Normalize(
             await _creator.UpdateProfileAsync(CreatorProfileMapper.ToUpdateBody(form), ct).ConfigureAwait(false),
             "update your profile");
-
-    public async Task<ApiResult> UpdateAvatarAsync(UpdateAvatarVm form, CancellationToken ct = default)
-        => Normalize(
-            await _creator.UpdateAvatarAsync(CreatorProfileMapper.ToAvatarBody(form), ct).ConfigureAwait(false),
-            "update your avatar");
 
     /// <summary>
     /// Uploads an avatar image directly to the managed ContentBlogs avatar endpoint

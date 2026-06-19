@@ -17,8 +17,8 @@ namespace YallaJo.Web.Areas.Creator.Controllers;
 /// routes per action so each carries the correct gate.</para>
 /// <para>Avatar accepts a managed file upload (posted to the ContentBlogs managed
 /// avatar endpoint, which validates/stores/persists in one round-trip) and a remove
-/// action (managed clear endpoint). A legacy URL-only action remains for back-compat
-/// but is no longer surfaced in the UI. All gate on <c>Creator.Update</c>.</para>
+/// action (managed clear endpoint). There is no URL-only avatar write path (CA-3).
+/// Both gate on <c>Creator.Update</c>.</para>
 /// </summary>
 [Area("Creator")]
 [Authorize]
@@ -79,25 +79,6 @@ public sealed class ProfileController : BaseController
         }
 
         SetSuccess(_localizer["Creator.Profile.Flash.Updated"]);
-        return RedirectToAction(nameof(Index));
-    }
-
-    // POST /creator/profile/avatar  — Creator.Update
-    [HttpPost("creator/profile/avatar")]
-    [ValidateAntiForgeryToken]
-    [RequirePermission(WebPermission.Creator.Update)]
-    public async Task<IActionResult> Avatar(UpdateAvatarVm form, CancellationToken ct = default)
-    {
-        if (!ModelState.IsValid)
-        {
-            SetError(FirstModelError() ?? _localizer["Creator.Profile.Flash.AvatarUrlInvalid"].Value);
-            return RedirectToAction(nameof(Index));
-        }
-
-        var result = await _facade.UpdateAvatarAsync(form, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-
-        SetFlash(result, _localizer["Creator.Profile.Flash.AvatarUpdated"].Value, _localizer["Creator.Profile.Flash.AvatarFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 
@@ -176,10 +157,4 @@ public sealed class ProfileController : BaseController
             AvatarUrl = avatarUrl,
         };
     }
-
-    private string? FirstModelError() =>
-        ModelState.Values
-            .SelectMany(v => v.Errors)
-            .Select(e => e.ErrorMessage)
-            .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
 }

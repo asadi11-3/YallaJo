@@ -20,10 +20,6 @@ public sealed class UpdateCreatorProfileCommandValidator
             .MaximumLength(2000)
             .When(x => x.Bio is not null);
 
-        RuleFor(x => x.AvatarUrl!)
-            .MaximumLength(500)
-            .When(x => x.AvatarUrl is not null);
-
         RuleFor(x => x.Slug!)
             .Must(slug => SlugRegex.IsMatch(slug))
                 .WithMessage("Slug must be lowercase alphanumeric segments separated by '-'.")

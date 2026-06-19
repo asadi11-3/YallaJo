@@ -6,7 +6,6 @@ using ContentBlogs.Application.Commands.Creator.SelfDeactivate;
 using ContentBlogs.Application.Commands.Creator.SubmitApplication;
 using ContentBlogs.Application.Commands.Creator.UnfollowCreator;
 using ContentBlogs.Application.Commands.Creator.UpdateApplication;
-using ContentBlogs.Application.Commands.Creator.UpdateAvatar;
 using ContentBlogs.Application.Commands.Creator.UpdateProfile;
 using ContentBlogs.Application.Commands.Creator.UploadAvatar;
 using ContentBlogs.Application.Queries.Blog.GetCreatorBlogs;
@@ -196,7 +195,6 @@ internal static class CreatorEndpoints
             var cmd = new UpdateCreatorProfileCommand(
                 DisplayName: request.DisplayName,
                 Bio: request.Bio,
-                AvatarUrl: request.AvatarUrl,
                 Slug: request.NewSlug);
 
             var result = await sender.Send(cmd, ct);
@@ -292,23 +290,6 @@ internal static class CreatorEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Creator, AppAction.Delete));
-
-        // ── PUT /api/v1/blogs/creators/profile/mine/avatar ───────────────
-        group.MapPut("/profile/mine/avatar", async (
-            UpdateCreatorAvatarRequest request,
-            ISender sender,
-            CancellationToken ct) =>
-        {
-            var result = await sender.Send(new UpdateCreatorAvatarCommand(request.AvatarUrl), ct);
-            return result.ToApiResult();
-        })
-        .WithName("UpdateCreatorAvatar")
-        .WithSummary("Update creator avatar URL")
-        .Produces(StatusCodes.Status200OK)
-        .ProducesValidationProblem()
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Creator, AppAction.Update));
 
         // ── POST /api/v1/blogs/creators/profile/mine/avatar/upload ───────
         group.MapPost("/profile/mine/avatar/upload", async (

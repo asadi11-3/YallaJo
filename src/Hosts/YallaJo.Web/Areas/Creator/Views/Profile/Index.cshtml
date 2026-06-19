@@ -69,8 +69,8 @@
                         <span asp-validation-for="Bio" class="text-danger small d-block" role="alert"></span>
                     </div>
 
-                    @* Avatar is managed via the upload/remove forms below; preserve current value on profile save. *@
-                    <input type="hidden" asp-for="AvatarUrl" />
+                    @* Avatar is managed via the upload/remove forms below; the backend preserves
+                       the current avatar on profile save and ignores any client-supplied value (CA-3). *@
 
                     <div>
                         <label asp-for="NewSlug" class="form-label"></label>

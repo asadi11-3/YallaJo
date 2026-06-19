@@ -57,20 +57,13 @@ public sealed class CreatorApiClient
 
     /// <summary>
     /// PUT /api/v1/blogs/creators/profile/mine — update own profile (display name,
-    /// bio, avatar URL, slug). Permission: Permission.Creator.Update.
+    /// bio, slug). Avatar is NOT updatable here (CA-3): it is changed only via the
+    /// managed upload/clear endpoints below. Permission: Permission.Creator.Update.
     /// 404 no profile; 409 slug-taken/concurrency; 422 validation.
     /// </summary>
     public Task<ApiResult> UpdateProfileAsync(
         UpdateCreatorProfileRequestBody body, CancellationToken ct = default)
         => _api.PutAsync(ProfileMinePath, body, ct);
-
-    /// <summary>
-    /// PUT /api/v1/blogs/creators/profile/mine/avatar — update avatar URL (no-JS /
-    /// power-user fallback). Permission: Permission.Creator.Update. 404; 409 concurrency.
-    /// </summary>
-    public Task<ApiResult> UpdateAvatarAsync(
-        UpdateCreatorAvatarRequestBody body, CancellationToken ct = default)
-        => _api.PutAsync($"{ProfileMinePath}/avatar", body, ct);
 
     /// <summary>
     /// POST /api/v1/blogs/creators/profile/mine/avatar/upload (CA-1) — managed avatar

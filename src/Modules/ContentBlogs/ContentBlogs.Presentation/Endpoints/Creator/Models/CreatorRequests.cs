@@ -23,12 +23,9 @@ public sealed record UpdateCreatorApplicationRequest(
 public sealed record UpdateCreatorProfileRequest(
     string DisplayName,
     string? Bio,
-    string? AvatarUrl,
     string? NewSlug);
 
 public sealed record RedeemCreatorInvitationRequest(string Token);
-
-public sealed record UpdateCreatorAvatarRequest(string AvatarUrl);
 
 public sealed record ApproveApplicationRequest(
     string DisplayName,

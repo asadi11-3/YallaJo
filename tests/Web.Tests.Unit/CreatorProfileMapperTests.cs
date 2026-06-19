@@ -70,7 +70,7 @@ public sealed class CreatorProfileMapperTests
         {
             DisplayName = "  Jane  ",
             Bio         = "  hi  ",
-            AvatarUrl   = "  https://cdn/a.jpg  ",
+            AvatarUrl   = "  https://cdn/a.jpg  ", // ignored: avatar is managed-only (CA-3)
             NewSlug     = "   ", // blank → keep existing slug (null)
         };
 
@@ -78,8 +78,18 @@ public sealed class CreatorProfileMapperTests
 
         body.DisplayName.Should().Be("Jane");
         body.Bio.Should().Be("hi");
-        body.AvatarUrl.Should().Be("https://cdn/a.jpg");
         body.NewSlug.Should().BeNull("a blank slug must not trigger a rename");
+    }
+
+    [Fact]
+    public void ToUpdateBody_DoesNotCarryAvatarUrl()
+    {
+        // CA-3: the profile update body no longer has an AvatarUrl member, so a normal
+        // profile save can never overwrite/clear the avatar. This is enforced at compile
+        // time; the test documents the contract.
+        typeof(UpdateCreatorProfileRequestBody)
+            .GetProperty("AvatarUrl")
+            .Should().BeNull("the avatar is managed only via upload/clear (CA-3)");
     }
 
     [Fact]
@@ -88,12 +98,5 @@ public sealed class CreatorProfileMapperTests
         var form = new CreatorProfileVm { DisplayName = "Jane", NewSlug = "new-slug" };
 
         CreatorProfileMapper.ToUpdateBody(form).NewSlug.Should().Be("new-slug");
-    }
-
-    [Fact]
-    public void Avatar_body_trims()
-    {
-        CreatorProfileMapper.ToAvatarBody(new UpdateAvatarVm { AvatarUrl = "  https://a  " })
-            .AvatarUrl.Should().Be("https://a");
     }
 }
