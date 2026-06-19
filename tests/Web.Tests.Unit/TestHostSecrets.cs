@@ -1,6 +1,40 @@
+using System.Net.Http;
 using Microsoft.AspNetCore.Hosting;
 
 namespace Web.Tests.Unit;
+
+/// <summary>
+/// Test-only helper that forces a deterministic request culture for Web smoke tests.
+///
+/// <para>
+/// The Web host's <c>RequestLocalizationOptions</c> default culture is <c>ar</c> and the
+/// request-culture providers resolve in order QueryString → Cookie → Accept-Language. The
+/// smoke-test <see cref="System.Net.Http.HttpClient"/>s send none of these, so pages render
+/// in Arabic while assertions expect English. Adding an <c>Accept-Language: en</c> header makes
+/// RequestLocalization resolve to the supported <c>en</c> culture, rendering English.
+/// </para>
+///
+/// <para>
+/// This is a TEST-ONLY change: production localization (default <c>ar</c>, supported cultures,
+/// providers) and the Arabic/English resource files are untouched.
+/// </para>
+/// </summary>
+internal static class TestCulture
+{
+    /// <summary>
+    /// Forces the test client to request the English (<c>en</c>) culture so server-rendered
+    /// pages are deterministic. Returns the same client for fluent chaining.
+    /// </summary>
+    internal static HttpClient WithEnglishCulture(this HttpClient client)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+
+        client.DefaultRequestHeaders.AcceptLanguage.Clear();
+        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en");
+
+        return client;
+    }
+}
 
 /// <summary>
 /// Patch 0A.2 — supplies safe, FAKE secrets to the Web test host so that it boots

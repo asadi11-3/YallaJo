@@ -42,7 +42,7 @@ public sealed class CreatorAudienceFlowSmokeTests
         // Uses the REAL cookie auth (no test scheme) so the [Authorize] challenge
         // redirects to the configured LoginPath (/auth/sign-in).
         using var f = new AnonymousFactory();
-        var client = f.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var client = f.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }).WithEnglishCulture();
 
         var resp = await client.GetAsync("/creator/audience");
 
@@ -224,7 +224,7 @@ public sealed class CreatorAudienceFlowSmokeTests
                     s.Configure<TestAuthState>(st => st.Permissions = permissions);
                     s.AddSingleton(state);
                 }));
-            return factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            return factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }).WithEnglishCulture();
         }
     }
 

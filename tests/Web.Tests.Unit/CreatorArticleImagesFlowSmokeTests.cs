@@ -290,7 +290,7 @@ public sealed class CreatorArticleImagesFlowSmokeTests
                         st.WriteStatus = writeStatus;
                     });
                 }));
-            return factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            return factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }).WithEnglishCulture();
         }
     }
 

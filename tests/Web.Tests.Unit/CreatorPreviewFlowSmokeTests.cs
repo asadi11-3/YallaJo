@@ -220,7 +220,7 @@ public sealed class CreatorPreviewFlowSmokeTests
                         st.PublicProfileStatus = publicProfileStatus;
                     });
                 }));
-            return factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            return factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }).WithEnglishCulture();
         }
     }
 

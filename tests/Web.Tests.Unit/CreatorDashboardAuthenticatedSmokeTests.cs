@@ -184,7 +184,7 @@ public sealed class CreatorDashboardAuthenticatedSmokeTests
             return factory.CreateClient(new WebApplicationFactoryClientOptions
             {
                 AllowAutoRedirect = false
-            });
+            }).WithEnglishCulture();
         }
     }
 
