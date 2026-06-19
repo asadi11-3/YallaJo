@@ -83,9 +83,19 @@
         client.postForm(form.action, new FormData(form))
             .then(function (response) {
                 if (response.ok) {
+                    // Non-blocking warning (e.g. some review images failed to upload).
+                    // The review itself succeeded, so this is shown in addition to the
+                    // success toast — never as an error.
+                    var imageWarning = "";
+                    var rawWarning = response.headers.get("X-Review-Image-Warning");
+                    if (rawWarning) {
+                        try { imageWarning = decodeURIComponent(rawWarning); }
+                        catch (e) { imageWarning = rawWarning; }
+                    }
                     return response.text().then(function (html) {
                         var swapped = swapSection(targetSection(form.action), html);
                         toast(form.dataset.successMessage, "success");
+                        if (imageWarning) { toast(imageWarning, "warning"); }
                         if (!swapped) { window.location.reload(); }
                     });
                 }

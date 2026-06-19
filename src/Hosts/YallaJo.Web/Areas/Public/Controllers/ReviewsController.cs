@@ -79,12 +79,14 @@ public sealed class ReviewsController : BaseController
 
         if (submission.IsSuccess)
         {
-            // The review is persisted even if some image uploads failed (no rollback);
-            // surface a non-blocking warning appended to the success message in that case.
-            var message = submission.AnyImageFailed
-                ? $"{_localizer["Public.Review.Created"].Value} {_localizer["Public.Review.ImagesPartialFailure"].Value}"
-                : _localizer["Public.Review.Created"].Value;
-            return await SucceedAsync(message, targetType, targetId, returnUrl, ct);
+            // The review is persisted even if some image uploads failed (no rollback).
+            // The warning is surfaced separately so the AJAX path can show it as its
+            // own toast and the full-page path can append it to the success flash.
+            var imageWarning = submission.AnyImageFailed
+                ? _localizer["Public.Review.ImagesPartialFailure"].Value
+                : null;
+            return await SucceedAsync(
+                _localizer["Public.Review.Created"].Value, targetType, targetId, returnUrl, ct, imageWarning);
         }
 
         if (!ApplyValidationErrors(submission.Result))
@@ -414,15 +416,27 @@ public sealed class ReviewsController : BaseController
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     /// <summary>PRG success: flash + redirect back, or refreshed partial for AJAX callers.</summary>
-    private async Task<IActionResult> SucceedAsync(string message, string targetType, Guid targetId, string? returnUrl, CancellationToken ct)
+    /// <param name="imageWarning">
+    /// Optional non-blocking warning (e.g. partial review-image upload failure). For AJAX
+    /// callers it is carried on the <c>X-Review-Image-Warning</c> response header (URL-encoded
+    /// so non-ASCII text is header-safe) so reviews.js can show it as a separate warning toast;
+    /// for full-page callers it is appended to the success flash message.
+    /// </param>
+    private async Task<IActionResult> SucceedAsync(
+        string message, string targetType, Guid targetId, string? returnUrl, CancellationToken ct, string? imageWarning = null)
     {
         if (WantsAjax())
         {
+            if (!string.IsNullOrWhiteSpace(imageWarning))
+            {
+                Response.Headers["X-Review-Image-Warning"] = Uri.EscapeDataString(imageWarning);
+            }
+
             var list = await _reviews.GetReviewListAsync(ToTargetType(targetType), targetId, 1, ct);
             return PartialView("_Reviews", list);
         }
 
-        SetSuccess(message);
+        SetSuccess(string.IsNullOrWhiteSpace(imageWarning) ? message : $"{message} {imageWarning}");
         return RedirectBack(returnUrl);
     }
 
