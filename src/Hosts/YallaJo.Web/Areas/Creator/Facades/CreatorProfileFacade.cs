@@ -5,13 +5,15 @@ using YallaJo.Web.Infrastructure.Api.Contracts;
 namespace YallaJo.Web.Areas.Creator.Facades;
 
 /// <summary>
-/// Orchestrates the creator profile page (CCD-3): view/update profile, avatar (file
-/// upload or URL), and self-deactivation. Registered automatically by
+/// Orchestrates the creator profile page (CCD-3): view/update profile, avatar (managed
+/// file upload or removal), and self-deactivation. Registered automatically by
 /// <c>AddFeatureServices()</c> (name ends in "Facade").
 /// <para>
-/// Avatar file upload posts the image to the shared ContentCore attachments subsystem
-/// with <c>EntityType=Creator</c> (added in B1), then feeds the returned URL into the
-/// existing PUT /profile/mine/avatar. A URL-only fallback remains for no-JS clients.
+/// Avatar file upload posts the image directly to the ContentBlogs-owned managed avatar
+/// endpoint (POST /profile/mine/avatar/upload), which validates, stores, and persists the
+/// avatar in one round-trip and cleans up the previous file. Avatar removal calls the
+/// managed clear endpoint (DELETE /profile/mine/avatar). The legacy URL-only PUT endpoint
+/// remains available for back-compat but is no longer the primary UI flow.
 /// </para>
 /// </summary>
 public sealed class CreatorProfileFacade
@@ -52,37 +54,36 @@ public sealed class CreatorProfileFacade
             "update your avatar");
 
     /// <summary>
-    /// Uploads an avatar image to the ContentCore attachments subsystem (EntityType=Creator,
-    /// EntityId=profileId) and then sets it as the creator's avatar via PUT /profile/mine/avatar.
-    /// Client-side validates type and size; the API remains the authority (SEC4 magic-byte).
+    /// Uploads an avatar image directly to the managed ContentBlogs avatar endpoint
+    /// (POST /profile/mine/avatar/upload). The backend validates (magic-byte JPEG/PNG/WEBP,
+    /// 5 MB cap), stores the file under <c>creators/avatars</c>, persists the URL onto the
+    /// creator profile, and cleans up the previous local file. A light client-side pre-check
+    /// gives a friendly message; the API remains the authority.
     /// </summary>
-    public async Task<ApiResult> UploadAvatarFileAsync(Guid profileId, IFormFile file, CancellationToken ct = default)
+    public async Task<ApiResult> UploadAvatarFileAsync(IFormFile file, CancellationToken ct = default)
     {
         if (file is null || file.Length == 0)
             return ApiResult.Fail(400, "Please choose an image to upload.");
 
         var contentType = file.ContentType?.ToLowerInvariant();
-        if (contentType is not ("image/jpeg" or "image/png" or "image/gif" or "image/webp"))
-            return ApiResult.Fail(422, "Choose a JPEG, PNG, GIF, or WebP image.");
+        if (contentType is not ("image/jpeg" or "image/png" or "image/webp"))
+            return ApiResult.Fail(422, "Choose a JPEG, PNG, or WebP image.");
 
-        if (file.Length > 10 * 1024 * 1024)
-            return ApiResult.Fail(422, "The image must be 10 MB or smaller.");
+        if (file.Length > 5 * 1024 * 1024)
+            return ApiResult.Fail(422, "The image must be 5 MB or smaller.");
 
         await using var stream = file.OpenReadStream();
-        var upload = await _creator
-            .UploadAvatarImageAsync(profileId, stream, file.FileName, contentType, ct)
-            .ConfigureAwait(false);
-
-        if (upload.RequireSignOut) return ApiResult.ForceSignOut();
-        if (upload.IsForbidden) return ApiResult.Fail(403, FriendlyError(403, "update your avatar"));
-        if (!upload.IsSuccess || upload.Data is null)
-            return ApiResult.Fail(upload.StatusCode, upload.Error ?? FriendlyError(upload.StatusCode, "update your avatar"));
-
-        // Persist the uploaded image URL as the avatar (reuses the existing avatar endpoint).
         return Normalize(
-            await _creator.UpdateAvatarAsync(new UpdateCreatorAvatarRequestBody(upload.Data.Url), ct).ConfigureAwait(false),
+            await _creator.UploadAvatarImageAsync(stream, file.FileName, contentType, ct).ConfigureAwait(false),
             "update your avatar");
     }
+
+    /// <summary>
+    /// Removes the creator avatar via the managed clear endpoint (DELETE /profile/mine/avatar).
+    /// The backend nulls the avatar URL and best-effort deletes the local file.
+    /// </summary>
+    public async Task<ApiResult> RemoveAvatarAsync(CancellationToken ct = default)
+        => Normalize(await _creator.ClearAvatarAsync(ct).ConfigureAwait(false), "remove your avatar");
 
     public async Task<ApiResult> SelfDeactivateAsync(CancellationToken ct = default)
         => Normalize(await _creator.SelfDeactivateAsync(ct).ConfigureAwait(false), "deactivate your creator profile");

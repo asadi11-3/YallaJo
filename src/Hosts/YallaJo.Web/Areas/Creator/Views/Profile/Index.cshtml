@@ -69,11 +69,8 @@
                         <span asp-validation-for="Bio" class="text-danger small d-block" role="alert"></span>
                     </div>
 
-                    <div>
-                        <label asp-for="AvatarUrl" class="form-label"></label>
-                        <input asp-for="AvatarUrl" class="form-control" dir="ltr" placeholder="https://..." aria-describedby="avatar-help" />
-                        <span asp-validation-for="AvatarUrl" class="text-danger small" role="alert"></span>
-                    </div>
+                    @* Avatar is managed via the upload/remove forms below; preserve current value on profile save. *@
+                    <input type="hidden" asp-for="AvatarUrl" />
 
                     <div>
                         <label asp-for="NewSlug" class="form-label"></label>
@@ -90,43 +87,35 @@
                 </div>
             </form>
 
-            @* Avatar upload via attachments (file), with a collapsed image-URL fallback for no-JS / power users. *@
+            @* Avatar managed upload (file). The backend validates, stores, persists, and cleans up the old file. *@
             <form asp-area="Creator" asp-controller="Profile" asp-action="AvatarUpload" method="post"
                   enctype="multipart/form-data" data-loading data-yj-component="avatar-upload"
                   data-msg-type="@Localizer["Creator.Profile.AvatarInvalidType"]"
                   data-msg-size="@Localizer["Creator.Profile.AvatarTooLarge"]" class="card border">
                 <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Creator.Profile.AvatarHeading"]</h2></div>
                 <div class="card-body">
-                    <input type="hidden" name="profileId" value="@Model.ProfileId" />
                     <div class="d-flex align-items-center gap-3">
                         <img id="avatarPreview" width="96" height="96" class="rounded-circle object-fit-cover flex-shrink-0"
                              src="@(string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl)"
                              alt="@Localizer["Creator.Profile.AvatarPreviewAlt"]" />
                         <div class="flex-grow-1">
                             <label class="form-label" for="avatarFile">@Localizer["Creator.Profile.AvatarUploadLabel"]</label>
-                            <input type="file" id="avatarFile" name="avatarFile" accept="image/*" class="form-control" aria-describedby="avatar-upload-hint" />
+                            <input type="file" id="avatarFile" name="avatarFile" accept="image/jpeg,image/png,image/webp" class="form-control" aria-describedby="avatar-upload-hint" />
                             <span id="avatar-upload-hint" class="form-text">@Localizer["Creator.Profile.AvatarUploadHint"]</span>
                         </div>
                     </div>
                 </div>
-                <div class="card-footer">
+                <div class="card-footer d-flex gap-2">
                     <button type="submit" class="btn btn-primary"><i class="fa-solid fa-cloud-arrow-up me-1" aria-hidden="true"></i>@Localizer["Creator.Profile.UpdateAvatar"]</button>
                 </div>
             </form>
 
-            <details class="mt-n2">
-                <summary class="small text-body-secondary">@Localizer["Creator.Profile.AvatarUrlFallback"]</summary>
-                <form asp-area="Creator" asp-controller="Profile" asp-action="Avatar" method="post" class="card border mt-2" data-loading>
-                    <div class="card-body">
-                        <label class="form-label" for="avatarUrlField">@Localizer["Creator.Profile.AvatarLabel"]</label>
-                        <div class="input-group">
-                            <input id="avatarUrlField" name="AvatarUrl" class="form-control" dir="ltr"
-                                   value="@Model.AvatarUrl" placeholder="https://..." />
-                            <button type="submit" class="btn btn-primary-soft">@Localizer["Creator.Profile.UpdateAvatar"]</button>
-                        </div>
-                    </div>
+            @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
+            {
+                <form asp-area="Creator" asp-controller="Profile" asp-action="RemoveAvatar" method="post" class="mt-n2" data-loading>
+                    <button type="submit" class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-trash-can me-1" aria-hidden="true"></i>@Localizer["Creator.Profile.RemoveAvatar"]</button>
                 </form>
-            </details>
+            }
 
             @* Danger zone: self-deactivate (modal-confirmed). *@
             <div class="card border border-danger">

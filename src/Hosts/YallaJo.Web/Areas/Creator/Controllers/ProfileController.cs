@@ -15,9 +15,10 @@ namespace YallaJo.Web.Areas.Creator.Controllers;
 /// <para>Permission gates: view = <c>Creator.Read</c>; update profile/avatar =
 /// <c>Creator.Update</c>; self-deactivate = <c>Creator.Delete</c>. Separate POST
 /// routes per action so each carries the correct gate.</para>
-/// <para>Avatar accepts a file upload (posted to the attachments subsystem as
-/// EntityType=Creator, then persisted via the avatar endpoint) with a URL-only
-/// fallback for no-JS clients. Both gate on <c>Creator.Update</c>.</para>
+/// <para>Avatar accepts a managed file upload (posted to the ContentBlogs managed
+/// avatar endpoint, which validates/stores/persists in one round-trip) and a remove
+/// action (managed clear endpoint). A legacy URL-only action remains for back-compat
+/// but is no longer surfaced in the UI. All gate on <c>Creator.Update</c>.</para>
 /// </summary>
 [Area("Creator")]
 [Authorize]
@@ -100,11 +101,11 @@ public sealed class ProfileController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
-    // POST /creator/profile/avatar/upload  — Creator.Update (file upload)
+    // POST /creator/profile/avatar/upload  — Creator.Update (managed file upload)
     [HttpPost("creator/profile/avatar/upload")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.Creator.Update)]
-    public async Task<IActionResult> AvatarUpload(Guid profileId, IFormFile? avatarFile, CancellationToken ct = default)
+    public async Task<IActionResult> AvatarUpload(IFormFile? avatarFile, CancellationToken ct = default)
     {
         if (avatarFile is null)
         {
@@ -112,10 +113,23 @@ public sealed class ProfileController : BaseController
             return RedirectToAction(nameof(Index));
         }
 
-        var result = await _facade.UploadAvatarFileAsync(profileId, avatarFile, ct);
+        var result = await _facade.UploadAvatarFileAsync(avatarFile, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, _localizer["Creator.Profile.Flash.AvatarUpdated"].Value, _localizer["Creator.Profile.Flash.AvatarFailed"].Value);
+        return RedirectToAction(nameof(Index));
+    }
+
+    // POST /creator/profile/avatar/remove  — Creator.Update (managed clear endpoint)
+    [HttpPost("creator/profile/avatar/remove")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Creator.Update)]
+    public async Task<IActionResult> RemoveAvatar(CancellationToken ct = default)
+    {
+        var result = await _facade.RemoveAvatarAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, _localizer["Creator.Profile.Flash.AvatarRemoved"].Value, _localizer["Creator.Profile.Flash.AvatarFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
 

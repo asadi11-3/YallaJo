@@ -1,5 +1,4 @@
 using YallaJo.Web.Areas.Creator.Models.Application;
-using YallaJo.Web.Areas.Creator.Models.Articles.Images;
 using YallaJo.Web.Areas.Creator.Models.Audience;
 using YallaJo.Web.Areas.Creator.Models.Dashboard;
 using YallaJo.Web.Areas.Creator.Models.Profile;
@@ -15,9 +14,6 @@ public sealed class CreatorApiClient
     private const string ApplicationsPath = "/api/v1/blogs/creators/applications";
     private const string RedeemInvitationPath = "/api/v1/blogs/creators/invitations/redeem";
     private const string ProfilesPath = "/api/v1/blogs/creators/profiles";
-    private const string AttachmentsPath = "/api/v1/content-core/attachments";
-    private const string CreatorEntityType = "Creator";
-    private const string ImageAttachmentType = "Image";
 
     private readonly IApiClient _api;
 
@@ -69,32 +65,35 @@ public sealed class CreatorApiClient
         => _api.PutAsync(ProfileMinePath, body, ct);
 
     /// <summary>
-    /// PUT /api/v1/blogs/creators/profile/mine/avatar — update avatar URL.
-    /// Permission: Permission.Creator.Update. 404; 409 concurrency.
+    /// PUT /api/v1/blogs/creators/profile/mine/avatar — update avatar URL (no-JS /
+    /// power-user fallback). Permission: Permission.Creator.Update. 404; 409 concurrency.
     /// </summary>
     public Task<ApiResult> UpdateAvatarAsync(
         UpdateCreatorAvatarRequestBody body, CancellationToken ct = default)
         => _api.PutAsync($"{ProfileMinePath}/avatar", body, ct);
 
     /// <summary>
-    /// POST /api/v1/content-core/attachments — upload an avatar image for the creator
-    /// profile (EntityType=Creator, EntityId=profileId). The server enforces ownership
-    /// (EntityOwnershipResolver → ICreatorOwnershipService) and SEC4 magic-byte validation.
-    /// Returns the stored attachment whose <c>Url</c> is then persisted via PUT .../avatar.
-    /// Permission: Permission.Attachment.Create.
+    /// POST /api/v1/blogs/creators/profile/mine/avatar/upload (CA-1) — managed avatar
+    /// upload owned by ContentBlogs. The file is sent multipart under field "file"; the
+    /// backend validates content (magic bytes, JPEG/PNG/WEBP, ≤5 MB), stores it under
+    /// /uploads/creators/avatars, sets the profile AvatarUrl, and best-effort deletes the
+    /// previous local avatar. No ContentCore attachment row is created. Returns no body.
+    /// Permission: Permission.Creator.Update. 401; 404; 422 invalid file.
     /// </summary>
-    public Task<ApiResult<UploadAttachmentResponse>> UploadAvatarImageAsync(
-        Guid profileId, Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
-        => _api.PostFileAsync<UploadAttachmentResponse>(
-            AttachmentsPath, fileStream, fileName, contentType,
-            formFields: new Dictionary<string, string>
-            {
-                ["EntityType"] = CreatorEntityType,
-                ["EntityId"] = profileId.ToString("D"),
-                ["AttachmentType"] = ImageAttachmentType,
-            },
+    public Task<ApiResult> UploadAvatarImageAsync(
+        Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
+        => _api.PostFileAsync(
+            $"{ProfileMinePath}/avatar/upload", fileStream, fileName, contentType,
             formFieldName: "file",
             ct: ct);
+
+    /// <summary>
+    /// DELETE /api/v1/blogs/creators/profile/mine/avatar (CA-1) — clears the profile
+    /// AvatarUrl and best-effort deletes the previous local avatar file.
+    /// Permission: Permission.Creator.Update. 401; 404.
+    /// </summary>
+    public Task<ApiResult> ClearAvatarAsync(CancellationToken ct = default)
+        => _api.DeleteAsync($"{ProfileMinePath}/avatar", ct);
 
     /// <summary>
     /// DELETE /api/v1/blogs/creators/profile/mine — voluntary self-deactivation

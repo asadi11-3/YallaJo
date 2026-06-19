@@ -106,16 +106,55 @@ public sealed class CreatorProfileFlowSmokeTests
     }
 
     [Fact]
-    public async Task Avatar_Succeeds_AndRedirects()
+    public async Task AvatarUpload_Succeeds_AndRedirects_ViaManagedEndpoint()
     {
         using var f = new ProfileFactory();
         var client = f.CreateClientFor([Read, Update], writeStatus: 200);
 
-        var resp = await PostFormAsync(client, "/creator/profile/avatar",
-            new() { ["AvatarUrl"] = "https://cdn/a.jpg" });
+        var resp = await PostAvatarFileAsync(client, ValidPng(), "avatar.png", "image/png");
 
         resp.StatusCode.Should().Be(HttpStatusCode.Redirect);
         resp.Headers.Location!.ToString().Should().Contain("/creator/profile");
+        // CA-2: the managed upload endpoint must have been called (NOT a ContentCore attachment).
+        f.LastPostFilePath.Should().Be("/api/v1/blogs/creators/profile/mine/avatar/upload");
+    }
+
+    [Fact]
+    public async Task AvatarUpload_Failure_ReturnsToFormWithError()
+    {
+        using var f = new ProfileFactory();
+        var client = f.CreateClientFor([Read, Update], profileJson: ActiveJson(), writeStatus: 422);
+
+        var resp = await PostAvatarFileAsync(client, ValidPng(), "avatar.png", "image/png");
+
+        resp.StatusCode.Should().Be(HttpStatusCode.Redirect);
+        resp.Headers.Location!.ToString().Should().Contain("/creator/profile");
+        f.LastPostFilePath.Should().Be("/api/v1/blogs/creators/profile/mine/avatar/upload");
+    }
+
+    [Fact]
+    public async Task RemoveAvatar_Succeeds_AndRedirects_ViaClearEndpoint()
+    {
+        using var f = new ProfileFactory();
+        var client = f.CreateClientFor([Read, Update], writeStatus: 200);
+
+        var resp = await PostFormAsync(client, "/creator/profile/avatar/remove", new());
+
+        resp.StatusCode.Should().Be(HttpStatusCode.Redirect);
+        resp.Headers.Location!.ToString().Should().Contain("/creator/profile");
+        // CA-2: the clear endpoint (DELETE) must have been called.
+        f.LastDeletePath.Should().Be("/api/v1/blogs/creators/profile/mine/avatar");
+    }
+
+    [Fact]
+    public async Task RemoveAvatar_Without_CreatorUpdate_Is403()
+    {
+        using var f = new ProfileFactory();
+        var client = f.CreateClientFor([Read]); // no Update
+
+        var resp = await PostFormAsync(client, "/creator/profile/avatar/remove", new());
+
+        resp.StatusCode.Should().Be(HttpStatusCode.Forbidden, "RemoveAvatar is gated by Creator.Update");
     }
 
     [Fact]
@@ -180,10 +219,29 @@ public sealed class CreatorProfileFlowSmokeTests
         return await client.PostAsync(path, content);
     }
 
+    private static async Task<HttpResponseMessage> PostAvatarFileAsync(
+        HttpClient client, byte[] bytes, string fileName, string contentType)
+    {
+        using var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(bytes);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+        content.Add(fileContent, "avatarFile", fileName);
+        return await client.PostAsync("/creator/profile/avatar/upload", content);
+    }
+
+    // Minimal valid PNG signature (8-byte magic + a few bytes); content is not validated by the Web layer.
+    private static byte[] ValidPng() =>
+        [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52];
+
     // ── Test host ─────────────────────────────────────────────────────────────
 
     internal sealed class ProfileFactory : WebApplicationFactory<Program>
     {
+        private readonly CallLog _callLog = new();
+
+        public string? LastPostFilePath => _callLog.LastPostFilePath;
+        public string? LastDeletePath => _callLog.LastDeletePath;
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Development");
@@ -202,6 +260,7 @@ public sealed class CreatorProfileFlowSmokeTests
                     o.DefaultScheme = TestAuthHandler.SchemeName;
                 });
 
+                services.AddSingleton(_callLog);
                 services.RemoveAll<IApiClient>();
                 services.AddScoped<IApiClient, StubApiClient>();
 
@@ -235,6 +294,12 @@ public sealed class CreatorProfileFlowSmokeTests
         public Task<bool> IsRequestValidAsync(Microsoft.AspNetCore.Http.HttpContext c) => Task.FromResult(true);
         public Task ValidateRequestAsync(Microsoft.AspNetCore.Http.HttpContext c) => Task.CompletedTask;
         public void SetCookieTokenAndHeader(Microsoft.AspNetCore.Http.HttpContext c) { }
+    }
+
+    private sealed class CallLog
+    {
+        public string? LastPostFilePath { get; set; }
+        public string? LastDeletePath { get; set; }
     }
 
     private sealed class TestAuthState { public string[] Permissions { get; set; } = []; }
@@ -275,7 +340,12 @@ public sealed class CreatorProfileFlowSmokeTests
     private sealed class StubApiClient : IApiClient
     {
         private readonly TestApiState _state;
-        public StubApiClient(IOptions<TestApiState> state) => _state = state.Value;
+        private readonly CallLog _callLog;
+        public StubApiClient(IOptions<TestApiState> state, CallLog callLog)
+        {
+            _state = state.Value;
+            _callLog = callLog;
+        }
 
         public Task<ApiResult<T>> GetAsync<T>(string path, CancellationToken ct = default)
         {
@@ -296,9 +366,20 @@ public sealed class CreatorProfileFlowSmokeTests
                 : ApiResult.Fail(_state.WriteStatus, null));
 
         public Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default)
-            => Task.FromResult(_state.WriteStatus is >= 200 and < 300
+        {
+            _callLog.LastDeletePath = path;
+            return Task.FromResult(_state.WriteStatus is >= 200 and < 300
                 ? ApiResult.Ok(_state.WriteStatus)
                 : ApiResult.Fail(_state.WriteStatus, null));
+        }
+
+        public Task<ApiResult> PostFileAsync(string path, Stream fileStream, string fileName, string contentType, IReadOnlyDictionary<string, string>? formFields = null, string formFieldName = "file", CancellationToken ct = default)
+        {
+            _callLog.LastPostFilePath = path;
+            return Task.FromResult(_state.WriteStatus is >= 200 and < 300
+                ? ApiResult.Ok(_state.WriteStatus)
+                : ApiResult.Fail(_state.WriteStatus, null));
+        }
 
         // ── Unused ─────────────────────────────────────────────────────────────
         public Task<ApiResult<ApiFile>> GetFileAsync(string path, CancellationToken ct = default)

@@ -7693,6 +7693,9 @@
   <data name="Creator.Profile.UpdateAvatar" xml:space="preserve">
     <value>Update avatar</value>
   </data>
+  <data name="Creator.Profile.RemoveAvatar" xml:space="preserve">
+    <value>Remove avatar</value>
+  </data>
   <data name="Creator.Profile.DangerHeading" xml:space="preserve">
     <value>Deactivate account</value>
   </data>
@@ -14037,6 +14040,9 @@
   </data>
   <data name="Creator.Profile.Flash.AvatarFailed" xml:space="preserve">
     <value>Could not update your avatar.</value>
+  </data>
+  <data name="Creator.Profile.Flash.AvatarRemoved" xml:space="preserve">
+    <value>Your avatar was removed.</value>
   </data>
   <data name="Creator.Profile.Flash.ChooseImage" xml:space="preserve">
     <value>Please choose an image to upload.</value>

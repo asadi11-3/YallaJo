@@ -239,6 +239,36 @@ public sealed class ApiClient : IApiClient
             return await _http.SendAsync(request, ct);
         }, ct);
 
+    public Task<ApiResult> PostFileAsync(
+        string path,
+        Stream fileStream,
+        string fileName,
+        string contentType,
+        IReadOnlyDictionary<string, string>? formFields = null,
+        string formFieldName = "file",
+        CancellationToken ct = default) =>
+        SendNoBodyAsync(path, async () =>
+        {
+            using var multipart = new MultipartFormDataContent();
+            using var streamContent = new StreamContent(fileStream);
+            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+            multipart.Add(streamContent, formFieldName, fileName);
+
+            if (formFields is not null)
+            {
+                foreach (var kvp in formFields)
+                {
+                    multipart.Add(new StringContent(kvp.Value), kvp.Key);
+                }
+            }
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, path)
+            {
+                Content = multipart,
+            };
+            return await _http.SendAsync(request, ct);
+        }, ct);
+
     public Task<ApiResult<T>> PostFilesAsync<T>(
         string path,
         IReadOnlyList<ApiUploadFile> files,

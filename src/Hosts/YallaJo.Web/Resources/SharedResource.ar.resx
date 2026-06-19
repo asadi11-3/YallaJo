@@ -7693,6 +7693,9 @@
   <data name="Creator.Profile.UpdateAvatar" xml:space="preserve">
     <value>تحديث الصورة الرمزية</value>
   </data>
+  <data name="Creator.Profile.RemoveAvatar" xml:space="preserve">
+    <value>إزالة الصورة الرمزية</value>
+  </data>
   <data name="Creator.Profile.DangerHeading" xml:space="preserve">
     <value>تعطيل الحساب</value>
   </data>
@@ -14037,6 +14040,9 @@
 </data>
 <data name="Creator.Profile.Flash.AvatarFailed" xml:space="preserve">
 <value>تعذّر تحديث صورتك الرمزية.</value>
+</data>
+<data name="Creator.Profile.Flash.AvatarRemoved" xml:space="preserve">
+<value>تمت إزالة صورتك الرمزية.</value>
 </data>
 <data name="Creator.Profile.Flash.ChooseImage" xml:space="preserve">
 <value>يرجى اختيار صورة للتحميل.</value>
