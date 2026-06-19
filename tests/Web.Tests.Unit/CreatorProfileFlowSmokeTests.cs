@@ -62,7 +62,7 @@ public sealed class CreatorProfileFlowSmokeTests
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var html = await resp.Content.ReadAsStringAsync();
-        html.Should().Contain("suspended");
+        html.Should().Contain("Suspended", "the inactive notice renders the localized Suspended status word");
         html.Should().NotContain("Save profile");
     }
 
@@ -192,7 +192,7 @@ public sealed class CreatorProfileFlowSmokeTests
         var resp = await client.GetAsync("/creator/profile");
         var html = await resp.Content.ReadAsStringAsync();
 
-        html.Should().Contain("bi-person-badge fa-fw me-1", "the My Profile sidebar link renders for Creator.Read");
+        html.Should().Contain("fa-solid fa-id-badge fa-fw me-1", "the My Profile sidebar link renders for Creator.Read");
     }
 
     // ── Fixtures ────────────────────────────────────────────────────────────────

@@ -128,7 +128,7 @@ public sealed class CreatorPreviewFlowSmokeTests
             publicProfileJson: PublicProfileJson(), blogsJson: EmptyBlogsJson());
 
         var html = await (await client.GetAsync("/creator/preview")).Content.ReadAsStringAsync();
-        html.Should().Contain("bi-eye fa-fw me-1", "the Public Preview sidebar link renders for Creator.Read");
+        html.Should().Contain("fa-solid fa-eye fa-fw me-1", "the Public Preview sidebar link renders for Creator.Read");
     }
 
     [Fact]

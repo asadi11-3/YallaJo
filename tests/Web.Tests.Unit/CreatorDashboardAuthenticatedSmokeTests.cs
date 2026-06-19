@@ -57,27 +57,20 @@ public sealed class CreatorDashboardAuthenticatedSmokeTests
     }
 
     [Fact]
-    public async Task AuthenticatedUser_WithoutCreatorRead_GetsDashboard_ButSidebarLinkIsHidden()
+    public async Task AuthenticatedUser_WithoutCreatorRead_IsForbiddenFromDashboard()
     {
         using var factory = new CreatorWebFactory();
         var client = factory.CreateClientFor(permissions: ["Permission.SomethingElse.Read"]);
 
         var response = await client.GetAsync("/creator/dashboard");
 
-        // [Authorize]-only controller, so the page still loads; only the link is gated.
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var html = await response.Content.ReadAsStringAsync();
-
-        html.Should().Contain("creatorDashboardMenu", "the sidebar chrome still renders");
-        html.Should().NotContain("asp-action", "tag helpers must be processed, not emitted raw");
-        // The bare-string assertion `NotContain("/creator/dashboard")` was brittle: the
-        // layout's language-switcher form emits the current request URL as a hidden
-        // returnUrl input value (see _Navbar.cshtml ~line 215), which always matched.
-        // Restrict the assertion to the rendered anchor's href so it really verifies the
-        // <permission>-gated sidebar Dashboard link is absent.
-        html.Should().NotContain("href=\"/creator/dashboard\"",
-            "the Dashboard nav link must be hidden when Creator.Read is absent");
+        // DashboardController is now gated at the class level with
+        // [RequirePermission(WebPermission.Creator.Read)] (not merely [Authorize]), so a
+        // caller lacking Creator.Read is rejected before the page renders. This strictly
+        // enforces "no dashboard access without Creator.Read" (which also means the
+        // sidebar Dashboard link can never be seen by such a user).
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden,
+            "the dashboard requires Creator.Read and must be forbidden without it");
     }
 
     [Fact]
@@ -128,7 +121,9 @@ public sealed class CreatorDashboardAuthenticatedSmokeTests
         var html = await response.Content.ReadAsStringAsync();
         html.Should().Contain("Active creator", "the approved badge must render for an Active profile");
         html.Should().Contain("Total Views", "the stats cards must render for an approved creator");
-        html.Should().Contain("1234", "real backend view count must be displayed");
+        // Stat cards format counts with the "N0" specifier under the request culture
+        // (forced to English in tests), so 1234 renders as "1,234".
+        html.Should().Contain("1,234", "real backend view count must be displayed (N0-formatted)");
         html.Should().Contain("Recent Articles");
         html.Should().NotContain("Become a creator", "approved creators must not see the application CTA");
     }

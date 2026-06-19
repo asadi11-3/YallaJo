@@ -160,7 +160,7 @@ public sealed class CreatorApplicationFlowSmokeTests
 
         // The sidebar Application nav-link carries a unique icon marker; assert on it
         // rather than the bare URL (the dashboard CTA also links to /creator/application).
-        const string sidebarMarker = "bi-pencil-square fa-fw me-1";
+        const string sidebarMarker = "fa-solid fa-pen-to-square fa-fw me-1";
 
         var withSubmit = await (f.CreateClientFor([Read, Submit]))
             .GetAsync("/creator/dashboard");

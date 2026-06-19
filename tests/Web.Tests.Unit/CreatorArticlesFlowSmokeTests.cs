@@ -65,7 +65,11 @@ public sealed class CreatorArticlesFlowSmokeTests
         var html = await resp.Content.ReadAsStringAsync();
         html.Should().Contain("My Title");
         html.Should().Contain("New Article", "create CTA shows for Blog.Create holders");
-        html.Should().Contain("statusFilter", "the status filter renders");
+        // The status filter is now a set of GET pills inside a <nav aria-label="Status">
+        // (no longer an element with id "statusFilter"); assert the stable region marker
+        // and that the active Draft filter is reflected in a pill link.
+        html.Should().Contain("aria-label=\"Status\"", "the status filter region renders");
+        html.Should().Contain("status=Draft", "the active Draft status filter pill renders");
     }
 
     [Fact]
@@ -244,7 +248,7 @@ public sealed class CreatorArticlesFlowSmokeTests
         var client = f.CreateClientFor([ReadOwn], myBlogsJson: EmptyPageJson());
 
         var html = await (await client.GetAsync("/creator/articles")).Content.ReadAsStringAsync();
-        html.Should().Contain("bi-journals fa-fw me-1", "the My Articles sidebar link renders for Blog.ReadOwn");
+        html.Should().Contain("fa-solid fa-book-open fa-fw me-1", "the My Articles sidebar link renders for Blog.ReadOwn");
     }
 
     // Note: anonymous → sign-in redirect is covered by the runtime smoke (it exercises

@@ -152,7 +152,7 @@ public sealed class CreatorAudienceFlowSmokeTests
             mineJson: MineJson("Active", followerCount: 0), followersJson: "[]");
 
         var html = await (await client.GetAsync("/creator/audience")).Content.ReadAsStringAsync();
-        html.Should().Contain("bi-people fa-fw me-1", "the Audience sidebar link renders for Creator.Read");
+        html.Should().Contain("fa-solid fa-users fa-fw me-1", "the Audience sidebar link renders for Creator.Read");
     }
 
     // ── Fixtures ────────────────────────────────────────────────────────────────
