@@ -7,14 +7,11 @@ namespace YallaJo.Web.Areas.Guide.ApiClients;
 
 /// <summary>
 /// Talks to the tour-guide profile endpoints (group /api/v1/guides) and the
-/// content-core lookup / attachment endpoints used by the "My Profile" page.
+/// content-core lookup endpoints used by the "My Profile" page.
 /// </summary>
 public sealed class ProfileApiClient
 {
     private const string GuidesBase = "/api/v1/guides";
-    private const string AttachmentsBase = "/api/v1/content-core/attachments";
-    private const string GuideEntityType = "TourGuide";
-    private const string ImageAttachmentType = "Image";
 
     private readonly IApiClient _api;
 
@@ -53,28 +50,14 @@ public sealed class ProfileApiClient
     public Task<ApiResult> DeactivateAsync(CancellationToken ct = default)
         => _api.DeleteAsync($"{GuidesBase}/me", ct);
 
-    // PUT /api/v1/guides/me/avatar (persists a URL only)
-    public Task<ApiResult> UpdateAvatarAsync(string avatarUrl, CancellationToken ct = default)
-        => _api.PutAsync($"{GuidesBase}/me/avatar", new UpdateGuideAvatarRequest(avatarUrl), ct);
+    // POST multipart /api/v1/guides/me/avatar/upload (managed avatar upload)
+    public Task<ApiResult> UploadAvatarAsync(
+        Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
+        => _api.PostFileAsync($"{GuidesBase}/me/avatar/upload", fileStream, fileName, contentType, formFieldName: "file", ct: ct);
 
-    // POST multipart /api/v1/content-core/attachments (returns persisted URL)
-    public Task<ApiResult<UploadAttachmentResponse>> UploadImageAsync(
-        Guid guideId, Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
-    {
-        // The singular attachment endpoint binds EntityType/EntityId/AttachmentType
-        // from multipart form fields ([FromForm]) only — not the query string.
-        // Match the working Creator/Admin upload pattern.
-        var fields = new Dictionary<string, string>
-        {
-            ["EntityType"]     = GuideEntityType,
-            ["EntityId"]       = guideId.ToString(),
-            ["AttachmentType"] = ImageAttachmentType,
-        };
-
-        return _api.PostFileAsync<UploadAttachmentResponse>(
-            AttachmentsBase, fileStream, fileName, contentType,
-            formFields: fields, formFieldName: "file", ct: ct);
-    }
+    // DELETE /api/v1/guides/me/avatar (managed avatar clear)
+    public Task<ApiResult> ClearAvatarAsync(CancellationToken ct = default)
+        => _api.DeleteAsync($"{GuidesBase}/me/avatar", ct);
 
     // GET /api/v1/content-core/specializations?activeOnly=true
     public Task<ApiResult<List<SpecializationResponse>>> GetSpecializationsAsync(CancellationToken ct = default)

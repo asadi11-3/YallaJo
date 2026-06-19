@@ -38,9 +38,16 @@
                     <form asp-area="Guide" asp-controller="Profile" asp-action="UploadAvatar" method="post" enctype="multipart/form-data" class="hstack gap-2" data-loading>
                         @Html.AntiForgeryToken()
                         <label for="avatar-file" class="visually-hidden">@Localizer["Guide.Profile.AvatarUpload"]</label>
-                        <input id="avatar-file" type="file" name="file" accept="image/*" class="form-control form-control-sm" required />
+                        <input id="avatar-file" type="file" name="file" accept="image/jpeg,image/png,image/webp" class="form-control form-control-sm" required />
                         <button type="submit" class="btn btn-sm btn-primary-soft text-nowrap">@Localizer["Guide.Profile.Avatar"]</button>
                     </form>
+                    @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
+                    {
+                        <form asp-area="Guide" asp-controller="Profile" asp-action="RemoveAvatar" method="post" class="mt-2" data-loading>
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger text-nowrap">@Localizer["Guide.Profile.AvatarRemove"]</button>
+                        </form>
+                    }
                 </div>
             </div>
         </div>

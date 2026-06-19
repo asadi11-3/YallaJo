@@ -134,6 +134,13 @@ public sealed class TourGuide : AuditableEntity, IAggregateRoot
         return Result.Success();
     }
 
+    /// <summary>Clears the avatar URL (used by the managed avatar delete endpoint).</summary>
+    public void ClearAvatar()
+    {
+        AvatarUrl = null;
+        MarkUpdated();
+    }
+
     public Result ChangeSlug(string newSlug)
     {
         var activeError = EnsureActive();

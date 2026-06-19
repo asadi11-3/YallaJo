@@ -8143,6 +8143,9 @@
   <data name="Guide.Profile.Avatar" xml:space="preserve">
     <value>Avatar</value>
   </data>
+  <data name="Guide.Profile.AvatarRemove" xml:space="preserve">
+    <value>Remove avatar</value>
+  </data>
   <data name="Guide.Profile.CoverUpload" xml:space="preserve">
     <value>Upload cover</value>
   </data>
@@ -16071,6 +16074,9 @@
 </data>
 <data name="Guide.Flash.AvatarUpdated" xml:space="preserve">
 <value>Avatar updated.</value>
+</data>
+<data name="Guide.Flash.AvatarRemoved" xml:space="preserve">
+<value>Your avatar was removed.</value>
 </data>
 <data name="Guide.Flash.CoverUpdated" xml:space="preserve">
 <value>Cover image updated.</value>

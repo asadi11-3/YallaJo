@@ -2,11 +2,12 @@ using ContentTours.Application.Commands.GuideAvailabilityBlock.Create;
 using ContentTours.Application.Commands.GuideAvailabilityBlock.Delete;
 using ContentTours.Application.Commands.TourGuides.AddLanguage;
 using ContentTours.Application.Commands.TourGuides.AddSpecialization;
+using ContentTours.Application.Commands.TourGuides.ClearAvatar;
 using ContentTours.Application.Commands.TourGuides.DeactivateGuide;
 using ContentTours.Application.Commands.TourGuides.RemoveLanguage;
 using ContentTours.Application.Commands.TourGuides.RemoveSpecialization;
-using ContentTours.Application.Commands.TourGuides.UpdateAvatar;
 using ContentTours.Application.Commands.TourGuides.UpdateProfile;
+using ContentTours.Application.Commands.TourGuides.UploadAvatar;
 using ContentTours.Application.Queries.GuideAvailabilityBlock;
 using ContentTours.Application.Queries.TourGuide.Analytics;
 using ContentTours.Application.Queries.TourGuide.Earnings;
@@ -25,6 +26,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
+using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
@@ -254,20 +256,87 @@ internal static class TourGuideProfileEndpoints
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Read))
         .RequireAuthorization();
 
-        // PUT /guides/me/avatar — guide updates own avatar
-        group.MapPut("/me/avatar", async (
-            UpdateGuideAvatarRequest request,
+        // POST /guides/me/avatar/upload — guide uploads own avatar (managed: magic-byte JPEG/PNG/WEBP, 5 MB, local storage)
+        group.MapPost("/me/avatar/upload", async (
+            IFormFile file,
+            ISender sender,
+            IFileStorageService fileStorage,
+            CancellationToken ct) =>
+        {
+            if (file is null || file.Length == 0)
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["file"] = ["An image file is required."],
+                });
+            }
+
+            const long maxAvatarBytes = 5 * 1024 * 1024;
+            if (file.Length > maxAvatarBytes)
+            {
+                return Results.ValidationProblem(
+                    new Dictionary<string, string[]> { ["file"] = ["The avatar image must be 5 MB or smaller."] },
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+
+            using var buffered = new MemoryStream();
+            await using (var source = file.OpenReadStream())
+            {
+                await source.CopyToAsync(buffered, ct);
+            }
+
+            buffered.Position = 0;
+            var validation = TourGuideAvatarFileValidator.Validate(buffered, file.ContentType, file.FileName);
+            if (!validation.IsValid)
+            {
+                return Results.ValidationProblem(
+                    new Dictionary<string, string[]>
+                    {
+                        [validation.Field ?? "file"] = [validation.Message ?? "Invalid image file."],
+                    },
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+
+            buffered.Position = 0;
+            var upload = await fileStorage.UploadAsync(buffered, file.FileName, file.ContentType, "guides/avatars", ct);
+            if (upload.IsFailure)
+            {
+                return Results.Problem(
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    detail: upload.Errors.FirstOrDefault()?.Message ?? "File upload failed.");
+            }
+
+            var result = await sender.Send(new UploadGuideAvatarCommand(upload.Value.Url), ct);
+            if (!result.IsSuccess)
+            {
+                await fileStorage.DeleteAsync(upload.Value.Url, ct);
+            }
+
+            return result.ToApiResult();
+        })
+        .WithName("UploadGuideAvatar")
+        .WithSummary("Upload own tour guide avatar")
+        .Accepts<IFormFile>("multipart/form-data")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Update))
+        .RequireAuthorization()
+        .DisableAntiforgery();
+
+        // DELETE /guides/me/avatar — guide clears own avatar
+        group.MapDelete("/me/avatar", async (
             ISender sender,
             CancellationToken ct) =>
         {
-            var cmd = new UpdateGuideAvatarCommand(request.AvatarUrl);
-            var result = await sender.Send(cmd, ct);
+            var result = await sender.Send(new ClearGuideAvatarCommand(), ct);
             return result.ToApiResult();
         })
-        .WithName("UpdateGuideAvatar")
-        .WithSummary("Update own tour guide avatar")
+        .WithName("ClearGuideAvatar")
+        .WithSummary("Clear own tour guide avatar")
         .Produces(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Update))
         .RequireAuthorization();

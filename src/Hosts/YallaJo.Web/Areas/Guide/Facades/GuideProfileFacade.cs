@@ -172,33 +172,29 @@ public sealed class GuideProfileFacade
     public async Task<ApiResult> UploadAvatarAsync(
         Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
     {
-        var guideId = await ResolveGuideIdAsync(ct);
-        if (guideId is null)
-        {
-            return ApiResult.Fail("Unable to resolve your guide profile.");
-        }
-
-        var upload = await _api.UploadImageAsync(guideId.Value, fileStream, fileName, contentType, ct);
-        if (upload.RequireSignOut)
-        {
-            return ApiResult.ForceSignOut();
-        }
-
-        if (!upload.IsSuccess || upload.Data is null || string.IsNullOrWhiteSpace(upload.Data.Url))
-        {
-            return upload.IsValidationError
-                ? ApiResult.ValidationFail(upload.StatusCode, upload.ValidationErrors!)
-                : ApiResult.Fail(upload.StatusCode, upload.Error ?? "Image upload failed.");
-        }
-
-        var persist = await _api.UpdateAvatarAsync(upload.Data.Url!, ct);
-        if (persist.IsSuccess)
+        // Managed upload: the API validates (magic-byte JPEG/PNG/WEBP, 5 MB),
+        // stores under /uploads/guides/avatars, and sets AvatarUrl itself.
+        // No ContentCore attachment row is created for the guide avatar.
+        var result = await _api.UploadAvatarAsync(fileStream, fileName, contentType, ct);
+        if (result.IsSuccess)
         {
             // Avatar feeds the cached sidebar identity — drop the stale entry.
             _guideId.Invalidate();
         }
 
-        return persist;
+        return result;
+    }
+
+    public async Task<ApiResult> RemoveAvatarAsync(CancellationToken ct = default)
+    {
+        var result = await _api.ClearAvatarAsync(ct);
+        if (result.IsSuccess)
+        {
+            // Avatar feeds the cached sidebar identity — drop the stale entry.
+            _guideId.Invalidate();
+        }
+
+        return result;
     }
 
     private Task<Guid?> ResolveGuideIdAsync(CancellationToken ct) =>

@@ -8143,6 +8143,9 @@
   <data name="Guide.Profile.Avatar" xml:space="preserve">
     <value>الصورة الرمزية</value>
   </data>
+  <data name="Guide.Profile.AvatarRemove" xml:space="preserve">
+    <value>إزالة الصورة الرمزية</value>
+  </data>
   <data name="Guide.Profile.CoverUpload" xml:space="preserve">
     <value>رفع صورة الغلاف</value>
   </data>
@@ -16071,6 +16074,9 @@
 </data>
 <data name="Guide.Flash.AvatarUpdated" xml:space="preserve">
 <value>تم تحديث الصورة الشخصية.</value>
+</data>
+<data name="Guide.Flash.AvatarRemoved" xml:space="preserve">
+<value>تمت إزالة صورتك الرمزية.</value>
 </data>
 <data name="Guide.Flash.CoverUpdated" xml:space="preserve">
 <value>تم تحديث صورة الغلاف.</value>

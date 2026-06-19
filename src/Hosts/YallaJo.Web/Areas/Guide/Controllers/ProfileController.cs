@@ -109,6 +109,14 @@ public sealed class ProfileController : GuideBaseController
         return HandleMutation(result, L["Guide.Flash.AvatarUpdated"]);
     }
 
+    [HttpPost("guide/profile/avatar/remove")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveAvatar(CancellationToken ct = default)
+    {
+        var result = await _profile.RemoveAvatarAsync(ct);
+        return HandleMutation(result, L["Guide.Flash.AvatarRemoved"]);
+    }
+
     // POST /guide/profile/deactivate — self-deactivate the guide profile (DELETE /guides/me).
     [HttpPost("guide/profile/deactivate")]
     [ValidateAntiForgeryToken]
