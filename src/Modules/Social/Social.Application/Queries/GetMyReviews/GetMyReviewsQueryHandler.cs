@@ -49,6 +49,7 @@ internal sealed class GetMyReviewsQueryHandler(IReviewRepository reviewRepositor
                 rp.Content,
                 rp.CreatedAt,
                 rp.LastEditedAt))
-            .ToList()
+            .ToList(),
+        Array.Empty<string>()
     );
 }

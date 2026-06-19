@@ -68,6 +68,17 @@
                             {
                                 <p class="mb-1 preserve-whitespace">@review.Content</p>
                             }
+                            @if (review.ImageUrls.Count > 0)
+                            {
+                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                    @foreach (var img in review.ImageUrls)
+                                    {
+                                        <a href="@img" target="_blank" rel="noopener">
+                                            <img src="@img" class="rounded border" style="width:96px;height:96px;object-fit:cover" loading="lazy" alt="@Localizer["Public.Review.image"]" />
+                                        </a>
+                                    }
+                                </div>
+                            }
                             @if (review.HelpfulVoteCount > 0)
                             {
                                 <span class="text-secondary small"><i class="bi bi-hand-thumbs-up me-1" aria-hidden="true"></i>@Localizer["Public.FoundHelpful.Count", review.HelpfulVoteCount]</span>

@@ -12250,6 +12250,15 @@
 <data name="Public.Review.Created" xml:space="preserve">
 <value>شكراً لتقييمك!</value>
 </data>
+<data name="Public.Review.AddPhotos" xml:space="preserve">
+<value>إضافة صور (اختياري)</value>
+</data>
+<data name="Public.Review.image" xml:space="preserve">
+<value>صورة التقييم</value>
+</data>
+<data name="Public.Review.ImagesPartialFailure" xml:space="preserve">
+<value>تعذّر رفع بعض الصور.</value>
+</data>
 <data name="Public.Review.Updated" xml:space="preserve">
 <value>تم تحديث تقييمك.</value>
 </data>

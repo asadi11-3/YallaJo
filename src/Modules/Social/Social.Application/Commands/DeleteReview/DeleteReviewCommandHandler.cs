@@ -1,3 +1,4 @@
+using ContentCore.Contracts.Attachments;
 using MediatR;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
@@ -15,9 +16,13 @@ internal sealed class DeleteReviewCommandHandler(
     ISocialUnitOfWork unitOfWork,
     HybridCache cache,
     TimeProvider timeProvider,
+    IEntityAttachmentCleanupService attachmentCleanup,
     ILogger<DeleteReviewCommandHandler> logger)
     : IRequestHandler<DeleteReviewCommand, Result>
 {
+    private const string ReviewAttachmentEntityType = "Review";
+
+
     public async Task<Result> Handle(DeleteReviewCommand command, CancellationToken ct)
     {
         var review = await reviewRepository.GetByIdAsync(command.ReviewId, ct);
@@ -42,6 +47,18 @@ internal sealed class DeleteReviewCommandHandler(
         await cache.RemoveByTagAsync(SocialCacheKeys.ReviewsTag(review.TargetType, review.TargetId), ct).ConfigureAwait(false);
         await cache.RemoveByTagAsync(SocialCacheKeys.UserReviewsTag(review.UserId), ct).ConfigureAwait(false);
         await cache.RemoveByTagAsync(SocialCacheKeys.ReviewTag(command.ReviewId), ct).ConfigureAwait(false);
+
+        // Best-effort cleanup of the review's public images; never fail the delete.
+        try
+        {
+            await attachmentCleanup
+                .DeleteEntityAttachmentsAsync(ReviewAttachmentEntityType, review.Id, ct)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to clean up images for deleted review {ReviewId}", command.ReviewId);
+        }
 
         logger.LogInformation("Review {ReviewId} deleted (source={Source}) by {CallerUserId}",
             command.ReviewId, source, command.CallerUserId);

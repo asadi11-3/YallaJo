@@ -16,6 +16,9 @@ public sealed class PublicReviewResponse
     public DateTime CreatedAt { get; init; }
     public int HelpfulVoteCount { get; init; }
     public string RowVersion { get; init; } = "";
+
+    // Public review image URLs (relative /uploads/... paths) returned by the API for Published reviews.
+    public IReadOnlyList<string> ImageUrls { get; init; } = [];
 }
 
 // Mirrors the API PublicReviewPageDto(Items, Page, PageSize, TotalCount).
@@ -49,3 +52,10 @@ public sealed record ReviewReportBody(string Reason, string Description);
 
 // SubmitReportRequest(ReportableEntityType EntityType, Guid EntityId, ReportReason Reason, string Description)
 public sealed record SubmitReportBody(string EntityType, Guid EntityId, string Reason, string Description);
+
+// Response from POST /api/v1/content-core/attachments when uploading a review image.
+public sealed class UploadReviewImageResponse
+{
+    public Guid Id { get; init; }
+    public string Url { get; init; } = "";
+}

@@ -60,6 +60,7 @@ public sealed class ReviewsController : BaseController
         Guid targetId,
         [Bind(Prefix = "Review")] ReviewFormVm form,
         string? returnUrl,
+        List<IFormFile>? reviewImages,
         CancellationToken ct)
     {
         form.TargetType = ToTargetType(targetType);
@@ -70,20 +71,25 @@ public sealed class ReviewsController : BaseController
             return await FailAsync(_localizer["Public.Review.FormError"], targetType, targetId, returnUrl, ct);
         }
 
-        var result = await _reviews.SubmitReviewAsync(form, ct);
-        if (GuardSignOut(result) is { } signOut)
+        var submission = await _reviews.SubmitReviewWithImagesAsync(form, reviewImages ?? [], ct);
+        if (GuardSignOut(submission.Result) is { } signOut)
         {
             return signOut;
         }
 
-        if (result.IsSuccess)
+        if (submission.IsSuccess)
         {
-            return await SucceedAsync(_localizer["Public.Review.Created"], targetType, targetId, returnUrl, ct);
+            // The review is persisted even if some image uploads failed (no rollback);
+            // surface a non-blocking warning appended to the success message in that case.
+            var message = submission.AnyImageFailed
+                ? $"{_localizer["Public.Review.Created"].Value} {_localizer["Public.Review.ImagesPartialFailure"].Value}"
+                : _localizer["Public.Review.Created"].Value;
+            return await SucceedAsync(message, targetType, targetId, returnUrl, ct);
         }
 
-        if (!ApplyValidationErrors(result))
+        if (!ApplyValidationErrors(submission.Result))
         {
-            SetError(result.Error);
+            SetError(submission.Result.Error);
         }
 
         return await FailAsync(null, targetType, targetId, returnUrl, ct);

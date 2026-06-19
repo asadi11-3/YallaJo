@@ -453,7 +453,7 @@
             <div class="container">
                 <div class="row g-4">
                     <div class="col-lg-7">
-                        <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="CreateReview" asp-route-targetType="place" asp-route-targetId="@Model.PlaceId" class="card border p-3 h-100" data-loading data-success-message="@Localizer["Public.Review.Created"]">
+                        <form method="post" enctype="multipart/form-data" asp-area="Public" asp-controller="Reviews" asp-action="CreateReview" asp-route-targetType="place" asp-route-targetId="@Model.PlaceId" class="card border p-3 h-100" data-loading data-success-message="@Localizer["Public.Review.Created"]">
                             @Html.AntiForgeryToken()
                             <h3 class="h6 mb-3">@Localizer["Public.Write.a.review"]</h3>
                             <input type="hidden" name="Review.TargetId" value="@Model.PlaceId" />
@@ -479,6 +479,10 @@
                             <div class="mb-3">
                                 <label class="form-label small" for="placeReviewVisit">@Localizer["Public.Visit.date.optional"]</label>
                                 <input id="placeReviewVisit" type="date" name="Review.VisitDate" class="form-control form-control-sm" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small" for="placeReviewImages">@Localizer["Public.Review.AddPhotos"]</label>
+                                <input id="placeReviewImages" type="file" name="reviewImages" accept="image/jpeg,image/png,image/gif,image/webp" multiple class="form-control form-control-sm" />
                             </div>
                             <button type="submit" class="btn btn-primary btn-sm">@Localizer["Public.Submit.review"]</button>
                         </form>

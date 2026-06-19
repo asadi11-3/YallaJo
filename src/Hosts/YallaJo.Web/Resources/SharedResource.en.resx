@@ -12250,6 +12250,15 @@
 <data name="Public.Review.Created" xml:space="preserve">
 <value>Thanks for your review!</value>
 </data>
+<data name="Public.Review.AddPhotos" xml:space="preserve">
+<value>Add photos (optional)</value>
+</data>
+<data name="Public.Review.image" xml:space="preserve">
+<value>Review photo</value>
+</data>
+<data name="Public.Review.ImagesPartialFailure" xml:space="preserve">
+<value>Some photos could not be uploaded.</value>
+</data>
 <data name="Public.Review.Updated" xml:space="preserve">
 <value>Your review was updated.</value>
 </data>

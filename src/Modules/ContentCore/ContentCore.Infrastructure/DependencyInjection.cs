@@ -52,6 +52,7 @@ public static class DependencyInjection
 
         services.AddScoped<IAttachmentExistenceService, AttachmentExistenceService>();
         services.AddScoped<IPublicEntityImageReader, PublicEntityImageReader>();
+        services.AddScoped<IEntityAttachmentCleanupService, EntityAttachmentCleanupService>();
         services.AddScoped<IEntityCategoryRepository, EntityCategoryRepository>();
         services.AddScoped<IEntityTagRepository, EntityTagRepository>();
         services.AddScoped<ICategoryHierarchyService, CategoryHierarchyService>();

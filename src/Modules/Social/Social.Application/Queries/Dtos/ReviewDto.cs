@@ -21,7 +21,8 @@ public sealed record ReviewDto(
     DateTime CreatedAt,
     int HelpfulVoteCount,
     string RowVersion,
-    IReadOnlyList<ReviewReplyDto> Replies
+    IReadOnlyList<ReviewReplyDto> Replies,
+    IReadOnlyList<string> ImageUrls
 );
 
 public sealed record ReviewReplyDto(

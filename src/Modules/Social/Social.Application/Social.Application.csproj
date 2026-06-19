@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Booking\Booking.Contracts\Booking.Contracts.csproj" />
     <ProjectReference Include="..\..\ContentPlaces\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />
+    <ProjectReference Include="..\..\ContentCore\ContentCore.Contracts\ContentCore.Contracts.csproj" />
     <ProjectReference Include="..\..\ContentTours\ContentTours.Contracts\ContentTours.Contracts.csproj" />
     <ProjectReference Include="..\..\Security\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\Social.Contracts\Social.Contracts.csproj" />

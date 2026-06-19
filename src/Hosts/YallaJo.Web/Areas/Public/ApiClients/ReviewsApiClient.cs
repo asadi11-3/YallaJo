@@ -12,6 +12,32 @@ public sealed class ReviewsApiClient(IApiClient api)
     public Task<ApiResult> CreateReviewAsync(CreateReviewBody body, CancellationToken ct = default)
         => api.PostAsync($"{Base}/reviews", body, ct);
 
+    // Creates a review and returns the new review id (API returns the Guid id with HTTP 200).
+    public Task<ApiResult<Guid>> CreateReviewWithIdAsync(CreateReviewBody body, CancellationToken ct = default)
+        => api.PostAsync<Guid>($"{Base}/reviews", body, ct);
+
+    // Uploads a single review image to the shared ContentCore attachment pipeline (EntityType=Review).
+    // ContentCore enforces magic-byte validation, allowed types, size cap and the per-entity limit (5).
+    public Task<ApiResult<UploadReviewImageResponse>> UploadImageAsync(
+        Guid reviewId,
+        Stream fileStream,
+        string fileName,
+        string contentType,
+        CancellationToken ct = default)
+        => api.PostFileAsync<UploadReviewImageResponse>(
+            "/api/v1/content-core/attachments",
+            fileStream,
+            fileName,
+            contentType,
+            formFields: new Dictionary<string, string>
+            {
+                ["EntityType"] = "Review",
+                ["EntityId"] = reviewId.ToString(),
+                ["AttachmentType"] = "Image",
+            },
+            formFieldName: "file",
+            ct: ct);
+
     public Task<ApiResult> EditReviewAsync(Guid id, EditReviewBody body, CancellationToken ct = default)
         => api.PutAsync($"{Base}/reviews/{id}", body, ct);
 

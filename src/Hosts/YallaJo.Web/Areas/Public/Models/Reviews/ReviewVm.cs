@@ -106,12 +106,18 @@ public sealed class ReviewItemVm
 
     public string RowVersion { get; init; } = "";
 
+    /// <summary>
+    /// Absolute (asset-resolved) public image URLs attached to this review.
+    /// Empty when the review has no images.
+    /// </summary>
+    public IReadOnlyList<string> ImageUrls { get; init; } = [];
+
     public bool IsWithinEditWindow => CreatedAt >= DateTime.UtcNow.AddHours(-48);
 }
 
 public static class ReviewMapper
 {
-    public static ReviewItemVm ToItem(PublicReviewResponse r) => new()
+    public static ReviewItemVm ToItem(PublicReviewResponse r, YallaJo.Web.Services.IApiAssetUrlResolver assetResolver) => new()
     {
         Id = r.Id,
         UserId = r.UserId,
@@ -124,5 +130,10 @@ public static class ReviewMapper
         CreatedAt = r.CreatedAt,
         HelpfulVoteCount = r.HelpfulVoteCount,
         RowVersion = r.RowVersion,
+        ImageUrls = r.ImageUrls
+            .Select(assetResolver.Resolve)
+            .Where(u => !string.IsNullOrWhiteSpace(u))
+            .Select(u => u!)
+            .ToList(),
     };
 }
