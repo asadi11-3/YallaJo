@@ -1,4 +1,3 @@
-using ContentTours.Application.Interfaces;
 using ContentTours.Application.Queries.TourGuides.Common;
 using ContentTours.Domain.Repositories;
 using Microsoft.Extensions.Logging;
@@ -9,7 +8,6 @@ namespace ContentTours.Application.Queries.TourGuides.ListPublic;
 
 internal sealed class ListTourGuidesQueryHandler(
     ITourGuideRepository guideRepository,
-    IProfileLookupService profileLookup,
     ILogger<ListTourGuidesQueryHandler> logger)
     : IQueryHandler<ListTourGuidesQuery, ListTourGuidesResult>
 {
@@ -25,10 +23,6 @@ internal sealed class ListTourGuidesQueryHandler(
 
         foreach (var guide in guides)
         {
-            var profile = await profileLookup
-                .GetPublicProfileAsync(guide.UserId, cancellationToken)
-                .ConfigureAwait(false);
-
             var tourCount = await guideRepository
                 .CountAssignedToursAsync(guide.UserId, cancellationToken)
                 .ConfigureAwait(false);
@@ -36,9 +30,9 @@ internal sealed class ListTourGuidesQueryHandler(
             items.Add(new TourGuideListItemDto(
                 Id: guide.Id,
                 UserId: guide.UserId,
-                DisplayName: profile?.DisplayName,
+                DisplayName: guide.DisplayName,
                 Slug: guide.Slug,
-                AvatarUrl: profile?.AvatarUrl,
+                AvatarUrl: guide.AvatarUrl,
                 Bio: guide.Bio,
                 AverageRating: guide.AverageRating,
                 ReviewCount: guide.ReviewCount,

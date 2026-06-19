@@ -102,7 +102,6 @@ public static class DependencyInjection
         // adapters will replace these bindings via their own DI registrations
         // in Program.cs / module-specific extension methods.
         services.AddScoped<IUserRoleChecker, NoOpUserRoleChecker>();
-        services.AddScoped<IProfileLookupService, NoOpProfileLookupService>();
 
         // ── Cross-module read-only services ──────────────────────────────────
         // Owned & implemented here so consumers (ContentCore, etc.) depend only on

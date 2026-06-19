@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using ContentTours.Application.Interfaces;
 using ContentTours.Application.Queries.TourGuides;
 using ContentTours.Domain.Entities;
 using ContentTours.Domain.Repositories;
@@ -15,15 +14,15 @@ public sealed class TourGuideListTests
     private static (
         GetTourGuidesQueryHandler Handler,
         ITourTourGuideRepository GuideRepo,
-        IProfileLookupService ProfileLookup)
+        ITourGuideRepository GuideProfileRepo)
         Build()
     {
         var guideRepo = Substitute.For<ITourTourGuideRepository>();
-        var profileLookup = Substitute.For<IProfileLookupService>();
+        var guideProfileRepo = Substitute.For<ITourGuideRepository>();
         var logger = Substitute.For<ILogger<GetTourGuidesQueryHandler>>();
 
-        var handler = new GetTourGuidesQueryHandler(guideRepo, profileLookup, logger);
-        return (handler, guideRepo, profileLookup);
+        var handler = new GetTourGuidesQueryHandler(guideRepo, guideProfileRepo, logger);
+        return (handler, guideRepo, guideProfileRepo);
     }
 
     private static void StubQuery(ITourTourGuideRepository repo, params TourTourGuide[] guides)
@@ -33,10 +32,38 @@ public sealed class TourGuideListTests
                 Arg.Any<bool>())
            .Returns(new TestAsyncQueryable<TourTourGuide>(guides));
 
+    private static void StubGuides(ITourGuideRepository repo, params TourGuide[] guides)
+        => repo.GetAllAsync(
+                Arg.Any<Expression<Func<TourGuide, bool>>?>(),
+                Arg.Any<Func<IQueryable<TourGuide>, IQueryable<TourGuide>>?>(),
+                Arg.Any<Func<IQueryable<TourGuide>, IOrderedQueryable<TourGuide>>?>(),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+           .Returns(guides.ToList());
+
+    private static TourGuide BuildGuide(Guid userId, string displayName, string? avatarUrl)
+    {
+        var guide = TourGuide.Register(
+            userId: userId,
+            displayName: displayName,
+            slug: $"guide-{userId:N}",
+            bio: "Experienced local guide.",
+            yearsOfExperience: 3,
+            hasFirstAid: true,
+            moTALicenseNumber: null).Value;
+
+        if (!string.IsNullOrWhiteSpace(avatarUrl))
+        {
+            guide.UpdateAvatar(avatarUrl);
+        }
+
+        return guide;
+    }
+
     [Fact]
     public async Task List_OrdersPrimaryFirstThenTourGuideIdAscending()
     {
-        var (handler, guideRepo, profileLookup) = Build();
+        var (handler, guideRepo, guideProfileRepo) = Build();
         var tourId = Guid.NewGuid();
 
         var highId = Guid.Parse("00000000-0000-0000-0000-000000000200");
@@ -48,8 +75,7 @@ public sealed class TourGuideListTests
         var primary = TourTourGuide.Create(tourId, primaryId, isPrimary: true);
 
         StubQuery(guideRepo, nonPrimaryHigh, nonPrimaryLow, primary);
-        profileLookup.GetPublicProfileAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns((PublicProfile?)null);
+        StubGuides(guideProfileRepo);
 
         var result = await handler.Handle(new GetTourGuidesQuery(tourId), CancellationToken.None);
 
@@ -59,15 +85,14 @@ public sealed class TourGuideListTests
     }
 
     [Fact]
-    public async Task List_ProfileFound_MapsDisplayNameAndAvatar()
+    public async Task List_ProfileFound_MapsDisplayNameAndAvatarFromGuideEntity()
     {
-        var (handler, guideRepo, profileLookup) = Build();
+        var (handler, guideRepo, guideProfileRepo) = Build();
         var tourId = Guid.NewGuid();
-        var guideId = Guid.NewGuid();
+        var guideUserId = Guid.NewGuid();
 
-        StubQuery(guideRepo, TourTourGuide.Create(tourId, guideId, isPrimary: true));
-        profileLookup.GetPublicProfileAsync(guideId, Arg.Any<CancellationToken>())
-            .Returns(new PublicProfile(guideId, "Guide One", "https://cdn/avatar.jpg"));
+        StubQuery(guideRepo, TourTourGuide.Create(tourId, guideUserId, isPrimary: true));
+        StubGuides(guideProfileRepo, BuildGuide(guideUserId, "Guide One", "https://cdn/avatar.jpg"));
 
         var result = await handler.Handle(new GetTourGuidesQuery(tourId), CancellationToken.None);
 
@@ -80,29 +105,76 @@ public sealed class TourGuideListTests
     [Fact]
     public async Task List_ProfileMissing_FallsBackToGuideIdString()
     {
-        var (handler, guideRepo, profileLookup) = Build();
+        var (handler, guideRepo, guideProfileRepo) = Build();
         var tourId = Guid.NewGuid();
-        var guideId = Guid.NewGuid();
+        var guideUserId = Guid.NewGuid();
 
-        StubQuery(guideRepo, TourTourGuide.Create(tourId, guideId, isPrimary: false));
-        profileLookup.GetPublicProfileAsync(guideId, Arg.Any<CancellationToken>())
-            .Returns((PublicProfile?)null);
+        StubQuery(guideRepo, TourTourGuide.Create(tourId, guideUserId, isPrimary: false));
+        StubGuides(guideProfileRepo);
 
         var result = await handler.Handle(new GetTourGuidesQuery(tourId), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         var dto = result.Value!.Single();
-        dto.DisplayName.Should().Be(guideId.ToString());
+        dto.DisplayName.Should().Be(guideUserId.ToString());
         dto.AvatarUrl.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task List_ProfileFoundButNullAvatar_RemainsSafe()
+    {
+        var (handler, guideRepo, guideProfileRepo) = Build();
+        var tourId = Guid.NewGuid();
+        var guideUserId = Guid.NewGuid();
+
+        StubQuery(guideRepo, TourTourGuide.Create(tourId, guideUserId, isPrimary: true));
+        StubGuides(guideProfileRepo, BuildGuide(guideUserId, "Guide One", avatarUrl: null));
+
+        var result = await handler.Handle(new GetTourGuidesQuery(tourId), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        var dto = result.Value!.Single();
+        dto.DisplayName.Should().Be("Guide One");
+        dto.AvatarUrl.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task List_BatchLoadsGuidesOnce_NoNPlusOne()
+    {
+        var (handler, guideRepo, guideProfileRepo) = Build();
+        var tourId = Guid.NewGuid();
+        var firstUserId = Guid.NewGuid();
+        var secondUserId = Guid.NewGuid();
+
+        StubQuery(
+            guideRepo,
+            TourTourGuide.Create(tourId, firstUserId, isPrimary: true),
+            TourTourGuide.Create(tourId, secondUserId, isPrimary: false));
+        StubGuides(
+            guideProfileRepo,
+            BuildGuide(firstUserId, "Guide One", "https://cdn/one.jpg"),
+            BuildGuide(secondUserId, "Guide Two", "https://cdn/two.jpg"));
+
+        var result = await handler.Handle(new GetTourGuidesQuery(tourId), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.Should().HaveCount(2);
+        await guideProfileRepo.Received(1).GetAllAsync(
+            Arg.Any<Expression<Func<TourGuide, bool>>?>(),
+            Arg.Any<Func<IQueryable<TourGuide>, IQueryable<TourGuide>>?>(),
+            Arg.Any<Func<IQueryable<TourGuide>, IOrderedQueryable<TourGuide>>?>(),
+            Arg.Any<bool>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task List_EmptyAssignments_ReturnsEmptyCollection()
     {
-        var (handler, guideRepo, _) = Build();
+        var (handler, guideRepo, guideProfileRepo) = Build();
         var tourId = Guid.NewGuid();
 
         StubQuery(guideRepo);
+        StubGuides(guideProfileRepo);
 
         var result = await handler.Handle(new GetTourGuidesQuery(tourId), CancellationToken.None);
 
@@ -112,16 +184,21 @@ public sealed class TourGuideListTests
     }
 
     [Fact]
-    public async Task List_WhenProfileLookupThrowsWithCanceledToken_ReturnsOutcomeCanceled()
+    public async Task List_WhenGuideLoadThrowsWithCanceledToken_ReturnsOutcomeCanceled()
     {
-        var (handler, guideRepo, profileLookup) = Build();
+        var (handler, guideRepo, guideProfileRepo) = Build();
         var tourId = Guid.NewGuid();
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
         StubQuery(guideRepo, TourTourGuide.Create(tourId, Guid.NewGuid(), isPrimary: false));
-        profileLookup.GetPublicProfileAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromException<PublicProfile?>(new OperationCanceledException(cts.Token)));
+        guideProfileRepo.GetAllAsync(
+                Arg.Any<Expression<Func<TourGuide, bool>>?>(),
+                Arg.Any<Func<IQueryable<TourGuide>, IQueryable<TourGuide>>?>(),
+                Arg.Any<Func<IQueryable<TourGuide>, IOrderedQueryable<TourGuide>>?>(),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+           .Returns(_ => Task.FromException<List<TourGuide>>(new OperationCanceledException(cts.Token)));
 
         var result = await handler.Handle(new GetTourGuidesQuery(tourId), cts.Token);
 

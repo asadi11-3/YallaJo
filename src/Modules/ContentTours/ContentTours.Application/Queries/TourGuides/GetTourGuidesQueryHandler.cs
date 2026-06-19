@@ -1,4 +1,3 @@
-using ContentTours.Application.Interfaces;
 using ContentTours.Application.Queries.TourGuides.Common;
 using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +9,7 @@ namespace ContentTours.Application.Queries.TourGuides;
 
 public sealed class GetTourGuidesQueryHandler(
     ITourTourGuideRepository guideRepo,
-    IProfileLookupService profileLookup,
+    ITourGuideRepository guideProfileRepository,
     ILogger<GetTourGuidesQueryHandler> logger)
     : IQueryHandler<GetTourGuidesQuery, IReadOnlyCollection<TourGuideDto>>
 {
@@ -25,17 +24,24 @@ public sealed class GetTourGuidesQueryHandler(
                 .ThenBy(g => g.TourGuideId)
                 .ToListAsync(cancellationToken);
 
+            // Batch-load the TourGuide profiles for the assigned guides (no N+1).
+            // TourTourGuide.TourGuideId stores the guide's UserId.
+            var userIds = guides.Select(g => g.TourGuideId).Distinct().ToList();
+            var profiles = await guideProfileRepository
+                .GetAllAsync(filter: g => userIds.Contains(g.UserId), ct: cancellationToken)
+                .ConfigureAwait(false);
+            var byUserId = profiles.ToDictionary(p => p.UserId);
+
             var dtos = new List<TourGuideDto>(guides.Count);
             foreach (var guide in guides)
             {
-                var profile = await profileLookup.GetPublicProfileAsync(
-                    guide.TourGuideId, cancellationToken);
+                var hasProfile = byUserId.TryGetValue(guide.TourGuideId, out var gp);
 
                 dtos.Add(new TourGuideDto(
                     TourGuideId: guide.TourGuideId,
                     IsPrimary:   guide.IsPrimary,
-                    DisplayName: profile?.DisplayName ?? guide.TourGuideId.ToString(),
-                    AvatarUrl:   profile?.AvatarUrl));
+                    DisplayName: hasProfile ? gp!.DisplayName : guide.TourGuideId.ToString(),
+                    AvatarUrl:   hasProfile ? gp!.AvatarUrl : null));
             }
 
             logger.LogDebug(

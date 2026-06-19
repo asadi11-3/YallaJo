@@ -1,4 +1,3 @@
-using ContentTours.Application.Interfaces;
 using ContentTours.Application.Queries.TourGuides.Common;
 using ContentTours.Domain.Repositories;
 using Microsoft.Extensions.Logging;
@@ -9,7 +8,6 @@ namespace ContentTours.Application.Queries.TourGuides.GetById;
 
 public sealed class GetTourGuideByIdQueryHandler(
     ITourGuideRepository guideRepository,
-    IProfileLookupService profileLookup,
     ILogger<GetTourGuideByIdQueryHandler> logger)
     : IQueryHandler<GetTourGuideByIdQuery, TourGuideProfileDto>
 {
@@ -30,10 +28,6 @@ public sealed class GetTourGuideByIdQueryHandler(
                     Outcome.NotFound);
             }
 
-            var publicProfile = await profileLookup
-                .GetPublicProfileAsync(guide.UserId, cancellationToken)
-                .ConfigureAwait(false);
-
             var tourCount = await guideRepository
                 .CountAssignedToursAsync(guide.UserId, cancellationToken)
                 .ConfigureAwait(false);
@@ -41,8 +35,8 @@ public sealed class GetTourGuideByIdQueryHandler(
             var dto = new TourGuideProfileDto(
                 Id: guide.Id,
                 UserId: guide.UserId,
-                DisplayName: publicProfile?.DisplayName,
-                AvatarUrl: publicProfile?.AvatarUrl,
+                DisplayName: guide.DisplayName,
+                AvatarUrl: guide.AvatarUrl,
                 Bio: guide.Bio,
                 YearsOfExperience: guide.YearsOfExperience,
                 HasFirstAid: guide.HasFirstAid,
