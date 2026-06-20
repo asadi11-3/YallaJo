@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using YallaJo.Web.Areas.Public.ApiClients;
 using YallaJo.Web.Areas.Public.Models.Reviews;
 using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Infrastructure.Identity;
 using YallaJo.Web.Services;
 
 namespace YallaJo.Web.Areas.Public.Facades;
@@ -12,7 +13,7 @@ public sealed record SubmitReviewResult(ApiResult Result, bool AnyImageFailed)
     public bool IsSuccess => Result.IsSuccess;
 }
 
-public sealed class ReviewsFacade(ReviewsApiClient api, IApiAssetUrlResolver assetResolver)
+public sealed class ReviewsFacade(ReviewsApiClient api, IApiAssetUrlResolver assetResolver, ICurrentUser currentUser)
 {
     private const int PageSize = 10;
 
@@ -135,6 +136,8 @@ public sealed class ReviewsFacade(ReviewsApiClient api, IApiAssetUrlResolver ass
 
             var items = pageData?.Items.Select(r => ReviewMapper.ToItem(r, assetResolver)).ToList() ?? [];
 
+            var (canReview, alreadyReviewed) = await GetEligibilityAsync(targetType, targetId, ct);
+
             return new ReviewListVm
             {
                 TargetType = targetType,
@@ -144,6 +147,8 @@ public sealed class ReviewsFacade(ReviewsApiClient api, IApiAssetUrlResolver ass
                 ReviewCount = ratings?.ReviewCount ?? (pageData?.TotalCount ?? 0),
                 Page = pageData?.Page ?? pageNumber,
                 PageSize = pageData?.PageSize ?? PageSize,
+                CanReview = canReview,
+                AlreadyReviewed = alreadyReviewed,
             };
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -153,6 +158,38 @@ public sealed class ReviewsFacade(ReviewsApiClient api, IApiAssetUrlResolver ass
         catch
         {
             return new ReviewListVm { TargetType = targetType, TargetId = targetId };
+        }
+    }
+
+    /// <summary>
+    /// Resolves the current user's review eligibility for the target. Only the Tour flow is
+    /// gated (only completed Tour bookings feed the eligibility snapshot), and only for
+    /// authenticated users. Any failure degrades gracefully to (false, false) so the form is
+    /// simply hidden rather than crashing the page.
+    /// </summary>
+    private async Task<(bool CanReview, bool AlreadyReviewed)> GetEligibilityAsync(
+        string targetType, Guid targetId, CancellationToken ct)
+    {
+        if (!currentUser.IsAuthenticated
+            || !string.Equals(targetType, "Tour", StringComparison.OrdinalIgnoreCase))
+        {
+            return (false, false);
+        }
+
+        try
+        {
+            var result = await api.GetEligibilityAsync(targetType, targetId, ct);
+            return result is { IsSuccess: true, Data: { } e }
+                ? (e.CanReview, e.AlreadyReviewed)
+                : (false, false);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return (false, false);
         }
     }
 }

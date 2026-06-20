@@ -68,11 +68,48 @@ public sealed class DevSocialSeeder(
             ReviewStatus.AutoHidden,
             cancellationToken);
 
+        // Eligibility snapshot so the seeded customer can submit a NEW review for the Wadi Rum
+        // tour (a tour they have NOT already reviewed) — exercises the eligible/can-review path.
+        seededAny |= await EnsureEligibilitySnapshotAsync(
+            DevSeedIds.CustomerUserId,
+            ReviewTargetType.Tour,
+            SeedContentIds.TourWadiRumCamp,
+            cancellationToken);
+
         if (seededAny)
         {
             await dbContext.SaveChangesAsync(cancellationToken);
-            logger.LogInformation("DEV-SEED-B1: seeded development reviews.");
+            logger.LogInformation("DEV-SEED-B1: seeded development reviews and review eligibility.");
         }
+    }
+
+    private async Task<bool> EnsureEligibilitySnapshotAsync(
+        Guid userId,
+        ReviewTargetType targetType,
+        Guid targetId,
+        CancellationToken cancellationToken)
+    {
+        var exists = await dbContext.BookingEligibilitySnapshots
+            .AnyAsync(
+                s => s.UserId == userId && s.TargetType == targetType && s.TargetId == targetId,
+                cancellationToken);
+
+        if (exists)
+        {
+            return false;
+        }
+
+        // FirstCompletedAt 10 days ago; bump LastCompletedAt to 5 days ago so the snapshot
+        // stays comfortably inside the 30-day verified-review window.
+        var snapshot = new BookingEligibilitySnapshot(
+            userId,
+            targetType,
+            targetId,
+            DateTime.UtcNow.AddDays(-10));
+        snapshot.RecordBooking(DateTime.UtcNow.AddDays(-5));
+
+        dbContext.BookingEligibilitySnapshots.Add(snapshot);
+        return true;
     }
 
     private async Task<bool> EnsureReviewAsync(

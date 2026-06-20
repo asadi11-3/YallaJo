@@ -78,4 +78,16 @@ public sealed class ReviewsApiClient(IApiClient api)
         });
         return api.GetAsync<RatingSummaryResponse>(url, ct);
     }
+
+    // Caller-specific review eligibility (requires authentication). Drives UI gating of the
+    // create-review form so an ineligible user is never shown a form the API will always reject.
+    public Task<ApiResult<ReviewEligibilityResponse>> GetEligibilityAsync(string targetType, Guid targetId, CancellationToken ct = default)
+    {
+        var url = QueryHelpers.AddQueryString($"{Base}/reviews/eligibility", new Dictionary<string, string?>
+        {
+            ["entityType"] = targetType,
+            ["entityId"] = targetId.ToString(),
+        });
+        return api.GetAsync<ReviewEligibilityResponse>(url, ct);
+    }
 }

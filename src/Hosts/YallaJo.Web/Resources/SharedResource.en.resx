@@ -9847,6 +9847,9 @@
   <data name="Provider.Documents.UploadHeading" xml:space="preserve">
     <value>Upload a document</value>
   </data>
+  <data name="Provider.Documents.UploadsUnavailable" xml:space="preserve">
+    <value>Document uploads are available while your application is in draft or when additional documents are requested. Your approved documents are listed and can be downloaded above.</value>
+  </data>
   <data name="Provider.Documents.FileHelp" xml:space="preserve">
     <value>PDF or image. Files are validated and scanned server-side.</value>
   </data>
@@ -12249,6 +12252,12 @@
 </data>
 <data name="Public.Review.Created" xml:space="preserve">
 <value>Thanks for your review!</value>
+</data>
+<data name="Public.Review.EligibilityRequired" xml:space="preserve">
+<value>You can review this tour after completing a booking.</value>
+</data>
+<data name="Public.Review.AlreadyReviewed" xml:space="preserve">
+<value>You have already reviewed this tour.</value>
 </data>
 <data name="Public.Review.AddPhotos" xml:space="preserve">
 <value>Add photos (optional)</value>

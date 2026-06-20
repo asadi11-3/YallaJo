@@ -9847,6 +9847,9 @@
   <data name="Provider.Documents.UploadHeading" xml:space="preserve">
     <value>رفع مستند</value>
   </data>
+  <data name="Provider.Documents.UploadsUnavailable" xml:space="preserve">
+    <value>يتاح رفع المستندات أثناء كون طلبك مسودة أو عند طلب مستندات إضافية. مستنداتك المعتمدة معروضة أعلاه ويمكنك تنزيلها.</value>
+  </data>
   <data name="Provider.Documents.FileHelp" xml:space="preserve">
     <value>ملف PDF أو صورة. تُفحص الملفات ويتم التحقق منها على الخادم.</value>
   </data>
@@ -12249,6 +12252,12 @@
 </data>
 <data name="Public.Review.Created" xml:space="preserve">
 <value>شكراً لتقييمك!</value>
+</data>
+<data name="Public.Review.EligibilityRequired" xml:space="preserve">
+<value>يمكنك تقييم هذه الجولة بعد إكمال حجز.</value>
+</data>
+<data name="Public.Review.AlreadyReviewed" xml:space="preserve">
+<value>لقد قمت بتقييم هذه الجولة بالفعل.</value>
 </data>
 <data name="Public.Review.AddPhotos" xml:space="preserve">
 <value>إضافة صور (اختياري)</value>

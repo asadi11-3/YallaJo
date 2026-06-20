@@ -686,40 +686,57 @@
             <div class="container">
                 <div class="row g-4">
                     <div class="col-lg-7">
-                        <form method="post" enctype="multipart/form-data" asp-area="Public" asp-controller="Reviews" asp-action="CreateReview" asp-route-targetType="tour" asp-route-targetId="@Model.Id" class="card border p-3" data-loading data-success-message="@Localizer["Public.Review.Created"]">
-                            @Html.AntiForgeryToken()
-                            <h3 class="h6 mb-3">@Localizer["Public.Write.a.review"]</h3>
-                            <input type="hidden" name="Review.TargetId" value="@Model.Id" />
-                                <input type="hidden" name="returnUrl" value="@(Context.Request.PathBase + Context.Request.Path + Context.Request.QueryString)" />
-                            <div class="mb-2">
-                                <label class="form-label" for="tourReviewRating">@Localizer["Public.Rating"]</label>
-                                <select id="tourReviewRating" name="Review.Rating" class="form-select">
-                                    <option value="5">@Localizer["Public.5.Excellent"]</option>
-                                    <option value="4">@Localizer["Public.4.Very.good"]</option>
-                                    <option value="3">@Localizer["Public.3.Average"]</option>
-                                    <option value="2">@Localizer["Public.2.Poor"]</option>
-                                    <option value="1">@Localizer["Public.1.Terrible"]</option>
-                                </select>
+                        @if (reviews.AlreadyReviewed)
+                        {
+                            <div class="card border p-3">
+                                <h3 class="h6 mb-2">@Localizer["Public.Write.a.review"]</h3>
+                                <p class="text-muted mb-0">@Localizer["Public.Review.AlreadyReviewed"]</p>
                             </div>
-                            <div class="mb-2">
-                                <label class="form-label" for="tourReviewTitle">@Localizer["Public.Title"]</label>
-                                <input id="tourReviewTitle" name="Review.Title" maxlength="150" class="form-control" />
+                        }
+                        else if (reviews.CanReview)
+                        {
+                            <form method="post" enctype="multipart/form-data" asp-area="Public" asp-controller="Reviews" asp-action="CreateReview" asp-route-targetType="tour" asp-route-targetId="@Model.Id" class="card border p-3" data-loading data-success-message="@Localizer["Public.Review.Created"]">
+                                @Html.AntiForgeryToken()
+                                <h3 class="h6 mb-3">@Localizer["Public.Write.a.review"]</h3>
+                                <input type="hidden" name="Review.TargetId" value="@Model.Id" />
+                                    <input type="hidden" name="returnUrl" value="@(Context.Request.PathBase + Context.Request.Path + Context.Request.QueryString)" />
+                                <div class="mb-2">
+                                    <label class="form-label" for="tourReviewRating">@Localizer["Public.Rating"]</label>
+                                    <select id="tourReviewRating" name="Review.Rating" class="form-select">
+                                        <option value="5">@Localizer["Public.5.Excellent"]</option>
+                                        <option value="4">@Localizer["Public.4.Very.good"]</option>
+                                        <option value="3">@Localizer["Public.3.Average"]</option>
+                                        <option value="2">@Localizer["Public.2.Poor"]</option>
+                                        <option value="1">@Localizer["Public.1.Terrible"]</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label" for="tourReviewTitle">@Localizer["Public.Title"]</label>
+                                    <input id="tourReviewTitle" name="Review.Title" maxlength="150" class="form-control" />
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label" for="tourReviewContent">@Localizer["Public.Your.review"]</label>
+                                    <textarea id="tourReviewContent" name="Review.Content" rows="4" minlength="20" maxlength="2000" required class="form-control"></textarea>
+                                    <div class="form-text">@Localizer["Public.Between.20.and.2000.characters"]</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="tourReviewVisitDate">@Localizer["Public.Visit.date.optional"]</label>
+                                    <input id="tourReviewVisitDate" type="date" name="Review.VisitDate" class="form-control" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="tourReviewImages">@Localizer["Public.Review.AddPhotos"]</label>
+                                    <input id="tourReviewImages" type="file" name="reviewImages" accept="image/jpeg,image/png,image/gif,image/webp" multiple class="form-control" />
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">@Localizer["Public.Submit.review"]</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="card border p-3">
+                                <h3 class="h6 mb-2">@Localizer["Public.Write.a.review"]</h3>
+                                <p class="text-muted mb-0">@Localizer["Public.Review.EligibilityRequired"]</p>
                             </div>
-                            <div class="mb-2">
-                                <label class="form-label" for="tourReviewContent">@Localizer["Public.Your.review"]</label>
-                                <textarea id="tourReviewContent" name="Review.Content" rows="4" minlength="20" maxlength="2000" required class="form-control"></textarea>
-                                <div class="form-text">@Localizer["Public.Between.20.and.2000.characters"]</div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="tourReviewVisitDate">@Localizer["Public.Visit.date.optional"]</label>
-                                <input id="tourReviewVisitDate" type="date" name="Review.VisitDate" class="form-control" />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="tourReviewImages">@Localizer["Public.Review.AddPhotos"]</label>
-                                <input id="tourReviewImages" type="file" name="reviewImages" accept="image/jpeg,image/png,image/gif,image/webp" multiple class="form-control" />
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-sm">@Localizer["Public.Submit.review"]</button>
-                        </form>
+                        }
                     </div>
                     <div class="col-lg-5">
                         <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="ReportEntity" asp-route-targetType="tour" asp-route-targetId="@Model.Id" class="card border p-3" data-loading data-success-message="@Localizer["Public.Review.Reported"]">

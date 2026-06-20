@@ -74,4 +74,9 @@ public sealed class ProviderApiClient
             $"/api/v1/provider/documents/{documentId}/replace-upload",
             fileStream, fileName, contentType, fields, "file", ct);
     }
+
+    // GET /api/v1/provider/documents/{id}/download — authorized, server-mediated download.
+    // The API enforces owner/admin access; the on-disk URL/StorageKey is never exposed to the browser.
+    public Task<ApiResult<ApiFile>> DownloadDocumentAsync(Guid documentId, CancellationToken ct = default)
+        => _api.GetFileAsync($"/api/v1/provider/documents/{documentId}/download", ct);
 }

@@ -15,6 +15,7 @@ using Social.Application.Commands.UpdateReviewReply;
 using Social.Application.Queries.Dtos;
 using Social.Application.Queries.GetFlaggedReviews;
 using Social.Application.Queries.GetMyReviews;
+using Social.Application.Queries.GetReviewEligibility;
 using Social.Application.Queries.GetPublicReviews;
 using Social.Application.Queries.GetRatingSummariesBatch;
 using Social.Application.Queries.GetRatingSummary;
@@ -210,6 +211,24 @@ internal static class ReviewEndpoints
         .WithName("GetMyReviews")
         .WithSummary("Get caller's reviews (paginated)")
         .Produces<ReviewPageDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.Review, AppAction.Read))
+        .RequireAuthorization();
+
+        // GET /api/v1/social/reviews/eligibility — Can the caller review this entity? (UI gating)
+        group.MapGet("/eligibility", async (
+            ICurrentUser currentUser,
+            ISender sender,
+            ReviewTargetType entityType,
+            Guid entityId,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetReviewEligibilityQuery(currentUser.UserId!.Value, entityType, entityId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetReviewEligibility")
+        .WithSummary("Whether the caller can review an entity (completed-booking gate + already-reviewed)")
+        .Produces<ReviewEligibilityDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.Review, AppAction.Read))
         .RequireAuthorization();

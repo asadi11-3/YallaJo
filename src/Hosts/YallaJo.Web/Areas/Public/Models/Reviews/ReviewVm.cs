@@ -80,6 +80,16 @@ public sealed class ReviewListVm
     public int PageSize { get; init; } = 10;
 
     public bool HasResults => Items.Count > 0;
+
+    /// <summary>
+    /// True when the current authenticated user is eligible to submit a review
+    /// (has a recent completed booking). Always false for anonymous requests.
+    /// Drives the create-review form gating on the tour detail page.
+    /// </summary>
+    public bool CanReview { get; init; }
+
+    /// <summary>True when the current authenticated user has already reviewed this target.</summary>
+    public bool AlreadyReviewed { get; init; }
 }
 
 public sealed class ReviewItemVm

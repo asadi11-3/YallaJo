@@ -52,3 +52,12 @@ public sealed record RatingSummaryDto(
     decimal AverageRating,
     int ReviewCount
 );
+
+/// <summary>
+/// Read projection describing whether the caller may submit a review for a target entity.
+/// <c>CanReview</c> = has a recent completed booking (verified eligibility).
+/// <c>AlreadyReviewed</c> = the caller has already left a review for this target.
+/// </summary>
+public sealed record ReviewEligibilityDto(
+    bool CanReview,
+    bool AlreadyReviewed);

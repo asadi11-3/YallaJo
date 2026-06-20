@@ -26,7 +26,8 @@ internal static class TourPackageEndpoints
     internal static void MapTourPackageEndpoints(RouteGroupBuilder group)
     {
         var packages = group.MapGroup("/packages")
-            .WithTags("ContentTours | TourPackages");
+            .WithTags("ContentTours | TourPackages")
+            .RequireAuthorization();
 
         packages.MapGet("/", async (
             int? page,

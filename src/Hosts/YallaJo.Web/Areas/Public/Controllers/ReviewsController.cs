@@ -89,12 +89,16 @@ public sealed class ReviewsController : BaseController
                 _localizer["Public.Review.Created"].Value, targetType, targetId, returnUrl, ct, imageWarning);
         }
 
+        // Surface the real backend reason (e.g. the booking-verification 403 or a
+        // validation message) to AJAX callers instead of a generic fallback, so the
+        // submit never fails silently (REVIEW-SUBMIT-A).
+        var failureMessage = ResolveFailureMessage(submission.Result);
         if (!ApplyValidationErrors(submission.Result))
         {
-            SetError(submission.Result.Error);
+            SetError(failureMessage);
         }
 
-        return await FailAsync(null, targetType, targetId, returnUrl, ct);
+        return await FailAsync(failureMessage, targetType, targetId, returnUrl, ct);
     }
 
     [HttpPost("reviews/" + TargetTypeToken + "/{targetId:guid}/{reviewId:guid}/edit")]
@@ -414,6 +418,30 @@ public sealed class ReviewsController : BaseController
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Picks the most specific user-facing message from a failed API result so AJAX
+    /// callers see the real backend reason (e.g. the booking-verification 403 or the
+    /// first validation message) rather than a generic fallback (REVIEW-SUBMIT-A).
+    /// </summary>
+    private string ResolveFailureMessage(Infrastructure.Api.Contracts.ApiResult result)
+    {
+        if (!string.IsNullOrWhiteSpace(result.Error))
+        {
+            return result.Error!;
+        }
+
+        var firstValidation = result.ValidationErrors?
+            .SelectMany(kvp => kvp.Value)
+            .FirstOrDefault(message => !string.IsNullOrWhiteSpace(message));
+        if (!string.IsNullOrWhiteSpace(firstValidation))
+        {
+            return firstValidation!;
+        }
+
+        return _localizer["Public.Results.Error"].Value;
+    }
+
 
     /// <summary>PRG success: flash + redirect back, or refreshed partial for AJAX callers.</summary>
     /// <param name="imageWarning">

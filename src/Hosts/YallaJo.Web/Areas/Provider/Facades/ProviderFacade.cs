@@ -154,4 +154,20 @@ public sealed class ProviderFacade
 
         return ApiResult.Fail(result.StatusCode, result.Error ?? "Could not replace the document.");
     }
+
+    /// <summary>
+    /// Streams a provider application document via the authorized API endpoint
+    /// (<c>GET /api/v1/provider/documents/{id}/download</c>). The API enforces
+    /// owner/admin access and never exposes the on-disk URL/StorageKey.
+    /// </summary>
+    public async Task<ApiResult<ApiFile>> DownloadDocumentAsync(Guid documentId, CancellationToken ct = default)
+    {
+        var result = await _api.DownloadDocumentAsync(documentId, ct);
+
+        if (result.IsUnauthorized) return ApiResult<ApiFile>.ForceSignOut();
+        if (!result.IsSuccess || result.Data is null)
+            return ApiResult<ApiFile>.Fail(result.StatusCode, result.Error ?? "Could not download the document.");
+
+        return ApiResult<ApiFile>.Ok(result.Data);
+    }
 }

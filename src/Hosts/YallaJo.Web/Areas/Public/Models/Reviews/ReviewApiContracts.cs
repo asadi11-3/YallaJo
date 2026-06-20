@@ -37,6 +37,13 @@ public sealed class RatingSummaryResponse
     public int ReviewCount { get; init; }
 }
 
+// Mirrors the API ReviewEligibilityDto(CanReview, AlreadyReviewed).
+public sealed class ReviewEligibilityResponse
+{
+    public bool CanReview { get; init; }
+    public bool AlreadyReviewed { get; init; }
+}
+
 // Request bodies sent to the API. Field names MUST match the API binding records.
 // CreateReviewRequest(ReviewTargetType TargetType, Guid TargetId, decimal Rating, string? Title, string Content, DateOnly? VisitDate)
 public sealed record CreateReviewBody(string TargetType, Guid TargetId, decimal Rating, string? Title, string Content, DateOnly? VisitDate);

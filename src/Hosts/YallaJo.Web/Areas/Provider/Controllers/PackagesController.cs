@@ -40,7 +40,7 @@ public sealed class PackagesController : BaseController
     [HttpPost("provider/packages/create")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.Package.Create)]
-    public async Task<IActionResult> Create(CreatePackageFormVm form, CancellationToken ct = default)
+    public async Task<IActionResult> Create([Bind(Prefix = "Create")] CreatePackageFormVm form, CancellationToken ct = default)
     {
 
         if (!ModelState.IsValid)
