@@ -2594,10 +2594,10 @@
     <value>Unfeature</value>
   </data>
   <data name="Admin.Trips.Title" xml:space="preserve">
-    <value>Tour approvals</value>
+    <value>Tour lookup</value>
   </data>
   <data name="Admin.Trips.Subtitle" xml:space="preserve">
-    <value>Review and moderate tours awaiting approval.</value>
+    <value>Look up an approved tour by ID to moderate it. For the pending approvals queue, use the Tours menu.</value>
   </data>
   <data name="Admin.Trips.BasePrice" xml:space="preserve">
     <value>Base price</value>
@@ -2681,7 +2681,7 @@
     <value>Close</value>
   </data>
   <data name="Admin.Trips.DirectoryHeading" xml:space="preserve">
-    <value>Approved tours</value>
+    <value>Approved tours directory</value>
   </data>
   <data name="Admin.Trips.EmptyMessage" xml:space="preserve">
     <value>No tours to display.</value>
@@ -10863,6 +10863,60 @@
   </data>
   <data name="Provider.Tours.SubmitRequirements" xml:space="preserve">
     <value>Submitting requires a complete listing: a description of at least 100 characters, a meeting point, and at least one image, one active Adult pricing tier, and one active schedule. Use the Manage links above to add them.</value>
+  </data>
+  <data name="Provider.TourReadiness.PanelTitle" xml:space="preserve">
+    <value>Review &amp; submit readiness</value>
+  </data>
+  <data name="Provider.TourReadiness.Basics" xml:space="preserve">
+    <value>Basics</value>
+  </data>
+  <data name="Provider.TourReadiness.Pricing" xml:space="preserve">
+    <value>Pricing</value>
+  </data>
+  <data name="Provider.TourReadiness.Schedule" xml:space="preserve">
+    <value>Schedule</value>
+  </data>
+  <data name="Provider.TourReadiness.Images" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="Provider.TourReadiness.Complete" xml:space="preserve">
+    <value>complete</value>
+  </data>
+  <data name="Provider.TourReadiness.Incomplete" xml:space="preserve">
+    <value>incomplete</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingHeading" xml:space="preserve">
+    <value>Before you can submit, please:</value>
+  </data>
+  <data name="Provider.TourReadiness.AllReady" xml:space="preserve">
+    <value>This listing meets all submission requirements.</value>
+  </data>
+  <data name="Provider.TourReadiness.Degraded" xml:space="preserve">
+    <value>We couldn't verify every requirement right now. You can still try to submit; we'll tell you if anything is missing.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingPlace" xml:space="preserve">
+    <value>Select a place/destination for the listing.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingMeetingPoint" xml:space="preserve">
+    <value>Set the meeting point coordinates.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingDescription" xml:space="preserve">
+    <value>Add a description of at least 100 characters.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingPricing" xml:space="preserve">
+    <value>Add at least one active pricing tier.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingAdultPricing" xml:space="preserve">
+    <value>Add at least one active Adult pricing tier.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingSchedule" xml:space="preserve">
+    <value>Add at least one active schedule.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingImages" xml:space="preserve">
+    <value>Add at least one image.</value>
+  </data>
+  <data name="Provider.Flash.SubmitBlockedHeading" xml:space="preserve">
+    <value>This listing can't be submitted yet:</value>
   </data>
   <data name="Provider.TourForm.Name" xml:space="preserve">
     <value>Name</value>

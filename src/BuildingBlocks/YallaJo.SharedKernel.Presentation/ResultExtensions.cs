@@ -45,6 +45,14 @@ public static class ResultExtensions
     /// <summary>
     /// Converts a failed outcome to an RFC 7807 Problem response.
     /// Errors take precedence; if none exist, the first message is used as detail.
+    /// <para>
+    /// When a result carries more than one <see cref="Error"/> (e.g. an aggregated
+    /// pre-submit validation gate that reports every missing requirement at once),
+    /// the full set is also emitted under the standard <c>errors</c> extension,
+    /// keyed by error code. This keeps the first error as the title/detail (so
+    /// single-error callers are unchanged) while letting clients surface each
+    /// specific failure instead of only an umbrella message.
+    /// </para>
     /// </summary>
     private static IResult ToProblem(
         Outcome outcome,
@@ -54,10 +62,26 @@ public static class ResultExtensions
         if (errors.Count > 0)
         {
             var first = errors[0];
+
+            // Expose every error so clients can render a complete checklist.
+            // The first error is treated as an umbrella; the remainder (when
+            // present) are the specific, actionable failures.
+            IReadOnlyList<Error> detailErrors = errors.Count > 1 ? errors.Skip(1).ToList() : errors;
+            var extensions = new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["errors"] = detailErrors
+                    .GroupBy(e => string.IsNullOrWhiteSpace(e.Code) ? "error" : e.Code, StringComparer.Ordinal)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(e => e.Message).ToArray(),
+                        StringComparer.Ordinal),
+            };
+
             return Results.Problem(
                 statusCode: (int)outcome,
                 title: first.Code,
-                detail: first.Message);
+                detail: first.Message,
+                extensions: extensions);
         }
 
         return Results.Problem(

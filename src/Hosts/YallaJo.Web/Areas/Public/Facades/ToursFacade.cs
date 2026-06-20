@@ -87,12 +87,13 @@ public sealed class ToursFacade
             var sp = searchResult.Data;
             cards = sp.Items.Select(MapSearchCard).ToList();
             totalCount = sp.TotalCount;
-            // Search payload carries no TotalPages (wire shape rule) — derive it.
-            totalPages = sp.PageSize > 0 ? (int)Math.Ceiling(sp.TotalCount / (double)sp.PageSize) : 0;
+            totalPages = sp.TotalPages;
             respPage = sp.PageNumber;
             respPageSize = sp.PageSize;
-            hasPrev = sp.HasPreviousPage;
-            hasNext = sp.HasNextPage;
+            // The search payload omits has-previous/has-next — derive them from the
+            // resolved page position (matches PaginatedResult<T> semantics on the browse path).
+            hasPrev = sp.PageNumber > 1;
+            hasNext = sp.PageNumber < sp.TotalPages;
         }
         else
         {

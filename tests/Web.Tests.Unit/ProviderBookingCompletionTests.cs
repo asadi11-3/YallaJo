@@ -70,17 +70,18 @@ public sealed class ProviderBookingCompletionTests
     // ── Facade mapping ────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task CompleteAsync_MapsBadRequest_ToFriendlyValidationMessage()
+    public async Task CompleteAsync_MapsBadRequest_SurfacesAccurateBackendDetail()
     {
-        // The backend returns 400 for "not yet started"; the non-generic ApiResult
-        // pipeline drops the Detail on a 400, so the facade surfaces a clear fallback.
+        // The backend returns 400 with a clear Detail for "not yet started". The
+        // non-generic ApiResult pipeline now preserves that Detail, so the facade
+        // surfaces the accurate backend reason instead of a guessed fallback.
         var facade = CreateFacade(HttpStatusCode.BadRequest,
             """{"title":"TourBooking.NotYetStarted","detail":"Cannot complete a tour that has not yet started."}""");
 
-        var result = await facade.CompleteAsync(Guid.NewGuid());
+        var result = await facade.CompleteAsync(Guid.CreateVersion7());
 
         result.Outcome.Should().Be(ProviderBookingOutcome.ValidationError);
-        result.Error.Should().Contain("after it has started");
+        result.Error.Should().Contain("Cannot complete a tour that has not yet started.");
     }
 
     [Fact]
@@ -91,7 +92,7 @@ public sealed class ProviderBookingCompletionTests
         var facade = CreateFacade(HttpStatusCode.BadRequest,
             """{"title":"Validation.BookingId","detail":"Booking id is required."}""");
 
-        var result = await facade.CompleteAsync(Guid.NewGuid());
+        var result = await facade.CompleteAsync(Guid.CreateVersion7());
 
         result.Outcome.Should().Be(ProviderBookingOutcome.ValidationError);
     }
@@ -102,7 +103,7 @@ public sealed class ProviderBookingCompletionTests
         var facade = CreateFacade(HttpStatusCode.Forbidden,
             """{"title":"TourBooking.OwnerMismatch","detail":"x"}""");
 
-        var result = await facade.CompleteAsync(Guid.NewGuid());
+        var result = await facade.CompleteAsync(Guid.CreateVersion7());
 
         result.Outcome.Should().Be(ProviderBookingOutcome.Forbidden);
         result.Error.Should().Contain("provider of this tour");
@@ -114,7 +115,7 @@ public sealed class ProviderBookingCompletionTests
         var facade = CreateFacade(HttpStatusCode.Conflict,
             """{"title":"TourBooking.ConcurrencyConflict","detail":"x"}""");
 
-        var result = await facade.CompleteAsync(Guid.NewGuid());
+        var result = await facade.CompleteAsync(Guid.CreateVersion7());
 
         result.Outcome.Should().Be(ProviderBookingOutcome.Conflict);
         result.Error.Should().Contain("Reload");
@@ -125,7 +126,7 @@ public sealed class ProviderBookingCompletionTests
     {
         var facade = CreateFacade(HttpStatusCode.Unauthorized, "{}");
 
-        var result = await facade.CompleteAsync(Guid.NewGuid());
+        var result = await facade.CompleteAsync(Guid.CreateVersion7());
 
         result.Outcome.Should().Be(ProviderBookingOutcome.ForceSignOut);
     }
@@ -135,7 +136,7 @@ public sealed class ProviderBookingCompletionTests
     {
         var facade = CreateFacade(HttpStatusCode.OK, "{}");
 
-        var result = await facade.CompleteAsync(Guid.NewGuid());
+        var result = await facade.CompleteAsync(Guid.CreateVersion7());
 
         result.Outcome.Should().Be(ProviderBookingOutcome.Ok);
     }

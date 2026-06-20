@@ -13,6 +13,18 @@ public sealed class TourWizardStepsVm
     /// <summary>1 = Basics, 2 = Pricing, 3 = Schedule, 4 = Images, 5 = Review &amp; submit.</summary>
     public int CurrentStep { get; init; }
 
+    /// <summary>
+    /// Persisted-data completion per step number. When supplied, the stepper marks a
+    /// step done because the underlying data exists — not merely because the user
+    /// walked past it. When <c>null</c>, the stepper has no data signal and shows no
+    /// check marks (it will not fall back to the old "visited == done" heuristic).
+    /// </summary>
+    public IReadOnlyDictionary<int, bool>? Completion { get; init; }
+
+    /// <summary>True when this step's persisted data is complete (defaults to false when unknown).</summary>
+    public bool IsStepDone(int number) =>
+        Completion is not null && Completion.TryGetValue(number, out var done) && done;
+
     public sealed record Step(int Number, string Label, string Icon, string Controller, string Action);
 
     public static IReadOnlyList<Step> Steps { get; } =

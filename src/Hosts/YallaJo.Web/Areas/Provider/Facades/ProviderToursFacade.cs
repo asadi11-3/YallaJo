@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Provider.ApiClients;
 using YallaJo.Web.Areas.Provider.Models.Tours;
+using YallaJo.Web.Areas.Provider.Models.TourPricing;
+using YallaJo.Web.Areas.Provider.Models.TourSchedules;
+using YallaJo.Web.Areas.Provider.Models.TourImages;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Areas.Provider.Facades;
@@ -37,16 +40,38 @@ public sealed record ProviderTourActionResult(
     IReadOnlyDictionary<string, string[]>? ValidationErrors = null,
     string? Error = null);
 
+public sealed record ProviderTourReadinessResult(
+    ProviderTourOutcome Outcome,
+    TourReadinessVm? Readiness = null,
+    string? Error = null);
+
 public sealed class ProviderToursFacade
 {
     private const int DefaultPageSize = 20;
 
+    // Mirrors SubmitTourCommandHandler.MinDescriptionLength (backend authority).
+    private const int MinDescriptionLength = 100;
+
+    // Mirrors the backend "Adult" participant-type gate (HasActiveAdultPricingAsync).
+    private const string AdultParticipantType = "Adult";
+
     private readonly ProviderToursApiClient _api;
+    private readonly ProviderTourPricingApiClient _pricingApi;
+    private readonly ProviderTourSchedulesApiClient _schedulesApi;
+    private readonly ProviderTourImagesApiClient _imagesApi;
     private readonly IOutputCacheStore _cache;
 
-    public ProviderToursFacade(ProviderToursApiClient api, IOutputCacheStore cache)
+    public ProviderToursFacade(
+        ProviderToursApiClient api,
+        ProviderTourPricingApiClient pricingApi,
+        ProviderTourSchedulesApiClient schedulesApi,
+        ProviderTourImagesApiClient imagesApi,
+        IOutputCacheStore cache)
     {
         _api = api;
+        _pricingApi = pricingApi;
+        _schedulesApi = schedulesApi;
+        _imagesApi = imagesApi;
         _cache = cache;
     }
 
@@ -109,6 +134,108 @@ public sealed class ProviderToursFacade
             return new(ProviderTourOutcome.ValidationError, Error: result.Error ?? "Could not load the listing.");
 
         return new(ProviderTourOutcome.Ok, ProviderToursMapper.ToFormVm(result.Data), result.Data.Status);
+    }
+
+    /// <summary>
+    /// Computes submit-readiness for a draft listing from PERSISTED data, mirroring the
+    /// backend pre-submit gate. Fetches detail + active pricing + active schedules + images
+    /// in parallel. Sub-resource lookups are a soft dependency: if one fails we mark the
+    /// readiness as degraded rather than reporting a false "incomplete".
+    /// </summary>
+    public async Task<ProviderTourReadinessResult> GetReadinessAsync(Guid id, CancellationToken ct = default)
+    {
+        var detailTask = _api.GetByIdAsync(id, ct);
+        var pricingTask = _pricingApi.GetPricingAsync(id, activeOnly: true, ct);
+        var schedulesTask = _schedulesApi.GetSchedulesAsync(id, activeOnly: true, ct);
+        var imagesTask = _imagesApi.GetImagesAsync(id, ct);
+
+        await Task.WhenAll(detailTask, pricingTask, schedulesTask, imagesTask);
+
+        var detail = detailTask.Result;
+        if (detail.IsUnauthorized) return new(ProviderTourOutcome.ForceSignOut);
+        if (detail.IsForbidden) return new(ProviderTourOutcome.Forbidden);
+        if (detail.IsNotFound) return new(ProviderTourOutcome.NotFound, Error: "Listing not found.");
+        if (!detail.IsSuccess || detail.Data is null)
+            return new(ProviderTourOutcome.ValidationError, Error: detail.Error ?? "Could not load the listing.");
+
+        var pricing = pricingTask.Result;
+        var schedules = schedulesTask.Result;
+        var images = imagesTask.Result;
+
+        // A sub-resource that failed to load leaves us unable to assert its requirement.
+        var degraded = !pricing.IsSuccess || !schedules.IsSuccess || !images.IsSuccess;
+
+        var readiness = ComputeReadiness(
+            id,
+            description: detail.Data.Description,
+            placeId: detail.Data.PlaceId,
+            meetingPointLatitude: detail.Data.MeetingPointLatitude,
+            meetingPointLongitude: detail.Data.MeetingPointLongitude,
+            pricing: pricing.IsSuccess ? pricing.Data : null,
+            schedules: schedules.IsSuccess ? schedules.Data : null,
+            images: images.IsSuccess ? images.Data : null,
+            degraded: degraded);
+
+        return new(ProviderTourOutcome.Ok, readiness);
+    }
+
+    /// <summary>
+    /// Pure, unit-testable readiness projection. Mirrors SubmitTourCommandHandler:
+    /// Basics = Place linked + meeting point present + description >= 100 chars;
+    /// Pricing = at least one active tier AND at least one active Adult tier;
+    /// Schedule = at least one active schedule; Images = at least one image.
+    /// When a collection is <c>null</c> (lookup failed), that requirement is treated
+    /// as unmet but the result is flagged <see cref="TourReadinessVm.IsDegraded"/>.
+    /// </summary>
+    internal static TourReadinessVm ComputeReadiness(
+        Guid tourId,
+        string? description,
+        Guid? placeId,
+        decimal? meetingPointLatitude,
+        decimal? meetingPointLongitude,
+        IReadOnlyList<TourPricingTierResponse>? pricing,
+        IReadOnlyList<TourScheduleResponse>? schedules,
+        IReadOnlyList<AttachmentItemResponse>? images,
+        bool degraded)
+    {
+        var hasPlace = placeId is { } pid && pid != Guid.Empty;
+        var hasMeetingPoint = meetingPointLatitude.HasValue && meetingPointLongitude.HasValue;
+        var hasDescription = !string.IsNullOrWhiteSpace(description)
+                             && description.Trim().Length >= MinDescriptionLength;
+        var basicsComplete = hasPlace && hasMeetingPoint && hasDescription;
+
+        var activeTiers = pricing?.Where(p => p.IsActive).ToList() ?? [];
+        var hasActivePricing = activeTiers.Count > 0;
+        var hasAdultPricing = activeTiers.Any(p =>
+            string.Equals(p.ParticipantType, AdultParticipantType, StringComparison.OrdinalIgnoreCase));
+        var pricingComplete = hasActivePricing && hasAdultPricing;
+
+        var scheduleComplete = schedules?.Any(s => s.IsActive) ?? false;
+        var imagesComplete = images is { Count: > 0 };
+
+        // Ordered missing-requirement checklist (resource keys resolved in the view).
+        var missing = new List<string>();
+        if (!basicsComplete)
+        {
+            if (!hasPlace) missing.Add("Provider.TourReadiness.MissingPlace");
+            if (!hasMeetingPoint) missing.Add("Provider.TourReadiness.MissingMeetingPoint");
+            if (!hasDescription) missing.Add("Provider.TourReadiness.MissingDescription");
+        }
+        if (!hasActivePricing) missing.Add("Provider.TourReadiness.MissingPricing");
+        else if (!hasAdultPricing) missing.Add("Provider.TourReadiness.MissingAdultPricing");
+        if (!scheduleComplete) missing.Add("Provider.TourReadiness.MissingSchedule");
+        if (!imagesComplete) missing.Add("Provider.TourReadiness.MissingImages");
+
+        return new TourReadinessVm
+        {
+            TourId = tourId,
+            BasicsComplete = basicsComplete,
+            PricingComplete = pricingComplete,
+            ScheduleComplete = scheduleComplete,
+            ImagesComplete = imagesComplete,
+            IsDegraded = degraded,
+            MissingRequirementKeys = missing,
+        };
     }
 
     public async Task<ProviderTourCreateResult> CreateAsync(ProviderTourFormVm vm, CancellationToken ct = default)

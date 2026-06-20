@@ -12,13 +12,25 @@
     };
     var total = TourWizardStepsVm.Steps.Count;
 }
+<style>
+    [dir="rtl"] .wizard-step-sep { transform: scaleX(-1); }
+</style>
 <nav aria-label="@Localizer["Provider.TourWizard.Progress"]" class="card border mb-0">
     <ol class="list-unstyled d-flex flex-wrap align-items-center gap-1 gap-md-2 p-3 mb-0">
         @foreach (var s in TourWizardStepsVm.Steps)
         {
-            var isDone = s.Number < Model.CurrentStep;
+            @* Completion is driven by persisted data (Model.Completion), never by which
+               step the user has visited. When no data signal is available, no check shows. *@
+            var isDone = Model.IsStepDone(s.Number);
             var isActive = s.Number == Model.CurrentStep;
-            var badgeCss = isDone ? "text-bg-success" : isActive ? "text-bg-primary" : "text-bg-light border";
+            @* Done = success green. Active-but-not-done = a neutral outlined badge that
+               reads as "you are here / still to do", NOT an error. Other incomplete steps
+               are muted. This avoids the alarming solid-primary look on an incomplete step. *@
+            var badgeCss = isDone
+                ? "text-bg-success"
+                : isActive
+                    ? "border border-primary text-primary bg-transparent"
+                    : "text-bg-light border";
             var label = Localizer["Provider.TourWizard.Step" + s.Number].Value;
             <li class="d-flex align-items-center" aria-current="@(isActive ? "step" : null)">
                 <a class="d-inline-flex align-items-center gap-2 text-decoration-none"
@@ -41,7 +53,9 @@
                 </a>
                 @if (s.Number < total)
                 {
-                    <i class="fa-solid fa-chevron-right text-body-secondary mx-1 mx-md-2 d-none d-sm-inline" aria-hidden="true"></i>
+                    @* Direction-aware separator: chevron flips automatically under RTL (Arabic)
+                       so the progress flow always points "forward". *@
+                    <i class="fa-solid fa-chevron-right text-body-secondary mx-1 mx-md-2 d-none d-sm-inline wizard-step-sep" aria-hidden="true"></i>
                 }
             </li>
         }

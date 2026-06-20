@@ -29,7 +29,7 @@
                     @if (Model.TourId.HasValue)
                     {
                         var stepTourId = Model.TourId.Value;
-                        <partial name="_TourWizardSteps" model="@(new TourWizardStepsVm { TourId = stepTourId, CurrentStep = 1 })" />
+                        <partial name="_TourWizardSteps" model="@(new TourWizardStepsVm { TourId = stepTourId, CurrentStep = 1, Completion = Model.Readiness?.StepCompletion })" />
                     }
                 }
                 else
@@ -103,15 +103,97 @@
 
                 @if (Model.IsEdit && (Model.CanSubmit || Model.CanArchive))
                 {
+                    var readiness = Model.Readiness;
+                    @* Readiness is data-driven (persisted listing data), not which step was visited.
+                       When it can't be resolved we degrade gracefully and leave submit enabled so
+                       the backend stays authoritative. *@
+                    var readinessKnown = readiness is not null && !readiness.IsDegraded;
+                    var blockSubmit = Model.CanSubmit && readinessKnown && !readiness!.AllComplete;
+
                     <div class="card border shadow-sm">
                         <div class="card-body">
+                            @if (Model.CanSubmit && readiness is not null)
+                            {
+                                <h2 class="fs-6 mb-2"><i class="fa-solid fa-clipboard-check me-2" aria-hidden="true"></i>@Localizer["Provider.TourReadiness.PanelTitle"]</h2>
+
+                                @if (readiness.IsDegraded)
+                                {
+                                    <div class="alert alert-warning py-2 px-3 small" role="alert">
+                                        <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>@Localizer["Provider.TourReadiness.Degraded"]
+                                    </div>
+                                }
+
+                                @* Each readiness row shows its OWN missing reason(s) inline, so the
+                                   provider sees exactly why a step is incomplete (e.g. why Basics is
+                                   not done) without hunting a separate list. Reasons are grouped from
+                                   the flat MissingRequirementKeys by which step each key belongs to. *@
+                                var basicsKeys = new[] { "Provider.TourReadiness.MissingPlace", "Provider.TourReadiness.MissingMeetingPoint", "Provider.TourReadiness.MissingDescription" };
+                                var pricingKeys = new[] { "Provider.TourReadiness.MissingPricing", "Provider.TourReadiness.MissingAdultPricing" };
+                                var scheduleKeys = new[] { "Provider.TourReadiness.MissingSchedule" };
+                                var imagesKeys = new[] { "Provider.TourReadiness.MissingImages" };
+                                var missing = readiness.MissingRequirementKeys;
+
+                                var checks = new (bool Done, string Label, string[] Keys)[]
+                                {
+                                    (readiness.BasicsComplete, Localizer["Provider.TourReadiness.Basics"].Value, basicsKeys),
+                                    (readiness.PricingComplete, Localizer["Provider.TourReadiness.Pricing"].Value, pricingKeys),
+                                    (readiness.ScheduleComplete, Localizer["Provider.TourReadiness.Schedule"].Value, scheduleKeys),
+                                    (readiness.ImagesComplete, Localizer["Provider.TourReadiness.Images"].Value, imagesKeys),
+                                };
+                                <ul class="list-unstyled mb-3">
+                                    @foreach (var check in checks)
+                                    {
+                                        <li class="mb-2">
+                                            <div class="d-flex align-items-center gap-2">
+                                                @if (check.Done)
+                                                {
+                                                    <i class="fa-solid fa-circle-check text-success" aria-hidden="true"></i>
+                                                    <span>@check.Label</span>
+                                                    <span class="visually-hidden">@Localizer["Provider.TourReadiness.Complete"]</span>
+                                                }
+                                                else
+                                                {
+                                                    <i class="fa-solid fa-circle-exclamation text-warning" aria-hidden="true"></i>
+                                                    <span class="fw-semibold">@check.Label</span>
+                                                    <span class="visually-hidden">@Localizer["Provider.TourReadiness.Incomplete"]</span>
+                                                }
+                                            </div>
+                                            @if (!check.Done)
+                                            {
+                                                var rowReasons = check.Keys.Where(k => missing.Contains(k)).ToList();
+                                                if (rowReasons.Count > 0)
+                                                {
+                                                    <ul class="small text-body-secondary mb-0 ps-4 mt-1">
+                                                        @foreach (var key in rowReasons)
+                                                        {
+                                                            <li>@Localizer[key]</li>
+                                                        }
+                                                    </ul>
+                                                }
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+
+                                @if (readiness.AllComplete)
+                                {
+                                    <p class="text-success small mb-3"><i class="fa-solid fa-check me-1" aria-hidden="true"></i>@Localizer["Provider.TourReadiness.AllReady"]</p>
+                                }
+                                else
+                                {
+                                    <p class="small text-body-secondary mb-3">@Localizer["Provider.TourReadiness.MissingHeading"]</p>
+                                }
+                            }
+
                             <div class="d-flex flex-wrap gap-2">
                                 @if (Model.CanSubmit)
                                 {
                                     <permission require="@WebPermission.Tour.Submit">
                                         <form asp-area="Provider" asp-controller="Tours" asp-action="Submit" asp-route-id="@Model.TourId" method="post" data-loading class="d-inline">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-outline-primary"><i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.Submit"]</button>
+                                            <button type="submit" class="btn btn-outline-primary" @(blockSubmit ? "disabled" : null) @(blockSubmit ? "aria-disabled=true" : null)>
+                                                <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Provider.Tours.Submit"]
+                                            </button>
                                         </form>
                                     </permission>
                                 }

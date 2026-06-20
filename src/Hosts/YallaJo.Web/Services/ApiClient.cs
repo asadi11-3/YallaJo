@@ -431,8 +431,14 @@ public sealed class ApiClient : IApiClient
 
         var raw = await response.Content.ReadAsStringAsync(ct);
         var err = ParseError<object>((int)response.StatusCode, raw);
-        return err.IsValidationError
-            ? ApiResult.ValidationFail(err.StatusCode, err.ValidationErrors!)
+
+        // A 400/422 can carry EITHER a field-error dictionary OR a single
+        // human/business message (ParseError branch 3). Only route to
+        // ValidationFail when we actually have field errors; otherwise we would
+        // drop the message and the caller would be left with a null Error
+        // (the source of the generic "Could not submit the listing." flash).
+        return err.IsValidationError && err.ValidationErrors is { Count: > 0 }
+            ? ApiResult.ValidationFail(err.StatusCode, err.ValidationErrors)
             : ApiResult.Fail(err.StatusCode, err.Error);
     }
 

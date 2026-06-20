@@ -2594,10 +2594,10 @@
     <value>إلغاء الإبراز</value>
   </data>
   <data name="Admin.Trips.Title" xml:space="preserve">
-    <value>اعتماد الجولات</value>
+    <value>بحث الجولات</value>
   </data>
   <data name="Admin.Trips.Subtitle" xml:space="preserve">
-    <value>راجع الجولات التي تنتظر الاعتماد واتخذ إجراءً بشأنها.</value>
+    <value>ابحث عن جولة معتمدة بالمعرّف لاتخاذ إجراء بشأنها. لطابور الجولات المعلّقة، استخدم قائمة الجولات.</value>
   </data>
   <data name="Admin.Trips.BasePrice" xml:space="preserve">
     <value>السعر الأساسي</value>
@@ -2681,7 +2681,7 @@
     <value>إغلاق</value>
   </data>
   <data name="Admin.Trips.DirectoryHeading" xml:space="preserve">
-    <value>الجولات المعتمدة</value>
+    <value>دليل الجولات المعتمدة</value>
   </data>
   <data name="Admin.Trips.EmptyMessage" xml:space="preserve">
     <value>لا توجد جولات لعرضها.</value>
@@ -10863,6 +10863,60 @@
   </data>
   <data name="Provider.Tours.SubmitRequirements" xml:space="preserve">
     <value>يتطلب الإرسال قائمة مكتملة: وصف لا يقل عن 100 حرف، ونقطة التقاء، وصورة واحدة على الأقل، وفئة تسعير للبالغين فعّالة واحدة، وجدول فعّال واحد. استخدم روابط الإدارة أعلاه لإضافتها.</value>
+  </data>
+  <data name="Provider.TourReadiness.PanelTitle" xml:space="preserve">
+    <value>جاهزية المراجعة والإرسال</value>
+  </data>
+  <data name="Provider.TourReadiness.Basics" xml:space="preserve">
+    <value>الأساسيات</value>
+  </data>
+  <data name="Provider.TourReadiness.Pricing" xml:space="preserve">
+    <value>التسعير</value>
+  </data>
+  <data name="Provider.TourReadiness.Schedule" xml:space="preserve">
+    <value>الجدول</value>
+  </data>
+  <data name="Provider.TourReadiness.Images" xml:space="preserve">
+    <value>الصور</value>
+  </data>
+  <data name="Provider.TourReadiness.Complete" xml:space="preserve">
+    <value>مكتمل</value>
+  </data>
+  <data name="Provider.TourReadiness.Incomplete" xml:space="preserve">
+    <value>غير مكتمل</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingHeading" xml:space="preserve">
+    <value>قبل أن تتمكن من الإرسال، يرجى:</value>
+  </data>
+  <data name="Provider.TourReadiness.AllReady" xml:space="preserve">
+    <value>تستوفي هذه القائمة جميع متطلبات الإرسال.</value>
+  </data>
+  <data name="Provider.TourReadiness.Degraded" xml:space="preserve">
+    <value>تعذّر علينا التحقق من كل المتطلبات الآن. يمكنك محاولة الإرسال، وسنخبرك إذا كان هناك أي نقص.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingPlace" xml:space="preserve">
+    <value>اختر مكانًا/وجهة للقائمة.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingMeetingPoint" xml:space="preserve">
+    <value>حدّد إحداثيات نقطة الالتقاء.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingDescription" xml:space="preserve">
+    <value>أضف وصفًا لا يقل عن 100 حرف.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingPricing" xml:space="preserve">
+    <value>أضف فئة تسعير فعّالة واحدة على الأقل.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingAdultPricing" xml:space="preserve">
+    <value>أضف فئة تسعير للبالغين فعّالة واحدة على الأقل.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingSchedule" xml:space="preserve">
+    <value>أضف جدولًا فعّالًا واحدًا على الأقل.</value>
+  </data>
+  <data name="Provider.TourReadiness.MissingImages" xml:space="preserve">
+    <value>أضف صورة واحدة على الأقل.</value>
+  </data>
+  <data name="Provider.Flash.SubmitBlockedHeading" xml:space="preserve">
+    <value>لا يمكن إرسال هذه القائمة بعد:</value>
   </data>
   <data name="Provider.TourForm.Name" xml:space="preserve">
     <value>الاسم</value>

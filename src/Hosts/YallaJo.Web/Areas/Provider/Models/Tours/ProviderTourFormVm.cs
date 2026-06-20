@@ -87,4 +87,9 @@ public sealed class ProviderTourFormVm
     // PlaceOptionsLoadError carries a friendly message so the form stays usable.
     public IReadOnlyList<PlaceOptionVm> PlaceOptions { get; set; } = [];
     public string? PlaceOptionsLoadError { get; set; }
+
+    // Submit-readiness derived from persisted data (edit mode only). Drives the
+    // wizard check marks and the Review & Submit readiness panel. Null on create
+    // or when readiness could not be resolved.
+    public TourReadinessVm? Readiness { get; set; }
 }

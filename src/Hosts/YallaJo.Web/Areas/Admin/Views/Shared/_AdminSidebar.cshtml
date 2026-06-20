@@ -12,8 +12,12 @@
     // supplied by AdminNavViewComponent. When absent (direct partial render or snapshot load
     // failure) fall back to the request's JWT-claim permissions so the shell still renders (ERR3).
     var securityMePermissions = ViewData["SecurityMePermissions"] as IReadOnlyCollection<string>;
-    bool Has(string permission) => securityMePermissions is not null
-        ? securityMePermissions.Contains(permission)
+    // Honor the "*" wildcard granted to super-roles, whose DB-backed snapshot drops the
+    // explicit permission array (kept off the JWT for IIS header-size limits) and carries
+    // only "*". An empty/absent snapshot falls back to the request's JWT-claim permissions
+    // so the shell still renders (ERR3). Mirrors PermissionTagHelper.HasPermission.
+    bool Has(string permission) => securityMePermissions is { Count: > 0 }
+        ? securityMePermissions.Contains("*") || securityMePermissions.Contains(permission)
         : CurrentUser.HasPermission(permission);
 
     // Cluster visibility: only render a section header if the user can see at least one item in it.
@@ -116,7 +120,7 @@
 
         <permission require="@WebPermission.Tour.Approve">
             <li class="nav-item">
-                <a class="@Active("Tours")" asp-area="Admin" asp-controller="Trips" asp-action="Index" aria-current="@(IsActive("Tours") ? "page" : null)">
+                <a class="@Active("Tours")" asp-area="Admin" asp-controller="Tours" asp-action="Index" aria-current="@(IsActive("Tours") ? "page" : null)">
                     <i class="bi bi-map fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Tours"]
                 </a>
             </li>

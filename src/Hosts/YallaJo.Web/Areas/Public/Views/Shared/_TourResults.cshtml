@@ -1,5 +1,6 @@
 @model YallaJo.Web.Areas.Public.Models.Tours.TourGridVm
 @using Microsoft.Extensions.Localization
+@using YallaJo.Web.Areas.Public.Helpers
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @*
     Tour results region — rendered inside Tours/Index and returned standalone
@@ -7,8 +8,11 @@
     tours-index.js swaps this markup into #tourResults and re-binds hooks.
 *@
 @{
-    var rangeStart = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
-    var rangeEnd = Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount);
+    // Defensive: derive the displayed range from the actually-rendered card count so a
+    // visible grid never shows "0–0", and an empty result always shows a clean 0–0.
+    var range = ResultRangeCalculator.Compute(Model.TotalCount, Model.Tours.Count, Model.PageNumber, Model.PageSize);
+    var rangeStart = range.Start;
+    var rangeEnd = range.End;
     var isAuthed = User.Identity?.IsAuthenticated == true;
 
     // Builds the current URL minus one query parameter (and minus page, so removal resets paging).

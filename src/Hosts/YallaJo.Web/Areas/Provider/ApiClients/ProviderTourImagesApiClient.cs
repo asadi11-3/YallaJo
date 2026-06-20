@@ -22,10 +22,23 @@ public sealed class ProviderTourImagesApiClient
     public Task<ApiResult<UploadAttachmentResponse>> UploadImageAsync(
         Guid tourId, Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
     {
-        var url = $"{Base}?EntityType={TourEntityType}&EntityId={tourId}&AttachmentType={ImageAttachmentType}";
+        // The ContentCore upload endpoint binds EntityType/EntityId/AttachmentType/SortOrder
+        // from the multipart form body ([FromForm]), NOT the query string. Sending them as
+        // query params produced "Required parameter 'string EntityType' was not provided from
+        // form" (and likewise for the non-nullable "int SortOrder"). These values are derived
+        // server-side from the route tourId (never the browser). SortOrder is required by the
+        // endpoint; the server re-anchors ordering, so 0 (append) is a safe default.
+        var fields = new Dictionary<string, string>
+        {
+            ["EntityType"]     = TourEntityType,
+            ["EntityId"]       = tourId.ToString(),
+            ["AttachmentType"] = ImageAttachmentType,
+            ["SortOrder"]      = "0",
+        };
 
         return _api.PostFileAsync<UploadAttachmentResponse>(
-            url, fileStream, fileName, contentType,
+            Base, fileStream, fileName, contentType,
+            formFields: fields,
             formFieldName: "file",
             ct: ct);
     }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Provider.ApiClients;
 using YallaJo.Web.Areas.Provider.Models.TourImages;
+using YallaJo.Web.Services;
 namespace YallaJo.Web.Areas.Provider.Facades;
 
 public enum TourImagesOutcome
@@ -25,11 +26,13 @@ public sealed class ProviderTourImagesFacade
 {
     private readonly ProviderTourImagesApiClient _api;
     private readonly IOutputCacheStore _cache;
+    private readonly IApiAssetUrlResolver _assetResolver;
 
-    public ProviderTourImagesFacade(ProviderTourImagesApiClient api, IOutputCacheStore cache)
+    public ProviderTourImagesFacade(ProviderTourImagesApiClient api, IOutputCacheStore cache, IApiAssetUrlResolver assetResolver)
     {
         _api = api;
         _cache = cache;
+        _assetResolver = assetResolver;
     }
 
     public async Task<TourImagesListResult> GetIndexAsync(Guid tourId, CancellationToken ct = default)
@@ -43,7 +46,7 @@ public sealed class ProviderTourImagesFacade
         if (!result.IsSuccess || result.Data is null)
             return new(TourImagesOutcome.ValidationError, Error: result.Error ?? "Could not load the listing images.");
 
-        return new(TourImagesOutcome.Ok, TourImagesMapper.ToVm(tourId, result.Data));
+        return new(TourImagesOutcome.Ok, TourImagesMapper.ToVm(tourId, result.Data, _assetResolver));
     }
 
     public async Task<TourImagesActionResult> UploadAsync(Guid tourId, TourImageUploadVm vm, CancellationToken ct = default)

@@ -102,6 +102,7 @@ public sealed class ToursController : ProviderTourResourceController
         {
             case ProviderTourOutcome.Ok:
                 if (await PopulatePlaceOptionsAsync(result.Form!, ct) is { } signOut) return signOut;
+                await PopulateReadinessAsync(result.Form!, ct);
                 return View("Upsert", result.Form);
             case ProviderTourOutcome.ForceSignOut:
                 return RedirectToLogin();
@@ -160,14 +161,52 @@ public sealed class ToursController : ProviderTourResourceController
             return RedirectToStatus();
 
         var result = await _facade.SubmitAsync(id, ct);
-        if (result.Outcome == ProviderTourOutcome.ForceSignOut) return RedirectToLogin();
+        switch (result.Outcome)
+        {
+            case ProviderTourOutcome.ForceSignOut:
+                return RedirectToLogin();
+            case ProviderTourOutcome.Ok:
+                SetSuccess(L["Provider.Flash.ListingSubmitted"]);
+                return RedirectToAction(nameof(Index));
+            case ProviderTourOutcome.NotFound:
+                SetError(result.Error ?? L["Provider.Flash.ListingNotFound"].Value);
+                return RedirectToAction(nameof(Index));
+            case ProviderTourOutcome.Forbidden:
+                SetError(result.Error ?? L["Provider.Flash.CouldNotSubmitListing"].Value);
+                return RedirectToStatus();
+            case ProviderTourOutcome.ValidationError:
+                // Surface the specific backend pre-submit failures (e.g. missing
+                // image / pricing / schedule) so the provider sees exactly what to
+                // fix, instead of the old generic "Could not submit the listing."
+                SurfaceSubmitErrors(result);
+                return RedirectToAction(nameof(Edit), new { id });
+            default:
+                SetError(result.Error ?? L["Provider.Flash.CouldNotSubmitListing"].Value);
+                return RedirectToAction(nameof(Edit), new { id });
+        }
+    }
 
-        if (result.Outcome == ProviderTourOutcome.Ok)
-            SetSuccess(L["Provider.Flash.ListingSubmitted"]);
-        else
-            SetError(result.Error ?? L["Provider.Flash.CouldNotSubmitListing"].Value);
+    /// <summary>
+    /// Turns the facade's submit validation result into a clear, multi-line flash
+    /// message listing each unmet requirement. Falls back to the single error or the
+    /// generic message when no per-rule details are available.
+    /// </summary>
+    private void SurfaceSubmitErrors(ProviderTourActionResult result)
+    {
+        var messages = (result.ValidationErrors?.Values ?? [])
+            .SelectMany(v => v)
+            .Where(m => !string.IsNullOrWhiteSpace(m))
+            .Distinct()
+            .ToList();
 
-        return RedirectToAction(nameof(Index));
+        if (messages.Count > 0)
+        {
+            var heading = L["Provider.Flash.SubmitBlockedHeading"].Value;
+            SetError($"{heading}\n{string.Join("\n", messages)}");
+            return;
+        }
+
+        SetError(result.Error ?? L["Provider.Flash.CouldNotSubmitListing"].Value);
     }
 
     // ── POST /provider/tours/{id}/archive ─────────────────────────────────────────
@@ -232,6 +271,23 @@ public sealed class ToursController : ProviderTourResourceController
         vm.PlaceOptions = result.Options;
         vm.PlaceOptionsLoadError = result.LoadFailed ? result.Error : null;
         return null;
+    }
+
+    /// <summary>
+    /// Best-effort: computes submit-readiness from persisted data so the wizard
+    /// check marks and the Review &amp; Submit panel reflect reality, not which step
+    /// the user walked through. A failure here must never block rendering the form,
+    /// so any non-Ok outcome simply leaves <see cref="ProviderTourFormVm.Readiness"/>
+    /// null and the view degrades gracefully.
+    /// </summary>
+    private async Task PopulateReadinessAsync(ProviderTourFormVm vm, CancellationToken ct)
+    {
+        if (!vm.TourId.HasValue)
+            return;
+
+        var readiness = await _facade.GetReadinessAsync(vm.TourId.Value, ct);
+        if (readiness.Outcome == ProviderTourOutcome.Ok)
+            vm.Readiness = readiness.Readiness;
     }
 
     private IActionResult IndexError(string? message, string? status, int page)

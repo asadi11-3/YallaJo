@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace YallaJo.Web.Areas.Public.Models.Search;
 
 /// <summary>
@@ -22,17 +24,30 @@ public sealed class TourSearchItemResponse
 }
 
 /// <summary>
-/// Per-feature paginated payload for tour search (matches the wire shape rule:
-/// <c>Items / PageNumber / PageSize / TotalCount / HasPreviousPage / HasNextPage</c>; no generic wrapper, no <c>TotalPages</c>).
+/// Paginated payload for tour search. The backend (GET /api/v1/tours/search,
+/// <c>SearchToursResult</c>) emits <c>items / total / page / pageSize / totalPages</c> and
+/// does NOT send <c>totalCount</c>, <c>pageNumber</c>, <c>hasPreviousPage</c> or
+/// <c>hasNextPage</c>. Explicit <see cref="JsonPropertyNameAttribute"/> mappings bind the
+/// real wire names so <see cref="TotalCount"/>/<see cref="PageNumber"/> are populated
+/// (previously they silently stayed 0, producing "Showing 0–0 of 0 results" while cards
+/// rendered). Has-previous/has-next are derived in the facade from page/totalPages.
 /// </summary>
 public sealed class PaginatedTourSearchResponse
 {
+    [JsonPropertyName("items")]
     public List<TourSearchItemResponse> Items { get; init; } = [];
+
+    [JsonPropertyName("page")]
     public int PageNumber { get; init; }
+
+    [JsonPropertyName("pageSize")]
     public int PageSize { get; init; }
+
+    [JsonPropertyName("total")]
     public int TotalCount { get; init; }
-    public bool HasPreviousPage { get; init; }
-    public bool HasNextPage { get; init; }
+
+    [JsonPropertyName("totalPages")]
+    public int TotalPages { get; init; }
 }
 
 /// <summary>
