@@ -22,18 +22,26 @@ public static class WishlistMapper
         return string.IsNullOrWhiteSpace(joined) ? string.Empty : joined;
     }
 
-    // Public detail-page URL per entity kind. NOTE: these are the exact URLs that
-    // previously lived inline in the wishlist view; preserved verbatim here.
-    // (Route-validity of some of these — e.g. /tours/{id} vs /tours/{slug}, and the
-    // existence of /places and /blogs routes — is a separate, deferred concern.)
-    public static string ResolveDetailUrl(string entityType, Guid entityId) => entityType switch
+    /// <summary>
+    /// Resolves the PUBLIC detail-page URL for a wishlist entity using the real
+    /// public route templates:
+    ///   Tour     => /tours/{slug}      (slug-based)
+    ///   Place    => /places/{slug}     (slug-based)
+    ///   Business => /businesses/{id}   (GUID-based public route)
+    ///   TourGuide/Blog/unknown => no link (slug not available from the wishlist
+    ///                              by-id lookups), so we return null and the view
+    ///                              renders a disabled View button instead of a
+    ///                              broken GUID URL.
+    /// Returns <c>null</c> when a safe, valid URL cannot be built. NEVER emits a
+    /// GUID for a slug-based route. Only ever uses <paramref name="entityId"/> for
+    /// the Business route, which is genuinely GUID-based.
+    /// </summary>
+    public static string? ResolveDetailUrl(string entityType, Guid entityId, string? slug) => entityType switch
     {
-        "Tour" => $"/tours/{entityId}",
-        "Place" => $"/places/{entityId}",
-        "Business" => $"/places/businesses/{entityId}",
-        "TourGuide" => $"/guides/{entityId}",
-        "Blog" => $"/blogs/{entityId}",
-        _ => "#",
+        "Tour" => string.IsNullOrWhiteSpace(slug) ? null : $"/tours/{slug}",
+        "Place" => string.IsNullOrWhiteSpace(slug) ? null : $"/places/{slug}",
+        "Business" => $"/businesses/{entityId}",
+        _ => null,
     };
 
     public static WishlistItemVm ToVm(
@@ -45,7 +53,8 @@ public static class WishlistMapper
         decimal? price,
         string? currency,
         decimal? rating,
-        DateTime addedAt) => new()
+        DateTime addedAt,
+        string? slug = null) => new()
     {
         EntityType = entityType,
         EntityId = entityId,
@@ -57,6 +66,6 @@ public static class WishlistMapper
         Rating = rating,
         AddedAt = addedAt,
         KindLabel = Humanize(entityType),
-        DetailUrl = ResolveDetailUrl(entityType, entityId),
+        DetailUrl = ResolveDetailUrl(entityType, entityId, slug),
     };
 }

@@ -46,6 +46,7 @@ public sealed class WishlistFacade
         decimal? price = null;
         string? currency = null;
         decimal? rating = null;
+        string? slug = null;
 
         try
         {
@@ -60,6 +61,7 @@ public sealed class WishlistFacade
                         price = t.SalePrice ?? t.BasePrice;
                         currency = t.Currency;
                         rating = t.AverageRating;
+                        slug = t.Slug;
                     }
                     imageUrl = await ResolveAttachmentAsync(fav.EntityType, fav.EntityId, ct);
                     break;
@@ -72,6 +74,7 @@ public sealed class WishlistFacade
                         title = p.Name;
                         subtitle = WishlistMapper.JoinLocation(p.City, p.Country);
                         rating = p.AverageRating;
+                        slug = p.Slug;
                     }
                     imageUrl = await ResolveAttachmentAsync(fav.EntityType, fav.EntityId, ct);
                     break;
@@ -124,7 +127,7 @@ public sealed class WishlistFacade
         }
 
         return WishlistMapper.ToVm(
-            fav.EntityType, fav.EntityId, title, subtitle, imageUrl, price, currency, rating, fav.AddedAt);
+            fav.EntityType, fav.EntityId, title, subtitle, imageUrl, price, currency, rating, fav.AddedAt, slug);
     }
 
     private async Task<string?> ResolveAttachmentAsync(string entityType, Guid entityId, CancellationToken ct)

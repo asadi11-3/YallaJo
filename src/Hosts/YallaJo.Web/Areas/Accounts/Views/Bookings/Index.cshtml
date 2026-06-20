@@ -81,8 +81,8 @@
                             @* Phase 1: shared empty state (UI-UX-L6) *@
                             <partial name="~/Areas/Public/Views/Shared/_EmptyState.cshtml" view-data='@(new ViewDataDictionary(ViewData)
                             {
-                                { "title", Localizer["Accounts.Bookings.EmptyTitle"].Value },
-                                { "message", Localizer["Accounts.Bookings.EmptyMessage"].Value }
+                                ["title"] = Localizer["Accounts.Bookings.EmptyTitle"].Value,
+                                ["message"] = Localizer["Accounts.Bookings.EmptyMessage"].Value
                             })' />
                         }
                         else

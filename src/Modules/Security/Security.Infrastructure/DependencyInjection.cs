@@ -39,6 +39,8 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork<SecurityDbContext>, UnitOfWork<SecurityDbContext>>();
         services.AddScoped<IModuleDbInitializer, SecurityDbInitializer>();
         services.AddScoped<IModuleDbInitializer, ProviderIdClaimBackfillInitializer>();
+        // DEV-SEED-B1: Development/QA-only seeder (guarded internally by IHostEnvironment.IsDevelopment()).
+        services.AddScoped<IModuleDbInitializer, DevSecuritySeeder>();
         services.AddScoped<ISecurityUnitOfWork, SecurityUnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();

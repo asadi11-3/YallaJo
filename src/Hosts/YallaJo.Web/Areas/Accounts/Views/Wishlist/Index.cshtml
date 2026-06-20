@@ -44,10 +44,10 @@
                             @* Phase 1: shared empty state (UI-UX-L6) *@
                             <partial name="~/Areas/Public/Views/Shared/_EmptyState.cshtml" view-data='@(new ViewDataDictionary(ViewData)
                             {
-                                { "title", Localizer["Accounts.Wishlist.EmptyTitle"].Value },
-                                { "message", Localizer["Accounts.Wishlist.EmptyMessage"].Value },
-                                { "ctaText", Localizer["Accounts.Wishlist.BrowseTours"].Value },
-                                { "ctaUrl", Url.Action("Index", "Tours", new { area = "Public" }) }
+                                ["title"] = Localizer["Accounts.Wishlist.EmptyTitle"].Value,
+                                ["message"] = Localizer["Accounts.Wishlist.EmptyMessage"].Value,
+                                ["ctaText"] = Localizer["Accounts.Wishlist.BrowseTours"].Value,
+                                ["ctaUrl"] = Url.Action("Index", "Tours", new { area = "Public" })
                             })' />
                         }
                         else
@@ -107,7 +107,14 @@
                                                         }
                                                     </div>
                                                 </div>
-                                                <a href="@item.DetailUrl" class="btn btn-sm btn-primary-soft w-100 mt-3 mb-0">@Localizer["Accounts.Common.View"]</a>
+                                                @if (!string.IsNullOrEmpty(item.DetailUrl))
+                                                {
+                                                    <a href="@item.DetailUrl" class="btn btn-sm btn-primary-soft w-100 mt-3 mb-0">@Localizer["Accounts.Common.View"]</a>
+                                                }
+                                                else
+                                                {
+                                                    <span class="btn btn-sm btn-primary-soft w-100 mt-3 mb-0 disabled" aria-disabled="true" tabindex="-1">@Localizer["Accounts.Common.View"]</span>
+                                                }
                                             </div>
                                         </div>
                                     </div>

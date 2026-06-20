@@ -42,6 +42,8 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork<BookingDbContext>, UnitOfWork<BookingDbContext>>();
         services.AddScoped<IBookingUnitOfWork, BookingUnitOfWork>();
         services.AddScoped<IModuleDbInitializer, BookingDbInitializer>();
+        // DEV-SEED-B1: Development/QA-only seeder (guarded internally by IHostEnvironment.IsDevelopment()).
+        services.AddScoped<IModuleDbInitializer, DevBookingSeeder>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<BookingDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<BookingDbContext>>();

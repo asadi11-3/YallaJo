@@ -39,6 +39,8 @@ public static class DependencyInjection
         services.AddSingleton<IPermissionCatalog, AccountsPermissionCatalog>();
         services.AddScoped<IModuleDbInitializer, AccountsDbInitializer>();
         services.AddScoped<IModuleDbInitializer, AccountsProviderApplicationSeeder>();
+        // DEV-SEED-B1: Development/QA-only seeder (guarded internally by IHostEnvironment.IsDevelopment()).
+        services.AddScoped<IModuleDbInitializer, DevAccountsSeeder>();
         services.AddScoped<IAccountsUnitOfWork, AccountsUnitOfWork>();
         services.AddScoped<IProfileRepository, ProfileRepository>();
         services.AddScoped<IProviderApplicationRepository, ProviderApplicationRepository>();

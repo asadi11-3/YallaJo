@@ -29,6 +29,8 @@ public sealed class WishlistItemVm
     public string KindLabel { get; init; } = string.Empty;
 
     /// <summary>Public detail-page URL for the entity, resolved in the mapper so the
-    /// view binds a ready value instead of building URLs inline.</summary>
-    public string DetailUrl { get; init; } = "#";
+    /// view binds a ready value instead of building URLs inline. <c>null</c> when no
+    /// valid public URL can be built (e.g. slug unavailable); the view then renders a
+    /// disabled View button rather than a broken link.</summary>
+    public string? DetailUrl { get; init; }
 }

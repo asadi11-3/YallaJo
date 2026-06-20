@@ -17,6 +17,9 @@ public sealed class TourLookupResponse
 
     public string Name { get; init; } = string.Empty;
 
+    /// <summary>Public slug used to build the slug-based tour detail route (/tours/{slug}).</summary>
+    public string? Slug { get; init; }
+
     public decimal BasePrice { get; init; }
 
     public decimal? SalePrice { get; init; }
@@ -31,6 +34,9 @@ public sealed class PlaceLookupResponse
     public Guid Id { get; init; }
 
     public string Name { get; init; } = string.Empty;
+
+    /// <summary>Public slug used to build the slug-based place detail route (/places/{slug}).</summary>
+    public string? Slug { get; init; }
 
     public string? City { get; init; }
 

@@ -51,6 +51,8 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, ContentPlacesDbInitializer>();
         // FE-2D development-only Place smoke data (Development-gated by UseDataSeedingAsync).
         services.AddScoped<IModuleDbInitializer, Fe2dSmokePlaceSeeder>();
+        // DEV-SEED-B1: Development/QA-only seeder (guarded internally by IHostEnvironment.IsDevelopment()).
+        services.AddScoped<IModuleDbInitializer, DevPlacesSeeder>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentPlacesDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentPlacesDbContext>>();

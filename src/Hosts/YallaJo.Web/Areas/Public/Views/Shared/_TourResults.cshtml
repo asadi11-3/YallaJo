@@ -94,9 +94,9 @@ else
     <partial name="_EmptyState"
              view-data='@(new ViewDataDictionary(ViewData)
              {
-                 { "title", Localizer["Public.No.tours.found"].Value },
-                 { "message", Localizer["Public.Try.a.different.sort.or.check.back.soon"].Value },
-                 { "ctaText", (chips.Count > 0 || !string.IsNullOrEmpty(Model.Query)) ? Localizer["Public.Filter.ClearAll"].Value : null },
-                 { "ctaUrl", (chips.Count > 0 || !string.IsNullOrEmpty(Model.Query)) ? Url.Action("Index", "Tours", new { area = "Public" }) : null }
+                 ["title"] = Localizer["Public.No.tours.found"].Value,
+                 ["message"] = Localizer["Public.Try.a.different.sort.or.check.back.soon"].Value,
+                 ["ctaText"] = (chips.Count > 0 || !string.IsNullOrEmpty(Model.Query)) ? Localizer["Public.Filter.ClearAll"].Value : null,
+                 ["ctaUrl"] = (chips.Count > 0 || !string.IsNullOrEmpty(Model.Query)) ? Url.Action("Index", "Tours", new { area = "Public" }) : null
              })' />
 }

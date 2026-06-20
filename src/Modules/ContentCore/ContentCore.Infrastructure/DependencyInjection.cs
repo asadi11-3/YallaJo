@@ -61,6 +61,8 @@ public static class DependencyInjection
         services.AddScoped<IContentCoreUnitOfWork, ContentCoreUnitOfWork>();
         services.AddScoped<IUnitOfWork<ContentCoreDbContext>, UnitOfWork<ContentCoreDbContext>>();
         services.AddScoped<IModuleDbInitializer, ContentCoreDbInitializer>();
+        // DEV-SEED-B1: Development/QA-only seeder (guarded internally by IHostEnvironment.IsDevelopment()).
+        services.AddScoped<IModuleDbInitializer, DevImagesSeeder>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentCoreDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentCoreDbContext>>();
