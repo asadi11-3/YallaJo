@@ -1,3 +1,4 @@
+using ContentCore.Contracts.Attachments;
 using ContentTours.Application.Queries.Tour.ListFeaturedTours;
 using ContentTours.Application.Queries.Tour.ListMyTours;
 using ContentTours.Application.Queries.Tour.SearchTours;
@@ -82,6 +83,21 @@ public sealed class TourSearchQueryHandlerTests
         return tour;
     }
 
+    // Stubbed primary-image reader: returns an empty batch so card enrichment is a
+    // no-op (NSubstitute returns null by default for reference types, which would
+    // NullRef inside the handler). Empty dict => no primary images => these tests
+    // continue to assert search filter/status/scoping behaviour unchanged.
+    private static IPublicEntityImageReader EmptyImageReader()
+    {
+        var reader = Substitute.For<IPublicEntityImageReader>();
+        reader.GetEntityImagesBatchAsync(
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyCollection<Guid>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, IReadOnlyList<EntityImageDto>>());
+        return reader;
+    }
+
     // ── Search ───────────────────────────────────────────────────────────────
 
     [Fact]
@@ -90,6 +106,7 @@ public sealed class TourSearchQueryHandlerTests
         await using var db = TestDbContextFactory.NewInMemory();
         var handler = new SearchToursQueryHandler(
             new TourRepository(db),
+            EmptyImageReader(),
             Substitute.For<ILogger<SearchToursQueryHandler>>());
 
         var result = await handler.Handle(
@@ -124,6 +141,7 @@ public sealed class TourSearchQueryHandlerTests
 
         var handler = new SearchToursQueryHandler(
             new TourRepository(db),
+            EmptyImageReader(),
             Substitute.For<ILogger<SearchToursQueryHandler>>());
 
         var result = await handler.Handle(
@@ -152,6 +170,7 @@ public sealed class TourSearchQueryHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new SearchToursQueryHandler(new TourRepository(db),
+            EmptyImageReader(),
             Substitute.For<ILogger<SearchToursQueryHandler>>());
 
         var result = await handler.Handle(
@@ -180,6 +199,7 @@ public sealed class TourSearchQueryHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new SearchToursQueryHandler(new TourRepository(db),
+            EmptyImageReader(),
             Substitute.For<ILogger<SearchToursQueryHandler>>());
 
         var result = await handler.Handle(
@@ -206,6 +226,7 @@ public sealed class TourSearchQueryHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new SearchToursQueryHandler(new TourRepository(db),
+            EmptyImageReader(),
             Substitute.For<ILogger<SearchToursQueryHandler>>());
 
         var result = await handler.Handle(

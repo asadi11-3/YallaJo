@@ -16,6 +16,9 @@ public sealed class TourSearchItemResponse
     public int ReviewCount { get; init; }
     public int BookingCount { get; init; }
     public bool IsFeatured { get; init; }
+
+    /// <summary>Real primary tour image (relative /uploads path) for the card; null when the tour has no images.</summary>
+    public string? PrimaryImageUrl { get; init; }
 }
 
 /// <summary>

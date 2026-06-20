@@ -107,11 +107,12 @@ public sealed class ToursFacade
 
             var page0 = toursResult.Data;
 
-            // Tour summaries expose no public image field and the attachment endpoint is
-            // not anonymous-accessible, so cards use a deterministic theme placeholder
-            // (temporary public image API gap — see PublicImagePlaceholder).
+            // Cards show the real primary tour image (relative /uploads path resolved
+            // to absolute via the asset resolver). The backend batch-loads it per page
+            // (no N+1). Fall back to a deterministic theme placeholder when a tour has
+            // no image (PrimaryImageUrl null) — see PublicImagePlaceholder.
             cards = page0.Items
-                .Select(t => TourGridMapper.ToCardVm(t, PublicImagePlaceholder.ResolveTourImage(t.Id)))
+                .Select(t => TourGridMapper.ToCardVm(t, ResolveCardImage(t.PrimaryImageUrl, t.Id)))
                 .ToList();
             totalCount = page0.TotalCount;
             totalPages = page0.TotalPages;
@@ -145,12 +146,12 @@ public sealed class ToursFacade
     }
 
     /// <summary>Search items expose the same card fields as browse summaries (see SearchFacade.MapItem precedent).</summary>
-    private static TourCardVm MapSearchCard(TourSearchItemResponse item) => new()
+    private TourCardVm MapSearchCard(TourSearchItemResponse item) => new()
     {
         Id = item.Id,
         Name = item.Name,
         Slug = item.Slug,
-        ImageUrl = PublicImagePlaceholder.ResolveTourImage(item.Id),
+        ImageUrl = ResolveCardImage(item.PrimaryImageUrl, item.Id),
         BasePrice = item.BasePrice,
         SalePrice = item.SalePrice,
         Currency = string.IsNullOrWhiteSpace(item.Currency) ? "USD" : item.Currency,
@@ -159,6 +160,23 @@ public sealed class ToursFacade
         BookingCount = item.BookingCount,
         IsFeatured = item.IsFeatured
     };
+
+    /// <summary>
+    /// Resolves a card's image: the real primary image (relative /uploads path made
+    /// absolute) when present, otherwise a deterministic theme placeholder keyed by id.
+    /// Mirrors the tour-detail image resolution (GetDetailAsync).
+    /// </summary>
+    private string ResolveCardImage(string? primaryImageUrl, Guid tourId)
+    {
+        if (!string.IsNullOrWhiteSpace(primaryImageUrl))
+        {
+            var resolved = _assetResolver.Resolve(primaryImageUrl);
+            if (!string.IsNullOrWhiteSpace(resolved))
+                return resolved!;
+        }
+
+        return PublicImagePlaceholder.ResolveTourImage(tourId);
+    }
 
     public async Task<ApiResult<TourDetailVm>> GetDetailAsync(string slug, CancellationToken ct = default)
     {

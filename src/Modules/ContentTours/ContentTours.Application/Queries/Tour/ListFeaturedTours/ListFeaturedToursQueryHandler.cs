@@ -30,7 +30,10 @@ public sealed class ListFeaturedToursQueryHandler(
                     t.Id, t.Name, t.Slug,
                     t.BasePrice.Amount, t.Currency, t.SalePrice,
                     t.AverageRating, t.ReviewCount, t.BookingCount,
-                    t.IsFeatured, t.Status.ToString(), t.CreatedAt))
+                    // Expression trees cannot use optional args — pass null explicitly.
+                    // Featured is out of TOUR-CARDS-IMG-A card scope (home rails keep
+                    // their existing placeholder), so PrimaryImageUrl is left unenriched.
+                    t.IsFeatured, t.Status.ToString(), t.CreatedAt, null))
                 .ToListAsync(cancellationToken);
 
             logger.LogDebug("Listed {Count} featured tours", dtos.Count);

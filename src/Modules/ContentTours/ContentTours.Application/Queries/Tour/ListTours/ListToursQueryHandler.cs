@@ -1,3 +1,4 @@
+using ContentCore.Contracts.Attachments;
 using ContentTours.Application.Queries.Tour.Common;
 using ContentTours.Domain.Enums;
 using ContentTours.Domain.Repositories;
@@ -13,10 +14,12 @@ namespace ContentTours.Application.Queries.Tour.ListTours;
 public sealed class ListToursQueryHandler(
     ITourRepository tourRepository,
     IActiveLanguageProvider activeLanguageProvider,
+    IPublicEntityImageReader imageReader,
     ILogger<ListToursQueryHandler> logger)
     : IQueryHandler<ListToursQuery, PaginatedResult<TourSummaryDto>>
 {
     private const int MaxPageSize = 50;
+    private const string TourEntityType = "Tour";
 
     public async Task<Result<PaginatedResult<TourSummaryDto>>> Handle(
         ListToursQuery request,
@@ -52,7 +55,10 @@ public sealed class ListToursQueryHandler(
                         t.BookingCount,
                         t.IsFeatured,
                         t.Status.ToString(),
-                        t.CreatedAt),
+                        t.CreatedAt,
+                        // Expression trees cannot use optional args — pass null
+                        // explicitly; PrimaryImageUrl is enriched after paging below.
+                        null),
                     filter: t => t.Status == TourStatus.Approved
                               && (request.PlaceId == null || t.PlaceId == request.PlaceId)
                               && (request.IsFeatured == null || t.IsFeatured == request.IsFeatured.Value),
@@ -60,7 +66,16 @@ public sealed class ListToursQueryHandler(
                     ct: cancellationToken)
                 .ConfigureAwait(false);
 
-            return Result<PaginatedResult<TourSummaryDto>>.Success(paged);
+            // Enrich card items with their real primary image in a SINGLE batched
+            // ContentCore query (no N+1). EntityImages live in a separate DbContext,
+            // so they cannot be joined into the EF projection above. Tours without an
+            // image stay null and the Web layer falls back to a placeholder.
+            var enriched = await EnrichWithPrimaryImagesAsync(paged.Items, cancellationToken)
+                .ConfigureAwait(false);
+
+            return Result<PaginatedResult<TourSummaryDto>>.Success(
+                new PaginatedResult<TourSummaryDto>(
+                    enriched, paged.TotalCount, paged.PageNumber, paged.PageSize));
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -68,6 +83,27 @@ public sealed class ListToursQueryHandler(
                 new Error("Request.Cancelled", "The request was cancelled."),
                 Outcome.Canceled);
         }
+    }
+
+    private async Task<IReadOnlyList<TourSummaryDto>> EnrichWithPrimaryImagesAsync(
+        IReadOnlyList<TourSummaryDto> items,
+        CancellationToken cancellationToken)
+    {
+        if (items.Count == 0)
+            return items;
+
+        var tourIds = items.Select(i => i.Id).ToList();
+        var imagesByTour = await imageReader
+            .GetEntityImagesBatchAsync(TourEntityType, tourIds, cancellationToken)
+            .ConfigureAwait(false);
+
+        return items
+            .Select(dto => imagesByTour.TryGetValue(dto.Id, out var images) && images.Count > 0
+                // Batch reader orders IsPrimary-first then SortOrder, so the first
+                // entry is the primary (or best) image for the card.
+                ? dto with { PrimaryImageUrl = images[0].Url }
+                : dto)
+            .ToList();
     }
 
     private static IOrderedQueryable<TourEntity> OrderBy(IQueryable<TourEntity> query, string? sort) =>

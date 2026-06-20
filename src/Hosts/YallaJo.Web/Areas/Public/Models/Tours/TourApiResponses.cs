@@ -15,6 +15,9 @@ public sealed class TourSummaryResponse
     public bool IsFeatured { get; init; }
     public string? Status { get; init; }
     public DateTime CreatedAt { get; init; }
+
+    /// <summary>Real primary tour image (relative /uploads path) for the card; null when the tour has no images.</summary>
+    public string? PrimaryImageUrl { get; init; }
 }
 
 /// <summary>Mirrors the API PaginatedResult&lt;T&gt; wrapper.</summary>
