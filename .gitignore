@@ -398,4 +398,8 @@ FodyWeavers.xsd
 # uses them to hold real values outside of user-secrets.
 appsettings.*.local.json
 appsettings.Secrets.json
+
+# Runtime upload files — never commit user-uploaded content.
+# Source/static assets (e.g. /assets/images/gallery) are NOT ignored.
+**/wwwroot/uploads/
 /src/Hosts/YallaJo.Api/nul

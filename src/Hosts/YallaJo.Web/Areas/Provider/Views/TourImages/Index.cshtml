@@ -29,6 +29,9 @@
                     <form asp-area="Provider" asp-controller="TourImages" asp-action="Upload"
                           asp-route-id="@Model.TourId" method="post" enctype="multipart/form-data"
                           class="row g-2 align-items-end" data-loading data-yj-image-upload
+                          data-yj-ajax data-yj-swap-target="gallery"
+                          data-success-message="@Localizer["Provider.Flash.ImageUploaded"]"
+                          data-error-text="@Localizer["Provider.Flash.CouldNotUploadImage"]"
                           data-yj-too-large="@Localizer["Provider.TourImages.FileTooLarge"]"
                           data-yj-invalid-type="@Localizer["Provider.TourImages.InvalidType"]"
                           data-yj-preview-alt="@Localizer["Provider.TourImages.PreviewAlt"]">
@@ -52,63 +55,8 @@
             </section>
         </permission>
 
-        <section class="card shadow" aria-labelledby="images-heading">
-            <div class="card-header border-bottom">
-                <h2 id="images-heading" class="card-header-title h5 mb-0">@Localizer["Provider.TourImages.GalleryHeading"]</h2>
-            </div>
-            <div class="card-body">
-                @if (!Model.HasImages)
-                {
-                    <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["message"] = Localizer["Provider.TourImages.EmptyMsg"].Value })" />
-                }
-                else
-                {
-                    <div class="row g-3">
-                        @foreach (var img in Model.Images)
-                        {
-                            var imgName = string.IsNullOrEmpty(img.FileName) ? Localizer["Provider.TourImages.UnnamedImage"].Value : img.FileName;
-                            <div class="col-sm-6 col-md-4 col-lg-3">
-                                <div class="card border h-100">
-                                    <div class="ratio ratio-4x3">
-                                        <img src="@img.Url" width="400" height="300" class="card-img-top object-fit-cover"
-                                             alt="@imgName" loading="lazy" />
-                                    </div>
-                                    <div class="card-body p-2">
-                                        <div class="small text-truncate" title="@imgName"><bdi dir="ltr">@imgName</bdi></div>
-                                        <div class="small text-body-secondary">
-                                            <bdi dir="ltr">@Date(img.UploadedAt)</bdi>
-                                            @if (!string.IsNullOrEmpty(img.FileSizeLabel))
-                                            {
-                                                <span> &middot; <bdi dir="ltr">@img.FileSizeLabel</bdi></span>
-                                            }
-                                        </div>
-                                    </div>
-                                    <div class="card-footer p-2 d-flex justify-content-between align-items-center">
-                                        <a href="@img.Url" target="_blank" rel="noopener noreferrer"
-                                           class="btn btn-sm btn-outline-secondary">
-                                            <i class="fa-solid fa-up-right-from-square me-1" aria-hidden="true"></i>@Localizer["Provider.TourImages.Open"]
-                                        </a>
-                                        <permission require="@WebPermission.Attachment.Delete">
-                                            <form asp-area="Provider" asp-controller="TourImages" asp-action="Delete"
-                                                  asp-route-id="@Model.TourId" asp-route-attachmentId="@img.Id" method="post" data-loading class="d-inline"
-                                                  data-confirm="@Localizer["Provider.TourImages.DeleteBody", imgName]"
-                                                  data-confirm-title="@Localizer["Provider.TourImages.DeleteTitle"]"
-                                                  data-confirm-action="@Localizer["Provider.TourImages.DeleteConfirm"]"
-                                                  data-confirm-cancel="@Localizer["Provider.TourImages.Cancel"]">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                    <i class="fa-solid fa-trash me-1" aria-hidden="true"></i>@Localizer["Provider.TourImages.Delete"]
-                                                </button>
-                                            </form>
-                                        </permission>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
-        </section>
+        @* Swappable AJAX region (PE1: full PRG without JS — provider-actions.js enhances). *@
+        <partial name="_Gallery" model="Model" />
     </div>
 </section>
 
@@ -116,4 +64,6 @@
 @section Scripts {
     @* Phase 5: image preview + pre-checks (PE1: plain multipart post without JS). *@
     <script src="~/assets/js/provider-images.js" asp-append-version="true"></script>
+    @* Progressive enhancement: AJAX upload/delete + gallery fragment swap (PE1: full PRG without JS). *@
+    <script src="~/assets/js/provider-actions.js" asp-append-version="true"></script>
 }

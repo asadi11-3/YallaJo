@@ -53,19 +53,16 @@ public sealed class TourImagesController : ProviderTourResourceController
         {
             var firstError = ModelState.Values.SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage).FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
-            SetError(firstError ?? L["Provider.Flash.InvalidImage"].Value);
-            return RedirectToImages(id);
+            return await FailAsync(id, firstError ?? L["Provider.Flash.InvalidImage"].Value, ct);
         }
 
         var result = await _facade.UploadAsync(id, vm, ct);
         if (result.Outcome == TourImagesOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourImagesOutcome.Ok)
-            SetSuccess(L["Provider.Flash.ImageUploaded"]);
-        else
-            SetError(result.Error ?? L["Provider.Flash.CouldNotUploadImage"].Value);
+            return await SucceedAsync(id, L["Provider.Flash.ImageUploaded"].Value, ct);
 
-        return RedirectToImages(id);
+        return await FailAsync(id, result.Error ?? L["Provider.Flash.CouldNotUploadImage"].Value, ct);
     }
 
     // ── POST /provider/tours/{id}/images/{attachmentId}/delete ─────────────────────
@@ -80,14 +77,40 @@ public sealed class TourImagesController : ProviderTourResourceController
         if (result.Outcome == TourImagesOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourImagesOutcome.Ok)
-            SetSuccess(L["Provider.Flash.ImageDeleted"]);
-        else
-            SetError(result.Error ?? L["Provider.Flash.CouldNotDeleteImage"].Value);
+            return await SucceedAsync(id, L["Provider.Flash.ImageDeleted"].Value, ct);
 
-        return RedirectToImages(id);
+        return await FailAsync(id, result.Error ?? L["Provider.Flash.CouldNotDeleteImage"].Value, ct);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// AJAX (WantsAjax): re-fetch the gallery and return the swappable fragment —
+    /// the client toasts its own data-success-message (NF1). No-JS: PRG flash + redirect (PE1).
+    /// </summary>
+    private async Task<IActionResult> SucceedAsync(Guid id, string message, CancellationToken ct)
+    {
+        if (WantsAjax())
+        {
+            var refreshed = await _facade.GetIndexAsync(id, ct);
+            if (refreshed.Outcome == TourImagesOutcome.ForceSignOut) return RedirectToLogin();
+            return PartialView("_Gallery", refreshed.Data ?? new TourImagesVm { TourId = id });
+        }
+
+        SetSuccess(message);
+        return RedirectToImages(id);
+    }
+
+    /// <summary>AJAX: 400 + { error } for the client toast. No-JS: PRG flash + redirect.</summary>
+    private async Task<IActionResult> FailAsync(Guid id, string? message, CancellationToken ct)
+    {
+        if (WantsAjax())
+            return BadRequest(new { error = message });
+
+        SetError(message);
+        await Task.CompletedTask;
+        return RedirectToImages(id);
+    }
 
     private IActionResult RedirectToImages(Guid id) =>
         RedirectToAction(nameof(Index), new { id });
