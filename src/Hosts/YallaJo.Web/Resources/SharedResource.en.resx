@@ -13999,10 +13999,19 @@
 <data name="Accounts.Msg.DeviceRegistered" xml:space="preserve">
 <value>Device registered for notifications.</value>
 </data>
-<data name="Accounts.Msg.DeviceRemoved" xml:space="preserve">
-<value>Device removed.</value>
-</data>
-<data name="Accounts.Msg.ReplyEmpty" xml:space="preserve">
+  <data name="Accounts.Msg.DeviceRemoved" xml:space="preserve">
+    <value>Device removed.</value>
+  </data>
+  <data name="Accounts.Msg.SessionRevokeFailed" xml:space="preserve">
+    <value>Could not sign out the session. Please try again.</value>
+  </data>
+  <data name="Accounts.Msg.DeviceTrustFailed" xml:space="preserve">
+    <value>Could not update the device. Please try again.</value>
+  </data>
+  <data name="Accounts.Msg.DeviceRemoveFailed" xml:space="preserve">
+    <value>Could not remove the device. Please try again.</value>
+  </data>
+  <data name="Accounts.Msg.ReplyEmpty" xml:space="preserve">
 <value>Please type a message before sending.</value>
 </data>
 <data name="Accounts.Msg.ReplySent" xml:space="preserve">

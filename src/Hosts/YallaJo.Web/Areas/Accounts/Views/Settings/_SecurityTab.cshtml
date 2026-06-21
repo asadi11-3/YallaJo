@@ -31,63 +31,10 @@
 
             <hr class="my-1" />
 
-            @* Active sessions *@
+            @* Active sessions — TrustDevice/RevokeSession are AJAX-enhanced via the swappable partial. *@
             <div>
-                <h6>@Localizer["Accounts.Settings.ActiveSessions"]</h6>
-                @if (Model.Sessions.Count == 0)
-                {
-                    <p class="text-body-secondary small mb-0">@Localizer["Accounts.Settings.NoSessions"]</p>
-                }
-                else
-                {
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle">
-                            <thead>
-                                <tr>
-                                    <th scope="col">@Localizer["Accounts.Settings.Device"]</th>
-                                    <th scope="col">@Localizer["Accounts.Settings.Ip"]</th>
-                                    <th scope="col">@Localizer["Accounts.Settings.Started"]</th>
-                                    <th scope="col">@Localizer["Accounts.JoinRequests.Expires"]</th>
-                                    <th scope="col" class="text-end">@Localizer["Accounts.Settings.Actions"]</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var s in Model.Sessions)
-                                {
-                                    <tr>
-                                        <td>
-                                            @s.DeviceName
-                                            @if (s.IsCurrent)
-                                            {
-                                                <span class="badge bg-success bg-opacity-10 text-success ms-1">@Localizer["Accounts.Settings.ThisDevice"]</span>
-                                            }
-                                        </td>
-                                        <td class="small"><span dir="ltr">@s.IpAddress</span></td>
-                                        <td class="small">@s.CreatedAt.ToString("d MMM yyyy")</td>
-                                        <td class="small">@s.ExpiresAt.ToString("d MMM yyyy")</td>
-                                        <td class="text-end">
-                                            <div class="d-inline-flex gap-1">
-                                                <form asp-area="Accounts" asp-controller="Settings" asp-action="TrustDevice"
-                                                      asp-route-deviceId="@s.DeviceId" method="post" class="d-inline">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-sm btn-outline-secondary mb-0">@Localizer["Accounts.Settings.Trust"]</button>
-                                                </form>
-                                                @if (!s.IsCurrent)
-                                                {
-                                                    <form asp-area="Accounts" asp-controller="Settings" asp-action="RevokeSession"
-                                                          asp-route-sessionId="@s.SessionId" method="post" class="d-inline">
-                                                        @Html.AntiForgeryToken()
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger mb-0">@Localizer["Accounts.Settings.SignOutSession"]</button>
-                                                    </form>
-                                                }
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
+                <partial name="_SessionsSection" model="Model" />
+                @* LogoutAll stays outside the sessions swap region; it signs the user out (native PRG). *@
                 <form asp-area="Accounts" asp-controller="Settings" asp-action="LogoutAll" method="post" class="mt-2">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-outline-danger mb-0">

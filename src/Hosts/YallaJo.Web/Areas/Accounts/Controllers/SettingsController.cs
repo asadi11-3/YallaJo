@@ -175,6 +175,12 @@ public sealed class SettingsController : BaseController
     {
         var result = await _sessions.RevokeAsync(sessionId, ct);
         if (GuardSignOut(result) is { } so) return so;
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.SessionRevokeFailed"].Value });
+            return await SessionsSectionPartialAsync(ct);
+        }
         if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.SessionSignedOut"]);
         else SetError(result.Error);
         return RedirectToAction(nameof(Index), new { tab = "security" });
@@ -186,6 +192,12 @@ public sealed class SettingsController : BaseController
     {
         var result = await _devices.TrustAsync(deviceId, ct);
         if (GuardSignOut(result) is { } so) return so;
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.DeviceTrustFailed"].Value });
+            return await SessionsSectionPartialAsync(ct);
+        }
         if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.DeviceTrusted"]);
         else SetError(result.Error);
         return RedirectToAction(nameof(Index), new { tab = "security" });
@@ -229,8 +241,29 @@ public sealed class SettingsController : BaseController
     {
         var result = await _devices.DeleteTokenAsync(id, ct);
         if (GuardSignOut(result) is { } so) return so;
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.DeviceRemoveFailed"].Value });
+            return await DevicesSectionPartialAsync(ct);
+        }
         if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.DeviceRemoved"]);
         else SetError(result.Error);
         return RedirectToAction(nameof(Index), new { tab = "devices" });
+    }
+
+    private async Task<IActionResult> SessionsSectionPartialAsync(CancellationToken ct)
+    {
+        var r = await _sessions.GetSessionsAsync(ct);
+        if (GuardSignOut(r) is { } so) return so;
+        var vm = new SettingsVm { Sessions = r.Data?.Sessions ?? [] };
+        return PartialView("_SessionsSection", vm);
+    }
+
+    private async Task<IActionResult> DevicesSectionPartialAsync(CancellationToken ct)
+    {
+        var devices = await _devices.GetTokensAsync(ct);
+        var vm = new SettingsVm { Devices = devices };
+        return PartialView("_DevicesSection", vm);
     }
 }

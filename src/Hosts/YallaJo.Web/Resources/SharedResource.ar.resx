@@ -13999,10 +13999,19 @@
 <data name="Accounts.Msg.DeviceRegistered" xml:space="preserve">
 <value>تم تسجيل الجهاز للإشعارات.</value>
 </data>
-<data name="Accounts.Msg.DeviceRemoved" xml:space="preserve">
-<value>تمت إزالة الجهاز.</value>
-</data>
-<data name="Accounts.Msg.ReplyEmpty" xml:space="preserve">
+  <data name="Accounts.Msg.DeviceRemoved" xml:space="preserve">
+    <value>تمت إزالة الجهاز.</value>
+  </data>
+  <data name="Accounts.Msg.SessionRevokeFailed" xml:space="preserve">
+    <value>تعذّر تسجيل الخروج من الجلسة. يرجى المحاولة مرة أخرى.</value>
+  </data>
+  <data name="Accounts.Msg.DeviceTrustFailed" xml:space="preserve">
+    <value>تعذّر تحديث الجهاز. يرجى المحاولة مرة أخرى.</value>
+  </data>
+  <data name="Accounts.Msg.DeviceRemoveFailed" xml:space="preserve">
+    <value>تعذّرت إزالة الجهاز. يرجى المحاولة مرة أخرى.</value>
+  </data>
+  <data name="Accounts.Msg.ReplyEmpty" xml:space="preserve">
 <value>يرجى كتابة رسالة قبل الإرسال.</value>
 </data>
 <data name="Accounts.Msg.ReplySent" xml:space="preserve">
