@@ -1,0 +1,48 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    // Link-based settings tab strip used on dedicated Settings sub-pages (e.g. Change password).
+    // The active key is passed via ViewData["SettingsActiveTab"]; "security" highlights the
+    // Change-password / Security tab. Other tabs navigate back to the Settings hub.
+    var activeTab = ViewData["SettingsActiveTab"] as string ?? "security";
+    string LinkClass(string key) => activeTab == key ? "nav-link active" : "nav-link";
+    string Current(string key) => activeTab == key ? "page" : null;
+}
+<ul class="nav nav-tabs nav-bottom-line mb-4 flex-nowrap overflow-auto" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="@LinkClass("notifications")" aria-current="@Current("notifications")"
+           asp-area="Accounts" asp-controller="Settings" asp-action="Index" asp-route-tab="notifications">
+            <i class="bi bi-bell fa-fw me-1"></i>@Localizer["Accounts.Settings.Tab.Notifications"]
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="@LinkClass("security")" aria-current="@Current("security")"
+           asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index">
+            <i class="bi bi-shield-lock fa-fw me-1"></i>@Localizer["Accounts.Settings.Tab.Security"]
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="@LinkClass("devices")" aria-current="@Current("devices")"
+           asp-area="Accounts" asp-controller="Settings" asp-action="Index" asp-route-tab="devices">
+            <i class="bi bi-phone fa-fw me-1"></i>@Localizer["Accounts.Settings.Tab.Devices"]
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="@LinkClass("linked")" aria-current="@Current("linked")"
+           asp-area="Accounts" asp-controller="Settings" asp-action="Index" asp-route-tab="linked">
+            <i class="bi bi-box-arrow-in-right fa-fw me-1"></i>@Localizer["Accounts.Settings.Tab.Linked"]
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="@LinkClass("privacy")" aria-current="@Current("privacy")"
+           asp-area="Accounts" asp-controller="Settings" asp-action="Index" asp-route-tab="privacy">
+            <i class="bi bi-shield-check fa-fw me-1"></i>@Localizer["Accounts.Settings.Tab.Privacy"]
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="@LinkClass("account")" aria-current="@Current("account")"
+           asp-area="Accounts" asp-controller="Settings" asp-action="Index" asp-route-tab="account">
+            <i class="bi bi-exclamation-triangle text-danger fa-fw me-1"></i>@Localizer["Accounts.Settings.Tab.Account"]
+        </a>
+    </li>
+</ul>

@@ -16660,4 +16660,58 @@
   <data name="Accounts.Promo.Inactive" xml:space="preserve">
     <value>Inactive</value>
   </data>
+  <data name="Accounts.ChangePassword.Title" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="Accounts.ChangePassword.Subtitle" xml:space="preserve">
+    <value>Update your password to keep your account secure.</value>
+  </data>
+  <data name="Accounts.ChangePassword.Forgot" xml:space="preserve">
+    <value>Forgot your current password?</value>
+  </data>
+  <data name="Accounts.ChangePassword.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Accounts.ChangePassword.ShowPassword" xml:space="preserve">
+    <value>Show password</value>
+  </data>
+  <data name="Accounts.ChangePassword.HidePassword" xml:space="preserve">
+    <value>Hide password</value>
+  </data>
+  <data name="Accounts.ChangePassword.Requirements" xml:space="preserve">
+    <value>Password requirements</value>
+  </data>
+  <data name="Accounts.ChangePassword.RuleLength" xml:space="preserve">
+    <value>At least 8 characters</value>
+  </data>
+  <data name="Accounts.ChangePassword.RuleUppercase" xml:space="preserve">
+    <value>One uppercase letter</value>
+  </data>
+  <data name="Accounts.ChangePassword.RuleNumber" xml:space="preserve">
+    <value>One number</value>
+  </data>
+  <data name="Accounts.ChangePassword.RuleSpecial" xml:space="preserve">
+    <value>One special character</value>
+  </data>
+  <data name="Accounts.ChangePassword.TipsTitle" xml:space="preserve">
+    <value>Security tips</value>
+  </data>
+  <data name="Accounts.ChangePassword.Tip1" xml:space="preserve">
+    <value>Use a unique password you do not use on other sites.</value>
+  </data>
+  <data name="Accounts.ChangePassword.Tip2" xml:space="preserve">
+    <value>Combine letters, numbers and symbols.</value>
+  </data>
+  <data name="Accounts.ChangePassword.Tip3" xml:space="preserve">
+    <value>Never share your password with anyone.</value>
+  </data>
+  <data name="Accounts.ChangePassword.HelpTitle" xml:space="preserve">
+    <value>Need help?</value>
+  </data>
+  <data name="Accounts.ChangePassword.HelpText" xml:space="preserve">
+    <value>Our support team is here to help you with anything.</value>
+  </data>
+  <data name="Accounts.ChangePassword.ContactSupport" xml:space="preserve">
+    <value>Contact support</value>
+  </data>
 </root>

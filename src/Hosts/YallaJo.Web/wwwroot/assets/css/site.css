@@ -1050,3 +1050,32 @@ details.card > summary { cursor: pointer; list-style-position: inside; }
 [dir="rtl"] .promo-card__edit {
     inset-inline-end: .5rem;
 }
+
+/* ── Change Password page: requirement checklist ── */
+.cp-checklist li {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    color: var(--bs-secondary-color);
+    font-size: .875rem;
+    margin-bottom: .25rem;
+    transition: color .15s ease;
+}
+
+.cp-checklist li.is-met {
+    color: var(--bs-success);
+}
+
+.cp-checklist li i {
+    font-size: .9rem;
+}
+
+/* Eye toggle button polish inside password input-groups. */
+.input-group [data-cp-toggle] {
+    border-top-right-radius: var(--bs-border-radius);
+    border-bottom-right-radius: var(--bs-border-radius);
+}
+
+[dir="rtl"] .input-group [data-cp-toggle] {
+    border-radius: var(--bs-border-radius) 0 0 var(--bs-border-radius);
+}

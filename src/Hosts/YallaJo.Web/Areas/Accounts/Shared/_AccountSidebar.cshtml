@@ -4,6 +4,7 @@
 @{
     var active = ViewData["AccountNav"] as string ?? "Profile";
     string Pill(string key) => active == key ? "nav-link active" : "nav-link";
+    var inSettings = active == "Settings" || active == "ChangePassword";
 }
 
 <div class="col-lg-4 col-xl-3">
@@ -91,16 +92,41 @@
                                 <i class="bi bi-credit-card fa-fw me-2" aria-hidden="true"></i>@Localizer["Accounts.Nav.Billing"]
                             </a>
                         </li>
+                        @* Settings group: flat link when outside Settings; expands to sub-items when inside the Settings area. *@
                         <li class="nav-item">
-                            <a class="@Pill("Settings")" asp-area="Accounts" asp-controller="Settings" asp-action="Index">
+                            <a class="@(inSettings ? "nav-link active" : "nav-link")" asp-area="Accounts" asp-controller="Settings" asp-action="Index" aria-expanded="@(inSettings ? "true" : "false")">
                                 <i class="bi bi-gear fa-fw me-2" aria-hidden="true"></i>@Localizer["Navbar.Settings"]
                             </a>
-                        </li>
-                        @* Change password — navigation entry only for now; the dedicated page is not built yet. *@
-                        <li class="nav-item">
-                            <span class="nav-link disabled" aria-disabled="true" tabindex="-1">
-                                <i class="bi bi-shield-lock fa-fw me-2" aria-hidden="true"></i>@Localizer["Accounts.Nav.ChangePassword"]
-                            </span>
+                            @if (inSettings)
+                            {
+                                <ul class="nav nav-pills-primary-soft flex-column ms-3 mt-1 border-start ps-2">
+                                    <li class="nav-item">
+                                        <a class="@(active == "ChangePassword" ? "nav-link active" : "nav-link")" asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index" aria-current="@(active == "ChangePassword" ? "page" : null)">
+                                            <i class="bi bi-shield-lock fa-fw me-2" aria-hidden="true"></i>@Localizer["Accounts.Nav.ChangePassword"]
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="Accounts" asp-controller="Settings" asp-action="Index" asp-route-tab="devices">
+                                            <i class="bi bi-phone fa-fw me-2" aria-hidden="true"></i>@Localizer["Accounts.Settings.Tab.Devices"]
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="Accounts" asp-controller="Settings" asp-action="Index" asp-route-tab="linked">
+                                            <i class="bi bi-box-arrow-in-right fa-fw me-2" aria-hidden="true"></i>@Localizer["Accounts.Settings.Tab.Linked"]
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="Accounts" asp-controller="Settings" asp-action="Index" asp-route-tab="privacy">
+                                            <i class="bi bi-shield-check fa-fw me-2" aria-hidden="true"></i>@Localizer["Accounts.Settings.Tab.Privacy"]
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="Accounts" asp-controller="Settings" asp-action="Index" asp-route-tab="account">
+                                            <i class="bi bi-exclamation-triangle fa-fw me-2" aria-hidden="true"></i>@Localizer["Accounts.Settings.Tab.Account"]
+                                        </a>
+                                    </li>
+                                </ul>
+                            }
                         </li>
                         @* Phase 2 (Accounts plan): Privacy & Data and Delete Profile moved into the Settings hub tabs. *@
                         <li class="nav-item mt-2">

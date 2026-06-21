@@ -4,34 +4,7 @@
 
 <div class="vstack gap-4">
 
-    @* ---------- Password ---------- *@
-    <div class="card border">
-        <div class="card-header border-bottom">
-            <h4 class="card-header-title mb-0">@Localizer["Accounts.Settings.UpdatePassword"]</h4>
-            <p class="mb-0 mt-1 small">@Localizer["Accounts.Settings.PasswordHint"]</p>
-        </div>
-        <div class="card-body">
-            <form asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index" method="post" class="row g-3" data-loading>
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="returnUrl" value="@(Url.Action("Index", "Settings", new { area = "Accounts", tab = "security" }))" />
-                <div class="col-12">
-                    <label for="settingsCurrentPassword" class="form-label">@Localizer["Accounts.Settings.CurrentPassword"]</label>
-                    <input type="password" id="settingsCurrentPassword" name="CurrentPassword" class="form-control" autocomplete="current-password" />
-                </div>
-                <div class="col-12">
-                    <label for="settingsNewPassword" class="form-label">@Localizer["Accounts.Settings.NewPassword"]</label>
-                    <input type="password" id="settingsNewPassword" name="NewPassword" class="form-control" autocomplete="new-password" />
-                </div>
-                <div class="col-12">
-                    <label for="settingsConfirmNewPassword" class="form-label">@Localizer["Accounts.Settings.ConfirmNewPassword"]</label>
-                    <input type="password" id="settingsConfirmNewPassword" name="ConfirmNewPassword" class="form-control" autocomplete="new-password" />
-                </div>
-                <div class="col-12 text-end">
-                    <button type="submit" class="btn btn-primary mb-0">@Localizer["Accounts.Settings.ChangePassword"]</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    @* The password change form now lives on its own dedicated page (Accounts/ChangePassword). *@
 
     @* ---------- Security (phone + sessions) ---------- *@
     <div class="card border">

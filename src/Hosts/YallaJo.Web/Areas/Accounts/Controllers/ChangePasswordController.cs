@@ -3,35 +3,57 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Models.ChangePassword;
 using YallaJo.Web.Areas.Accounts.Facades;
+using YallaJo.Web.Areas.Accounts.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
 /// <summary>
-/// Phase 2 (Accounts plan): the standalone change-password page was retired and merged into
-/// the Settings hub's Security tab. The GET now 301s there; the POST survives unchanged
-/// (it is submitted by the Security tab's password form and Profile's inline form) but
-/// follows PRG back to the caller via a validated returnUrl (UI-UX-PE1).
+/// Dedicated Change Password page under the Settings area. The GET renders a focused
+/// page (account sidebar + settings tabs + password card + security tips/help); the POST
+/// reuses the existing <see cref="ChangePasswordFacade"/> and follows PRG back to this page
+/// (or a validated returnUrl).
 /// </summary>
 [Area("Accounts")]
 [Authorize]
 public sealed class ChangePasswordController : BaseController
 {
     private readonly ChangePasswordFacade _facade;
+    private readonly ProfileFacade _profile;
     private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public ChangePasswordController(ChangePasswordFacade facade, IStringLocalizer<SharedResource> localizer)
+    public ChangePasswordController(
+        ChangePasswordFacade facade,
+        ProfileFacade profile,
+        IStringLocalizer<SharedResource> localizer)
     {
         _facade = facade;
+        _profile = profile;
         _localizer = localizer;
     }
 
-    [HttpGet]
-    public IActionResult Index()
-        => RedirectPermanent(Url.Action("Index", "Settings", new { area = "Accounts", tab = "security" })!);
+    [HttpGet("accounts/change-password")]
+    public async Task<IActionResult> Index(CancellationToken ct)
+    {
+        ViewData["AccountNav"] = "ChangePassword";
+        ViewData["SettingsActiveTab"] = "security";
 
-    [HttpPost]
+        var profileResult = await _profile.GetAsync(ct);
+        if (GuardSignOut(profileResult) is { } signOut) return signOut;
+
+        var profile = profileResult.Data;
+        ViewBag.Sidebar = new AccountSidebarVm
+        {
+            AvatarUrl = profile?.AvatarUrl,
+            DisplayName = profile?.DisplayName ?? $"{profile?.FirstName} {profile?.LastName}".Trim(),
+            Email = profile?.Email
+        };
+
+        return View(new ChangePasswordVm());
+    }
+
+    [HttpPost("accounts/change-password")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(ChangePasswordVm vm, string? returnUrl, CancellationToken ct)
     {
@@ -56,5 +78,5 @@ public sealed class ChangePasswordController : BaseController
     private IActionResult RedirectBack(string? returnUrl)
         => !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
             ? Redirect(returnUrl)
-            : RedirectToAction("Index", "Settings", new { area = "Accounts", tab = "security" });
+            : RedirectToAction(nameof(Index));
 }

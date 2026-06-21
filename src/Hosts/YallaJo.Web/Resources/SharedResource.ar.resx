@@ -16660,4 +16660,58 @@
   <data name="Accounts.Promo.Inactive" xml:space="preserve">
     <value>غير نشط</value>
   </data>
+  <data name="Accounts.ChangePassword.Title" xml:space="preserve">
+    <value>تغيير كلمة المرور</value>
+  </data>
+  <data name="Accounts.ChangePassword.Subtitle" xml:space="preserve">
+    <value>حدّث كلمة المرور للحفاظ على أمان حسابك.</value>
+  </data>
+  <data name="Accounts.ChangePassword.Forgot" xml:space="preserve">
+    <value>نسيت كلمة المرور الحالية؟</value>
+  </data>
+  <data name="Accounts.ChangePassword.Cancel" xml:space="preserve">
+    <value>إلغاء</value>
+  </data>
+  <data name="Accounts.ChangePassword.ShowPassword" xml:space="preserve">
+    <value>إظهار كلمة المرور</value>
+  </data>
+  <data name="Accounts.ChangePassword.HidePassword" xml:space="preserve">
+    <value>إخفاء كلمة المرور</value>
+  </data>
+  <data name="Accounts.ChangePassword.Requirements" xml:space="preserve">
+    <value>متطلبات كلمة المرور</value>
+  </data>
+  <data name="Accounts.ChangePassword.RuleLength" xml:space="preserve">
+    <value>8 أحرف على الأقل</value>
+  </data>
+  <data name="Accounts.ChangePassword.RuleUppercase" xml:space="preserve">
+    <value>حرف كبير واحد</value>
+  </data>
+  <data name="Accounts.ChangePassword.RuleNumber" xml:space="preserve">
+    <value>رقم واحد</value>
+  </data>
+  <data name="Accounts.ChangePassword.RuleSpecial" xml:space="preserve">
+    <value>رمز خاص واحد</value>
+  </data>
+  <data name="Accounts.ChangePassword.TipsTitle" xml:space="preserve">
+    <value>نصائح الأمان</value>
+  </data>
+  <data name="Accounts.ChangePassword.Tip1" xml:space="preserve">
+    <value>استخدم كلمة مرور فريدة لا تستخدمها في مواقع أخرى.</value>
+  </data>
+  <data name="Accounts.ChangePassword.Tip2" xml:space="preserve">
+    <value>امزج الأحرف والأرقام والرموز.</value>
+  </data>
+  <data name="Accounts.ChangePassword.Tip3" xml:space="preserve">
+    <value>لا تشارك كلمة مرورك مع أحد أبدًا.</value>
+  </data>
+  <data name="Accounts.ChangePassword.HelpTitle" xml:space="preserve">
+    <value>تحتاج مساعدة؟</value>
+  </data>
+  <data name="Accounts.ChangePassword.HelpText" xml:space="preserve">
+    <value>فريق الدعم هنا لمساعدتك في أي شيء.</value>
+  </data>
+  <data name="Accounts.ChangePassword.ContactSupport" xml:space="preserve">
+    <value>تواصل مع الدعم</value>
+  </data>
 </root>

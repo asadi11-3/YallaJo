@@ -1,0 +1,125 @@
+@model YallaJo.Web.Areas.Accounts.Models.ChangePassword.ChangePasswordVm
+@using YallaJo.Web.Areas.Accounts.Shared
+@{
+    ViewData["Title"] = Localizer["Accounts.ChangePassword.Title"].Value;
+    ViewData["AccountNav"] = "ChangePassword";
+    ViewData["SettingsActiveTab"] = "security";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
+    var cancelUrl = Url.Action("Index", "Settings", new { area = "Accounts", tab = "security" });
+}
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <partial name="_AccountSidebar" model="sidebar" />
+
+            <div class="col-lg-8 col-xl-6">
+                <partial name="_AccountMenuToggle" />
+                <partial name="_SettingsTabs" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="card border rounded-4">
+                    <div class="card-header border-bottom">
+                        <h4 class="card-header-title mb-1">@Localizer["Accounts.ChangePassword.Title"]</h4>
+                        <p class="text-body-secondary small mb-0">@Localizer["Accounts.ChangePassword.Subtitle"]</p>
+                    </div>
+                    <div class="card-body">
+                        <form asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index" method="post" class="row g-3" data-loading id="changePasswordForm">
+                            @Html.AntiForgeryToken()
+
+                            <div class="col-12">
+                                <label asp-for="CurrentPassword" class="form-label">@Localizer["Accounts.Settings.CurrentPassword"]</label>
+                                <div class="input-group">
+                                    <input asp-for="CurrentPassword" id="cpCurrent" class="form-control" autocomplete="current-password" />
+                                    <button class="btn btn-outline-secondary" type="button" data-cp-toggle data-bs-target="#cpCurrent"
+                                            data-cp-show="@Localizer["Accounts.ChangePassword.ShowPassword"]" data-cp-hide="@Localizer["Accounts.ChangePassword.HidePassword"]"
+                                            aria-label="@Localizer["Accounts.ChangePassword.ShowPassword"]" aria-pressed="false">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="CurrentPassword" class="text-danger small"></span>
+                                <div class="mt-1">
+                                    <a asp-area="Auth" asp-controller="Auth" asp-action="ForgotPassword" class="small">@Localizer["Accounts.ChangePassword.Forgot"]</a>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="NewPassword" class="form-label">@Localizer["Accounts.Settings.NewPassword"]</label>
+                                <div class="input-group">
+                                    <input asp-for="NewPassword" id="cpNew" class="form-control" autocomplete="new-password" />
+                                    <button class="btn btn-outline-secondary" type="button" data-cp-toggle data-bs-target="#cpNew"
+                                            data-cp-show="@Localizer["Accounts.ChangePassword.ShowPassword"]" data-cp-hide="@Localizer["Accounts.ChangePassword.HidePassword"]"
+                                            aria-label="@Localizer["Accounts.ChangePassword.ShowPassword"]" aria-pressed="false">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="NewPassword" class="text-danger small"></span>
+
+                                <ul class="cp-checklist list-unstyled mt-2 mb-0" id="cpChecklist" aria-label="@Localizer["Accounts.ChangePassword.Requirements"]">
+                                    <li data-cp-rule="length"><i class="bi bi-circle"></i><span>@Localizer["Accounts.ChangePassword.RuleLength"]</span></li>
+                                    <li data-cp-rule="upper"><i class="bi bi-circle"></i><span>@Localizer["Accounts.ChangePassword.RuleUppercase"]</span></li>
+                                    <li data-cp-rule="number"><i class="bi bi-circle"></i><span>@Localizer["Accounts.ChangePassword.RuleNumber"]</span></li>
+                                    <li data-cp-rule="special"><i class="bi bi-circle"></i><span>@Localizer["Accounts.ChangePassword.RuleSpecial"]</span></li>
+                                </ul>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="ConfirmNewPassword" class="form-label">@Localizer["Accounts.Settings.ConfirmNewPassword"]</label>
+                                <div class="input-group">
+                                    <input asp-for="ConfirmNewPassword" id="cpConfirm" class="form-control" autocomplete="new-password" />
+                                    <button class="btn btn-outline-secondary" type="button" data-cp-toggle data-bs-target="#cpConfirm"
+                                            data-cp-show="@Localizer["Accounts.ChangePassword.ShowPassword"]" data-cp-hide="@Localizer["Accounts.ChangePassword.HidePassword"]"
+                                            aria-label="@Localizer["Accounts.ChangePassword.ShowPassword"]" aria-pressed="false">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="ConfirmNewPassword" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12 d-flex flex-wrap gap-2 mt-2">
+                                <button type="submit" class="btn btn-danger">@Localizer["Accounts.Settings.ChangePassword"]</button>
+                                <a class="btn btn-light" href="@cancelUrl">@Localizer["Accounts.ChangePassword.Cancel"]</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-12 col-xl-3">
+                <div class="vstack gap-4">
+                    <div class="card border rounded-4">
+                        <div class="card-body">
+                            <h6 class="d-flex align-items-center gap-2 mb-3">
+                                <i class="bi bi-shield-check text-success"></i>
+                                @Localizer["Accounts.ChangePassword.TipsTitle"]
+                            </h6>
+                            <ul class="list-unstyled vstack gap-2 mb-0 small">
+                                <li class="d-flex gap-2"><i class="bi bi-check-circle-fill text-success mt-1"></i><span>@Localizer["Accounts.ChangePassword.Tip1"]</span></li>
+                                <li class="d-flex gap-2"><i class="bi bi-check-circle-fill text-success mt-1"></i><span>@Localizer["Accounts.ChangePassword.Tip2"]</span></li>
+                                <li class="d-flex gap-2"><i class="bi bi-check-circle-fill text-success mt-1"></i><span>@Localizer["Accounts.ChangePassword.Tip3"]</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card border rounded-4">
+                        <div class="card-body">
+                            <h6 class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-life-preserver text-primary"></i>
+                                @Localizer["Accounts.ChangePassword.HelpTitle"]
+                            </h6>
+                            <p class="text-body-secondary small mb-3">@Localizer["Accounts.ChangePassword.HelpText"]</p>
+                            <a class="btn btn-sm btn-outline-primary" asp-area="Accounts" asp-controller="Support" asp-action="Index">@Localizer["Accounts.ChangePassword.ContactSupport"]</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/change-password.js" asp-append-version="true"></script>
+}
