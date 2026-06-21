@@ -1,0 +1,86 @@
+@model YallaJo.Web.Areas.Accounts.Models.Profile.ProfileVm
+@{
+    var displayName = string.IsNullOrWhiteSpace(Model.DisplayName)
+        ? $"{Model.FirstName} {Model.LastName}".Trim()
+        : Model.DisplayName;
+
+    var pct = Model.CompletionPercent;
+
+    // Profile-completion flags are computed server-side on the view model
+    // (ProfileVm), so the percentage and checklist stay the source of truth.
+    var checks = new (string Label, bool Done)[]
+    {
+        (Localizer["Accounts.Profile.CheckName"].Value, Model.NameComplete),
+        (Localizer["Accounts.Profile.CheckEmail"].Value, Model.EmailComplete),
+        (Localizer["Accounts.Profile.CheckMobile"].Value, Model.MobileComplete),
+        (Localizer["Accounts.Profile.CheckDob"].Value, Model.DobComplete),
+        (Localizer["Accounts.Profile.CheckAddress"].Value, Model.AddressComplete),
+    };
+}
+
+<div class="vstack gap-4" data-yj-swap="profile-card">
+    @* ── Complete Your Profile ──────────────────────────────── *@
+    <div class="bg-light rounded p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">@Localizer["Accounts.Profile.CompleteTitle"]</h5>
+            <span class="fw-bold" dir="ltr">@pct%</span>
+        </div>
+        <div class="progress progress-sm bg-success bg-opacity-10" role="progressbar" aria-valuenow="@pct" aria-valuemin="0" aria-valuemax="100">
+            @* Inline style justified (UI-PERF-X6): width is a runtime-computed percentage. *@
+            <div class="progress-bar bg-success" style="width:@(pct)%"></div>
+        </div>
+        <div class="bg-body rounded p-3 mt-3">
+            <ul class="list-inline hstack flex-wrap gap-3 mb-0">
+                @foreach (var c in checks)
+                {
+                    <li class="list-inline-item mb-0">
+                        @if (c.Done)
+                        {
+                            <i class="bi bi-check-circle-fill text-success me-1" aria-hidden="true"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-plus-circle-fill text-primary me-1" aria-hidden="true"></i>
+                        }
+                        @c.Label
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    @* ── Personal Information ───────────────────────────────── *@
+    <div class="card border">
+        <div class="card-header border-bottom">
+            <h4 class="card-header-title mb-0">@Localizer["Accounts.Profile.PersonalInfo"]</h4>
+        </div>
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-4">
+                <span class="avatar avatar-xl me-3 avatar-editable">
+                    <img class="avatar-img rounded-circle border border-white border-3"
+                         data-avatar-img
+                         src="@(string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl)"
+                         alt="@Localizer["Accounts.Nav.AvatarAlt"]">
+                    <button type="button" class="avatar-editable__trigger" data-avatar-edit-trigger
+                            title="@Localizer["Accounts.Profile.PhotoEdit"]" aria-label="@Localizer["Accounts.Profile.PhotoEdit"]">
+                        <i class="bi bi-camera-fill" aria-hidden="true"></i>
+                    </button>
+                </span>
+                <div>
+                    <h6 class="mb-1">@displayName</h6>
+                    <p class="text-body-secondary small mb-0">@Model.Email</p>
+                </div>
+            </div>
+
+            <form asp-area="Accounts" asp-controller="Profile" asp-action="Update" method="post"
+                  data-loading
+                  data-yj-ajax
+                  data-yj-swap-target="profile-card"
+                  data-success-message="@Localizer["Accounts.Msg.ProfileUpdated"]"
+                  data-error-text="@Localizer["Accounts.Msg.ProfileUpdateFailed"]">
+                @Html.AntiForgeryToken()
+                <partial name="_UpdateProfileForm" model="Model.Update" />
+            </form>
+        </div>
+    </div>
+</div>

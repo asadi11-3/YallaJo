@@ -13915,9 +13915,12 @@
 <data name="Accounts.Msg.DataDeletionCancelFailed" xml:space="preserve">
 <value>Could not cancel the deletion.</value>
 </data>
-<data name="Accounts.Msg.ProfileUpdated" xml:space="preserve">
-<value>Profile updated.</value>
-</data>
+  <data name="Accounts.Msg.ProfileUpdated" xml:space="preserve">
+    <value>Profile updated.</value>
+  </data>
+  <data name="Accounts.Msg.ProfileUpdateFailed" xml:space="preserve">
+    <value>Could not update profile. Please try again.</value>
+  </data>
 <data name="Accounts.Msg.ChooseImage" xml:space="preserve">
 <value>Please choose an image file.</value>
 </data>

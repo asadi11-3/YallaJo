@@ -21,4 +21,28 @@ public sealed class ProfileVm
     public UpdateAvatarVm UpdateAvatar { get; init; } = new();
 
     public IReadOnlyList<PromoBlockVm> Promos { get; init; } = [];
+
+    // Profile-completion checks (server is source of truth; logic mirrors the prior view-side calc).
+    public bool NameComplete => !string.IsNullOrWhiteSpace(FirstName) && !string.IsNullOrWhiteSpace(LastName);
+    public bool EmailComplete => !string.IsNullOrWhiteSpace(Email);
+    public bool MobileComplete => !string.IsNullOrWhiteSpace(PhoneNumber);
+    public bool DobComplete => DateOfBirth is not null;
+    public bool AddressComplete =>
+        !string.IsNullOrWhiteSpace(AddressLine)
+        || !string.IsNullOrWhiteSpace(City)
+        || !string.IsNullOrWhiteSpace(Country);
+
+    public int CompletionPercent
+    {
+        get
+        {
+            var done =
+                (NameComplete ? 1 : 0)
+                + (EmailComplete ? 1 : 0)
+                + (MobileComplete ? 1 : 0)
+                + (DobComplete ? 1 : 0)
+                + (AddressComplete ? 1 : 0);
+            return (int)System.Math.Round(100.0 * done / 5);
+        }
+    }
 }

@@ -57,6 +57,9 @@ public sealed class ProfileController : BaseController
         // LastName, DateOfBirth, Gender, Country, City, AddressLine.
         if (!ModelState.IsValid)
         {
+            // AJAX: return the refreshed card with inline validation errors (400);
+            // non-JS: re-render the full page preserving edits (PRG fallback).
+            if (WantsAjax()) return await ProfileCardPartialWithEdit(vm, ct, 400);
             return await ReloadIndexWithEdit(vm, ct);
         }
 
@@ -65,12 +68,31 @@ public sealed class ProfileController : BaseController
 
         if (result.IsSuccess)
         {
+            if (WantsAjax())
+            {
+                var refreshed = await _facade.GetAsync(ct);
+                if (GuardSignOut(refreshed) is { } signOutAfter) return signOutAfter;
+                var promos = await LoadPromosAsync(ct);
+                var src = refreshed.IsSuccess && refreshed.Data is not null
+                    ? refreshed.Data
+                    : new ProfileVm();
+                return PartialView("_ProfileCard", BuildVm(src, promos));
+            }
+
             SetSuccess(_localizer["Accounts.Msg.ProfileUpdated"]);
             return RedirectToAction(nameof(Index));
         }
 
         if (!ApplyValidationErrors(result))
-            ModelState.AddModelError(string.Empty, result.Error ?? "Could not update profile.");
+            ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Accounts.Msg.ProfileUpdateFailed"].Value);
+
+        if (WantsAjax())
+        {
+            // Validation failures → swap the card (400 html). Other failures → JSON error toast.
+            return ModelState.IsValid
+                ? BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.ProfileUpdateFailed"].Value })
+                : await ProfileCardPartialWithEdit(vm, ct, 400);
+        }
 
         return await ReloadIndexWithEdit(vm, ct);
     }
@@ -145,6 +167,21 @@ public sealed class ProfileController : BaseController
 
         // Preserve the user's in-flight edits.
         return View(nameof(Index), BuildVm(vm, promos, edit));
+    }
+
+    private async Task<IActionResult> ProfileCardPartialWithEdit(UpdateProfileVm edit, CancellationToken ct, int statusCode)
+    {
+        var load = await _facade.GetAsync(ct);
+        if (GuardSignOut(load) is { } signOut) return signOut;
+
+        var vm = load.IsSuccess && load.Data is not null
+            ? load.Data
+            : new ProfileVm();
+
+        var promos = await LoadPromosAsync(ct);
+
+        Response.StatusCode = statusCode;
+        return PartialView("_ProfileCard", BuildVm(vm, promos, edit));
     }
 
     private async Task<IReadOnlyList<PromoBlockVm>> LoadPromosAsync(CancellationToken ct)

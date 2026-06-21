@@ -56,6 +56,9 @@
         var next = template.content.firstElementChild;
         if (!next) { return false; }
         section.replaceWith(next);
+        // Notify enhancers (e.g. profile-avatar.js) that DOM was swapped so they
+        // can rebind controls inside the new fragment.
+        document.dispatchEvent(new CustomEvent("yj:swapped", { detail: { target: next } }));
         return true;
     }
 
@@ -76,6 +79,19 @@
                         toast(form.dataset.successMessage, "success");
                         if (!swapped) {
                             // Fragment contract broken — fall back to a full reload (PE2).
+                            window.location.reload();
+                        }
+                    });
+                }
+                var contentType = response.headers.get("Content-Type") || "";
+                if (contentType.indexOf("text/html") !== -1) {
+                    // Validation failure: server returned the refreshed fragment with
+                    // inline field errors (e.g. 400 _ProfileCard). Swap it in place; the
+                    // inline errors are the feedback, so no toast here.
+                    return response.text().then(function (html) {
+                        resetLoading(form);
+                        var swapped = swapSection(section, html);
+                        if (!swapped) {
                             window.location.reload();
                         }
                     });

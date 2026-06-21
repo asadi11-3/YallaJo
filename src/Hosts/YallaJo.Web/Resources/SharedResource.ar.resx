@@ -13915,10 +13915,13 @@
 <data name="Accounts.Msg.DataDeletionCancelFailed" xml:space="preserve">
 <value>تعذّر إلغاء الحذف.</value>
 </data>
-<data name="Accounts.Msg.ProfileUpdated" xml:space="preserve">
-<value>تم تحديث الملف الشخصي.</value>
-</data>
-<data name="Accounts.Msg.ChooseImage" xml:space="preserve">
+  <data name="Accounts.Msg.ProfileUpdated" xml:space="preserve">
+    <value>تم تحديث الملف الشخصي.</value>
+  </data>
+  <data name="Accounts.Msg.ProfileUpdateFailed" xml:space="preserve">
+    <value>تعذّر تحديث الملف الشخصي. يرجى المحاولة مرة أخرى.</value>
+  </data>
+  <data name="Accounts.Msg.ChooseImage" xml:space="preserve">
 <value>يرجى اختيار ملف صورة.</value>
 </data>
 <data name="Accounts.Msg.AvatarUpdated" xml:space="preserve">

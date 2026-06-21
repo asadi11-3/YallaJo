@@ -42,6 +42,17 @@
             document.body.appendChild(editor);
         }
 
+        // The editor lives on <body> (outside any swap region) and its controls are
+        // bound once for the page lifetime. When a fragment is swapped in (yj:swapped)
+        // init() re-runs to rebind only the in-card trigger; skip re-binding the editor
+        // controls so each one isn't wired twice. The trigger binding below is guarded
+        // per-trigger, so it is always safe to run.
+        if (editor.dataset.yjAvatarInit === "1") {
+            bindTriggers();
+            return;
+        }
+        editor.dataset.yjAvatarInit = "1";
+
         var defaultAvatar = editor.dataset.defaultAvatar || "";
         var liveImgs = function () { return document.querySelectorAll("[data-avatar-img]"); };
         // Remember the original image so Cancel can restore it.
@@ -223,18 +234,27 @@
         });
 
         // ── Triggers (camera control + sidebar pencil) ───────────────────────
-        document.querySelectorAll("[data-avatar-edit-trigger]").forEach(function (trigger) {
-            trigger.addEventListener("click", function (e) {
-                e.preventDefault();
-                if (!editor.hidden && currentTrigger === trigger) {
+        // Declared as a hoisted function so the one-time guard above can call it on
+        // re-entry. Each trigger is bound at most once (dataset guard) so re-running
+        // after a fragment swap only wires the freshly inserted in-card trigger.
+        function bindTriggers() {
+            document.querySelectorAll("[data-avatar-edit-trigger]").forEach(function (trigger) {
+                if (trigger.dataset.yjAvatarBound === "1") { return; }
+                trigger.dataset.yjAvatarBound = "1";
+                trigger.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    if (!editor.hidden && currentTrigger === trigger) {
+                        cancelPending();
+                        closePanel();
+                        return;
+                    }
                     cancelPending();
-                    closePanel();
-                    return;
-                }
-                cancelPending();
-                openPanel(trigger);
+                    openPanel(trigger);
+                });
             });
-        });
+        }
+
+        bindTriggers();
     }
 
     if (document.readyState === "loading") {
@@ -242,4 +262,10 @@
     } else {
         init();
     }
+
+    // When provider-actions.js swaps in a refreshed fragment (e.g. the profile card
+    // after a save/validation), re-run init() to rebind the freshly inserted camera
+    // trigger. init() is idempotent: editor controls are guarded one-time and each
+    // trigger is bound at most once.
+    document.addEventListener("yj:swapped", init);
 })();
