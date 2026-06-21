@@ -1,0 +1,92 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    // Reusable profile-photo editor (UI-UX). Rendered ONCE per page.
+    // Both the Personal Information camera control and the sidebar pencil open this
+    // same panel via [data-avatar-edit-trigger]; the panel is anchored to whichever
+    // trigger was clicked. All avatar <img> elements tagged [data-avatar-img] are kept
+    // in sync so the live preview is reflected everywhere on the page.
+    var avatarUrl = ViewBag.AvatarUrl as string;
+    var hasAvatar = !string.IsNullOrWhiteSpace(avatarUrl);
+    var defaultAvatar = Url.Content("~/assets/images/avatar/01.jpg");
+    var currentAvatar = hasAvatar ? avatarUrl! : defaultAvatar;
+}
+
+<div class="avatar-editor" id="avatar-editor"
+     data-default-avatar="@defaultAvatar"
+     data-has-avatar="@(hasAvatar ? "true" : "false")"
+     data-msg-too-large="@Localizer["Accounts.Profile.PhotoTooLarge"]"
+     data-msg-invalid-type="@Localizer["Accounts.Profile.PhotoInvalidType"]"
+     hidden>
+
+    @* Elegant popover-style card shown next to whichever trigger was activated *@
+    <div class="avatar-editor__panel card shadow-lg border-0 rounded-4" role="dialog" aria-modal="false"
+         aria-label="@Localizer["Accounts.Profile.UpdatePhotoTitle"]">
+        <div class="card-body p-3">
+            <div class="text-center">
+                <div class="avatar-editor__preview-wrap mx-auto mb-2">
+                    <img class="avatar-editor__preview rounded-circle" data-avatar-editor-preview
+                         src="@currentAvatar" alt="@Localizer["Accounts.Nav.AvatarAlt"]">
+                </div>
+                <h6 class="mb-1">@Localizer["Accounts.Profile.UpdatePhotoTitle"]</h6>
+                <p class="small text-body-secondary mb-3">@Localizer["Accounts.Profile.PhotoHint"]</p>
+            </div>
+
+            @* Hidden native input — never shown raw; opened via the buttons below *@
+            <input type="file" class="visually-hidden" accept="image/png,image/jpeg" data-avatar-editor-input
+                   aria-label="@Localizer["Accounts.Profile.ChoosePhoto"]">
+
+            <p class="avatar-editor__error small text-danger text-center mb-2" data-avatar-editor-error hidden></p>
+
+            <div class="d-grid gap-2">
+                @* Default state actions *@
+                <div class="avatar-editor__actions-default d-grid gap-2" data-avatar-editor-actions="default">
+                    <button type="button" class="btn btn-sm btn-primary-soft mb-0" data-avatar-editor-choose>
+                        <i class="bi bi-image me-1" aria-hidden="true"></i>@Localizer["Accounts.Profile.ChoosePhoto"]
+                    </button>
+                    @if (hasAvatar)
+                    {
+                        <button type="button" class="btn btn-sm btn-link text-danger text-decoration-none mb-0" data-avatar-editor-remove>
+                            <i class="bi bi-trash3 me-1" aria-hidden="true"></i>@Localizer["Accounts.Profile.RemovePhoto"]
+                        </button>
+                    }
+                </div>
+
+                @* Inline removal confirmation step (elegant, self-contained) *@
+                <div class="avatar-editor__confirm rounded-3 border border-danger-subtle bg-danger-subtle p-2 text-center" data-avatar-editor-actions="confirm" hidden>
+                    <p class="small mb-2">@Localizer["Accounts.Profile.RemovePhotoConfirm"]</p>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-light flex-fill mb-0" data-avatar-editor-confirm-cancel>
+                            @Localizer["Public.Confirm.Cancel"]
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger flex-fill mb-0" data-avatar-editor-confirm-remove>
+                            <i class="bi bi-trash3 me-1" aria-hidden="true"></i>@Localizer["Public.Confirm.Delete"]
+                        </button>
+                    </div>
+                </div>
+
+                @* Pending state actions (a new image was chosen, or removal staged) *@
+                <div class="avatar-editor__actions-pending d-flex gap-2" data-avatar-editor-actions="pending" hidden>
+                    <button type="button" class="btn btn-sm btn-light flex-fill mb-0" data-avatar-editor-cancel>
+                        @Localizer["Public.Confirm.Cancel"]
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary flex-fill mb-0" data-avatar-editor-save>
+                        @Localizer["Public.Save.changes"]
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @* Hidden submit forms — driven by the shared JS once the user clicks Save *@
+        <form class="d-none" data-avatar-editor-form="update"
+              asp-area="Accounts" asp-controller="Profile" asp-action="UpdateAvatar"
+              method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="file" name="File" accept="image/png,image/jpeg" data-avatar-editor-file-proxy class="d-none">
+        </form>
+        <form class="d-none" data-avatar-editor-form="delete"
+              asp-area="Accounts" asp-controller="Profile" asp-action="DeleteAvatar" method="post">
+            @Html.AntiForgeryToken()
+        </form>
+    </div>
+</div>

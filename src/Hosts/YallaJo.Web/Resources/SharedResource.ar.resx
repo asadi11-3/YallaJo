@@ -16579,7 +16579,34 @@
 <data name="Auth.Password.StrengthFair" xml:space="preserve">
 <value>كلمة مرور متوسطة</value>
 </data>
-<data name="Auth.Password.StrengthStrong" xml:space="preserve">
-<value>كلمة مرور قوية</value>
-</data>
+  <data name="Auth.Password.StrengthStrong" xml:space="preserve">
+    <value>كلمة مرور قوية</value>
+  </data>
+  <data name="Accounts.Profile.PhotoEdit" xml:space="preserve">
+    <value>تعديل الصورة</value>
+  </data>
+  <data name="Accounts.Profile.UpdatePhotoTitle" xml:space="preserve">
+    <value>تحديث صورة الملف الشخصي</value>
+  </data>
+  <data name="Accounts.Profile.PhotoHint" xml:space="preserve">
+    <value>JPG أو PNG. الحجم الأقصى 5 ميغابايت.</value>
+  </data>
+  <data name="Accounts.Profile.ChoosePhoto" xml:space="preserve">
+    <value>اختر صورة</value>
+  </data>
+  <data name="Accounts.Profile.RemovePhoto" xml:space="preserve">
+    <value>إزالة الصورة</value>
+  </data>
+  <data name="Accounts.Profile.RemovePhotoConfirm" xml:space="preserve">
+    <value>هل تريد إزالة صورة ملفك الشخصي واستخدام الصورة الافتراضية بدلاً منها؟</value>
+  </data>
+  <data name="Accounts.Profile.PhotoTooLarge" xml:space="preserve">
+    <value>يجب أن يكون حجم الصورة 5 ميغابايت أو أقل.</value>
+  </data>
+  <data name="Accounts.Profile.PhotoInvalidType" xml:space="preserve">
+    <value>يرجى اختيار صورة بصيغة JPG أو PNG.</value>
+  </data>
+  <data name="Accounts.Nav.ChangePassword" xml:space="preserve">
+    <value>تغيير كلمة المرور</value>
+  </data>
 </root>

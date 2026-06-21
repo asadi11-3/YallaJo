@@ -27,6 +27,8 @@
     };
     var doneCount = checks.Count(c => c.Done);
     var pct = checks.Length == 0 ? 0 : (int)System.Math.Round(100.0 * doneCount / checks.Length);
+
+    ViewBag.AvatarUrl = Model.AvatarUrl;
 }
 
 <section class="pt-3">
@@ -77,29 +79,19 @@
                         </div>
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-4">
-                                <span class="avatar avatar-xl me-3">
+                                <span class="avatar avatar-xl me-3 avatar-editable">
                                     <img class="avatar-img rounded-circle border border-white border-3"
+                                         data-avatar-img
                                          src="@(string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl)"
                                          alt="@Localizer["Accounts.Nav.AvatarAlt"]">
+                                    <button type="button" class="avatar-editable__trigger" data-avatar-edit-trigger
+                                            title="@Localizer["Accounts.Profile.PhotoEdit"]" aria-label="@Localizer["Accounts.Profile.PhotoEdit"]">
+                                        <i class="bi bi-camera-fill" aria-hidden="true"></i>
+                                    </button>
                                 </span>
                                 <div>
-                                    <form asp-area="Accounts" asp-controller="Profile" asp-action="UpdateAvatar"
-                                          method="post" enctype="multipart/form-data" class="d-flex align-items-center gap-2 mb-2">
-                                        @Html.AntiForgeryToken()
-                                        <input type="file" name="File" accept="image/*" class="form-control form-control-sm max-w-14r" aria-label="@Localizer["Accounts.Profile.ChangeAvatar"]" />
-                                        <button type="submit" class="btn btn-sm btn-primary-soft mb-0">@Localizer["Accounts.Profile.ChangeAvatar"]</button>
-                                    </form>
-                                    @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
-                                    {
-                                        <form asp-area="Accounts" asp-controller="Profile" asp-action="DeleteAvatar" method="post"
-                                              data-confirm="@Localizer["Accounts.Confirm.DeleteAvatar"]"
-                                              data-confirm-title="@Localizer["Public.Confirm.Title"]"
-                                              data-confirm-action="@Localizer["Public.Confirm.Delete"]"
-                                              data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-link text-danger p-0 mb-0">@Localizer["Accounts.Common.Remove"]</button>
-                                        </form>
-                                    }
+                                    <h6 class="mb-1">@displayName</h6>
+                                    <p class="text-body-secondary small mb-0">@Model.Email</p>
                                 </div>
                             </div>
 
@@ -148,8 +140,13 @@
             </div>
         </div>
     </div>
+
+    @* Reusable profile-photo editor — a single instance shared by the Personal
+       Information camera control and the sidebar pencil overlay. *@
+    <partial name="_AvatarEditor" />
 </section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/profile-avatar.js" asp-append-version="true"></script>
 }

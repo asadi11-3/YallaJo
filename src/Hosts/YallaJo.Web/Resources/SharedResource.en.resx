@@ -16579,7 +16579,34 @@
 <data name="Auth.Password.StrengthFair" xml:space="preserve">
 <value>Fair password</value>
 </data>
-<data name="Auth.Password.StrengthStrong" xml:space="preserve">
-<value>Strong password</value>
-</data>
+  <data name="Auth.Password.StrengthStrong" xml:space="preserve">
+    <value>Strong password</value>
+  </data>
+  <data name="Accounts.Profile.PhotoEdit" xml:space="preserve">
+    <value>Edit photo</value>
+  </data>
+  <data name="Accounts.Profile.UpdatePhotoTitle" xml:space="preserve">
+    <value>Update profile photo</value>
+  </data>
+  <data name="Accounts.Profile.PhotoHint" xml:space="preserve">
+    <value>JPG or PNG. Max size 5MB.</value>
+  </data>
+  <data name="Accounts.Profile.ChoosePhoto" xml:space="preserve">
+    <value>Choose photo</value>
+  </data>
+  <data name="Accounts.Profile.RemovePhoto" xml:space="preserve">
+    <value>Remove photo</value>
+  </data>
+  <data name="Accounts.Profile.RemovePhotoConfirm" xml:space="preserve">
+    <value>Remove your profile photo and use the default avatar instead?</value>
+  </data>
+  <data name="Accounts.Profile.PhotoTooLarge" xml:space="preserve">
+    <value>The image must be 5MB or smaller.</value>
+  </data>
+  <data name="Accounts.Profile.PhotoInvalidType" xml:space="preserve">
+    <value>Please choose a JPG or PNG image.</value>
+  </data>
+  <data name="Accounts.Nav.ChangePassword" xml:space="preserve">
+    <value>Change password</value>
+  </data>
 </root>

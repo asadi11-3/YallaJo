@@ -13,17 +13,32 @@
         </div>
         <div class="offcanvas-body p-3 p-lg-0">
             <div class="card bg-light w-100">
-                <div class="position-absolute top-0 end-0 p-3">
-                    <a asp-area="Accounts" asp-controller="Profile" asp-action="Index" class="text-primary-hover" title="@Localizer["Accounts.Nav.EditProfile"]" aria-label="@Localizer["Accounts.Nav.EditProfile"]">
-                        <i class="bi bi-pencil-square" aria-hidden="true"></i>
-                    </a>
-                </div>
+                @{
+                    // On the My Profile page the pencil opens the shared photo editor; on every
+                    // other Accounts page it falls back to a link to the profile page.
+                    var onProfile = (ViewData["AccountNav"] as string) == "Profile";
+                }
                 <div class="card-body p-3">
                     <div class="text-center mb-3">
-                        <div class="avatar avatar-xl mb-2">
+                        <div class="avatar avatar-xl mb-2 avatar-editable avatar-editable--sidebar">
                             <img class="avatar-img rounded-circle border border-white border-3"
+                                 data-avatar-img
                                  src="@(string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl)"
                                  alt="@Localizer["Accounts.Nav.AvatarAlt"]">
+                            @if (onProfile)
+                            {
+                                <button type="button" class="avatar-editable__trigger" data-avatar-edit-trigger
+                                        title="@Localizer["Accounts.Profile.PhotoEdit"]" aria-label="@Localizer["Accounts.Profile.PhotoEdit"]">
+                                    <i class="bi bi-pencil-fill" aria-hidden="true"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <a asp-area="Accounts" asp-controller="Profile" asp-action="Index" class="avatar-editable__trigger"
+                                   title="@Localizer["Accounts.Nav.EditProfile"]" aria-label="@Localizer["Accounts.Nav.EditProfile"]">
+                                    <i class="bi bi-pencil-fill" aria-hidden="true"></i>
+                                </a>
+                            }
                         </div>
                         <h6 class="mb-0">@Model.DisplayName</h6>
                         <a asp-area="Accounts" asp-controller="Profile" asp-action="Index" class="text-reset text-primary-hover small">@Model.Email</a>
@@ -80,6 +95,12 @@
                             <a class="@Pill("Settings")" asp-area="Accounts" asp-controller="Settings" asp-action="Index">
                                 <i class="bi bi-gear fa-fw me-2" aria-hidden="true"></i>@Localizer["Navbar.Settings"]
                             </a>
+                        </li>
+                        @* Change password — navigation entry only for now; the dedicated page is not built yet. *@
+                        <li class="nav-item">
+                            <span class="nav-link disabled" aria-disabled="true" tabindex="-1">
+                                <i class="bi bi-shield-lock fa-fw me-2" aria-hidden="true"></i>@Localizer["Accounts.Nav.ChangePassword"]
+                            </span>
                         </li>
                         @* Phase 2 (Accounts plan): Privacy & Data and Delete Profile moved into the Settings hub tabs. *@
                         <li class="nav-item mt-2">
