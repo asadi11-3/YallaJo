@@ -334,6 +334,11 @@
     <script src="~/assets/js/api-client.js" asp-append-version="true"></script>
     <script src="~/assets/js/form-ux.js" asp-append-version="true"></script>
 
+    @* Generic data-yj-ajax form enhancer (provider/guide areas load it per-view). Admin
+       approval/moderation forms opt in via data-yj-ajax + data-yj-swap to refresh a region
+       without a full reload; native PRG submit remains the no-JS fallback. Rules UI-JS JS5/JS1. *@
+    <script src="~/assets/js/provider-actions.js" asp-append-version="true"></script>
+
     @* Per-view extra scripts *@
     @await RenderSectionAsync("Scripts", required: false)
 </body>

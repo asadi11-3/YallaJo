@@ -55,6 +55,16 @@ public sealed class FlaggedReviewsController : BaseController
             return signOut;
         }
 
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+            {
+                return BadRequest(new { error = result.Error ?? _localizer["Admin.FlaggedReviews.Flash.ApproveFailed"].Value });
+            }
+
+            return await ListPartialAsync(ct);
+        }
+
         SetFlash(result, _localizer["Admin.FlaggedReviews.Flash.Approved"].Value, _localizer["Admin.FlaggedReviews.Flash.ApproveFailed"].Value);
         return RedirectToAction(nameof(Index));
     }
@@ -70,7 +80,34 @@ public sealed class FlaggedReviewsController : BaseController
             return signOut;
         }
 
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+            {
+                return BadRequest(new { error = result.Error ?? _localizer["Admin.FlaggedReviews.Flash.RemoveFailed"].Value });
+            }
+
+            return await ListPartialAsync(ct);
+        }
+
         SetFlash(result, _localizer["Admin.FlaggedReviews.Flash.Removed"].Value, _localizer["Admin.FlaggedReviews.Flash.RemoveFailed"].Value);
         return RedirectToAction(nameof(Index));
+    }
+
+    // ── Helpers ──
+
+    /// <summary>
+    /// Re-fetches the flagged-reviews queue and returns the swappable list partial for
+    /// AJAX approve/remove. The default page size mirrors the Index controller boundary.
+    /// </summary>
+    private async Task<IActionResult> ListPartialAsync(CancellationToken ct)
+    {
+        var result = await _facade.GetIndexAsync(null, 50, ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        return PartialView("_FlaggedReviewsList", result.Data ?? new FlaggedReviewsVm());
     }
 }
