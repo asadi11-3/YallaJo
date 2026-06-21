@@ -1,13 +1,8 @@
-@using System.Globalization
-@using Microsoft.AspNetCore.Mvc.ViewFeatures
 @using YallaJo.Web.Areas.Provider.Models
 @model ProviderStatusVm
 @{
     ViewData["Title"] = Localizer["Provider.Documents.Title"].Value;
     ViewData["ProviderNav"] = "Documents";
-
-    var culture = CultureInfo.CurrentUICulture;
-    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd", culture);
 }
 
 @await Component.InvokeAsync("ProviderSidebar")
@@ -27,124 +22,12 @@
         }
         else
         {
-            <div class="row g-4">
-                <div class="col-lg-7">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                            <h2 class="card-header-title h5 mb-0">@Localizer["Provider.Documents.DirectoryHeading"]</h2>
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary"><bdi dir="ltr" class="font-data">@Model.Documents.Count</bdi></span>
-                        </div>
-                        <div class="card-body">
-                            @if (!Model.HasDocuments)
-                            {
-                                <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.Documents.EmptyTitle"].Value, ["message"] = Localizer["Provider.Documents.EmptyMessage"].Value })" />
-                            }
-                            else
-                            {
-                                <div class="vstack gap-2">
-                                    @foreach (var d in Model.Documents)
-                                    {
-                                        var replaceId = $"replace-{d.DocumentId:N}";
-                                        <div class="border rounded p-3">
-                                            <div class="d-flex justify-content-between align-items-start gap-2">
-                                                <div>
-                                                    <div class="fw-semibold">@d.DocumentTypeLabel</div>
-                                                    <div class="small text-body-secondary">
-                                                        @if (!string.IsNullOrWhiteSpace(d.FileName))
-                                                        {
-                                                            <bdi dir="ltr">@d.FileName</bdi>
-                                                        }
-                                                        @if (d.ExpiresAt.HasValue)
-                                                        {
-                                                            <text> · @Localizer["Provider.Documents.ExpiresOn"] <bdi dir="ltr" class="font-data">@Date(d.ExpiresAt.Value)</bdi></text>
-                                                        }
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="d-flex gap-3 mt-2">
-                                                <a class="small" href="@Url.Action("Download", "ProviderDocuments", new { id = d.DocumentId })" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square me-1" aria-hidden="true"></i>@Localizer["Provider.Documents.ViewFile"]</a>
-                                                @if (Model.CanUploadDocuments)
-                                                {
-                                                    <permission require="@WebPermission.ProviderApplication.Update">
-                                                        <button type="button" class="btn btn-link btn-sm p-0 small text-primary" data-bs-toggle="collapse" data-bs-target="#@replaceId" aria-expanded="false" aria-controls="@replaceId"><i class="fa-solid fa-rotate me-1" aria-hidden="true"></i>@Localizer["Provider.Documents.Replace"]</button>
-                                                    </permission>
-                                                }
-                                            </div>
-                                            @if (Model.CanUploadDocuments)
-                                            {
-                                                <permission require="@WebPermission.ProviderApplication.Update">
-                                                    <div class="collapse mt-2" id="@replaceId">
-                                                        <form asp-action="Replace" asp-route-id="@d.DocumentId" method="post" data-loading enctype="multipart/form-data" class="row g-2 align-items-end">
-                                                            @Html.AntiForgeryToken()
-                                                            <div class="col-md-6">
-                                                                <label class="form-label small mb-1" for="rf-@d.DocumentId">@Localizer["Provider.Documents.ReplaceNewFile"]</label>
-                                                                <input id="rf-@d.DocumentId" name="File" type="file" class="form-control form-control-sm" accept="@ProviderDocumentUploadVm.AcceptAttribute" required />
-                                                            </div>
-                                                            <div class="col-md-4">
-                                                                <label class="form-label small mb-1" for="re-@d.DocumentId">@Localizer["Provider.Documents.ReplaceExpiry"]</label>
-                                                                <input id="re-@d.DocumentId" name="ExpiresAt" type="date" class="form-control form-control-sm" dir="ltr" value="@(d.ExpiresAt?.ToString("yyyy-MM-dd"))" />
-                                                            </div>
-                                                            <div class="col-md-2 d-grid">
-                                                                <button type="submit" class="btn btn-sm btn-primary">@Localizer["Provider.Documents.ReplaceSubmit"]</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </permission>
-                                            }
-                                        </div>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-5">
-                    @if (Model.CanUploadDocuments)
-                    {
-                        <permission require="@WebPermission.ProviderApplication.Create">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.Documents.UploadHeading"]</h2></div>
-                                <div class="card-body">
-                                    <form asp-action="Upload" method="post" data-loading enctype="multipart/form-data" class="vstack gap-3">
-                                        @Html.AntiForgeryToken()
-                                        <div>
-                                            <label for="DocumentType" class="form-label">@Localizer["Provider.Onboarding.DocumentType"]</label>
-                                            <select id="DocumentType" name="DocumentType" class="form-select">
-                                                <option value="">@Localizer["Provider.Onboarding.ChooseType"]</option>
-                                                @foreach (var opt in Model.UploadForm.DocumentTypeOptions)
-                                                {
-                                                    <option value="@opt.Value">@opt.Label</option>
-                                                }
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label for="File" class="form-label">@Localizer["Provider.Onboarding.File"]</label>
-                                            <input id="File" name="File" type="file" class="form-control" accept="@ProviderDocumentUploadVm.AcceptAttribute" aria-describedby="doc-file-help" />
-                                            <small id="doc-file-help" class="form-text">@Localizer["Provider.Documents.FileHelp"]</small>
-                                        </div>
-                                        <div>
-                                            <label for="ExpiresAt" class="form-label">@Localizer["Provider.Onboarding.ExpiresAt"]</label>
-                                            <input id="ExpiresAt" name="ExpiresAt" type="date" dir="ltr" class="form-control" />
-                                        </div>
-                                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-upload me-1" aria-hidden="true"></i>@Localizer["Provider.Documents.UploadSubmit"]</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </permission>
-                    }
-                    else
-                    {
-                        <div class="alert alert-info mb-0" role="status">
-                            <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>@Localizer["Provider.Documents.UploadsUnavailable"]
-                        </div>
-                    }
-                </div>
-            </div>
+            <partial name="_DocumentsManager" model="Model" />
         }
     </div>
 </section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/provider-actions.js" asp-append-version="true"></script>
 }

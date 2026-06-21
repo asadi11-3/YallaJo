@@ -52,12 +52,26 @@ public sealed class ProviderDocumentsController : BaseController
                 .SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage)
                 .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
+            if (WantsAjax())
+                return BadRequest(new { error = firstError ?? L["Provider.Flash.FixUploadForm"].Value });
             SetError(firstError ?? L["Provider.Flash.FixUploadForm"].Value);
             return RedirectToAction(nameof(Index));
         }
 
         var result = await _facade.UploadDocumentAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+            {
+                var error = result.IsValidationError
+                    ? result.ValidationErrors!.SelectMany(kvp => kvp.Value).FirstOrDefault() ?? L["Provider.Flash.DocumentRejected"].Value
+                    : result.Error ?? L["Provider.Flash.CouldNotUploadDocument"].Value;
+                return BadRequest(new { error });
+            }
+            return await DocumentsPartialAsync(ct);
+        }
 
         if (result.IsValidationError)
             SetError(result.ValidationErrors!.SelectMany(kvp => kvp.Value).FirstOrDefault()
@@ -83,12 +97,26 @@ public sealed class ProviderDocumentsController : BaseController
                 .SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage)
                 .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
+            if (WantsAjax())
+                return BadRequest(new { error = firstError ?? L["Provider.Flash.FixReplaceForm"].Value });
             SetError(firstError ?? L["Provider.Flash.FixReplaceForm"].Value);
             return RedirectToAction(nameof(Index));
         }
 
         var result = await _facade.ReplaceDocumentAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+            {
+                var error = result.IsValidationError
+                    ? result.ValidationErrors!.SelectMany(kvp => kvp.Value).FirstOrDefault() ?? L["Provider.Flash.ReplacementRejected"].Value
+                    : result.Error ?? L["Provider.Flash.CouldNotReplaceDocument"].Value;
+                return BadRequest(new { error });
+            }
+            return await DocumentsPartialAsync(ct);
+        }
 
         if (result.IsValidationError)
             SetError(result.ValidationErrors!.SelectMany(kvp => kvp.Value).FirstOrDefault()
@@ -97,6 +125,20 @@ public sealed class ProviderDocumentsController : BaseController
             SetFlash(result, L["Provider.Flash.DocumentReplaced"], L["Provider.Flash.CouldNotReplaceDocument"].Value);
 
         return RedirectToAction(nameof(Index));
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────────
+    // Re-fetches the provider status and returns the swappable documents manager
+    // partial for AJAX upload/replace responses (PRG fallback handled inline above).
+    private async Task<IActionResult> DocumentsPartialAsync(CancellationToken ct)
+    {
+        var result = await _facade.GetStatusAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (!result.IsSuccess || result.Data is null)
+            return BadRequest(new { error = result.Error ?? L["Provider.Flash.CouldNotUploadDocument"].Value });
+
+        return PartialView("_DocumentsManager", result.Data);
     }
 
     // ── GET /provider/documents/{id}/download ─────────────────────────────────────
