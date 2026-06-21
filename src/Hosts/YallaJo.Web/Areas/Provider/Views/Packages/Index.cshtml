@@ -107,95 +107,7 @@
             </permission>
 
             <div class="col-lg-7">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header border-bottom">
-                        <h2 class="card-header-title h5 mb-0">@Localizer["Provider.Packages.DirectoryHeading"]</h2>
-                    </div>
-                    <div class="card-body">
-                        @if (!Model.HasPackages)
-                        {
-                            <partial name="_ProviderEmptyState" view-data="@(new ViewDataDictionary(ViewData) { ["title"] = Localizer["Provider.Packages.EmptyTitle"].Value, ["message"] = Localizer["Provider.Packages.EmptyMessage"].Value })" />
-                        }
-                        else
-                        {
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">@Localizer["Provider.Packages.ColName"]</th>
-                                            <th scope="col" class="text-end">@Localizer["Provider.Packages.ColPrice"]</th>
-                                            <th scope="col" class="text-end">@Localizer["Provider.Packages.ColTours"]</th>
-                                            <th scope="col">@Localizer["Provider.Packages.ColValidity"]</th>
-                                            <th scope="col" class="text-end">@Localizer["Provider.Packages.ColActions"]</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var p in Model.Packages)
-                                        {
-                                            <tr>
-                                                <td>
-                                                    <span class="fw-semibold">@p.Name</span>
-                                                    <div class="small text-secondary">@Localizer["Provider.Packages.CreatedOn"] <bdi dir="ltr" class="font-data">@Date(p.CreatedAt)</bdi></div>
-                                                </td>
-                                                <td class="text-end"><bdi dir="ltr" class="font-data">@p.PriceLabel</bdi></td>
-                                                <td class="text-end"><bdi dir="ltr" class="font-data">@Count(p.IncludedTourCount)</bdi></td>
-                                                <td>
-                                                    @if (string.IsNullOrWhiteSpace(p.ValidityLabel))
-                                                    {
-                                                        <span class="text-secondary">&mdash;</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <bdi dir="ltr" class="font-data">@p.ValidityLabel</bdi>
-                                                    }
-                                                </td>
-                                                <td class="text-end">
-                                                    <div class="btn-group btn-group-sm" role="group" aria-label="@Localizer["Provider.Packages.ColActions"]">
-                                                        <a asp-action="Manage" asp-route-id="@p.Id" class="btn btn-outline-primary"><i class="fa-solid fa-gear me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.Manage"]</a>
-                                                        <permission require="@WebPermission.Package.Delete">
-                                                            <form asp-action="Delete" asp-route-id="@p.Id" method="post" data-loading class="d-inline"
-                                                                  data-confirm="@Localizer["Provider.Packages.DeleteBody", p.Name]"
-                                                                  data-confirm-title="@Localizer["Provider.Packages.DeleteTitle"]"
-                                                                  data-confirm-action="@Localizer["Provider.Packages.DeleteConfirm"]"
-                                                                  data-confirm-cancel="@Localizer["Provider.Packages.Cancel"]">
-                                                                @Html.AntiForgeryToken()
-                                                                <button type="submit" class="btn btn-outline-danger">
-                                                                    <i class="fa-solid fa-trash-can me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.Delete"]
-                                                                </button>
-                                                            </form>
-                                                        </permission>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                    </div>
-                    @if (Model.HasPrevious || Model.HasNext)
-                    {
-                        <div class="card-footer border-top d-flex justify-content-between align-items-center">
-                            @if (Model.HasPrevious)
-                            {
-                                <a asp-action="Index" asp-route-page="@(Model.Page - 1)" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-chevron-left me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.Previous"]</a>
-                            }
-                            else
-                            {
-                                <span></span>
-                            }
-                            <span class="small text-secondary">@Localizer["Provider.Packages.PageLabel"] <bdi dir="ltr" class="font-data">@Count(Model.Page)</bdi></span>
-                            @if (Model.HasNext)
-                            {
-                                <a asp-action="Index" asp-route-page="@(Model.Page + 1)" class="btn btn-sm btn-outline-secondary">@Localizer["Provider.Packages.Next"]<i class="fa-solid fa-chevron-right ms-1" aria-hidden="true"></i></a>
-                            }
-                            else
-                            {
-                                <span></span>
-                            }
-                        </div>
-                    }
-                </div>
+                <partial name="_PackagesList" model="Model" />
             </div>
         </div>
     </div>
@@ -207,4 +119,5 @@
     <link rel="stylesheet" href="~/assets/vendor/choices/css/choices.min.css" />
     <script src="~/assets/vendor/choices/js/choices.min.js" asp-append-version="true"></script>
     <script src="~/assets/js/provider-packages.js" asp-append-version="true"></script>
+    <script src="~/assets/js/provider-actions.js" asp-append-version="true"></script>
 }

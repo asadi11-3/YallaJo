@@ -87,11 +87,21 @@ public sealed class PackagesController : BaseController
     {
         if (string.IsNullOrWhiteSpace(description))
         {
+            if (WantsAjax()) return BadRequest(new { error = L["Provider.Flash.InclusionRequired"].Value });
             SetError(L["Provider.Flash.InclusionRequired"]);
             return RedirectToAction(nameof(Manage), new { id });
         }
 
         var result = await _facade.AddInclusionAsync(id, description, ct);
+
+        if (WantsAjax())
+        {
+            if (result.Outcome == PackageOutcome.ForceSignOut) return RedirectToLogin();
+            if (result.Outcome != PackageOutcome.Ok)
+                return BadRequest(new { error = result.Error ?? L["Provider.Common.ActionFailed"].Value });
+            return await ManageInclusionsPartialAsync(id, ct);
+        }
+
         return Finish(result, id, L["Provider.Flash.InclusionAdded"]);
     }
 
@@ -114,6 +124,13 @@ public sealed class PackagesController : BaseController
         var result = await _facade.DeleteAsync(id, ct);
         if (result.Outcome == PackageOutcome.ForceSignOut) return RedirectToLogin();
 
+        if (WantsAjax())
+        {
+            if (result.Outcome != PackageOutcome.Ok)
+                return BadRequest(new { error = result.Error ?? L["Provider.Flash.CouldNotDeletePackage"].Value });
+            return await IndexListPartialAsync(ct);
+        }
+
         if (result.Outcome == PackageOutcome.Ok)
             SetSuccess(L["Provider.Flash.PackageDeleted"]);
         else
@@ -123,6 +140,24 @@ public sealed class PackagesController : BaseController
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
+
+    // PE: re-fetch the package directory and return the swappable list partial (AJAX delete).
+    private async Task<IActionResult> IndexListPartialAsync(CancellationToken ct)
+    {
+        var result = await _facade.GetIndexAsync(1, ct);
+        if (result.Outcome == PackageOutcome.ForceSignOut) return RedirectToLogin();
+        return PartialView("_PackagesList", result.Data ?? new PackagesIndexVm());
+    }
+
+    // PE: re-fetch the package and return the swappable inclusions partial (AJAX add-inclusion).
+    private async Task<IActionResult> ManageInclusionsPartialAsync(Guid id, CancellationToken ct)
+    {
+        var result = await _facade.GetManageAsync(id, ct);
+        if (result.Outcome == PackageOutcome.ForceSignOut) return RedirectToLogin();
+        if (result.Outcome != PackageOutcome.Ok || result.Data is null)
+            return BadRequest(new { error = result.Error ?? L["Provider.Common.ActionFailed"].Value });
+        return PartialView("_Inclusions", result.Data);
+    }
 
     private IActionResult Finish(PackageActionResult result, Guid id, string success)
     {

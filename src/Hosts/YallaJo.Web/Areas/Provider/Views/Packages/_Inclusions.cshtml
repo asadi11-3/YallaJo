@@ -1,0 +1,28 @@
+@model YallaJo.Web.Areas.Provider.Models.Packages.PackageManageVm
+@* PE: swappable inclusions section (list + add form). Single root carries data-yj-swap="inclusions". *@
+<div class="card-body" data-yj-swap="inclusions">
+    @if (Model.Inclusions.Count == 0)
+    {
+        <p class="text-body-secondary mb-3">@Localizer["Provider.Packages.NoInclusions"]</p>
+    }
+    else
+    {
+        <ul class="list-group list-group-borderless mb-3">
+            @foreach (var inc in Model.Inclusions)
+            {
+                <li class="list-group-item px-0"><i class="fa-solid fa-check text-success me-2" aria-hidden="true"></i><bdi>@inc.Description</bdi></li>
+            }
+        </ul>
+    }
+    <permission require="@WebPermission.Package.Update">
+        <form asp-action="AddInclusion" asp-route-id="@Model.Id" method="post" data-loading class="input-group input-group-sm"
+              data-yj-ajax data-yj-swap-target="inclusions"
+              data-success-message="@Localizer["Provider.Flash.InclusionAdded"]"
+              data-error-text="@Localizer["Provider.Common.ActionFailed"]">
+            @Html.AntiForgeryToken()
+            <label class="visually-hidden" for="add-inc">@Localizer["Provider.Packages.AddInclusionLabel"]</label>
+            <input id="add-inc" name="description" class="form-control" maxlength="500" placeholder="@Localizer["Provider.Packages.AddInclusionPlaceholder"]" required />
+            <button type="submit" class="btn btn-primary">@Localizer["Provider.Packages.Add"]</button>
+        </form>
+    </permission>
+</div>
