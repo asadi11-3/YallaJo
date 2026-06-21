@@ -85,12 +85,33 @@ public sealed class WishlistController : BaseController
         var result = await _wishlist.RemoveAllAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.Error ?? _localizer["Accounts.Wishlist.RemoveFailed"].Value });
+
+            return await WishlistCardPartialAsync(ct);
+        }
+
         if (result.IsSuccess)
             SetSuccess(_localizer["Accounts.Msg.WishlistCleared"]);
         else
             SetError(result.Error);
 
         return RedirectToAction(nameof(Index));
+    }
+
+    // ── Helpers ──
+
+    /// <summary>Re-fetches the wishlist and returns the swappable card partial for
+    /// AJAX callers (RemoveAll). Falls back to BadRequest on a fetch failure so the
+    /// client surfaces an error toast instead of a broken swap.</summary>
+    private async Task<IActionResult> WishlistCardPartialAsync(CancellationToken ct)
+    {
+        var refreshed = await _wishlist.GetWishlistAsync(ct);
+        if (GuardSignOut(refreshed) is { } signOut) return signOut;
+
+        return PartialView("_WishlistCard", refreshed.Data ?? new WishlistVm());
     }
 
     private async Task PopulateSidebarAsync(CancellationToken ct)

@@ -1,0 +1,119 @@
+@model YallaJo.Web.Areas.Accounts.Models.Wishlist.WishlistVm
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
+
+@* Swappable wishlist card. Single root carries data-yj-swap="wishlist" so the
+   RemoveAll AJAX action (WantsAjax branch) can replace it in place (PE). When the
+   list is empty the header controls (sort + remove-all) are not rendered and the
+   shared empty state shows. Per-item remove stays handled by accounts-wishlist.js
+   (optimistic + Undo); RemoveAll uses the generic data-yj-ajax enhancer. *@
+<div class="card border" data-yj-swap="wishlist">
+    <div class="card-header border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h4 class="card-header-title mb-0">@Localizer["Accounts.Wishlist.Title"]</h4>
+        @if (Model.Items.Count > 0)
+        {
+            <div class="d-flex align-items-center gap-2">
+                <select id="wishlistSort" class="form-select form-select-sm border-0 bg-light w-auto" aria-label="@Localizer["Accounts.Wishlist.SortLabel"]">
+                    <option value="recent" selected>@Localizer["Accounts.Wishlist.SortRecent"]</option>
+                    <option value="title">@Localizer["Accounts.Wishlist.SortTitle"]</option>
+                    <option value="rating">@Localizer["Accounts.Wishlist.SortRating"]</option>
+                    <option value="price">@Localizer["Accounts.Wishlist.SortPrice"]</option>
+                </select>
+                <form asp-area="Accounts" asp-controller="Wishlist" asp-action="RemoveAll" method="post" class="mb-0"
+                      data-yj-ajax data-yj-swap-target="wishlist"
+                      data-success-message="@Localizer["Accounts.Msg.WishlistCleared"]"
+                      data-error-text="@Localizer["Accounts.Wishlist.RemoveFailed"]"
+                      data-confirm="@Localizer["Accounts.Confirm.RemoveAllWishlist"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-danger-soft mb-0">
+                        <i class="bi bi-trash me-1" aria-hidden="true"></i>@Localizer["Accounts.Wishlist.RemoveAll"]
+                    </button>
+                </form>
+            </div>
+        }
+    </div>
+
+    <div class="card-body">
+        @if (Model.Items.Count == 0)
+        {
+            @* Phase 1: shared empty state (UI-UX-L6) *@
+            <partial name="~/Areas/Public/Views/Shared/_EmptyState.cshtml" view-data='@(new ViewDataDictionary(ViewData)
+            {
+                ["title"] = Localizer["Accounts.Wishlist.EmptyTitle"].Value,
+                ["message"] = Localizer["Accounts.Wishlist.EmptyMessage"].Value,
+                ["ctaText"] = Localizer["Accounts.Wishlist.BrowseTours"].Value,
+                ["ctaUrl"] = Url.Action("Index", "Tours", new { area = "Public" })
+            })' />
+        }
+        else
+        {
+            @* Phase 4b: optimistic remove + Undo (WL2/WL3, NF6); native form POST still works with JS off (PE1). *@
+            <div class="row g-3" id="wishlistGrid" data-yj-component="wishlist" aria-live="polite"
+                 data-removed-text="@Localizer["Accounts.Wishlist.Removed"]"
+                 data-undo-text="@Localizer["Accounts.Wishlist.Undo"]"
+                 data-failed-text="@Localizer["Accounts.Wishlist.RemoveFailed"]">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="col-md-6 wishlist-item"
+                         data-title="@item.Title"
+                         data-rating="@(item.Rating?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
+                         data-price="@(item.Price?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
+                         data-added="@item.AddedAt.ToString("o")">
+                        <div class="card border h-100">
+                            <div class="position-relative">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl" class="card-img-top object-fit-cover card-img-h180" loading="lazy" alt="@item.Title" />
+                                }
+                                else
+                                {
+                                    <div class="bg-light d-flex align-items-center justify-content-center card-img-h180">
+                                        <i class="bi bi-image display-5 text-secondary" aria-hidden="true"></i>
+                                    </div>
+                                }
+                                <span class="badge bg-dark bg-opacity-75 position-absolute top-0 start-0 m-2">@item.KindLabel</span>
+                                <form asp-area="Accounts" asp-controller="Wishlist" asp-action="Remove"
+                                      asp-route-entityType="@item.EntityType" asp-route-entityId="@item.EntityId"
+                                      method="post" class="position-absolute top-0 end-0 m-2 mb-0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger rounded-circle"
+                                            title="@Localizer["Public.Remove.from.wishlist"]" aria-label="@Localizer["Public.Remove.from.wishlist"]">
+                                        <i class="bi bi-heart-fill" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="mb-1 text-truncate">@item.Title</h6>
+                                @if (!string.IsNullOrEmpty(item.Subtitle))
+                                {
+                                    <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>@item.Subtitle</p>
+                                }
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        @if (item.Rating is > 0)
+                                        {
+                                            <span class="small"><i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>@item.Rating.Value.ToString("0.0")</span>
+                                        }
+                                    </div>
+                                    <div>
+                                        @if (item.Price is > 0)
+                                        {
+                                            <span class="h6 mb-0" dir="ltr">@item.Price.Value.ToString("0.00") <small class="text-muted">@item.Currency</small></span>
+                                        }
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(item.DetailUrl))
+                                {
+                                    <a href="@item.DetailUrl" class="btn btn-sm btn-primary-soft w-100 mt-3 mb-0">@Localizer["Accounts.Common.View"]</a>
+                                }
+                                else
+                                {
+                                    <span class="btn btn-sm btn-primary-soft w-100 mt-3 mb-0 disabled" aria-disabled="true" tabindex="-1">@Localizer["Accounts.Common.View"]</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
