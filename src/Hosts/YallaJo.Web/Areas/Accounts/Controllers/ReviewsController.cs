@@ -82,12 +82,23 @@ public sealed class ReviewsController : BaseController
     {
         if (!ModelState.IsValid)
         {
+            if (WantsAjax())
+                return BadRequest(new { error = _localizer["Accounts.Msg.FormError"].Value });
+
             SetError(_localizer["Accounts.Msg.FormError"]);
             return RedirectToAction(nameof(Index));
         }
 
         var result = await _reviews.EditAsync(form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.ReviewUpdateFailed"].Value });
+
+            return await MyReviewsPartialAsync(ct);
+        }
 
         if (result.IsSuccess)
             SetSuccess(_localizer["Accounts.Msg.ReviewUpdated"]);
@@ -105,12 +116,34 @@ public sealed class ReviewsController : BaseController
         var result = await _reviews.DeleteAsync(id, rowVersion, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.ReviewDeleteFailed"].Value });
+
+            return await MyReviewsPartialAsync(ct);
+        }
+
         if (result.IsSuccess)
             SetSuccess(_localizer["Accounts.Msg.ReviewDeleted"]);
         else
             SetError(result.Error ?? _localizer["Accounts.Msg.ReviewDeleteFailed"].Value);
 
         return RedirectToAction(nameof(Index));
+    }
+
+    // ── Helpers ──
+
+    /// <summary>
+    /// Re-fetches the caller's reviews and returns the "My reviews" tab fragment for an
+    /// AJAX swap. Mirrors the PRG path's data source so JS and no-JS render identically.
+    /// </summary>
+    private async Task<IActionResult> MyReviewsPartialAsync(CancellationToken ct)
+    {
+        var result = await _reviews.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        return PartialView("_MyReviewsTab", result.Data ?? new ReviewsVm());
     }
 
     private async Task PopulateSidebarAsync(CancellationToken ct)

@@ -21,6 +21,7 @@
     };
 }
 
+<div data-yj-swap="reviews-mine">
 @if (!Model.HasReviews)
 {
     <div class="text-center py-5">
@@ -100,6 +101,8 @@ else
                             </button>
                             <form asp-area="Accounts" asp-controller="Reviews" asp-action="Delete"
                                   asp-route-id="@r.Id" method="post" class="mb-0"
+                                  data-yj-ajax data-yj-swap-target="reviews-mine"
+                                  data-success-message="@Localizer["Accounts.Msg.ReviewDeleted"]" data-error-text="@Localizer["Accounts.Msg.ReviewDeleteFailed"]"
                                   data-confirm="@Localizer["Public.Confirm.DeleteReview"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="rowVersion" value="@r.RowVersion" />
@@ -110,7 +113,9 @@ else
                         </div>
 
                         <div class="collapse mt-3" id="edit-@r.Id.ToString("N")">
-                            <form asp-area="Accounts" asp-controller="Reviews" asp-action="Edit" method="post" class="border-top pt-3" data-loading>
+                            <form asp-area="Accounts" asp-controller="Reviews" asp-action="Edit" method="post" class="border-top pt-3" data-loading
+                                  data-yj-ajax data-yj-swap-target="reviews-mine"
+                                  data-success-message="@Localizer["Accounts.Msg.ReviewUpdated"]" data-error-text="@Localizer["Accounts.Msg.ReviewUpdateFailed"]">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="Id" value="@r.Id" />
                                 <input type="hidden" name="RowVersion" value="@r.RowVersion" />
@@ -159,3 +164,4 @@ else
         }
     </div>
 }
+</div>

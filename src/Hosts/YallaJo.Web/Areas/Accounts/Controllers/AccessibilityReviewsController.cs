@@ -40,9 +40,33 @@ public sealed class AccessibilityReviewsController : BaseController
         var result = await _reviews.DeleteAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.AccReviewDeleteFailed"].Value });
+
+            return await AccessibilityTabPartialAsync(ct);
+        }
+
         if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.AccReviewDeleted"]);
         else SetError(result.Error ?? _localizer["Accounts.Msg.AccReviewDeleteFailed"].Value);
 
         return RedirectToAction("Index", "Reviews", new { area = "Accounts", tab = "accessibility" });
+    }
+
+    // ── Helpers ──
+
+    /// <summary>
+    /// Re-fetches the caller's accessibility reviews and returns the hub's accessibility
+    /// tab fragment for an AJAX swap (PRG fallback still redirects to the hub tab).
+    /// </summary>
+    private async Task<IActionResult> AccessibilityTabPartialAsync(CancellationToken ct)
+    {
+        var result = await _reviews.GetMyAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        return PartialView(
+            "~/Areas/Accounts/Views/Reviews/_AccessibilityReviewsTab.cshtml",
+            result.Data ?? new Areas.Public.Models.AccessibilityReviews.MyAccessibilityReviewsVm());
     }
 }
