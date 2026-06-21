@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Accounts.Models.Profile;
+using YallaJo.Web.Areas.Accounts.Models.Promo;
 using YallaJo.Web.Areas.Accounts.Facades;
+using YallaJo.Web.Infrastructure.Identity;
 using YallaJo.Web.Infrastructure.Mvc;
 using YallaJo.Web.Resources;
 
@@ -13,11 +15,19 @@ namespace YallaJo.Web.Areas.Accounts.Controllers;
 public sealed class ProfileController : BaseController
 {
     private readonly ProfileFacade _facade;
+    private readonly PromoFacade _promoFacade;
+    private readonly ICurrentUser _currentUser;
     private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public ProfileController(ProfileFacade facade, IStringLocalizer<SharedResource> localizer)
+    public ProfileController(
+        ProfileFacade facade,
+        PromoFacade promoFacade,
+        ICurrentUser currentUser,
+        IStringLocalizer<SharedResource> localizer)
     {
         _facade = facade;
+        _promoFacade = promoFacade;
+        _currentUser = currentUser;
         _localizer = localizer;
     }
 
@@ -26,12 +36,15 @@ public sealed class ProfileController : BaseController
     {
         var result = await _facade.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
+
+        var promos = await LoadPromosAsync(ct);
+
         if (!result.IsSuccess)
         {
             SetError(result.Error);
-            return View(new ProfileVm());
+            return View(BuildVm(new ProfileVm(), promos));
         }
-        return View(result.Data);
+        return View(BuildVm(result.Data!, promos));
     }
 
     [HttpPost("accounts/profile/update")]
@@ -128,23 +141,44 @@ public sealed class ProfileController : BaseController
             ? load.Data
             : new ProfileVm();
 
+        var promos = await LoadPromosAsync(ct);
+
         // Preserve the user's in-flight edits.
-        return View(nameof(Index), new ProfileVm
-        {
-            UserId       = vm.UserId,
-            FirstName    = vm.FirstName,
-            LastName     = vm.LastName,
-            DisplayName  = vm.DisplayName,
-            AvatarUrl    = vm.AvatarUrl,
-            PhoneNumber  = vm.PhoneNumber,
-            DateOfBirth  = vm.DateOfBirth,
-            Gender       = vm.Gender,
-            Country      = vm.Country,
-            City         = vm.City,
-            AddressLine  = vm.AddressLine,
-            Email        = vm.Email,
-            Update       = edit,
-            UpdateAvatar = new UpdateAvatarVm(),
-        });
+        return View(nameof(Index), BuildVm(vm, promos, edit));
     }
+
+    private async Task<IReadOnlyList<PromoBlockVm>> LoadPromosAsync(CancellationToken ct)
+    {
+        var isAdmin = _currentUser.IsInRole("Admin")
+            || _currentUser.IsInRole("SuperAdmin")
+            || _currentUser.IsInRole("Owner");
+
+        var result = await _promoFacade.GetForProfileAsync(includeInactive: isAdmin, ct);
+        return result.IsSuccess && result.Data is not null
+            ? result.Data
+            : Array.Empty<PromoBlockVm>();
+    }
+
+    private static ProfileVm BuildVm(
+        ProfileVm src,
+        IReadOnlyList<PromoBlockVm> promos,
+        UpdateProfileVm? edit = null,
+        UpdateAvatarVm? avatar = null) => new()
+        {
+            UserId       = src.UserId,
+            FirstName    = src.FirstName,
+            LastName     = src.LastName,
+            DisplayName  = src.DisplayName,
+            AvatarUrl    = src.AvatarUrl,
+            PhoneNumber  = src.PhoneNumber,
+            DateOfBirth  = src.DateOfBirth,
+            Gender       = src.Gender,
+            Country      = src.Country,
+            City         = src.City,
+            AddressLine  = src.AddressLine,
+            Email        = src.Email,
+            Update       = edit ?? src.Update,
+            UpdateAvatar = avatar ?? new UpdateAvatarVm(),
+            Promos       = promos,
+        };
 }

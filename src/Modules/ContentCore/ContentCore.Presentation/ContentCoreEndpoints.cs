@@ -3,6 +3,7 @@ using ContentCore.Presentation.Endpoints.Category;
 using ContentCore.Presentation.Endpoints.EntityCategory;
 using ContentCore.Presentation.Endpoints.EntityTag;
 using ContentCore.Presentation.Endpoints.Language;
+using ContentCore.Presentation.Endpoints.PromoBlock;
 using ContentCore.Presentation.Endpoints.Specialization;
 using ContentCore.Presentation.Endpoints.Tag;
 using ContentCore.Presentation.Endpoints.Translation;
@@ -27,6 +28,7 @@ public static class ContentCoreEndpoints
         EntityCategoryEndpoints.MapEntityCategoryEndpoints(group);
         EntityTagEndpoints.MapEntityTagEndpoints(group);
         SpecializationEndpoints.MapSpecializationEndpoints(group);
+        PromoBlockEndpoints.MapPromoBlockEndpoints(group);
 
         return endpoints;
     }

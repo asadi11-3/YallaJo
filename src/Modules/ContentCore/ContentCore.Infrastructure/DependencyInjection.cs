@@ -49,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<ISpecializationRepository, SpecializationRepository>();
         services.AddScoped<ITranslationCacheRepository, TranslationCacheRepository>();
         services.AddScoped<IAttachmentRepository, AttachmentRepository>();
+        services.AddScoped<IPromoBlockRepository, PromoBlockRepository>();
 
         services.AddScoped<IAttachmentExistenceService, AttachmentExistenceService>();
         services.AddScoped<IPublicEntityImageReader, PublicEntityImageReader>();

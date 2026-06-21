@@ -8,5 +8,6 @@ public enum EntityType : byte
     Review = 3,
     Blog = 4,
     TourGuide = 5,
-    Creator = 6
+    Creator = 6,
+    PromoBlock = 7
 }

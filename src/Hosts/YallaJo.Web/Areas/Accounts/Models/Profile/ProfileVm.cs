@@ -1,3 +1,5 @@
+using YallaJo.Web.Areas.Accounts.Models.Promo;
+
 namespace YallaJo.Web.Areas.Accounts.Models.Profile;
 
 public sealed class ProfileVm
@@ -16,5 +18,7 @@ public sealed class ProfileVm
     public string Email { get; init; } = string.Empty;
 
     public UpdateProfileVm Update { get; init; } = new();
-    public UpdateAvatarVm  UpdateAvatar { get; init; } = new();
+    public UpdateAvatarVm UpdateAvatar { get; init; } = new();
+
+    public IReadOnlyList<PromoBlockVm> Promos { get; init; } = [];
 }

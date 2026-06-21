@@ -1,0 +1,151 @@
+@using Microsoft.Extensions.Localization
+@model YallaJo.Web.Areas.Accounts.Models.Promo.PromoBlockVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+
+@functions {
+    // Render-time CTA sanitizer. Mirrors ContentCore.Application.Promotions.PromoLinkPolicy
+    // (the Web host does not reference that layer). Allows only relative paths or
+    // same-scheme http/https absolute URLs; blocks javascript:, data:, vbscript:,
+    // protocol-relative ("//"), and backslash tricks.
+    static string? SanitizeCta(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+
+        var trimmed = value.Trim();
+
+        // Reject control characters.
+        foreach (var ch in trimmed)
+        {
+            if (char.IsControl(ch)) return null;
+        }
+
+        // Reject protocol-relative and backslash tricks.
+        if (trimmed.StartsWith("//", StringComparison.Ordinal)
+            || trimmed.StartsWith("/\\", StringComparison.Ordinal)
+            || trimmed.StartsWith("\\", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        // Absolute URLs must be http/https only.
+        if (Uri.TryCreate(trimmed, UriKind.Absolute, out var abs))
+        {
+            return (abs.Scheme == Uri.UriSchemeHttp || abs.Scheme == Uri.UriSchemeHttps)
+                ? trimmed
+                : null;
+        }
+
+        // Relative path: allow a single leading slash.
+        return trimmed;
+    }
+}
+
+@{
+    var key = Model.PlacementKey;
+    var isBanner = string.Equals(key, "MyProfile.BottomBanner", StringComparison.OrdinalIgnoreCase);
+    var hasContent = !string.IsNullOrWhiteSpace(Model.Title) || !string.IsNullOrWhiteSpace(Model.Description);
+    var isEmpty = !hasContent;
+    var href = SanitizeCta(Model.ButtonUrl);
+    var hasCta = href is not null && !string.IsNullOrWhiteSpace(Model.ButtonText);
+    var hasImage = !string.IsNullOrWhiteSpace(Model.ImageUrl);
+    var activeAttr = Model.IsActive ? "true" : "false";
+}
+
+@if (isEmpty)
+{
+    <role require="Admin,SuperAdmin,Owner">
+        <div class="card border border-dashed promo-card promo-card--placeholder" data-promo-card data-promo-key="@key">
+            <div class="card-body text-center py-4">
+                <span class="promo-card__placeholder-icon mb-2 d-inline-flex align-items-center justify-content-center rounded-circle">
+                    <i class="bi bi-megaphone"></i>
+                </span>
+                <p class="text-body-secondary small mb-3">@Localizer["Accounts.Promo.AddPromotion"]</p>
+                <button type="button"
+                        class="btn btn-sm btn-primary-soft"
+                        data-promo-edit-trigger
+                        data-promo-key="@key"
+                        data-promo-title="@Model.Title"
+                        data-promo-description="@Model.Description"
+                        data-promo-buttontext="@Model.ButtonText"
+                        data-promo-buttonurl="@Model.ButtonUrl"
+                        data-promo-badge="@Model.BadgeText"
+                        data-promo-icon="@Model.IconName"
+                        data-promo-active="@activeAttr"
+                        data-promo-image="@Model.ImageUrl">
+                    <i class="bi bi-pencil-fill me-1"></i>@Localizer["Accounts.Promo.Edit"]
+                </button>
+            </div>
+        </div>
+    </role>
+}
+else
+{
+    <div class="card border promo-card @(isBanner ? "promo-card--banner" : null) @(Model.IsActive ? null : "promo-card--inactive")"
+         data-promo-card data-promo-key="@key">
+
+        @if (hasImage)
+        {
+            <div class="promo-card__media">
+                <img class="promo-card__img" data-promo-card-image src="@Model.ImageUrl" alt="@Model.Title" loading="lazy">
+                @if (!string.IsNullOrWhiteSpace(Model.BadgeText))
+                {
+                    <span class="badge bg-primary promo-card__badge" data-promo-card-badge>@Model.BadgeText</span>
+                }
+            </div>
+        }
+
+        <div class="card-body @(isBanner ? "d-sm-flex align-items-center gap-3" : null)">
+            <div class="flex-grow-1">
+                @if (!hasImage && !string.IsNullOrWhiteSpace(Model.BadgeText))
+                {
+                    <span class="badge bg-primary-soft text-primary mb-2 promo-card__badge" data-promo-card-badge>@Model.BadgeText</span>
+                }
+
+                <h6 class="mb-1 d-flex align-items-center gap-2">
+                    @if (!string.IsNullOrWhiteSpace(Model.IconName))
+                    {
+                        <i class="bi @Model.IconName text-primary" data-promo-card-icon></i>
+                    }
+                    <span data-promo-card-title>@Model.Title</span>
+                    @if (!Model.IsActive)
+                    {
+                        <role require="Admin,SuperAdmin,Owner">
+                            <span class="badge bg-secondary-soft text-secondary ms-1">@Localizer["Accounts.Promo.Inactive"]</span>
+                        </role>
+                    }
+                </h6>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <p class="text-body-secondary small mb-2" data-promo-card-desc>@Model.Description</p>
+                }
+            </div>
+
+            @if (hasCta)
+            {
+                <div class="@(isBanner ? "flex-shrink-0 mt-2 mt-sm-0" : "mt-2")">
+                    <a class="btn btn-sm btn-primary" data-promo-card-cta href="@href">@Model.ButtonText</a>
+                </div>
+            }
+        </div>
+
+        <role require="Admin,SuperAdmin,Owner">
+            <button type="button"
+                    class="promo-card__edit"
+                    title="@Localizer["Accounts.Promo.Edit"]"
+                    aria-label="@Localizer["Accounts.Promo.Edit"]"
+                    data-promo-edit-trigger
+                    data-promo-key="@key"
+                    data-promo-title="@Model.Title"
+                    data-promo-description="@Model.Description"
+                    data-promo-buttontext="@Model.ButtonText"
+                    data-promo-buttonurl="@Model.ButtonUrl"
+                    data-promo-badge="@Model.BadgeText"
+                    data-promo-icon="@Model.IconName"
+                    data-promo-active="@activeAttr"
+                    data-promo-image="@Model.ImageUrl">
+                <i class="bi bi-pencil-fill"></i>
+            </button>
+        </role>
+    </div>
+}

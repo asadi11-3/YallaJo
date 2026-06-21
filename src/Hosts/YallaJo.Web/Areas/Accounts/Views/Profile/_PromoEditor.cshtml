@@ -1,0 +1,82 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+
+<role require="Admin,SuperAdmin,Owner">
+    <div class="promo-editor"
+         id="promo-editor"
+         data-msg-too-large="@Localizer["Accounts.Profile.PhotoTooLarge"]"
+         data-msg-invalid-type="@Localizer["Accounts.Profile.PhotoInvalidType"]"
+         data-msg-saved="@Localizer["Accounts.Promo.Saved"]"
+         hidden>
+        <div class="promo-editor__panel card shadow-lg border-0 rounded-4" role="dialog" aria-modal="false" aria-label="@Localizer["Accounts.Promo.EditTitle"]">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="mb-0">@Localizer["Accounts.Promo.EditTitle"]</h6>
+                    <button type="button" class="btn-close" data-promo-editor-cancel aria-label="@Localizer["Accounts.Promo.Cancel"]"></button>
+                </div>
+
+                @Html.AntiForgeryToken()
+
+                <div class="text-center mb-3">
+                    <div class="promo-editor__preview-wrap mx-auto mb-2">
+                        <img class="promo-editor__preview rounded-3" data-promo-editor-preview src="" alt="" />
+                    </div>
+                    <input type="file"
+                           class="visually-hidden"
+                           accept="image/png,image/jpeg,image/webp"
+                           data-promo-editor-input />
+                    <button type="button" class="btn btn-sm btn-primary-soft" data-promo-editor-choose>
+                        <i class="bi bi-image me-1"></i>@Localizer["Accounts.Promo.ChooseImage"]
+                    </button>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label small mb-1">@Localizer["Accounts.Promo.FieldTitle"]</label>
+                    <input type="text" class="form-control form-control-sm" data-promo-editor-field="title" maxlength="200" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label small mb-1">@Localizer["Accounts.Promo.FieldDescription"]</label>
+                    <textarea class="form-control form-control-sm" rows="2" data-promo-editor-field="description" maxlength="1000"></textarea>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="form-label small mb-1">@Localizer["Accounts.Promo.FieldButtonText"]</label>
+                        <input type="text" class="form-control form-control-sm" data-promo-editor-field="buttonText" maxlength="100" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small mb-1">@Localizer["Accounts.Promo.FieldButtonUrl"]</label>
+                        <input type="text" class="form-control form-control-sm" data-promo-editor-field="buttonUrl" maxlength="2048" />
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="form-label small mb-1">@Localizer["Accounts.Promo.FieldBadge"]</label>
+                        <input type="text" class="form-control form-control-sm" data-promo-editor-field="badgeText" maxlength="60" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small mb-1">@Localizer["Accounts.Promo.FieldIcon"]</label>
+                        <input type="text" class="form-control form-control-sm" data-promo-editor-field="iconName" maxlength="60" placeholder="bi-stars" />
+                    </div>
+                </div>
+
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="promo-editor-active" data-promo-editor-field="isActive" />
+                    <label class="form-check-label small" for="promo-editor-active">@Localizer["Accounts.Promo.FieldActive"]</label>
+                </div>
+
+                <p class="promo-editor__error small text-danger mb-2" data-promo-editor-error hidden></p>
+
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-light flex-fill" data-promo-editor-cancel>@Localizer["Accounts.Promo.Cancel"]</button>
+                    <button type="button" class="btn btn-sm btn-primary flex-fill" data-promo-editor-save>
+                        <span class="spinner-border spinner-border-sm me-1 d-none" data-promo-editor-spinner role="status" aria-hidden="true"></span>
+                        @Localizer["Accounts.Promo.Save"]
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</role>

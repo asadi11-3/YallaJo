@@ -16609,4 +16609,55 @@
   <data name="Accounts.Nav.ChangePassword" xml:space="preserve">
     <value>Change password</value>
   </data>
+  <data name="Public.Session.Expired" xml:space="preserve">
+    <value>Your session has expired. Please sign in again.</value>
+  </data>
+  <data name="Accounts.Promo.SaveFailed" xml:space="preserve">
+    <value>Unable to save promotional content. Please try again.</value>
+  </data>
+  <data name="Accounts.Promo.Edit" xml:space="preserve">
+    <value>Edit promotion</value>
+  </data>
+  <data name="Accounts.Promo.EditTitle" xml:space="preserve">
+    <value>Edit promotion</value>
+  </data>
+  <data name="Accounts.Promo.FieldTitle" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Accounts.Promo.FieldDescription" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Accounts.Promo.FieldButtonText" xml:space="preserve">
+    <value>Button text</value>
+  </data>
+  <data name="Accounts.Promo.FieldButtonUrl" xml:space="preserve">
+    <value>Button link</value>
+  </data>
+  <data name="Accounts.Promo.FieldBadge" xml:space="preserve">
+    <value>Badge</value>
+  </data>
+  <data name="Accounts.Promo.FieldIcon" xml:space="preserve">
+    <value>Icon (Bootstrap Icons class)</value>
+  </data>
+  <data name="Accounts.Promo.FieldActive" xml:space="preserve">
+    <value>Visible to users</value>
+  </data>
+  <data name="Accounts.Promo.ChooseImage" xml:space="preserve">
+    <value>Choose image</value>
+  </data>
+  <data name="Accounts.Promo.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Accounts.Promo.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Accounts.Promo.Saved" xml:space="preserve">
+    <value>Promotion updated.</value>
+  </data>
+  <data name="Accounts.Promo.AddPromotion" xml:space="preserve">
+    <value>Add a promotion</value>
+  </data>
+  <data name="Accounts.Promo.Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
 </root>

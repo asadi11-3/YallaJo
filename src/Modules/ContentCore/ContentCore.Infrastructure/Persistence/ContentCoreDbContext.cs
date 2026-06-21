@@ -23,6 +23,7 @@ public sealed class ContentCoreDbContext : DbContext, IDbContext
     public DbSet<SpecializationTranslation> SpecializationTranslations => Set<SpecializationTranslation>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<TranslationCache> TranslationCaches => Set<TranslationCache>();
+    public DbSet<PromoBlock> PromoBlocks => Set<PromoBlock>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

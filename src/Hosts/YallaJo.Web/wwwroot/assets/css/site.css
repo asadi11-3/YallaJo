@@ -923,3 +923,130 @@ details.card > summary { cursor: pointer; list-style-position: inside; }
     right: auto;
     left: -2px;
 }
+
+/* ── Promotional placement cards (My Profile right rail + bottom banner) ───── */
+.promo-card {
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow .15s ease, transform .15s ease;
+}
+
+.promo-card:hover {
+    box-shadow: 0 .5rem 1.25rem rgba(17, 17, 17, .08);
+    transform: translateY(-2px);
+}
+
+.promo-card--inactive { opacity: .6; }
+
+.promo-card__media {
+    position: relative;
+    overflow: hidden;
+    border-radius: .5rem .5rem 0 0;
+}
+
+.promo-card__img {
+    width: 100%;
+    height: 8rem;
+    object-fit: cover;
+    display: block;
+}
+
+.promo-card__badge {
+    position: absolute;
+    top: .5rem;
+    inset-inline-start: .5rem;
+}
+
+/* Floating edit pencil — appears on hover/focus for admin-tier users only. */
+.promo-card__edit {
+    position: absolute;
+    top: .5rem;
+    inset-inline-end: .5rem;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bs-primary);
+    color: #fff;
+    opacity: 0;
+    transition: opacity .15s ease, transform .15s ease;
+    z-index: 2;
+}
+
+.promo-card:hover .promo-card__edit,
+.promo-card:focus-within .promo-card__edit,
+.promo-card__edit:focus-visible {
+    opacity: 1;
+}
+
+.promo-card__edit:hover,
+.promo-card__edit:focus-visible {
+    transform: scale(1.08);
+    outline: none;
+    box-shadow: 0 4px 10px rgba(17, 17, 17, .3);
+}
+
+/* Dashed "add a promotion" placeholder shown to admins for empty slots. */
+.promo-card--placeholder {
+    border-style: dashed !important;
+    background: var(--bs-light);
+}
+
+.promo-card__placeholder-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: .5rem;
+}
+
+/* Floating promo editor panel — absolutely positioned by JS, mirrors avatar. */
+.promo-editor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1060;
+    width: 320px;
+    max-width: calc(100vw - 1rem);
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity .15s ease, transform .15s ease;
+    pointer-events: none;
+}
+
+.promo-editor[hidden] { display: none; }
+
+.promo-editor.is-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.promo-editor__panel { width: 100%; }
+
+.promo-editor__preview-wrap {
+    width: 100%;
+    height: 7rem;
+    border-radius: .5rem;
+    overflow: hidden;
+    background: var(--bs-light);
+}
+
+.promo-editor__preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* RTL: mirror the floating edit pencil to the opposite corner. */
+[dir="rtl"] .promo-card__edit {
+    inset-inline-end: .5rem;
+}

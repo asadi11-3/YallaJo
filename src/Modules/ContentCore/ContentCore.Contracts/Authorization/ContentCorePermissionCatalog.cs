@@ -69,5 +69,11 @@ public sealed class ContentCorePermissionCatalog : IPermissionCatalog
         new(ContentCoreFeatures.Attachment, AppAction.Create, PermissionGroup.ContentManagement, "Upload an attachment"),
         new(ContentCoreFeatures.Attachment, AppAction.Update, PermissionGroup.ContentManagement, "Update attachment details"),
         new(ContentCoreFeatures.Attachment, AppAction.Delete, PermissionGroup.ContentManagement, "Delete an attachment"),
+
+        // ── Promotion (promo/ad placement blocks) ────────────────────────────
+        new(ContentCoreFeatures.Promotion, AppAction.Read,   PermissionGroup.ContentManagement, "View promo placements (including inactive)"),
+        new(ContentCoreFeatures.Promotion, AppAction.Create, PermissionGroup.ContentManagement, "Create a promo placement"),
+        new(ContentCoreFeatures.Promotion, AppAction.Update, PermissionGroup.ContentManagement, "Update a promo placement"),
+        new(ContentCoreFeatures.Promotion, AppAction.Delete, PermissionGroup.ContentManagement, "Delete a promo placement"),
     ];
 }

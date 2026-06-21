@@ -1,8 +1,13 @@
 @model YallaJo.Web.Areas.Accounts.Models.Profile.ProfileVm
+@using YallaJo.Web.Areas.Accounts.Models.Promo
 @{
     ViewData["Title"] = Localizer["Navbar.MyProfile"].Value;
     ViewData["AccountNav"] = "Profile";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var promoByKey = Model.Promos.ToDictionary(p => p.PlacementKey, StringComparer.OrdinalIgnoreCase);
+    PromoBlockVm Slot(string key) => promoByKey.GetValueOrDefault(key)
+        ?? new PromoBlockVm { PlacementKey = key, Title = string.Empty, IsActive = false };
 
     var displayName = string.IsNullOrWhiteSpace(Model.DisplayName)
         ? $"{Model.FirstName} {Model.LastName}".Trim()
@@ -36,7 +41,7 @@
         <div class="row g-4 g-xl-5">
             <partial name="_AccountSidebar" model="sidebar" />
 
-            <div class="col-lg-8 col-xl-9">
+            <div class="col-lg-8 col-xl-6">
                 <partial name="_AccountMenuToggle" />
 
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
@@ -101,42 +106,29 @@
                             </form>
                         </div>
                     </div>
-
-                    @* ── Update password ────────────────────────────────────── *@
-                    <div class="card border">
-                        <div class="card-header border-bottom">
-                            <h4 class="card-header-title mb-0">@Localizer["Accounts.Settings.UpdatePassword"]</h4>
-                            <p class="mb-0 mt-1 small">@Localizer["Accounts.Settings.PasswordHint"]</p>
-                        </div>
-                        <div class="card-body">
-                            <form asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index" method="post" class="row g-3" data-loading>
-                                @Html.AntiForgeryToken()
-                                @* Phase 2 (Accounts plan): PRG returns here instead of the retired change-password page. *@
-                                <input type="hidden" name="returnUrl" value="@(Url.Action("Index", "Profile", new { area = "Accounts" }))" />
-                                <div class="col-12">
-                                    <label for="CurrentPassword" class="form-label">@Localizer["Accounts.Settings.CurrentPassword"]</label>
-                                    <input type="password" id="CurrentPassword" name="CurrentPassword" class="form-control" autocomplete="current-password" />
-                                </div>
-                                <div class="col-12">
-                                    <label for="psw-input" class="form-label">@Localizer["Accounts.Settings.NewPassword"]</label>
-                                    <div class="input-group">
-                                        <input type="password" id="psw-input" name="NewPassword" class="form-control fakepassword" autocomplete="new-password" />
-                                        <span class="input-group-text p-0 bg-transparent">
-                                            <i class="fakepasswordicon fas fa-eye-slash cursor-pointer p-2" aria-hidden="true"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <label for="ConfirmNewPassword" class="form-label">@Localizer["Accounts.Settings.ConfirmNewPassword"]</label>
-                                    <input type="password" id="ConfirmNewPassword" name="ConfirmNewPassword" class="form-control" autocomplete="new-password" />
-                                </div>
-                                <div class="col-12 text-end">
-                                    <button type="submit" class="btn btn-primary mb-0">@Localizer["Accounts.Settings.ChangePassword"]</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
                 </div>
+            </div>
+
+            @* ── Right rail: promotional placements ─────────────────────── *@
+            @{
+                var promoTop = Slot("MyProfile.RightRail.Top");
+                var promoMiddle = Slot("MyProfile.RightRail.Middle");
+                var promoBottom = Slot("MyProfile.RightRail.Bottom");
+                var promoBanner = Slot("MyProfile.BottomBanner");
+            }
+            <div class="col-lg-12 col-xl-3">
+                <div class="vstack gap-4">
+                    <partial name="_PromoCard" model="promoTop" />
+                    <partial name="_PromoCard" model="promoMiddle" />
+                    <partial name="_PromoCard" model="promoBottom" />
+                </div>
+            </div>
+        </div>
+
+        @* ── Bottom banner promo ─────────────────────────────────────────── *@
+        <div class="row mt-4">
+            <div class="col-12">
+                <partial name="_PromoCard" model="promoBanner" />
             </div>
         </div>
     </div>
@@ -144,9 +136,14 @@
     @* Reusable profile-photo editor — a single instance shared by the Personal
        Information camera control and the sidebar pencil overlay. *@
     <partial name="_AvatarEditor" />
+
+    @* Reusable promo editor — a single instance shared by every promo card
+       pencil. Only rendered for Admin/SuperAdmin/Owner (gated inside the partial). *@
+    <partial name="_PromoEditor" />
 </section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/assets/js/profile-avatar.js" asp-append-version="true"></script>
+    <script src="~/assets/js/profile-promo.js" asp-append-version="true"></script>
 }

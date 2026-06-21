@@ -16609,4 +16609,55 @@
   <data name="Accounts.Nav.ChangePassword" xml:space="preserve">
     <value>تغيير كلمة المرور</value>
   </data>
+  <data name="Public.Session.Expired" xml:space="preserve">
+    <value>انتهت جلستك. يرجى تسجيل الدخول مرة أخرى.</value>
+  </data>
+  <data name="Accounts.Promo.SaveFailed" xml:space="preserve">
+    <value>تعذر حفظ المحتوى الترويجي. حاول مرة أخرى.</value>
+  </data>
+  <data name="Accounts.Promo.Edit" xml:space="preserve">
+    <value>تعديل العرض الترويجي</value>
+  </data>
+  <data name="Accounts.Promo.EditTitle" xml:space="preserve">
+    <value>تعديل العرض الترويجي</value>
+  </data>
+  <data name="Accounts.Promo.FieldTitle" xml:space="preserve">
+    <value>العنوان</value>
+  </data>
+  <data name="Accounts.Promo.FieldDescription" xml:space="preserve">
+    <value>الوصف</value>
+  </data>
+  <data name="Accounts.Promo.FieldButtonText" xml:space="preserve">
+    <value>نص الزر</value>
+  </data>
+  <data name="Accounts.Promo.FieldButtonUrl" xml:space="preserve">
+    <value>رابط الزر</value>
+  </data>
+  <data name="Accounts.Promo.FieldBadge" xml:space="preserve">
+    <value>شارة</value>
+  </data>
+  <data name="Accounts.Promo.FieldIcon" xml:space="preserve">
+    <value>أيقونة (صنف Bootstrap Icons)</value>
+  </data>
+  <data name="Accounts.Promo.FieldActive" xml:space="preserve">
+    <value>ظاهر للمستخدمين</value>
+  </data>
+  <data name="Accounts.Promo.ChooseImage" xml:space="preserve">
+    <value>اختر صورة</value>
+  </data>
+  <data name="Accounts.Promo.Save" xml:space="preserve">
+    <value>حفظ</value>
+  </data>
+  <data name="Accounts.Promo.Cancel" xml:space="preserve">
+    <value>إلغاء</value>
+  </data>
+  <data name="Accounts.Promo.Saved" xml:space="preserve">
+    <value>تم تحديث العرض الترويجي.</value>
+  </data>
+  <data name="Accounts.Promo.AddPromotion" xml:space="preserve">
+    <value>أضف عرضًا ترويجيًا</value>
+  </data>
+  <data name="Accounts.Promo.Inactive" xml:space="preserve">
+    <value>غير نشط</value>
+  </data>
 </root>

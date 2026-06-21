@@ -23,6 +23,11 @@ public sealed class ContentCoreDbInitializer(
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
+        // Promo blocks are seeded independently of the reference-data guard below so
+        // existing databases (where languages already exist) still receive the
+        // My Profile promotional placements on next boot. Idempotent on PlacementKey.
+        await SeedPromoBlocksAsync(cancellationToken);
+
         if (await dbContext.Languages.AnyAsync(cancellationToken))
             return;
 
@@ -187,6 +192,78 @@ public sealed class ContentCoreDbInitializer(
             EntityImage.Create(EntityType.Place, SeedContentIds.PlaceAmman,   ammanAttachments[1].Id,    ImageSize.Large, sortOrder: 1));
 
         // Single atomic commit: Language outbox messages + all seed entities.
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Idempotently seeds the four My Profile promotional placements. Only placement
+    /// keys that do not yet exist are inserted, so this is safe to run on every boot
+    /// and never overwrites admin-edited content. Domain events are cleared because
+    /// seed data does not need to trigger downstream handlers.
+    /// </summary>
+    private async Task SeedPromoBlocksAsync(CancellationToken cancellationToken)
+    {
+        var seeds = new (string Key, string Title, string? Description, string? ButtonText, string? ButtonUrl, string? Icon, int SortOrder)[]
+        {
+            (
+                "MyProfile.RightRail.Top",
+                "Discover unforgettable experiences",
+                "From iconic landmarks to hidden gems. Your next adventure is waiting.",
+                "Explore destinations",
+                "/destinations",
+                "bi-compass",
+                1),
+            (
+                "MyProfile.RightRail.Middle",
+                "Travel preferences",
+                "Help us personalize your recommendations.",
+                "Update preferences",
+                "/account/settings",
+                "bi-sliders",
+                2),
+            (
+                "MyProfile.RightRail.Bottom",
+                "Need help?",
+                "Our support team is here to help you with anything.",
+                "Contact support",
+                "/support",
+                "bi-life-preserver",
+                3),
+            (
+                "MyProfile.BottomBanner",
+                "List your experience and earn while you share what you love",
+                "Join other locals and earn by offering unforgettable experiences.",
+                "Start listing",
+                "/list-your-experience",
+                "bi-stars",
+                4),
+        };
+
+        var keys = seeds.Select(s => s.Key).ToArray();
+        var existingKeys = await dbContext.PromoBlocks
+            .IgnoreQueryFilters()
+            .Where(p => keys.Contains(p.PlacementKey))
+            .Select(p => p.PlacementKey)
+            .ToListAsync(cancellationToken);
+
+        var missing = seeds.Where(s => !existingKeys.Contains(s.Key)).ToArray();
+        if (missing.Length == 0)
+            return;
+
+        foreach (var s in missing)
+        {
+            var block = PromoBlock.Create(
+                placementKey: s.Key,
+                title: s.Title,
+                description: s.Description,
+                buttonText: s.ButtonText,
+                buttonUrl: s.ButtonUrl,
+                iconName: s.Icon,
+                sortOrder: s.SortOrder);
+            block.ClearDomainEvents();
+            dbContext.PromoBlocks.Add(block);
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
