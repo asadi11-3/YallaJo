@@ -13930,6 +13930,12 @@
 <data name="Accounts.Msg.AvatarUploadFailed" xml:space="preserve">
 <value>تعذّر رفع الصورة الرمزية.</value>
 </data>
+<data name="Accounts.Msg.AvatarRemoved" xml:space="preserve">
+<value>تمت إزالة الصورة الرمزية.</value>
+</data>
+<data name="Accounts.Msg.AvatarRemoveFailed" xml:space="preserve">
+<value>تعذّرت إزالة الصورة الرمزية.</value>
+</data>
 <data name="Accounts.Msg.ProfileDeleted" xml:space="preserve">
 <value>تم حذف ملفك الشخصي.</value>
 </data>

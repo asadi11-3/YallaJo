@@ -80,12 +80,18 @@
         @* Hidden submit forms — driven by the shared JS once the user clicks Save *@
         <form class="d-none" data-avatar-editor-form="update"
               asp-area="Accounts" asp-controller="Profile" asp-action="UpdateAvatar"
-              method="post" enctype="multipart/form-data">
+              method="post" enctype="multipart/form-data"
+              data-yj-ajax data-yj-swap-target="profile-card"
+              data-success-message="@Localizer["Accounts.Msg.AvatarUpdated"]"
+              data-error-text="@Localizer["Accounts.Msg.AvatarUploadFailed"]">
             @Html.AntiForgeryToken()
             <input type="file" name="File" accept="image/png,image/jpeg" data-avatar-editor-file-proxy class="d-none">
         </form>
         <form class="d-none" data-avatar-editor-form="delete"
-              asp-area="Accounts" asp-controller="Profile" asp-action="DeleteAvatar" method="post">
+              asp-area="Accounts" asp-controller="Profile" asp-action="DeleteAvatar" method="post"
+              data-yj-ajax data-yj-swap-target="profile-card"
+              data-success-message="@Localizer["Accounts.Msg.AvatarRemoved"]"
+              data-error-text="@Localizer["Accounts.Msg.AvatarRemoveFailed"]">
             @Html.AntiForgeryToken()
         </form>
     </div>

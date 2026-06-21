@@ -49,6 +49,7 @@
         // per-trigger, so it is always safe to run.
         if (editor.dataset.yjAvatarInit === "1") {
             bindTriggers();
+            syncFromCard();
             return;
         }
         editor.dataset.yjAvatarInit = "1";
@@ -211,6 +212,17 @@
         });
 
         // ── Save ─────────────────────────────────────────────────────────────
+        // Submit via requestSubmit() (not submit()) so the delegated provider-actions.js
+        // listener intercepts and performs an AJAX postForm + profile-card swap. When JS
+        // or the API client is unavailable the form falls back to a native PRG submit.
+        function submitForm(form) {
+            if (typeof form.requestSubmit === "function") {
+                form.requestSubmit();
+            } else {
+                form.submit();
+            }
+        }
+
         editor.querySelectorAll("[data-avatar-editor-save]").forEach(function (btn) {
             btn.addEventListener("click", function () {
                 if (pendingMode === "upload") {
@@ -226,12 +238,42 @@
                         fileProxy.parentNode.replaceChild(input, fileProxy);
                         input.name = "File";
                     }
-                    updateForm.submit();
+                    submitForm(updateForm);
+                    closePanel();
                 } else if (pendingMode === "remove") {
-                    deleteForm.submit();
+                    submitForm(deleteForm);
+                    closePanel();
                 }
             });
         });
+
+        // ── Avatar sync after an AJAX profile-card swap ──────────────────────
+        // The profile-card (and its [data-avatar-img]) is refreshed server-side, but the
+        // sidebar avatar and the editor preview live OUTSIDE the swap region. After a swap
+        // copy the authoritative avatar src from the swapped-in card image to every other
+        // [data-avatar-img] (sidebar + preview), and reset the editor's baseline so a
+        // subsequent Cancel restores the new image rather than the stale one.
+        function syncFromCard() {
+            var card = document.querySelector('[data-yj-swap="profile-card"]');
+            if (!card) { return; }
+            var cardImg = card.querySelector("[data-avatar-img]");
+            if (!cardImg) { return; }
+            var newSrc = cardImg.getAttribute("src");
+            if (!newSrc) { return; }
+
+            document.querySelectorAll("[data-avatar-img]").forEach(function (img) {
+                if (img !== cardImg) { img.setAttribute("src", newSrc); }
+            });
+            if (preview) { preview.setAttribute("src", newSrc); }
+
+            // New baseline for Cancel + keep the editor's has-avatar flag accurate.
+            originalSrc = newSrc;
+            pendingMode = null;
+            input.value = "";
+            showError("");
+            toDefault();
+            editor.dataset.hasAvatar = (newSrc === defaultAvatar) ? "false" : "true";
+        }
 
         // ── Triggers (camera control + sidebar pencil) ───────────────────────
         // Declared as a hoisted function so the one-time guard above can call it on

@@ -103,6 +103,10 @@ public sealed class ProfileController : BaseController
     {
         if (!ModelState.IsValid)
         {
+            // AJAX: surface a visible error (JSON), no false success; non-JS: PRG.
+            if (WantsAjax())
+                return BadRequest(new { error = _localizer["Accounts.Msg.ChooseImage"].Value });
+
             SetError(_localizer["Accounts.Msg.ChooseImage"]);
             return RedirectToAction(nameof(Index));
         }
@@ -112,6 +116,10 @@ public sealed class ProfileController : BaseController
 
         if (result.IsSuccess)
         {
+            // AJAX: refresh the profile card (carries the new avatar URL via re-fetch);
+            // non-JS: PRG with a success flash.
+            if (WantsAjax()) return await ProfileCardPartialAsync(ct);
+
             SetSuccess(_localizer["Accounts.Msg.AvatarUpdated"]);
             return RedirectToAction(nameof(Index));
         }
@@ -120,7 +128,11 @@ public sealed class ProfileController : BaseController
             .SelectMany(messages => messages)
             .FirstOrDefault();
 
-        SetError(firstMessage ?? result.Error ?? _localizer["Accounts.Msg.AvatarUploadFailed"].Value);
+        var uploadError = firstMessage ?? result.Error ?? _localizer["Accounts.Msg.AvatarUploadFailed"].Value;
+
+        if (WantsAjax()) return BadRequest(new { error = uploadError });
+
+        SetError(uploadError);
         return RedirectToAction(nameof(Index));
     }
 
@@ -131,7 +143,19 @@ public sealed class ProfileController : BaseController
         var result = await _facade.DeleteAvatarAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        SetFlash(result, "Avatar removed.", "Could not remove avatar.");
+        if (result.IsSuccess)
+        {
+            if (WantsAjax()) return await ProfileCardPartialAsync(ct);
+
+            SetSuccess(_localizer["Accounts.Msg.AvatarRemoved"]);
+            return RedirectToAction(nameof(Index));
+        }
+
+        var removeError = result.Error ?? _localizer["Accounts.Msg.AvatarRemoveFailed"].Value;
+
+        if (WantsAjax()) return BadRequest(new { error = removeError });
+
+        SetError(removeError);
         return RedirectToAction(nameof(Index));
     }
 
@@ -182,6 +206,22 @@ public sealed class ProfileController : BaseController
 
         Response.StatusCode = statusCode;
         return PartialView("_ProfileCard", BuildVm(vm, promos, edit));
+    }
+
+    // Re-fetch the profile and return the refreshed _ProfileCard fragment (200). Used by
+    // the avatar AJAX flows: the write endpoints return no avatar URL, so re-fetching the
+    // profile yields the resolved AvatarUrl which the swapped-in card then carries.
+    private async Task<IActionResult> ProfileCardPartialAsync(CancellationToken ct)
+    {
+        var load = await _facade.GetAsync(ct);
+        if (GuardSignOut(load) is { } signOut) return signOut;
+
+        var vm = load.IsSuccess && load.Data is not null
+            ? load.Data
+            : new ProfileVm();
+
+        var promos = await LoadPromosAsync(ct);
+        return PartialView("_ProfileCard", BuildVm(vm, promos));
     }
 
     private async Task<IReadOnlyList<PromoBlockVm>> LoadPromosAsync(CancellationToken ct)
