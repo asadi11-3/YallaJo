@@ -13978,9 +13978,15 @@
 <data name="Accounts.Msg.NotificationPrefsSaved" xml:space="preserve">
 <value>تم حفظ تفضيلات الإشعارات.</value>
 </data>
-<data name="Accounts.Msg.MarketingPrefsSaved" xml:space="preserve">
-<value>تم حفظ تفضيلات التسويق.</value>
-</data>
+  <data name="Accounts.Msg.MarketingPrefsSaved" xml:space="preserve">
+    <value>تم حفظ تفضيلات التسويق.</value>
+  </data>
+  <data name="Accounts.Msg.NotificationPrefsFailed" xml:space="preserve">
+    <value>تعذّر حفظ تفضيلات الإشعارات. يرجى المحاولة مرة أخرى.</value>
+  </data>
+  <data name="Accounts.Msg.MarketingPrefsFailed" xml:space="preserve">
+    <value>تعذّر حفظ تفضيلات التسويق. يرجى المحاولة مرة أخرى.</value>
+  </data>
 <data name="Accounts.Msg.InvalidPhone" xml:space="preserve">
 <value>يرجى إدخال رقم هاتف صالح.</value>
 </data>

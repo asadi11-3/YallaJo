@@ -13978,9 +13978,15 @@
 <data name="Accounts.Msg.NotificationPrefsSaved" xml:space="preserve">
 <value>Notification preferences saved.</value>
 </data>
-<data name="Accounts.Msg.MarketingPrefsSaved" xml:space="preserve">
-<value>Marketing preferences saved.</value>
-</data>
+  <data name="Accounts.Msg.MarketingPrefsSaved" xml:space="preserve">
+    <value>Marketing preferences saved.</value>
+  </data>
+  <data name="Accounts.Msg.NotificationPrefsFailed" xml:space="preserve">
+    <value>Could not save notification preferences. Please try again.</value>
+  </data>
+  <data name="Accounts.Msg.MarketingPrefsFailed" xml:space="preserve">
+    <value>Could not save marketing preferences. Please try again.</value>
+  </data>
 <data name="Accounts.Msg.InvalidPhone" xml:space="preserve">
 <value>Please enter a valid phone number.</value>
 </data>

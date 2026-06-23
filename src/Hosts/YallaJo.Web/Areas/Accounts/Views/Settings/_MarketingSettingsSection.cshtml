@@ -1,0 +1,35 @@
+@model YallaJo.Web.Areas.Accounts.Models.Settings.SettingsVm
+@* Phase 4 (Accounts plan): Marketing settings swap section — AJAX-enhanced. *@
+
+<div class="card border" data-yj-swap="marketing-settings">
+    <div class="card-header border-bottom">
+        <h4 class="card-header-title mb-0">@Localizer["Accounts.Settings.Marketing"]</h4>
+        <p class="mb-0 small">@Localizer["Accounts.Settings.MarketingHint"]</p>
+    </div>
+    <div class="card-body">
+        <form asp-area="Accounts" asp-controller="Settings" asp-action="UpdateMarketing" method="post" data-loading
+              data-yj-ajax data-yj-swap-target="marketing-settings"
+              data-success-message="@Localizer["Accounts.Msg.MarketingPrefsSaved"]"
+              data-error-text="@Localizer["Accounts.Msg.MarketingPrefsFailed"]">
+            @Html.AntiForgeryToken()
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="emailDigest"
+                       name="emailDigest" value="true" @(Model.Marketing.EmailDigest ? "checked" : "") />
+                <label class="form-check-label" for="emailDigest">@Localizer["Accounts.Settings.EmailDigest"]</label>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="pushNotifications"
+                       name="pushNotifications" value="true" @(Model.Marketing.PushNotifications ? "checked" : "") />
+                <label class="form-check-label" for="pushNotifications">@Localizer["Accounts.Settings.PromoPush"]</label>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="reEngagementCampaigns"
+                       name="reEngagementCampaigns" value="true" @(Model.Marketing.ReEngagementCampaigns ? "checked" : "") />
+                <label class="form-check-label" for="reEngagementCampaigns">@Localizer["Accounts.Settings.ReEngagement"]</label>
+            </div>
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary mb-0">@Localizer["Accounts.Common.Save"]</button>
+            </div>
+        </form>
+    </div>
+</div>

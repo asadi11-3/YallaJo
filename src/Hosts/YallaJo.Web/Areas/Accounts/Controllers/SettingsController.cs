@@ -131,6 +131,12 @@ public sealed class SettingsController : BaseController
 
         var result = await _settings.UpdateNotificationsAsync(enabledKeys, ct);
         if (GuardSignOut(result) is { } so) return so;
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.NotificationPrefsFailed"].Value });
+            return await NotificationSettingsPartialAsync(ct);
+        }
         if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.NotificationPrefsSaved"]);
         else SetError(result.Error);
         return RedirectToAction(nameof(Index), new { tab = "notifications" });
@@ -147,6 +153,12 @@ public sealed class SettingsController : BaseController
         var result = await _settings.UpdateMarketingAsync(
             emailDigest, pushNotifications, reEngagementCampaigns, ct);
         if (GuardSignOut(result) is { } so) return so;
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.MarketingPrefsFailed"].Value });
+            return await MarketingSettingsPartialAsync(ct);
+        }
         if (result.IsSuccess) SetSuccess(_localizer["Accounts.Msg.MarketingPrefsSaved"]);
         else SetError(result.Error);
         return RedirectToAction(nameof(Index), new { tab = "notifications" });
@@ -265,5 +277,21 @@ public sealed class SettingsController : BaseController
         var devices = await _devices.GetTokensAsync(ct);
         var vm = new SettingsVm { Devices = devices };
         return PartialView("_DevicesSection", vm);
+    }
+
+    private async Task<IActionResult> NotificationSettingsPartialAsync(CancellationToken ct)
+    {
+        var r = await _settings.GetNotificationRowsAsync(ct);
+        if (GuardSignOut(r) is { } so) return so;
+        var vm = new SettingsVm { NotificationRows = r.Data ?? [] };
+        return PartialView("_NotificationSettingsSection", vm);
+    }
+
+    private async Task<IActionResult> MarketingSettingsPartialAsync(CancellationToken ct)
+    {
+        var r = await _settings.GetMarketingAsync(ct);
+        if (GuardSignOut(r) is { } so) return so;
+        var vm = new SettingsVm { Marketing = r.Data ?? new MarketingConsentVm() };
+        return PartialView("_MarketingSettingsSection", vm);
     }
 }
