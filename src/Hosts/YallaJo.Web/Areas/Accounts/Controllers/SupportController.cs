@@ -104,6 +104,18 @@ public sealed class SupportController : BaseController
         var result = await _support.CloseAsync(id, rowVersion, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.TicketCloseFailed"].Value });
+
+            var refreshed = await _support.GetDetailAsync(id, ct);
+            if (GuardSignOut(refreshed) is { } so2) return so2;
+            return refreshed is { IsSuccess: true, Data: { } detail }
+                ? PartialView("_SupportTicketCard", detail)
+                : BadRequest(new { error = refreshed.Error ?? _localizer["Accounts.Msg.TicketCloseFailed"].Value });
+        }
+
         if (result.IsSuccess)
             SetSuccess(_localizer["Accounts.Msg.TicketClosed"]);
         else

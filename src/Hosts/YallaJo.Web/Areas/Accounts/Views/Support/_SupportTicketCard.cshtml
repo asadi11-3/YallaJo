@@ -1,0 +1,47 @@
+@model YallaJo.Web.Areas.Accounts.Models.Support.SupportTicketDetailVm
+@using YallaJo.Web.Infrastructure.Authorization
+@{
+    string TimeStamp(DateTime utc) => utc.ToString("dd MMM yyyy HH:mm") + " UTC";
+
+    string StatusClass(string status) => status.ToLowerInvariant() switch
+    {
+        "closed" => "bg-secondary bg-opacity-10 text-secondary",
+        "resolved" => "bg-success bg-opacity-10 text-success",
+        "awaitinguser" => "bg-warning bg-opacity-10 text-warning",
+        _ => "bg-primary bg-opacity-10 text-primary",
+    };
+}
+
+@* Phase 6 (Accounts plan): whole ticket card extracted so Close swaps header badge + thread + footer together (data-yj-swap="support-ticket"). *@
+<div class="card border mb-4" data-yj-swap="support-ticket">
+    <div class="card-header border-bottom d-flex justify-content-between align-items-start">
+        <div class="me-2">
+            <h4 class="card-header-title mb-1">@Model.Subject</h4>
+            <span class="badge bg-secondary bg-opacity-10 text-secondary small me-2">@Model.Category</span>
+            <span class="small text-muted">Opened @TimeStamp(Model.CreatedAt)</span>
+        </div>
+        <span class="badge @StatusClass(Model.Status) flex-shrink-0">@Model.Status</span>
+    </div>
+
+    @* thread + reply extracted into _SupportThread, AJAX-swappable (NF6/PE1). *@
+    <div id="supportThread" data-yj-component="support-thread" aria-live="polite"
+         data-failed-text="@Localizer["Accounts.Support.ReplyFailed"]" data-sent-text="@Localizer["Accounts.Support.ReplySent"]">
+        <partial name="_SupportThread" model="Model" />
+    </div>
+
+    @if (Model.CanClose)
+    {
+        <permission require="@WebPermission.SupportTicket.Close">
+            <div class="card-footer border-top text-end">
+                <form asp-area="Accounts" asp-controller="Support" asp-action="Close" asp-route-id="@Model.Id" method="post"
+                      class="m-0" data-yj-ajax data-yj-swap-target="support-ticket"
+                      data-success-message="@Localizer["Accounts.Msg.TicketClosed"]" data-error-text="@Localizer["Accounts.Msg.TicketCloseFailed"]"
+                      data-confirm="@Localizer["Accounts.Confirm.CloseTicket"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Accounts.Confirm.Close"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+                    <button type="submit" class="btn btn-sm btn-outline-danger mb-0">@Localizer["Accounts.Support.CloseTicketBtn"]</button>
+                </form>
+            </div>
+        </permission>
+    }
+</div>
