@@ -28,6 +28,7 @@
     })!;
 }
 
+<div data-yj-swap="notifications-list">
 @if (!Model.HasItems)
 {
     <div class="text-center py-5">
@@ -69,6 +70,8 @@ else
                         }
                         <permission require="@WebPermission.Notification.Delete">
                             <form asp-area="Accounts" asp-controller="Notifications" asp-action="Delete" asp-route-id="@n.Id" method="post" class="m-0"
+                                  data-yj-ajax data-yj-swap-target="notifications-list"
+                                  data-success-message="@Localizer["Accounts.Msg.NotificationDeleted"]" data-error-text="@Localizer["Accounts.Msg.NotificationDeleteFailed"]"
                                   data-confirm="@Localizer["Accounts.Confirm.DeleteNotification"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="status" value="@Model.Filter.Status" />
@@ -95,3 +98,4 @@ else
         }
     </div>
 }
+</div>

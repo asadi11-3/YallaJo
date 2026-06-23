@@ -75,6 +75,22 @@ public sealed class NotificationsController : BaseController
         var result = await _notifications.DeleteAsync(id, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        if (WantsAjax())
+        {
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.Error ?? _localizer["Accounts.Msg.NotificationDeleteFailed"].Value });
+
+            var filter = new NotificationInboxFilterVm
+            {
+                Status = NormalizeStatus(status),
+                Type = string.IsNullOrWhiteSpace(type) ? null : type,
+                FromDate = fromDate,
+                ToDate = toDate,
+            };
+            var vm = await _notifications.GetInboxAsync(filter, null, ct);
+            return PartialView("_NotificationsList", vm);
+        }
+
         if (result.IsSuccess)
             SetSuccess(_localizer["Accounts.Msg.NotificationDeleted"]);
         else
