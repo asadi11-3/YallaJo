@@ -4,6 +4,13 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<YallaJo.Web.Resources.SharedResource> L
 @{
     var displayName = User.Identity?.Name ?? L["Navbar.Account"].Value;
+
+    // Active-nav detection (Explore page = Public/Home; Explore dropdown groups Tours/Packages/Guides/Directory).
+    var navController = (ViewContext.RouteData.Values["controller"] as string) ?? string.Empty;
+    var exploreControllers = new[] { "Home", "Tours", "Packages", "Guides", "Directory" };
+    var isExploreActive = exploreControllers.Contains(navController, StringComparer.OrdinalIgnoreCase);
+    var isPlacesActive = string.Equals(navController, "Places", StringComparison.OrdinalIgnoreCase);
+    var isBlogActive = string.Equals(navController, "Blog", StringComparison.OrdinalIgnoreCase);
 }
 
 <header class="navbar-light header-sticky">
@@ -32,7 +39,7 @@
 
                     <!-- Nav item: Explore dropdown (Tours / Packages / Guides / Directory) -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="exploreDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">@L["Navbar.Explore"]</a>
+                        <a class="nav-link dropdown-toggle@(isExploreActive ? " active" : "")" href="#" id="exploreDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-current="@(isExploreActive ? "page" : null)">@L["Navbar.Explore"]</a>
                         <ul class="dropdown-menu" aria-labelledby="exploreDropdown">
                             <li><a class="dropdown-item" asp-area="Public" asp-controller="Tours" asp-action="Index">@L["Navbar.Tours"]</a></li>
                             <li><a class="dropdown-item" asp-area="Public" asp-controller="Packages" asp-action="Index">@L["Navbar.Packages"]</a></li>
@@ -43,12 +50,12 @@
 
                     <!-- Nav item Places -->
                     <li class="nav-item">
-                        <a class="nav-link" asp-action="Index" asp-controller="Places" asp-area="Public">@L["Navbar.Destinations"]</a>
+                        <a class="nav-link@(isPlacesActive ? " active" : "")" aria-current="@(isPlacesActive ? "page" : null)" asp-action="Index" asp-controller="Places" asp-area="Public">@L["Navbar.Destinations"]</a>
                     </li>
 
                     <!-- Nav item Blog -->
                     <li class="nav-item">
-                        <a class="nav-link" asp-action="Index" asp-controller="Blog" asp-area="Public">@L["Navbar.Stories"]</a>
+                        <a class="nav-link@(isBlogActive ? " active" : "")" aria-current="@(isBlogActive ? "page" : null)" asp-action="Index" asp-controller="Blog" asp-area="Public">@L["Navbar.Stories"]</a>
                     </li>
 
                     <!-- Nav item: More dropdown (Help / Contact / Agencies) -->

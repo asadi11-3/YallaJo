@@ -1,0 +1,29 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Explore newsletter banner — UI-ONLY and intentionally NON-SUBMITTING (no backend endpoint exists).
+    Deliberately NOT a <form>: the email field + button are inert (button type="button", no action,
+    no JS handler, no fake success message). Full-bleed background image (existing asset) + dark gradient
+    overlay for readable text. If a newsletter backend is added later, convert this to a real <form>.
+    ViewData knobs: "bgImage" (string) background image url, default /assets/images/default-newsletter.jpg
+*@
+@{
+    var bgImage = ViewData["bgImage"] as string ?? "/assets/images/default-newsletter.jpg";
+}
+<section class="pt-5 pt-md-7">
+    <div class="container">
+        <div class="yj-news-band" style="--yj-news-bg: url('@bgImage')">
+            <div class="yj-news-inner">
+                <span class="yj-eyebrow yj-eyebrow-gold">@Localizer["Home.Newsletter.Eyebrow"]</span>
+                <h2 class="yj-news-title mt-2 mb-2">@Localizer["Home.Newsletter.Title"]</h2>
+                <p class="yj-news-sub mb-4">@Localizer["Home.Newsletter.Subtitle"]</p>
+                <div class="yj-news-form" role="group" aria-label="@Localizer["Home.Newsletter.Title"]">
+                    <input type="email" class="form-control" inputmode="email" autocomplete="email"
+                           placeholder="@Localizer["Home.Newsletter.Placeholder"]" aria-label="@Localizer["Home.Newsletter.Placeholder"]" />
+                    <button type="button" class="btn btn-primary">@Localizer["Home.Newsletter.Button"]</button>
+                </div>
+                <small class="yj-news-note d-block mt-3">@Localizer["Home.Newsletter.Privacy"]</small>
+            </div>
+        </div>
+    </div>
+</section>

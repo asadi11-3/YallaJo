@@ -303,3 +303,172 @@
     border-top-left-radius: var(--bs-border-radius-lg) !important;
     border-bottom-left-radius: var(--bs-border-radius-lg) !important;
 }
+
+/* ------------------------------------------------------------------
+   11. Explore page redesign (RTL audit).
+       Almost every new yj- Explore component uses CSS logical
+       properties (inset-inline-*, margin-inline-*, padding-inline-*,
+       text-align:start/end) so it mirrors automatically in RTL.
+       Only the few items below need explicit help because they rely
+       on physical scroll geometry or LTR-built Bootstrap utilities.
+   ------------------------------------------------------------------ */
+
+/* Popular rail: the prev/next chevrons (.bi-chevron-left/right) are
+   already mirrored at the ::before glyph level by §5, so the arrows
+   point the correct way in RTL. The rail-nav buttons themselves use
+   inset-inline-start/end, so their positions mirror automatically.
+   Keep the horizontal scroll snapping LTR-of-content but RTL-of-flow:
+   the flex track reverses naturally in RTL; no transform needed.
+   We only guard against the track gaining a stray scrollbar offset. */
+[dir="rtl"] .yj-rail-track {
+    direction: rtl;
+}
+
+/* Destinations map labels / numeric overlays: keep Latin numerals and
+   star ratings visually LTR inside the otherwise-RTL card so digits
+   render in logical order. .yj-dest-rate / .yj-pop-meta hold a star
+   icon + a number; force LTR on just the numeric run. */
+[dir="rtl"] .yj-dest-rate,
+[dir="rtl"] .yj-pop-price {
+    direction: ltr;
+}
+
+/* Newsletter inline form: the input + button row uses flex + gap and
+   logical wrapping, so it mirrors automatically. The email input must
+   stay LTR for address legibility (matches the global Latin-input rule
+   in §6). */
+[dir="rtl"] .yj-news-form input[type="email"] {
+    direction: ltr;
+    text-align: start;
+}
+
+
+/* =====================================================================
+   §12 — Tours page redesign (Card/List view toggle + list variant)
+   Most of the layout is written with logical properties in site.css so
+   these overrides are minimal — only where an icon or fixed offset would
+   otherwise be double-flipped or misaligned in RTL.
+   ===================================================================== */
+
+/* Card/List toggle icons: keep visually identical in both directions —
+   grid and list glyphs are direction-neutral, so prevent any inherited
+   transform from double-flipping them. */
+[dir=rtl] .yj-view-toggle .btn > i {
+    transform: none;
+}
+
+/* List-card border between body and right side becomes an inline-end
+   border in LTR (via border-inline-start), which auto-flips in RTL.
+   Belt-and-braces so any legacy .border-start doesn''t leak through. */
+[dir=rtl] .yj-list-body-side {
+    text-align: end;
+}
+
+/* Ensure star icon in list card does not get mirrored (bi-star-fill).
+   nav-divider markers already handled by Bootstrap RTL bundle. */
+[dir=rtl] .yj-list-card .bi-star-fill {
+    transform: none;
+}
+
+/* (Stale rule removed — the new hero uses `.yj-tours-page .yj-hero-img`,
+   handled in §13 below, which mirrors the photo to match the template.) */
+
+
+/* =====================================================================
+   §13 — Tours parity rebuild (full-bleed hero, floating search, trust)
+   Companion to site.css .yj-tours-page block. All layout uses logical
+   properties (margin-inline / padding-inline / border-inline-*), so most
+   RTL behavior is automatic. The rules below only prevent icon
+   double-flips and stretch/mirror artifacts on the new hero.
+   ===================================================================== */
+
+/* Full-bleed hero photo: mirror in Arabic to match the template
+   (template applies heroImgTransform: scaleX(-1) in AR). We flip ONLY
+   the <img> photo layer — not the hero section, text, pills, or search
+   bar. Combined with the mirrored object-position below, the vehicle
+   lands on the LEFT and the light gradient sits on the RIGHT (under the
+   Arabic text), exactly like the Arabic template. */
+[dir="rtl"] .yj-tours-page .yj-hero-img {
+    transform: scaleX(-1);
+    /* LTR uses 70% 60%; mirror horizontally so the crop stays on the
+       vehicle after the scaleX flip. */
+    object-position: 30% 60%;
+}
+
+/* Hero gradient MUST be re-declared for RTL: CSS gradient keywords are
+   physical and do NOT respond to `dir`. LTR fades sand→photo left→right;
+   in RTL we fade right→left so the opaque sand sits under the Arabic
+   text on the RIGHT and the photo shows on the LEFT. */
+[dir="rtl"] .yj-tours-page .yj-hero-gradient {
+    background: linear-gradient(
+        to left,
+        #faf4ec 0%,
+        #faf4ec 30%,
+        rgba(250,244,236,.86) 44%,
+        rgba(250,244,236,.35) 60%,
+        rgba(250,244,236,0) 78%
+    );
+}
+
+/* Hero pill icons (shield-check / lightning / star) are direction-neutral
+   glyphs. Prevent any inherited flip from parent rules. */
+[dir="rtl"] .yj-tours-page .yj-hero-pill i,
+[dir="rtl"] .yj-tours-page .yj-hero-pill .bi {
+    transform: none;
+}
+
+/* Hero divider (gold bar + 2 dots) is symmetric; keep as-is. */
+[dir="rtl"] .yj-tours-page .yj-hero-divider {
+    /* symmetric — nothing to flip */
+}
+
+/* Floating search bar: field separators are border-inline-end
+   (auto-flips). Only the search icon inside inputs and the submit button
+   needs a no-flip safeguard so the magnifier stays semantically the
+   same shape in both directions. */
+[dir="rtl"] .yj-tours-page .yj-search .bi-search,
+[dir="rtl"] .yj-tours-page .yj-search-btn .bi-search,
+[dir="rtl"] .yj-tours-page .yj-search-btn .bi {
+    transform: none;
+}
+
+/* Decorative When/Guests placeholders — text should still align to
+   start (which is right in RTL) so hint text sits under the label. */
+[dir="rtl"] .yj-tours-page .yj-search-field input,
+[dir="rtl"] .yj-tours-page .yj-search-field select {
+    text-align: start;
+}
+
+/* Segmented view-tabs: grid/list glyphs are direction-neutral. */
+[dir="rtl"] .yj-tours-page .yj-view-tabs .yj-view-tab i,
+[dir="rtl"] .yj-tours-page .yj-view-tabs .yj-view-tab .bi {
+    transform: none;
+}
+
+/* Sidebar apply/clear icons + custom check glyph never flip. */
+[dir="rtl"] .yj-tours-page .yj-aside .bi-sliders,
+[dir="rtl"] .yj-tours-page .yj-filter-check .bi-check-lg,
+[dir="rtl"] .yj-tours-page .yj-apply-btn .bi {
+    transform: none;
+}
+
+/* Trust strip divider: border-inline-end in LTR auto-flips to
+   border-inline-start in RTL. Icon circles + text stay untouched. */
+[dir="rtl"] .yj-tours-page .yj-trust-icon .bi,
+[dir="rtl"] .yj-tours-page .yj-trust-col .bi {
+    transform: none;
+}
+
+/* Wishlist heart on cards is a heart glyph — direction neutral. */
+[dir="rtl"] .yj-tours-page .btn-wishlist .bi,
+[dir="rtl"] .yj-tours-page .btn-wishlist i {
+    transform: none;
+}
+
+/* List card body-side border already uses border-inline-start (auto
+   flips). Explicit text-align:end kept for legacy safety and to mirror
+   the template's inline-end alignment in AR. */
+[dir="rtl"] .yj-tours-page .yj-list-body-side {
+    text-align: end;
+}
+

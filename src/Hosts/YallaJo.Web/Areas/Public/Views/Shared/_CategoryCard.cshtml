@@ -1,0 +1,31 @@
+@model YallaJo.Web.Areas.Public.Models.Home.HomeCategoryVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Explore "Browse by category" image tile. HomeCategoryVm carries NO image (only Icon), so the
+    background photo is a shared DECORATIVE default (not fabricated per-category data) behind a strong
+    gradient overlay, matching the approved design's image-tile look. Icon + name + arrow sit on top.
+    Links to the Tours index filtered by categoryId — preserving the existing route/filter behavior.
+    ViewData knobs:
+      - "colClass" (string) grid column classes, default "col-6 col-md-4 col-lg-3"
+      - "bgImage"  (string) decorative background image, default /assets/images/default-place.jpg
+*@
+@{
+    var colClass = ViewData["colClass"] as string ?? "col-6 col-md-4 col-lg-3";
+    var icon = string.IsNullOrWhiteSpace(Model.Icon) ? "bi-tag" : Model.Icon;
+    var bgImage = ViewData["bgImage"] as string ?? "/assets/images/default-place.jpg";
+}
+<div class="@colClass">
+    <a asp-area="Public" asp-controller="Tours" asp-action="Index" asp-route-categoryId="@Model.Id"
+       class="yj-cat-tile h-100 text-decoration-none" aria-label="@Model.Name">
+        <img class="yj-cat-img object-cover" src="@bgImage" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+        <span class="yj-cat-overlay" aria-hidden="true"></span>
+        <span class="yj-cat-body">
+            <span class="yj-cat-ic" aria-hidden="true"><i class="bi @icon"></i></span>
+            <span class="yj-cat-name">@Model.Name</span>
+            <span class="yj-cat-go">
+                @Localizer["Home.Categories.ExploreLink"] <i class="bi bi-arrow-right ic-arrow"></i>
+            </span>
+        </span>
+    </a>
+</div>

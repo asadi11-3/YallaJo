@@ -1,0 +1,50 @@
+@model YallaJo.Web.Areas.Public.Models.Places.PlaceCardVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Explore "Top destinations" ranked image card (bento). Uses dynamic PlaceCardVm data + strong
+    gradient overlay for readable text. Links to Places/Details by slug (existing route).
+    PlaceCardVm has no tour-count field, so the sub line shows LocationLabel + rating only (no fabricated data).
+    ViewData knobs:
+      - "rank"     (int?)   1-based rank badge (e.g. 01). Omit to hide.
+      - "tall"     (bool)   render a taller bento tile (default false)
+      - "colClass" (string) grid column classes, default "col-12 col-sm-6 col-lg-4"
+*@
+@{
+    var rank = ViewData["rank"] as int?;
+    var tall = ViewData["tall"] as bool? ?? false;
+    var colClass = ViewData["colClass"] as string ?? "col-12 col-sm-6 col-lg-4";
+}
+<div class="@colClass">
+    <a asp-area="Public" asp-controller="Places" asp-action="Details" asp-route-slug="@Model.Slug"
+       class="yj-dest-card @(tall ? "yj-dest-tall" : "") h-100 text-decoration-none" aria-label="@Model.Name">
+        @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+        {
+            <img src="@Model.ImageUrl" class="yj-dest-img object-cover" alt="@Model.Name" loading="lazy" decoding="async" />
+        }
+        else
+        {
+            <img src="/assets/images/default-destination.jpg" class="yj-dest-img object-cover" alt="@Model.Name" loading="lazy" decoding="async" />
+        }
+        <span class="yj-dest-overlay" aria-hidden="true"></span>
+
+        @if (rank is int r)
+        {
+            <span class="yj-dest-rank">@r.ToString("00")</span>
+        }
+        <span class="yj-dest-rate">
+            <i class="bi bi-star-fill" aria-hidden="true"></i>@Model.AverageRating.ToString("0.0")
+        </span>
+
+        <span class="yj-dest-body">
+            <span class="yj-dest-name">@Model.Name</span>
+            @if (!string.IsNullOrWhiteSpace(Model.LocationLabel))
+            {
+                <span class="yj-dest-sub">
+                    <i class="bi bi-geo-alt" aria-hidden="true"></i>@Model.LocationLabel
+                </span>
+            }
+        </span>
+        <span class="yj-dest-go" aria-hidden="true"><i class="bi bi-arrow-right ic-arrow"></i></span>
+    </a>
+</div>

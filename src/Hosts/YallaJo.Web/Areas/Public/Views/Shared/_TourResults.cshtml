@@ -15,6 +15,14 @@
     var rangeEnd = range.End;
     var isAuthed = User.Identity?.IsAuthenticated == true;
 
+    // View mode: server-authoritative via ?viewMode= (card|list). Default card.
+    // Controllers/ViewModels intentionally untouched — we read the raw query directly.
+    var viewModeRaw = Context.Request.Query["viewMode"].ToString();
+    var isListView = string.Equals(viewModeRaw, "list", StringComparison.OrdinalIgnoreCase);
+    var cardVariant = isListView ? "list" : "standard";
+    var gridColClass = isListView ? "col-12 js-tour-card yj-list-col" : "col-md-6 col-xl-4 js-tour-card yj-card-col";
+    var gridWrapperClass = isListView ? "row g-3 yj-view-list yj-tour-grid" : "row g-4 yj-view-card yj-tour-grid";
+
     // Builds the current URL minus one query parameter (and minus page, so removal resets paging).
     string RemoveParamUrl(string param)
     {
@@ -51,15 +59,15 @@
     if (f.HasDiscount == true) { chips.Add((Localizer["Public.Filter.HasDiscount"].Value, "hasDiscount")); }
 }
 
-<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-    <h2 class="h3 mb-0 me-auto" id="tourResultsCount">
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3 yj-results-count-row">
+    <h2 class="h3 mb-0 me-auto yj-results-count" id="tourResultsCount">
         @Localizer["Public.ShowingResults", rangeStart, rangeEnd, Model.TotalCount]
     </h2>
 </div>
 
 @if (chips.Count > 0)
 {
-    <div class="d-flex flex-wrap gap-2 mb-3" id="tourActiveFilters">
+    <div class="d-flex flex-wrap gap-2 mb-3 yj-active-filters" id="tourActiveFilters">
         @foreach (var chip in chips)
         {
             <a class="badge text-bg-light border d-inline-flex align-items-center gap-1 text-decoration-none js-filter-chip"
@@ -77,11 +85,11 @@
 
 @if (Model.HasResults)
 {
-    <div class="row g-4" id="tourGrid">
+    <div class="@gridWrapperClass" id="tourGrid" data-view-mode="@(isListView ? "list" : "card")">
         @foreach (var tour in Model.Tours)
         {
             <partial name="_TourCard" model="tour"
-                     view-data='@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-md-6 col-xl-4 js-tour-card" }, { "dataTitle", tour.Name.ToLowerInvariant() } })' />
+                     view-data='@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", gridColClass }, { "dataTitle", tour.Name.ToLowerInvariant() }, { "CardVariant", cardVariant } })' />
         }
     </div>
 

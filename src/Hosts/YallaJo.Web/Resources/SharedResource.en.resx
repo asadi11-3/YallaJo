@@ -62,7 +62,7 @@
     <value>Life is an adventure, explore it</value>
   </data>
   <data name="Home.Hero.Lead" xml:space="preserve">
-    <value>Discover authentic experiences across Jordan. Explore tours, local guides, hidden gems, and unforgettable adventures — all in one place.</value>
+    <value>Authentic tours, hidden gems and unforgettable adventures — handpicked with trusted local guides, from the rose-red city of Petra to the silence of Wadi Rum.</value>
   </data>
   <data name="Home.Search.Label" xml:space="preserve">
     <value>Search tours</value>
@@ -12664,9 +12664,9 @@
 <data name="Home.Hero.TitleEmphasis" xml:space="preserve">
 <value>tours in Jordan</value>
 </data>
-<data name="Home.Hero.Cta" xml:space="preserve">
-<value>Explore Tours</value>
-</data>
+  <data name="Home.Hero.Cta" xml:space="preserve">
+    <value>Explore tours</value>
+  </data>
 <data name="Home.Hero.Watch" xml:space="preserve">
 <value>Watch our story</value>
 </data>
@@ -12676,15 +12676,54 @@
 <data name="Home.Hero.Eyebrow" xml:space="preserve">
 <value>Explore Jordan</value>
 </data>
-<data name="Home.Hero.Title1" xml:space="preserve">
-<value>Discover</value>
-</data>
-<data name="Home.Hero.TitleAccent" xml:space="preserve">
-<value>Jordan</value>
-</data>
-<data name="Home.Hero.Title2" xml:space="preserve">
-<value>One Journey at a Time</value>
-</data>
+  <data name="Home.Hero.Title1" xml:space="preserve">
+    <value>Discover </value>
+  </data>
+  <data name="Home.Hero.TitleAccent" xml:space="preserve">
+    <value>Jordan,</value>
+  </data>
+  <data name="Home.Hero.Title2" xml:space="preserve">
+    <value> one </value>
+  </data>
+  <data name="Home.Hero.TitleAccent2" xml:space="preserve">
+    <value>journey</value>
+  </data>
+  <data name="Home.Hero.Title3" xml:space="preserve">
+    <value> at a time</value>
+  </data>
+  <data name="Home.Hero.Pill" xml:space="preserve">
+    <value>Jordan’s #1 local travel marketplace</value>
+  </data>
+  <data name="Home.Hero.SecureTitle" xml:space="preserve">
+    <value>Secure booking</value>
+  </data>
+  <data name="Home.Hero.SecureSub" xml:space="preserve">
+    <value>Free cancellation · 24h</value>
+  </data>
+  <data name="Home.Hero.RatingTitle" xml:space="preserve">
+    <value>Petra Full-Day</value>
+  </data>
+  <data name="Home.Hero.RatingMeta" xml:space="preserve">
+    <value>4.9 ★ · 1,240 reviews</value>
+  </data>
+  <data name="Home.Hero.StatRating" xml:space="preserve">
+    <value>4.9</value>
+  </data>
+  <data name="Home.Hero.StatRatingSub" xml:space="preserve">
+    <value>from 12,400+ travelers</value>
+  </data>
+  <data name="Home.Hero.StatTours" xml:space="preserve">
+    <value>320+</value>
+  </data>
+  <data name="Home.Hero.StatToursSub" xml:space="preserve">
+    <value>Curated tours</value>
+  </data>
+  <data name="Home.Hero.StatGuides" xml:space="preserve">
+    <value>180+</value>
+  </data>
+  <data name="Home.Hero.StatGuidesSub" xml:space="preserve">
+    <value>Verified local guides</value>
+  </data>
 <data name="Home.Hero.ImageAlt" xml:space="preserve">
 <value>The Treasury at Petra, Jordan</value>
 </data>
@@ -12757,10 +12796,13 @@
 <data name="Public.Filter.Preferences" xml:space="preserve">
 <value>Preferences</value>
 </data>
-<data name="Public.Breadcrumb.Home" xml:space="preserve">
-<value>Home</value>
-</data>
-<data name="Map.Aria" xml:space="preserve">
+  <data name="Public.Breadcrumb.Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Public.Breadcrumb.Explore" xml:space="preserve">
+    <value>Explore</value>
+  </data>
+  <data name="Map.Aria" xml:space="preserve">
 <value>Interactive map</value>
 </data>
 <data name="Map.OpenInGoogleMaps" xml:space="preserve">
@@ -16737,5 +16779,92 @@
   </data>
   <data name="Accounts.ChangePassword.ContactSupport" xml:space="preserve">
     <value>Contact support</value>
+  </data>
+  <data name="Home.Categories.ExploreLink" xml:space="preserve">
+    <value>Explore</value>
+  </data>
+  <data name="Home.Featured.EditorPick" xml:space="preserve">
+    <value>Editor's pick</value>
+  </data>
+  <data name="Home.Featured.AllChip" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Home.Popular.Badge" xml:space="preserve">
+    <value>Popular</value>
+  </data>
+  <data name="Home.Popular.Prev" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Home.Popular.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Home.Destinations.MapTitle" xml:space="preserve">
+    <value>Explore on the map</value>
+  </data>
+  <data name="Home.Newsletter.Eyebrow" xml:space="preserve">
+    <value>Stay in the loop</value>
+  </data>
+  <data name="Home.Newsletter.Title" xml:space="preserve">
+    <value>Get Jordan travel inspiration in your inbox</value>
+  </data>
+  <data name="Home.Newsletter.Subtitle" xml:space="preserve">
+    <value>Handpicked tours, hidden gems, and seasonal offers — no spam, ever.</value>
+  </data>
+  <data name="Home.Newsletter.Placeholder" xml:space="preserve">
+    <value>Enter your email address</value>
+  </data>
+  <data name="Home.Newsletter.Button" xml:space="preserve">
+    <value>Subscribe</value>
+  </data>
+  <data name="Home.Newsletter.Privacy" xml:space="preserve">
+    <value>We respect your privacy. Unsubscribe anytime.</value>
+  </data>
+  <data name="Public.View.Card" xml:space="preserve">
+    <value>Card view</value>
+  </data>
+  <data name="Public.View.List" xml:space="preserve">
+    <value>List view</value>
+  </data>
+  <data name="Public.View.CardAria" xml:space="preserve">
+    <value>Switch to card view</value>
+  </data>
+  <data name="Public.View.ListAria" xml:space="preserve">
+    <value>Switch to list view</value>
+  </data>
+  <data name="Public.Search.Where" xml:space="preserve">
+    <value>Where to?</value>
+  </data>
+  <data name="Public.Search.WherePlaceholder" xml:space="preserve">
+    <value>e.g. Petra, Wadi Rum</value>
+  </data>
+  <data name="Public.Search.When" xml:space="preserve">
+    <value>When?</value>
+  </data>
+  <data name="Public.Search.WhenPlaceholder" xml:space="preserve">
+    <value>Select date</value>
+  </data>
+  <data name="Public.Search.Guests" xml:space="preserve">
+    <value>Guests</value>
+  </data>
+  <data name="Public.Search.GuestsPlaceholder" xml:space="preserve">
+    <value>2 guests</value>
+  </data>
+  <data name="Public.Search.Experience" xml:space="preserve">
+    <value>Experience</value>
+  </data>
+  <data name="Public.Search.ExperiencePlaceholder" xml:space="preserve">
+    <value>Any category</value>
+  </data>
+  <data name="Public.Search.Button" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Public.Hero.Pill.Guides" xml:space="preserve">
+    <value>Verified local guides</value>
+  </data>
+  <data name="Public.Hero.Pill.Instant" xml:space="preserve">
+    <value>Instant booking</value>
+  </data>
+  <data name="Public.Hero.Pill.TopRated" xml:space="preserve">
+    <value>Top rated tours</value>
   </data>
 </root>

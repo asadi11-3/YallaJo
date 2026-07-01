@@ -121,12 +121,65 @@
         });
     }
 
+    /* Popular-right-now horizontal rail: prev/next buttons scroll the track.
+       RTL-aware (scroll sign flips automatically because scrollLeft is negative
+       in RTL on modern engines; we read the computed direction to be safe). */
+    function initRails() {
+        document.querySelectorAll('[data-rail]').forEach(function (rail) {
+            var track = rail.querySelector('[data-rail-track]');
+            if (!track) return;
+            var prev = rail.querySelector('[data-rail-prev]');
+            var next = rail.querySelector('[data-rail-next]');
+            var isRtl = (getComputedStyle(rail).direction === 'rtl');
+
+            function step() {
+                var card = track.querySelector('.yj-pop-card');
+                var amount = card ? (card.getBoundingClientRect().width + 16) * 2 : track.clientWidth * 0.8;
+                return Math.max(amount, 200);
+            }
+            function scrollByDir(forward) {
+                var delta = step() * (forward ? 1 : -1) * (isRtl ? -1 : 1);
+                try { track.scrollBy({ left: delta, behavior: 'smooth' }); }
+                catch (e) { track.scrollLeft += delta; }
+            }
+            function refreshNav() {
+                if (!prev && !next) return;
+                var max = track.scrollWidth - track.clientWidth - 1;
+                var pos = Math.abs(track.scrollLeft);
+                if (prev) prev.disabled = pos <= 0;
+                if (next) next.disabled = pos >= max;
+            }
+            if (prev) prev.addEventListener('click', function () { scrollByDir(false); });
+            if (next) next.addEventListener('click', function () { scrollByDir(true); });
+            track.addEventListener('scroll', refreshNav, { passive: true });
+            refreshNav();
+        });
+    }
+
+    /* Featured category chips: progressive client-side highlight only.
+       Chips remain real links (?categoryId=...) so no-JS users still navigate.
+       The "All" chip [data-chip-filter="all"] just toggles the active class. */
+    function initChips() {
+        document.querySelectorAll('.yj-chips').forEach(function (group) {
+            var chips = group.querySelectorAll('.yj-chip');
+            if (!chips.length) return;
+            chips.forEach(function (chip) {
+                chip.addEventListener('click', function () {
+                    chips.forEach(function (c) { c.classList.remove('active'); });
+                    chip.classList.add('active');
+                });
+            });
+        });
+    }
+
     function init() {
         initLocationChoices();
         initDateRange();
         initParticipantsCounter();
         initGLightbox();
         initTooltips();
+        initRails();
+        initChips();
     }
 
     if (document.readyState === 'loading') {

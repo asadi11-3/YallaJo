@@ -1,0 +1,90 @@
+@model IReadOnlyList<YallaJo.Web.Areas.Public.Models.Places.PlaceCardVm>
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Explore booking / search bar (master plan §3.x). Extracted verbatim from Home/Index so the
+    exact element IDs and data-attrs that home-index.js wires remain intact:
+      #heroLocation (name=placeId, data-choices), #heroDate + hidden #heroDateFrom/#heroDateTo,
+      #heroParticipantsToggle, #heroParticipantsLabel (data-word-*), hidden #heroParticipants,
+      [data-counter][data-action][data-counter-value].
+    GET form posts to Public/Tours/Index (unchanged). Stacks cleanly on mobile via the grid.
+    Model: the destination options (Model.PopularPlaces). Pass null/empty for "any destination" only.
+*@
+<div class="card shadow yj-searchbar-card p-3 p-md-4">
+    <form method="get" asp-area="Public" asp-controller="Tours" asp-action="Index" class="row g-3 align-items-end">
+        @* Location / destination *@
+        <div class="col-12 col-md-4">
+            <label for="heroLocation" class="form-label fw-semibold small mb-1">
+                <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>@Localizer["Home.Search.Where"]
+            </label>
+            <select id="heroLocation" name="placeId" class="form-select" data-choices>
+                <option value="">@Localizer["Home.Search.AnyDestination"]</option>
+                @if (Model is { Count: > 0 })
+                {
+                    @foreach (var place in Model)
+                    {
+                        <option value="@place.Id">@place.Name@(string.IsNullOrWhiteSpace(place.City) ? "" : ", " + place.City)</option>
+                    }
+                }
+            </select>
+        </div>
+
+        @* Date — Flatpickr range *@
+        <div class="col-12 col-md-4">
+            <label for="heroDate" class="form-label fw-semibold small mb-1">
+                <i class="bi bi-calendar me-1" aria-hidden="true"></i>@Localizer["Home.Search.When"]
+            </label>
+            <input id="heroDate" type="text" class="form-control" placeholder="@Localizer["Home.Search.SelectDates"]" autocomplete="off" />
+            <input type="hidden" name="from" id="heroDateFrom" />
+            <input type="hidden" name="to" id="heroDateTo" />
+        </div>
+
+        @* Participants (Adults + Children counter) *@
+        <div class="col-8 col-md-3">
+            <label class="form-label fw-semibold small mb-1">
+                <i class="bi bi-people me-1" aria-hidden="true"></i>@Localizer["Home.Search.Who"]
+            </label>
+            <div class="dropdown">
+                <button class="form-select text-start" type="button" id="heroParticipantsToggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span id="heroParticipantsLabel"
+                          data-word-adult="@Localizer["Home.Search.WordAdult"]"
+                          data-word-adults="@Localizer["Home.Search.WordAdults"]"
+                          data-word-child="@Localizer["Home.Search.WordChild"]"
+                          data-word-children="@Localizer["Home.Search.WordChildren"]">1 @Localizer["Home.Search.WordAdult"]</span>
+                </button>
+                <div class="dropdown-menu p-3 min-w-240" aria-labelledby="heroParticipantsToggle">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <div class="fw-semibold">@Localizer["Home.Search.Adults"]</div>
+                            <small class="text-body-secondary">@Localizer["Home.Search.AdultsAge"]</small>
+                        </div>
+                        <div class="btn-group" role="group" aria-label="@Localizer["Home.Search.AdultsCounter"]">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="adults" data-action="dec" aria-label="@Localizer["Home.Search.DecreaseAdults"]">−</button>
+                            <span class="btn btn-sm btn-light disabled" data-counter-value="adults">1</span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="adults" data-action="inc" aria-label="@Localizer["Home.Search.IncreaseAdults"]">+</button>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-semibold">@Localizer["Home.Search.Children"]</div>
+                            <small class="text-body-secondary">@Localizer["Home.Search.ChildrenAge"]</small>
+                        </div>
+                        <div class="btn-group" role="group" aria-label="@Localizer["Home.Search.ChildrenCounter"]">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="children" data-action="dec" aria-label="@Localizer["Home.Search.DecreaseChildren"]">−</button>
+                            <span class="btn btn-sm btn-light disabled" data-counter-value="children">0</span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="children" data-action="inc" aria-label="@Localizer["Home.Search.IncreaseChildren"]">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" name="participants" id="heroParticipants" value="1" />
+        </div>
+
+        @* Submit *@
+        <div class="col-4 col-md-1 d-grid">
+            <button type="submit" class="btn btn-primary yj-search-go" aria-label="@Localizer["Navbar.Search"]">
+                <i class="bi bi-search" aria-hidden="true"></i>
+            </button>
+        </div>
+    </form>
+</div>

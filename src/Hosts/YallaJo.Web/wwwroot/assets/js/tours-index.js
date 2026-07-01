@@ -234,8 +234,103 @@
         syncPriceUi(false);
     }
 
+    // ---- Card/List view toggle (server-authoritative via ?viewMode=card|list) --
+    // Preference is remembered in localStorage but ALSO mirrored into the two
+    // hidden inputs (#filterViewMode, #sortViewMode) so every subsequent AJAX
+    // submit re-renders _TourResults with the correct CardVariant server-side.
+    var VIEW_STORAGE_KEY = "yj-tours-view";
+    var VIEW_VALUES = { card: true, list: true };
+
+    function readStoredView() {
+        try {
+            var v = window.localStorage && window.localStorage.getItem(VIEW_STORAGE_KEY);
+            return VIEW_VALUES[v] ? v : null;
+        } catch (err) { return null; }
+    }
+    function writeStoredView(v) {
+        try {
+            if (window.localStorage && VIEW_VALUES[v]) {
+                window.localStorage.setItem(VIEW_STORAGE_KEY, v);
+            }
+        } catch (err) { /* quota / private mode — non-fatal */ }
+    }
+    function readUrlView(href) {
+        try {
+            var u = new URL(href, window.location.origin);
+            var v = u.searchParams.get("viewMode");
+            return VIEW_VALUES[v] ? v : null;
+        } catch (err) { return null; }
+    }
+    function setViewInputs(v) {
+        var a = document.getElementById("filterViewMode");
+        var b = document.getElementById("sortViewMode");
+        if (a) { a.value = v; }
+        if (b) { b.value = v; }
+    }
+    function setViewToggleUi(v) {
+        var group = document.querySelector("[data-yj-view-toggle]");
+        if (!group) { return; }
+        group.querySelectorAll("[data-view-value]").forEach(function (btn) {
+            var on = btn.getAttribute("data-view-value") === v;
+            btn.classList.toggle("active", on);
+            btn.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+    }
+    function buildUrlWithView(v) {
+        try {
+            var u = new URL(window.location.href);
+            u.searchParams.set("viewMode", v);
+            // Reset to first page whenever the view mode changes to avoid empty pages.
+            u.searchParams.delete("page");
+            return u.toString();
+        } catch (err) {
+            return window.location.pathname + "?viewMode=" + v;
+        }
+    }
+
+    var toggleGroup = document.querySelector("[data-yj-view-toggle]");
+    if (toggleGroup) {
+        toggleGroup.addEventListener("click", function (e) {
+            var btn = e.target.closest("[data-view-value]");
+            if (!btn) { return; }
+            var v = btn.getAttribute("data-view-value");
+            if (!VIEW_VALUES[v]) { return; }
+            // Already active? no-op.
+            if (btn.classList.contains("active")) { return; }
+            setViewInputs(v);
+            setViewToggleUi(v);
+            writeStoredView(v);
+            loadResults(buildUrlWithView(v), true);
+        });
+    }
+
+    // Initial sync: if URL has no viewMode but user previously chose "list",
+    // apply it once. If saved === "card" (default), do nothing — server
+    // already rendered card view.
+    (function initViewPreference() {
+        var urlView = readUrlView(window.location.href);
+        if (urlView) {
+            // URL wins; ensure inputs + toggle + storage all agree.
+            setViewInputs(urlView);
+            setViewToggleUi(urlView);
+            writeStoredView(urlView);
+            return;
+        }
+        var stored = readStoredView();
+        if (stored && stored !== "card" && toggleGroup) {
+            // Fire the swap so server re-renders with the preferred variant.
+            setViewInputs(stored);
+            setViewToggleUi(stored);
+            loadResults(buildUrlWithView(stored), true);
+        }
+    })();
+
     // Back/forward restores results (UI-UX-S1).
     window.addEventListener("popstate", function () {
+        // Keep toggle UI in sync with whatever the restored URL says.
+        var v = readUrlView(window.location.href) || "card";
+        setViewInputs(v);
+        setViewToggleUi(v);
         loadResults(window.location.href, false);
     });
 

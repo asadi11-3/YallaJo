@@ -1,5 +1,7 @@
 ﻿@model YallaJo.Web.Areas.Public.Models.Home.HomeVm
+@using System.Text.Json
 @using YallaJo.Web.Infrastructure.Seo
+@using YallaJo.Web.Infrastructure.Maps
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
@@ -16,12 +18,33 @@
         OgImage = $"{baseUrl}/assets/images/bg/06.jpg",
         OgType = "website",
     });
+
+    // Destinations map markers — built from the SAME dynamic PopularPlaces data (no static pins).
+    // (0,0) means the place has no geocoordinates yet, so it is excluded from the map only.
+    string? destMarkersJson = null;
+    if (Model.HasPopularPlaces)
+    {
+        var pins = Model.PopularPlaces
+            .Where(p => p.Latitude != 0 || p.Longitude != 0)
+            .Select(p => new Dictionary<string, object?>
+            {
+                ["lat"] = p.Latitude,
+                ["lng"] = p.Longitude,
+                ["label"] = p.Name,
+                ["url"] = Url.Action("Details", "Places", new { area = "Public", slug = p.Slug }),
+            })
+            .ToList();
+        if (pins.Count > 0)
+        {
+            destMarkersJson = JsonSerializer.Serialize(pins);
+        }
+    }
 }
 
 @Html.AntiForgeryToken()
 
-@*========================== Hero ==========================*@
-<section class="pt-4 pt-md-5 position-relative overflow-hidden">
+@*========================== 1. Hero ==========================*@
+<section id="hero" class="yj-section-anchor pt-4 pt-md-5 position-relative overflow-hidden">
     @* Decorative desert-gold compass ornament on the sand canvas *@
     <svg class="yj-ornament top-0 end-0 mt-5 me-5" width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true">
         <circle cx="12" cy="12" r="10" />
@@ -32,32 +55,44 @@
         <div class="row align-items-center g-4 g-lg-5">
             @* Left column: eyebrow + heading + lead + CTAs + trust row *@
             <div class="col-lg-6">
-                <span class="yj-eyebrow mb-2">@Localizer["Home.Hero.Eyebrow"]</span>
+                <span class="yj-hero-pill mb-3">
+                    <span class="yj-hero-pill-dot" aria-hidden="true"></span>@Localizer["Home.Hero.Pill"]
+                </span>
                 <h1 class="yj-hero-title mt-2 mb-3">
-                    @Localizer["Home.Hero.Title1"]
-                    <span class="text-primary">@Localizer["Home.Hero.TitleAccent"]</span>
-                    @Localizer["Home.Hero.Title2"]
+                    @Localizer["Home.Hero.Title1"]<span class="yj-hero-em-burgundy">@Localizer["Home.Hero.TitleAccent"]</span>@Localizer["Home.Hero.Title2"]<span class="yj-hero-em-gold">@Localizer["Home.Hero.TitleAccent2"]</span>@Localizer["Home.Hero.Title3"]
                 </h1>
                 <p class="lead text-body-secondary mb-4">@Localizer["Home.Hero.Lead"]</p>
 
                 <div class="d-flex flex-wrap align-items-center gap-3 mb-4 mb-md-5">
-                    <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-primary rounded-pill px-4 mb-0">@Localizer["Home.Hero.Cta"]</a>
+                    <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-primary rounded-pill px-4 mb-0">
+                        @Localizer["Home.Hero.Cta"]<i class="bi bi-arrow-right ic-arrow ms-2" aria-hidden="true"></i>
+                    </a>
                     @* 'Watch our story' routes to Stories (Blog) until a real brand video exists (Phase 11 honesty rule). *@
                     <a asp-area="Public" asp-controller="Blog" asp-action="Index" class="btn btn-outline-dark rounded-pill px-4 mb-0">
                         <i class="bi bi-play-circle me-2" aria-hidden="true"></i>@Localizer["Home.Hero.Watch"]
                     </a>
                 </div>
 
-                @* Trust row — honest copy only (Phase 11: no fabricated stats). *@
-                <div class="d-flex align-items-center gap-3">
-                    <div class="yj-avatar-group" aria-hidden="true">
-                        <img src="~/assets/images/avatar/01.jpg" alt="">
-                        <img src="~/assets/images/avatar/02.jpg" alt="">
-                        <img src="~/assets/images/avatar/03.jpg" alt="">
+                @* Trust/stats row — avatars + presentation marketing copy (resx, approved as static UI chrome). *@
+                <div class="yj-hero-stats">
+                    <div class="yj-hero-stat yj-hero-stat-rating">
+                        <div class="yj-avatar-group" aria-hidden="true">
+                            <img src="~/assets/images/avatar/01.jpg" alt="" loading="lazy" decoding="async">
+                            <img src="~/assets/images/avatar/02.jpg" alt="" loading="lazy" decoding="async">
+                            <img src="~/assets/images/avatar/03.jpg" alt="" loading="lazy" decoding="async">
+                        </div>
+                        <div>
+                            <span class="yj-hero-stat-num"><i class="bi bi-star-fill" aria-hidden="true"></i> @Localizer["Home.Hero.StatRating"]</span>
+                            <span class="yj-hero-stat-sub">@Localizer["Home.Hero.StatRatingSub"]</span>
+                        </div>
                     </div>
-                    <div>
-                        <h6 class="mb-0">@Localizer["Home.Trust.Title"]</h6>
-                        <small class="text-body-secondary">@Localizer["Home.Trust.Text"]</small>
+                    <div class="yj-hero-stat">
+                        <span class="yj-hero-stat-num">@Localizer["Home.Hero.StatTours"]</span>
+                        <span class="yj-hero-stat-sub">@Localizer["Home.Hero.StatToursSub"]</span>
+                    </div>
+                    <div class="yj-hero-stat">
+                        <span class="yj-hero-stat-num">@Localizer["Home.Hero.StatGuides"]</span>
+                        <span class="yj-hero-stat-sub">@Localizer["Home.Hero.StatGuidesSub"]</span>
                     </div>
                 </div>
             </div>
@@ -65,26 +100,29 @@
             @* Right column: rounded hero photo + floating badge + destination thumbs *@
             <div class="col-lg-6">
                 <div class="yj-hero-media">
-                    @* TODO(content): placeholder from theme assets — swap assets/images/jordan/*.jpg for licensed Jordan photography. *@
                     <img src="~/assets/images/jordan/petra-hero.jpg" class="yj-hero-img" alt="@Localizer["Home.Hero.ImageAlt"]" fetchpriority="high">
 
-                    <div class="yj-float-badge">
-                        <span class="yj-badge-icon"><i class="bi bi-headset" aria-hidden="true"></i></span>
+                    @* Floating card: secure booking assurance (top-end) — static presentation chrome. *@
+                    <div class="yj-hero-float-card yj-hero-float-top">
+                        <span class="yj-hero-float-icon"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
                         <div>
-                            <h6 class="mb-0 small">24/7</h6>
-                            <small class="small text-body-secondary">@Localizer["Home.Hero.SupportBadge"]</small>
+                            <span class="yj-hero-float-title">@Localizer["Home.Hero.SecureTitle"]</span>
+                            <span class="yj-hero-float-sub">@Localizer["Home.Hero.SecureSub"]</span>
                         </div>
                     </div>
 
-                    <div class="yj-hero-thumbs">
-                        <div class="yj-hero-thumb">
-                            <img src="~/assets/images/jordan/wadi-rum.jpg" alt="">
-                            <span class="yj-thumb-label">@Localizer["Home.Hero.Thumb1"]</span>
+                    @* Floating card: featured tour rating (bottom-end) — static presentation chrome. *@
+                    <div class="yj-hero-float-card yj-hero-float-bottom">
+                        <span class="yj-hero-float-icon yj-hero-float-icon-gold"><i class="bi bi-star-fill" aria-hidden="true"></i></span>
+                        <div>
+                            <span class="yj-hero-float-title">@Localizer["Home.Hero.RatingTitle"]</span>
+                            <span class="yj-hero-float-sub">@Localizer["Home.Hero.RatingMeta"]</span>
                         </div>
-                        <div class="yj-hero-thumb">
-                            <img src="~/assets/images/jordan/dead-sea.jpg" alt="">
-                            <span class="yj-thumb-label">@Localizer["Home.Hero.Thumb2"]</span>
-                        </div>
+                    </div>
+
+                    @* Large Wadi Rum inset card overlapping the bottom-start corner. *@
+                    <div class="yj-hero-inset">
+                        <img src="~/assets/images/jordan/wadi-rum.jpg" alt="@Localizer["Home.Hero.Thumb1"]" loading="lazy" decoding="async">
                     </div>
                 </div>
             </div>
@@ -92,96 +130,15 @@
     </div>
 </section>
 
-@*========================== Check Availability search bar ==========================*@
-<section class="pt-4 pt-md-5">
+@*========================== 2 & 3. Search / booking bar ==========================*@
+<section id="search" class="yj-section-anchor pt-4 pt-md-5">
     <div class="container">
-        <div class="card shadow rounded-3 p-3 p-md-4">
-            @* Submits to Tours/Index — placeId is honored as a filter today;
-               from/to/participants travel in the URL as future-filter intent. *@
-            @* Phase 4.1: hero search targets /tours directly (Search page retired; /search 301s here). from/to/participants ride along as URL intent until backend supports availability-window filtering. *@
-            <form method="get" asp-area="Public" asp-controller="Tours" asp-action="Index" class="row g-3 align-items-end">
-                @* Location pill *@
-                <div class="col-md-4">
-                    <label for="heroLocation" class="form-label fw-semibold small mb-1">
-                        <i class="bi bi-geo-alt me-1"></i>@Localizer["Home.Search.Where"]
-                    </label>
-                    <select id="heroLocation" name="placeId" class="form-select" data-choices>
-                        <option value="">@Localizer["Home.Search.AnyDestination"]</option>
-                        @if (Model.PopularPlaces is { Count: > 0 })
-                        {
-                            @foreach (var place in Model.PopularPlaces)
-                            {
-                                <option value="@place.Id">@place.Name@(string.IsNullOrWhiteSpace(place.City) ? "" : ", " + place.City)</option>
-                            }
-                        }
-                    </select>
-                </div>
-
-                @* Date pill — Flatpickr range *@
-                <div class="col-md-4">
-                    <label for="heroDate" class="form-label fw-semibold small mb-1">
-                        <i class="bi bi-calendar me-1"></i>@Localizer["Home.Search.When"]
-                    </label>
-                    <input id="heroDate" type="text" class="form-control" placeholder="@Localizer["Home.Search.SelectDates"]" autocomplete="off" />
-                    <input type="hidden" name="from" id="heroDateFrom" />
-                    <input type="hidden" name="to" id="heroDateTo" />
-                </div>
-
-                @* Participants pill (Adults + Children counter) *@
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold small mb-1">
-                        <i class="bi bi-people me-1"></i>@Localizer["Home.Search.Who"]
-                    </label>
-                    <div class="dropdown">
-                        <button class="form-select text-start" type="button" id="heroParticipantsToggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            @* Phase 9: localized plural words consumed by home-index.js via data attrs *@
-                            <span id="heroParticipantsLabel"
-                                  data-word-adult="@Localizer["Home.Search.WordAdult"]"
-                                  data-word-adults="@Localizer["Home.Search.WordAdults"]"
-                                  data-word-child="@Localizer["Home.Search.WordChild"]"
-                                  data-word-children="@Localizer["Home.Search.WordChildren"]">1 @Localizer["Home.Search.WordAdult"]</span>
-                        </button>
-                        <div class="dropdown-menu p-3 min-w-240" aria-labelledby="heroParticipantsToggle">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div>
-                                    <div class="fw-semibold">@Localizer["Home.Search.Adults"]</div>
-                                    <small class="text-body-secondary">@Localizer["Home.Search.AdultsAge"]</small>
-                                </div>
-                                <div class="btn-group" role="group" aria-label="@Localizer["Home.Search.AdultsCounter"]">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="adults" data-action="dec" aria-label="@Localizer["Home.Search.DecreaseAdults"]">−</button>
-                                    <span class="btn btn-sm btn-light disabled" data-counter-value="adults">1</span>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="adults" data-action="inc" aria-label="@Localizer["Home.Search.IncreaseAdults"]">+</button>
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-semibold">@Localizer["Home.Search.Children"]</div>
-                                    <small class="text-body-secondary">@Localizer["Home.Search.ChildrenAge"]</small>
-                                </div>
-                                <div class="btn-group" role="group" aria-label="@Localizer["Home.Search.ChildrenCounter"]">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="children" data-action="dec" aria-label="@Localizer["Home.Search.DecreaseChildren"]">−</button>
-                                    <span class="btn btn-sm btn-light disabled" data-counter-value="children">0</span>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-counter="children" data-action="inc" aria-label="@Localizer["Home.Search.IncreaseChildren"]">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <input type="hidden" name="participants" id="heroParticipants" value="1" />
-                </div>
-
-                @* Submit pill *@
-                <div class="col-md-1 d-grid">
-                    <button type="submit" class="btn btn-primary" aria-label="@Localizer["Navbar.Search"]">
-                        <i class="bi bi-search"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
+        <partial name="_SearchBar" model="Model.PopularPlaces" />
     </div>
 </section>
 
-@*========================== Feature strip ==========================*@
-<section class="pt-5 pt-md-6">
+@*========================== 4. Trust indicators row ==========================*@
+<section id="trust" class="yj-section-anchor pt-5 pt-md-6">
     <div class="container">
         <div class="yj-feature-strip p-4 p-md-5">
             <div class="row g-4">
@@ -218,144 +175,180 @@
     </div>
 </section>
 
-@*========================== Featured Tours ==========================*@
+@*========================== 5. Featured tours ==========================*@
 @if (Model.HasFeatured)
 {
-    <section class="pt-5 pt-md-7">
+    var featured = Model.FeaturedTours.ToList();
+    var featuredWide = featured.Take(2).ToList();   // editor-pick highlights
+    var featuredRest = featured.Skip(2).ToList();   // standard grid
+    <section id="featured" class="yj-section-anchor pt-5 pt-md-7">
         <div class="container">
-            <div class="row mb-4 align-items-end">
-                <div class="col-md-8">
-                    <span class="yj-eyebrow">@Localizer["Home.Featured.Eyebrow"]</span>
-                    <h2 class="mb-1 mt-2">@Localizer["Home.Featured.Title"]</h2>
-                    <p class="mb-0 text-body-secondary">@Localizer["Home.Featured.Subtitle"]</p>
+            <partial name="_SectionHeader" view-data="@(new ViewDataDictionary(ViewData) {
+                { "SectionEyebrow", Localizer["Home.Featured.Eyebrow"].Value },
+                { "SectionTitle", Localizer["Home.Featured.Title"].Value },
+                { "SectionDescription", Localizer["Home.Featured.Subtitle"].Value },
+                { "SectionActionText", Localizer["Home.SeeAllTours"].Value },
+                { "SectionActionUrl", Url.Action("Index", "Tours", new { area = "Public" }) }
+            })" />
+
+            @* Category chips (truthful: derived from dynamic Categories). Client-side filter is progressive-enhancement. *@
+            @if (Model.HasCategories)
+            {
+                <div class="yj-chips mb-4" role="group" aria-label="@Localizer["Home.Categories.Title"]">
+                    <button type="button" class="yj-chip active" data-chip-filter="all">@Localizer["Home.Featured.AllChip"]</button>
+                    @foreach (var cat in Model.Categories)
+                    {
+                        <a class="yj-chip" asp-area="Public" asp-controller="Tours" asp-action="Index" asp-route-categoryId="@cat.Id">@cat.Name</a>
+                    }
                 </div>
-                <div class="col-md-4 text-md-end">
-                    <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-link p-0">
-                        @Localizer["Home.SeeAllTours"] <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                </div>
-            </div>
-            <div class="row g-4">
-                @foreach (var tour in Model.FeaturedTours)
+            }
+
+            @* Two wide editor-pick highlights *@
+            <div class="row g-4 mb-4">
+                @foreach (var tour in featuredWide)
                 {
-                    <partial name="_TourCard" model="tour" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-sm-6 col-xl-3" } })" />
+                    <partial name="_TourCard" model="tour" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-12 col-lg-6" }, { "CardVariant", "featured" } })" />
                 }
             </div>
+
+            @* Standard 3-up grid for the remaining featured tours *@
+            @if (featuredRest.Count > 0)
+            {
+                <div class="row g-4">
+                    @foreach (var tour in featuredRest)
+                    {
+                        <partial name="_TourCard" model="tour" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-sm-6 col-lg-4" } })" />
+                    }
+                </div>
+            }
         </div>
     </section>
 }
 
-@*========================== Explore Nearby (Places) ==========================*@
+@*========================== 6. Top destinations (cards + map) ==========================*@
 @if (Model.HasPopularPlaces)
 {
-    <section class="pt-5 pt-md-7">
+    var places = Model.PopularPlaces.ToList();
+    <section id="destinations" class="yj-section-anchor pt-5 pt-md-7">
         <div class="container">
-            <div class="row mb-4 align-items-end">
-                <div class="col-md-8">
-                    <span class="yj-eyebrow">@Localizer["Home.Places.Eyebrow"]</span>
-                    <h2 class="mb-1 mt-2">
-                        @Localizer["Home.Places.TitleLead"]
-                        <span class="d-md-block text-warning">@Localizer["Home.Places.TitleAccent"]</span>
-                    </h2>
-                    <p class="mb-0 text-body-secondary">@Localizer["Home.Places.Subtitle"]</p>
+            <partial name="_SectionHeader" view-data="@(new ViewDataDictionary(ViewData) {
+                { "SectionEyebrow", Localizer["Home.Places.Eyebrow"].Value },
+                { "SectionTitle", Localizer["Home.Places.TitleLead"].Value },
+                { "SectionAccent", Localizer["Home.Places.TitleAccent"].Value },
+                { "SectionAccentGold", true },
+                { "SectionDescription", Localizer["Home.Places.Subtitle"].Value },
+                { "SectionActionText", Localizer["Home.BrowseAllPlaces"].Value },
+                { "SectionActionUrl", Url.Action("Index", "Places", new { area = "Public" }) }
+            })" />
+
+            <div class="yj-dest-layout">
+                @* Cards column (first in DOM => shows first on mobile) *@
+                <div class="yj-dest-cards">
+                    <div class="row g-4">
+                        @{ var rank = 0; }
+                        @foreach (var place in places)
+                        {
+                            rank++;
+                            var isTall = rank == 1;
+                            <partial name="_DestinationCard" model="place" view-data="@(new ViewDataDictionary(ViewData) {
+                                { "isAuthed", isAuthed },
+                                { "rank", rank },
+                                { "tall", isTall },
+                                { "colClass", isTall ? "col-12 col-sm-6" : "col-12 col-sm-6 col-xl-4" }
+                            })" />
+                        }
+                    </div>
                 </div>
-                <div class="col-md-4 text-md-end">
-                    <a asp-area="Public" asp-controller="Places" asp-action="Index" class="btn btn-link p-0">
-                        @Localizer["Home.BrowseAllPlaces"] <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                </div>
-            </div>
-            <div class="row g-4 justify-content-center">
-                @foreach (var place in Model.PopularPlaces)
+
+                @* Map panel (after cards in DOM => below on mobile, side-by-side on desktop via CSS) *@
+                @if (destMarkersJson is not null)
                 {
-                    <partial name="_PlaceCircleCard" model="place" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })" />
+                    <aside class="yj-dest-map-panel" aria-label="@Localizer["Home.Destinations.MapTitle"]">
+                        <h3 class="yj-dest-map-title">@Localizer["Home.Destinations.MapTitle"]</h3>
+                        <partial name="_Map" model="@(new MapVm { Mode = "pins", MarkersJson = destMarkersJson, CssClass = "yj-map-tall" })" />
+                    </aside>
                 }
             </div>
         </div>
     </section>
 }
 
-@*========================== Popular Tours ==========================*@
+@*========================== 7. Popular right now (distinct rail) ==========================*@
 @if (Model.HasPopular)
 {
-    <section class="pt-5 pt-md-7">
+    <section id="popular" class="yj-section-anchor pt-5 pt-md-7">
         <div class="container">
-            <div class="row mb-4 align-items-end">
-                <div class="col-md-8">
-                    <span class="yj-eyebrow">@Localizer["Home.Popular.Eyebrow"]</span>
-                    <h2 class="mb-1 mt-2">@Localizer["Home.Popular.Title"]</h2>
-                    <p class="mb-0 text-body-secondary">@Localizer["Home.Popular.Subtitle"]</p>
+            <partial name="_SectionHeader" view-data="@(new ViewDataDictionary(ViewData) {
+                { "SectionEyebrow", Localizer["Home.Popular.Eyebrow"].Value },
+                { "SectionTitle", Localizer["Home.Popular.Title"].Value },
+                { "SectionDescription", Localizer["Home.Popular.Subtitle"].Value },
+                { "SectionActionText", Localizer["Home.SeeAllTours"].Value },
+                { "SectionActionUrl", Url.Action("Index", "Tours", new { area = "Public" }) }
+            })" />
+
+            <div class="yj-rail" data-rail>
+                <button type="button" class="yj-rail-nav yj-rail-prev" data-rail-prev aria-label="@Localizer["Home.Popular.Prev"]">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                </button>
+                <div class="yj-rail-track" data-rail-track>
+                    @foreach (var tour in Model.PopularTours)
+                    {
+                        <partial name="_TourCard" model="tour" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "CardVariant", "popularRail" } })" />
+                    }
                 </div>
-                <div class="col-md-4 text-md-end">
-                    <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-link p-0">
-                        @Localizer["Home.SeeAllTours"] <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                </div>
-            </div>
-            <div class="row g-4">
-                @foreach (var tour in Model.PopularTours)
-                {
-                    <partial name="_TourCard" model="tour" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-sm-6 col-xl-3" } })" />
-                }
+                <button type="button" class="yj-rail-nav yj-rail-next" data-rail-next aria-label="@Localizer["Home.Popular.Next"]">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
     </section>
 }
 
-@*========================== Popular Businesses ==========================*@
+@*========================== 8. Local businesses ==========================*@
 @if (Model.HasPopularBusinesses)
 {
-    <section class="pt-5 pt-md-7">
+    <section id="businesses" class="yj-section-anchor pt-5 pt-md-7">
         <div class="container">
-            <div class="row mb-4 align-items-end">
-                <div class="col-md-8">
-                    <span class="yj-eyebrow">@Localizer["Home.Businesses.Eyebrow"]</span>
-                    <h2 class="mb-1 mt-2">@Localizer["Home.Businesses.Title"]</h2>
-                    <p class="mb-0 text-body-secondary">@Localizer["Home.Businesses.Subtitle"]</p>
-                </div>
-                <div class="col-md-4 text-md-end">
-                    <a asp-area="Public" asp-controller="Directory" asp-action="Index" class="btn btn-link p-0">
-                        @Localizer["Home.SeeAllBusinesses"] <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                </div>
-            </div>
+            <partial name="_SectionHeader" view-data="@(new ViewDataDictionary(ViewData) {
+                { "SectionEyebrow", Localizer["Home.Businesses.Eyebrow"].Value },
+                { "SectionTitle", Localizer["Home.Businesses.Title"].Value },
+                { "SectionDescription", Localizer["Home.Businesses.Subtitle"].Value },
+                { "SectionActionText", Localizer["Home.SeeAllBusinesses"].Value },
+                { "SectionActionUrl", Url.Action("Index", "Directory", new { area = "Public" }) }
+            })" />
             <div class="row g-4">
                 @foreach (var business in Model.PopularBusinesses)
                 {
-                    <partial name="_BusinessCard" model="business" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-sm-6 col-xl-3" } })" />
+                    <partial name="_BusinessExploreCard" model="business" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed }, { "colClass", "col-12 col-md-6 col-lg-4" } })" />
                 }
             </div>
         </div>
     </section>
 }
 
-@*========================== Categories ==========================*@
+@*========================== 9. Browse by category ==========================*@
 @if (Model.HasCategories)
 {
-    <section class="pt-5 pt-md-7 pb-5 pb-md-7">
+    <section id="categories" class="yj-section-anchor pt-5 pt-md-7">
         <div class="container">
-            <div class="row mb-4">
-                <div class="col-12 text-center">
-                    <span class="yj-eyebrow justify-content-center">@Localizer["Home.Categories.Eyebrow"]</span>
-                    <h2 class="mb-1 mt-2">@Localizer["Home.Categories.Title"]</h2>
-                    <p class="mb-0 text-body-secondary">@Localizer["Home.Categories.Subtitle"]</p>
-                </div>
-            </div>
-            <div class="row g-3">
+            <partial name="_SectionHeader" view-data="@(new ViewDataDictionary(ViewData) {
+                { "SectionEyebrow", Localizer["Home.Categories.Eyebrow"].Value },
+                { "SectionTitle", Localizer["Home.Categories.Title"].Value },
+                { "SectionDescription", Localizer["Home.Categories.Subtitle"].Value },
+                { "SectionCenter", true }
+            })" />
+            <div class="row g-3 g-md-4">
                 @foreach (var cat in Model.Categories)
                 {
-                    <div class="col-6 col-md-4 col-lg-3">
-                        <a asp-area="Public" asp-controller="Tours" asp-action="Index" asp-route-categoryId="@cat.Id"
-                           class="card border h-100 text-center text-decoration-none p-3 card-hover-shadow">
-                            <i class="bi @(string.IsNullOrWhiteSpace(cat.Icon) ? "bi-tag" : cat.Icon) fs-2 text-primary mb-2"></i>
-                            <div class="fw-semibold">@cat.Name</div>
-                        </a>
-                    </div>
+                    <partial name="_CategoryCard" model="cat" view-data="@(new ViewDataDictionary(ViewData) { { "colClass", "col-6 col-md-4 col-lg-3" } })" />
                 }
             </div>
         </div>
     </section>
 }
+
+@*========================== 10. Newsletter banner (UI-only, non-submitting) ==========================*@
+<partial name="_NewsletterBanner" />
 
 @*========================== Empty state ==========================*@
 @if (!Model.HasFeatured && !Model.HasPopular && !Model.HasPopularPlaces && !Model.HasPopularBusinesses && !Model.HasCategories)
@@ -370,5 +363,10 @@
 }
 
 @section Scripts {
+    @* Destinations map (reuses existing Mapbox loader; renders only when markers exist & Mapbox enabled). *@
+    @if (Model.HasPopularPlaces)
+    {
+        <script src="~/assets/js/yj-map.js" asp-append-version="true"></script>
+    }
     <script src="~/assets/js/home-index.js" asp-append-version="true"></script>
 }

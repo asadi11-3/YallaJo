@@ -395,6 +395,88 @@ details.card > summary { cursor: pointer; list-style-position: inside; }
     line-height: 1.12;
 }
 
+/* Hero editorial accent words (template parity): burgundy + gold italics. */
+.yj-hero-em-burgundy {
+    font-style: italic;
+    color: var(--bs-primary);
+}
+
+.yj-hero-em-gold {
+    font-style: italic;
+    color: var(--yj-gold, #c9a24b);
+}
+
+/* Hero pill badge: 'Jordan's #1 local travel marketplace' + live green dot. */
+.yj-hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .4rem .9rem .4rem .65rem;
+    border-radius: 50rem;
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--yj-line, #e6dccb);
+    box-shadow: 0 .25rem .9rem rgba(38, 28, 23, .08);
+    font-size: .8125rem;
+    font-weight: 600;
+    color: var(--yj-ink-soft, #5a4f47);
+}
+
+.yj-hero-pill-dot {
+    inline-size: .5rem;
+    block-size: .5rem;
+    border-radius: 50%;
+    background-color: #2f9e5b;
+    box-shadow: 0 0 0 .25rem rgba(47, 158, 91, .16);
+    flex-shrink: 0;
+}
+
+/* Hero trust/stats row: avatars + 3 stat columns with logical dividers. */
+.yj-hero-stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.yj-hero-stat {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    position: relative;
+}
+
+.yj-hero-stat + .yj-hero-stat {
+    padding-inline-start: 1.25rem;
+}
+
+.yj-hero-stat + .yj-hero-stat::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block: .15rem;
+    inline-size: 1px;
+    background-color: var(--yj-line, #e6dccb);
+}
+
+.yj-hero-stat-num {
+    display: block;
+    font-weight: 700;
+    font-size: 1.25rem;
+    line-height: 1.1;
+    color: var(--yj-ink, #261c17);
+}
+
+.yj-hero-stat-rating .yj-hero-stat-num i {
+    color: var(--yj-gold, #c9a24b);
+    font-size: .9em;
+}
+
+.yj-hero-stat-sub {
+    display: block;
+    font-size: .8rem;
+    color: var(--yj-ink-soft, #5a4f47);
+}
+
 /* Hero media: rounded portrait photo + floating badge + circular thumbs. */
 .yj-hero-media {
     position: relative;
@@ -409,62 +491,82 @@ details.card > summary { cursor: pointer; list-style-position: inside; }
     border-radius: 1.5rem;
 }
 
-.yj-float-badge {
+/* Hero floating cards (template parity): Secure booking (top) + rating (bottom). */
+.yj-hero-float-card {
     position: absolute;
-    inset-block-start: 1.5rem;
-    inset-inline-end: -.75rem;
+    z-index: 4;
     display: flex;
     align-items: center;
-    gap: .625rem;
-    padding: .625rem 1rem;
-    background-color: var(--bs-body-bg);
-    border-radius: 1rem;
-    box-shadow: 0 .5rem 1.5rem rgba(17, 17, 17, .12);
+    gap: .65rem;
+    max-inline-size: 14.5rem;
+    padding: .6rem .85rem;
+    background-color: rgba(255, 255, 255, .94);
+    backdrop-filter: blur(8px);
+    border-radius: .9rem;
+    box-shadow: 0 .5rem 1.5rem rgba(38, 28, 23, .16);
 }
 
-.yj-float-badge .yj-badge-icon {
+.yj-hero-float-top {
+    inset-block-start: 1.25rem;
+    inset-inline-end: -.85rem;
+}
+
+.yj-hero-float-bottom {
+    inset-block-end: 2.5rem;
+    inset-inline-end: -.85rem;
+}
+
+.yj-hero-float-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    inline-size: 2.5rem;
-    block-size: 2.5rem;
-    border-radius: 50%;
+    inline-size: 2.4rem;
+    block-size: 2.4rem;
+    border-radius: .7rem;
     background-color: rgba(176, 42, 42, .1);
     color: var(--bs-primary);
-    font-size: 1.125rem;
+    font-size: 1.05rem;
+    flex-shrink: 0;
 }
 
-.yj-hero-thumbs {
+.yj-hero-float-icon-gold {
+    background-color: rgba(201, 162, 75, .16);
+    color: var(--yj-gold, #c9a24b);
+}
+
+.yj-hero-float-title {
+    display: block;
+    font-size: .85rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--yj-ink, #261c17);
+}
+
+.yj-hero-float-sub {
+    display: block;
+    font-size: .72rem;
+    color: var(--yj-ink-soft, #5a4f47);
+}
+
+/* Large Wadi Rum inset card overlapping the hero bottom-start corner. */
+.yj-hero-inset {
     position: absolute;
-    inset-block-end: -2.25rem;
-    inset-inline-start: 1.5rem;
-    display: flex;
-    gap: 1.25rem;
+    inset-block-end: -1.75rem;
+    inset-inline-start: -1.25rem;
+    z-index: 3;
+    inline-size: 42%;
+    max-inline-size: 12.5rem;
+    aspect-ratio: 4 / 3;
+    border-radius: 1.1rem;
+    overflow: hidden;
+    border: 5px solid var(--bs-body-bg, #fff);
+    box-shadow: 0 .75rem 1.75rem rgba(38, 28, 23, .22);
 }
 
-.yj-hero-thumb {
-    text-align: center;
-}
-
-.yj-hero-thumb img {
-    inline-size: 4rem;
-    block-size: 4rem;
+.yj-hero-inset img {
+    inline-size: 100%;
+    block-size: 100%;
     object-fit: cover;
-    border-radius: 50%;
-    border: 3px solid #fff;
-    box-shadow: 0 .25rem .75rem rgba(17, 17, 17, .18);
-}
-
-.yj-hero-thumb .yj-thumb-label {
-    display: inline-block;
-    margin-block-start: .375rem;
-    padding: .125rem .625rem;
-    font-size: .75rem;
-    font-weight: 600;
-    background-color: var(--bs-body-bg);
-    color: var(--bs-heading-color);
-    border-radius: 50rem;
-    box-shadow: 0 .125rem .375rem rgba(17, 17, 17, .1);
 }
 
 /* Overlapping avatars for the trust row. */
@@ -1078,4 +1180,1698 @@ details.card > summary { cursor: pointer; list-style-position: inside; }
 
 [dir="rtl"] .input-group [data-cp-toggle] {
     border-radius: var(--bs-border-radius) 0 0 var(--bs-border-radius);
+}
+
+/* ============================================================
+   EXPLORE PAGE REDESIGN (Public Home / /explore)
+   Premium Jordan marketplace: warm cream, burgundy, gold.
+   All rules use logical properties so RTL works automatically.
+   Tokens reused: --bs-primary #b02a2a, gold #c9a24b, green #3e6b4a,
+   cream #f6f1e8. DO NOT duplicate in style.css.
+   ============================================================ */
+.yj-home-page {
+    --yj-gold: #c9a24b;
+    --yj-cream: #f6f1e8;
+    --yj-ink: #261c17;
+    --yj-ink-soft: #5a4f47;
+    --yj-line: #e6dccb;
+    --yj-footer: #20140f;
+    --yj-radius: 1.25rem;
+    --yj-radius-lg: 1.75rem;
+    --yj-shadow-card: 0 .5rem 1.5rem rgba(38, 28, 23, .08);
+    --yj-shadow-hover: 0 1rem 2.25rem rgba(38, 28, 23, .14);
+    overflow-x: hidden; /* fix #12: no horizontal scrollbar from overlays/negative margins */
+}
+/* fix #12: global guards so no Explore section can cause horizontal overflow */
+.yj-home-page img { max-width: 100%; }
+.yj-home-page .container,
+.yj-home-page [class^="col-"],
+.yj-home-page [class*=" col-"] { min-width: 0; }
+
+/* --- sticky-navbar fix #1: anchors clear the sticky header --- */
+.yj-section-anchor {
+    scroll-margin-top: 6.5rem;
+}
+
+/* --- Section header (eyebrow + title + subtitle + CTA) --- */
+.yj-section-head {
+    margin-block-end: 1.75rem;
+}
+.yj-section-head-center {
+    max-width: 46rem;
+    margin-inline: auto;
+    margin-block-end: 2rem;
+}
+.yj-section-title {
+    font-weight: 700;
+    line-height: 1.15;
+    margin-block: .25rem 0;
+    color: var(--yj-ink);
+}
+.yj-section-subtitle {
+    color: var(--yj-ink-soft);
+    margin-block: .5rem 0;
+    max-width: 42rem;
+}
+.yj-section-head-center .yj-section-subtitle {
+    margin-inline: auto;
+}
+.yj-section-link {
+    white-space: nowrap;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--bs-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+}
+.yj-section-link:hover {
+    text-decoration: underline;
+}
+
+/* --- z helper so CTA buttons sit above stretched-link --- */
+.yj-z-1 {
+    position: relative;
+    z-index: 2;
+}
+
+/* --- generic image fallback box --- */
+.yj-img-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    block-size: 100%;
+    background: var(--yj-cream);
+    color: var(--bs-secondary);
+}
+.yj-img-fallback i { font-size: 2.5rem; }
+
+/* --- floating heart wrapper used by new cards --- */
+.yj-card-heart {
+    position: absolute;
+    inset-block-start: .75rem;
+    inset-inline-end: .75rem;
+    z-index: 3;
+}
+
+/* --- category chips row --- */
+.yj-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-block-end: 1.5rem;
+}
+
+/* ============================================================
+   SEARCH BAR
+   ============================================================ */
+.yj-searchbar-card {
+    border: 0;
+    border-radius: var(--yj-radius-lg);
+    box-shadow: var(--yj-shadow-card);
+    margin-block-start: -2.5rem;
+    position: relative;
+    z-index: 4;
+    background: #fff;
+}
+.yj-search-go {
+    inline-size: 100%;
+    block-size: 100%;
+    min-block-size: 3rem;
+    border-radius: .75rem;
+}
+
+/* ============================================================
+   FEATURED -- wide editor-pick cards
+   ============================================================ */
+.yj-featured-wide {
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    border-radius: var(--yj-radius);
+    background: #fff;
+    box-shadow: var(--yj-shadow-card);
+    block-size: 100%;
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+.yj-featured-wide:hover {
+    box-shadow: var(--yj-shadow-hover);
+    transform: translateY(-2px);
+}
+.yj-featured-wide-media {
+    position: relative;
+    flex: 0 0 44%;
+    min-block-size: 14rem;
+    overflow: hidden;
+}
+.yj-featured-wide-media img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+}
+.yj-featured-wide-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem 1.4rem;
+}
+.yj-featured-wide-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-block: .35rem .5rem;
+}
+.yj-featured-wide-title a {
+    color: var(--yj-ink);
+    text-decoration: none;
+}
+.yj-pick-ribbon {
+    position: absolute;
+    inset-block-start: .85rem;
+    inset-inline-start: .85rem;
+    z-index: 2;
+    background: var(--bs-primary);
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: .3rem .6rem;
+    border-radius: .5rem;
+}
+@media (max-width: 575.98px) {
+    .yj-featured-wide { flex-direction: column; }
+    .yj-featured-wide-media { flex-basis: auto; aspect-ratio: 16 / 9; min-block-size: 0; }
+}
+
+/* ============================================================
+   DESTINATIONS -- ranked bento + map (responsive)
+   ============================================================ */
+.yj-dest-layout {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+.yj-dest-map-panel {
+    position: sticky;
+    inset-block-start: 6.5rem;
+    background: #fff;
+    border-radius: var(--yj-radius);
+    box-shadow: var(--yj-shadow-card);
+    padding: 1rem;
+}
+.yj-dest-map-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-block-end: .75rem;
+}
+.yj-dest-card {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: var(--yj-radius);
+    aspect-ratio: 4 / 3;
+    color: #fff;
+    text-decoration: none;
+    box-shadow: var(--yj-shadow-card);
+}
+.yj-dest-card.yj-dest-tall { aspect-ratio: 4 / 5; }
+.yj-dest-img {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    transition: transform .4s ease;
+}
+.yj-dest-card:hover .yj-dest-img { transform: scale(1.06); }
+.yj-dest-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(20, 13, 9, .85) 0%, rgba(20, 13, 9, .25) 45%, rgba(20, 13, 9, 0) 75%);
+    z-index: 1;
+}
+.yj-dest-rank {
+    position: absolute;
+    inset-block-start: .85rem;
+    inset-inline-start: .85rem;
+    z-index: 2;
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--yj-gold);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, .5);
+}
+.yj-dest-rate {
+    position: absolute;
+    inset-block-start: .85rem;
+    inset-inline-end: .85rem;
+    z-index: 2;
+    background: rgba(255, 255, 255, .92);
+    color: var(--yj-ink);
+    font-weight: 700;
+    font-size: .8rem;
+    padding: .2rem .5rem;
+    border-radius: .5rem;
+}
+.yj-dest-rate i { color: #c9a24b; }
+.yj-dest-body {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    z-index: 2;
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+}
+.yj-dest-name { font-weight: 700; font-size: 1.1rem; }
+.yj-dest-sub { font-size: .85rem; opacity: .9; display: inline-flex; align-items: center; gap: .3rem; }
+.yj-dest-go {
+    position: absolute;
+    inset-block-end: 1rem;
+    inset-inline-end: 1.1rem;
+    z-index: 2;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, .92);
+    color: var(--bs-primary);
+    border-radius: 50%;
+}
+@media (max-width: 991.98px) {
+    /* mobile/tablet: cards first, map below (fix #7) */
+    .yj-dest-layout { grid-template-columns: 1fr; }
+    .yj-dest-map-panel { position: static; order: 2; }
+    .yj-dest-cards { order: 1; }
+}
+
+/* ============================================================
+   POPULAR RIGHT NOW -- horizontal scroll-snap rail
+   (deliberately different from Featured grid, fix #6)
+   ============================================================ */
+.yj-rail {
+    position: relative;
+}
+.yj-rail-track {
+    display: flex;
+    gap: 1.25rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding-block: .5rem 1rem;
+    padding-inline: .25rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox: hide native scrollbar */
+}
+.yj-rail-track::-webkit-scrollbar { display: none; } /* WebKit: hide native scrollbar */
+.yj-pop-card {
+    position: relative;
+    flex: 0 0 17rem;
+    max-inline-size: 17rem;
+    scroll-snap-align: start;
+    border-radius: var(--yj-radius);
+    overflow: hidden;
+    box-shadow: var(--yj-shadow-card);
+    background: #fff;
+}
+.yj-pop-media {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+}
+.yj-pop-media img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    transition: transform .4s ease;
+}
+.yj-pop-card:hover .yj-pop-media img { transform: scale(1.06); }
+.yj-pop-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(20, 13, 9, .9) 0%, rgba(20, 13, 9, .25) 50%, rgba(20, 13, 9, 0) 78%);
+    z-index: 1;
+}
+.yj-pop-badge {
+    position: absolute;
+    inset-block-start: .75rem;
+    inset-inline-start: .75rem;
+    z-index: 2;
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .25rem .55rem;
+    border-radius: .5rem;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+}
+.yj-pop-badge-featured { background: var(--bs-primary); }
+.yj-pop-badge-popular { background: var(--bs-success, #3e6b4a); }
+.yj-pop-badge-deal {
+    inset-block-start: auto;
+    inset-block-end: 3.5rem;
+    inset-inline-start: auto;
+    inset-inline-end: .75rem;
+    background: #c9a24b;
+    color: #20140f;
+}
+.yj-pop-info {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    z-index: 2;
+    padding: 1rem;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+.yj-pop-meta { font-size: .8rem; opacity: .92; display: inline-flex; align-items: center; gap: .4rem; }
+.yj-pop-meta i { color: #c9a24b; }
+.yj-pop-title { font-size: 1.02rem; font-weight: 700; margin: 0; line-height: 1.25; }
+.yj-pop-title a { color: #fff; text-decoration: none; }
+.yj-pop-price { font-weight: 700; font-size: .95rem; }
+.yj-rail-nav {
+    position: absolute;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--yj-ink);
+    box-shadow: var(--yj-shadow-card);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.yj-rail-nav:hover { background: var(--bs-primary); color: #fff; }
+.yj-rail-prev { inset-inline-start: -.5rem; }
+.yj-rail-next { inset-inline-end: -.5rem; }
+@media (max-width: 767.98px) {
+    .yj-rail-nav { display: none; } /* touch users swipe the rail */
+}
+
+/* ============================================================
+   LOCAL BUSINESSES -- floating-icon card (icon NEVER overlaps text, fix #4)
+   ============================================================ */
+.yj-biz-card {
+    position: relative;
+    background: #fff;
+    border-radius: var(--yj-radius);
+    overflow: hidden;
+    box-shadow: var(--yj-shadow-card);
+    block-size: 100%;
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+.yj-biz-card:hover { box-shadow: var(--yj-shadow-hover); transform: translateY(-2px); }
+.yj-biz-media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+}
+.yj-biz-media img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+.yj-biz-loc {
+    position: absolute;
+    inset-block-start: .65rem;
+    inset-inline-start: .65rem;
+    z-index: 2;
+    background: rgba(255, 255, 255, .92);
+    color: var(--yj-ink);
+    font-size: .78rem;
+    font-weight: 600;
+    padding: .25rem .55rem;
+    border-radius: .5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    max-inline-size: calc(100% - 1.3rem);
+    box-shadow: 0 .25rem .75rem rgba(38, 28, 23, .14);
+}
+.yj-biz-body {
+    position: relative;
+    /* reserve space so the floating icon (start) + verify badge (end) never overlap text (fix #4) */
+    padding: 2.25rem 1.2rem 1.2rem;
+}
+.yj-biz-cat {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--yj-gold, #c9a24b);
+    margin-block-end: .15rem;
+}
+.yj-biz-icon {
+    position: absolute;
+    inset-block-start: -1.6rem;
+    inset-inline-start: 1.2rem;
+    z-index: 2;
+    inline-size: 3.25rem;
+    block-size: 3.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bs-primary);
+    color: #fff;
+    border-radius: .85rem;
+    box-shadow: var(--yj-shadow-card);
+    font-size: 1.35rem;
+}
+.yj-biz-verify {
+    position: absolute;
+    inset-block-start: .9rem;
+    inset-inline-end: 1.1rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--bs-success, #3e6b4a);
+}
+.yj-biz-name { font-size: 1.1rem; font-weight: 700; margin-block: .25rem .15rem; }
+.yj-biz-name a { color: var(--yj-ink); text-decoration: none; }
+.yj-biz-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-block-start: .75rem;
+}
+.yj-biz-foot .yj-biz-rating i { color: #c9a24b; }
+
+/* ============================================================
+   CATEGORIES -- premium image tiles (decorative bg photo + overlay;
+   HomeCategoryVm has no per-category image, so bg is shared/decorative)
+   ============================================================ */
+.yj-cat-tile {
+    position: relative;
+    display: block;
+    block-size: 100%;
+    min-block-size: 12.5rem;
+    overflow: hidden;
+    border-radius: var(--yj-radius);
+    color: #fff;
+    text-decoration: none;
+    box-shadow: var(--yj-shadow-card);
+    isolation: isolate;
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+.yj-cat-tile:hover {
+    box-shadow: var(--yj-shadow-hover);
+    transform: translateY(-3px);
+}
+.yj-cat-img {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    z-index: -2;
+    transition: transform .5s ease;
+}
+.yj-cat-tile:hover .yj-cat-img { transform: scale(1.07); }
+.yj-cat-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(160deg, rgba(176, 42, 42, .42) 8%, rgba(20, 13, 9, .55) 52%, rgba(20, 13, 9, .9) 100%);
+}
+.yj-cat-body {
+    position: relative;
+    z-index: 1;
+    block-size: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: .4rem;
+    padding: 1.25rem;
+}
+.yj-cat-ic {
+    inline-size: 3rem;
+    block-size: 3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .85rem;
+    background: rgba(255, 255, 255, .16);
+    border: 1px solid rgba(255, 255, 255, .34);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    font-size: 1.4rem;
+    margin-block-end: .5rem;
+}
+.yj-cat-name { font-weight: 700; font-size: 1.15rem; color: #fff; }
+.yj-cat-go {
+    font-size: .82rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, .92);
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    transition: gap .2s ease;
+}
+.yj-cat-tile:hover .yj-cat-go { gap: .6rem; }
+
+/* ============================================================
+   NEWSLETTER BANNER (inert / non-submitting)
+   ============================================================ */
+.yj-news-band {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--yj-radius-lg);
+    padding: clamp(2rem, 5vw, 4rem);
+    background-image: var(--yj-news-bg);
+    background-size: cover;
+    background-position: center;
+    isolation: isolate;
+}
+.yj-news-band::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(120deg, rgba(20, 13, 9, .92) 0%, rgba(78, 16, 25, .82) 55%, rgba(20, 13, 9, .7) 100%);
+}
+.yj-news-inner { max-inline-size: 40rem; color: #fff; }
+.yj-news-title { font-weight: 700; color: #fff; margin-block: .25rem .5rem; }
+.yj-news-sub { color: rgba(255, 255, 255, .85); margin-block-end: 1.25rem; }
+.yj-news-form {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+.yj-news-form .form-control {
+    flex: 1 1 16rem;
+    min-block-size: 3rem;
+    border-radius: .75rem;
+}
+.yj-news-form .btn { min-block-size: 3rem; border-radius: .75rem; }
+.yj-news-note { display: block; color: rgba(255, 255, 255, .7); margin-block-start: .75rem; }
+@media (max-width: 575.98px) {
+    .yj-news-form .form-control,
+    .yj-news-form .btn { flex-basis: 100%; }
+}
+
+/* ============================================================
+   FOOTER restyle (global, CSS-only) -- deep brown premium look
+   ============================================================ */
+.yj-footer {
+    background: var(--yj-footer, #20140f) !important;
+}
+.yj-footer .nav-link { color: rgba(255, 255, 255, .72); }
+.yj-footer .nav-link:hover { color: #fff; }
+.yj-footer h6, .yj-footer .h6 { color: #fff; letter-spacing: .02em; }
+.yj-footer hr { border-color: rgba(255, 255, 255, .12); }
+.yj-footer-socials {
+    display: flex;
+    gap: .5rem;
+    margin-block-start: 1rem;
+}
+.yj-footer-socials a {
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .08);
+    color: rgba(255, 255, 255, .8);
+    transition: background .15s ease, color .15s ease;
+}
+.yj-footer-socials a:hover { background: var(--bs-primary); color: #fff; }
+
+/* ============================================================
+   NAVBAR compact premium polish (CSS-only; markup unchanged)
+   Targets the shared sticky header so all pages benefit.
+   ============================================================ */
+.header-sticky .navbar { padding-block: .5rem; }
+.header-sticky.is-stuck,
+.header-sticky.headroom--pinned {
+    background: color-mix(in srgb, #f6f1e8 88%, transparent);
+    backdrop-filter: saturate(150%) blur(12px);
+    box-shadow: 0 .5rem 1.75rem -1rem rgba(38, 28, 23, .55);
+}
+.header-sticky .navbar-nav .nav-link {
+    font-weight: 600;
+    border-radius: .55rem;
+    padding-inline: .85rem;
+}
+.header-sticky .navbar-nav .nav-link.active,
+.header-sticky .navbar-nav .show > .nav-link { color: var(--bs-primary); }
+.header-sticky .navbar-nav .nav-link:hover {
+    background: rgba(176, 42, 42, .06);
+    color: var(--bs-primary);
+}
+
+/* ============================================================
+   TRUST / assurance strip parity (compact circles + dividers)
+   ============================================================ */
+.yj-home-page .yj-feature-strip [class*="col-"] + [class*="col-"] {
+    position: relative;
+}
+@media (min-width: 768px) {
+    .yj-home-page .yj-feature-strip [class*="col-"]:not(:first-child)::before {
+        content: "";
+        position: absolute;
+        inset-block: .35rem;
+        inset-inline-start: 0;
+        inline-size: 1px;
+        background: var(--yj-line, #e6dccb);
+    }
+}
+
+/* ============================================================
+   _TourCard compact variant (CardVariant="compact")
+   Dense reusable tile for favorites/sidebar/related-tour rails.
+   Logical properties keep RTL parity without extra overrides.
+   ============================================================ */
+.yj-tc-compact {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--yj-line, #e6dccb);
+}
+.yj-tc-compact .yj-tc-compact-media {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: #f6efe1;
+}
+.yj-tc-compact .yj-tc-compact-media > img.card-img-top {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    display: block;
+    border-start-start-radius: 14px;
+    border-start-end-radius: 14px;
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+}
+.yj-tc-compact .yj-tc-compact-fallback {
+    aspect-ratio: 4 / 3;
+    inline-size: 100%;
+    block-size: auto;
+}
+.yj-tc-compact .yj-tc-compact-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-block-size: 2.4em;
+    line-height: 1.2;
+}
+.yj-tc-compact .card-body { min-block-size: 0; }
+
+
+
+/* =====================================================================
+   Tours page — brand refresh (see Areas/Public/Views/Tours/Index.cshtml)
+   Palette tokens: sand #faf4ec, red #8C1D24, gold #C0954A, green #2E7D5B.
+   All properties are logical (margin-inline / inset-inline-*) so RTL works
+   without further overrides. RTL-only tweaks live in rtl.css §12.
+   ===================================================================== */
+
+/* Hero polish — used by .yj-tours-hero which sits inside .yj-page-hero */
+.yj-tours-hero .yj-page-hero-img {
+    object-fit: cover;
+    object-position: center 40%;
+}
+
+/* Toolbar row above the results grid: filter trigger | search | toggle | sort */
+.yj-tour-toolbar {
+    gap: .75rem;
+    row-gap: .75rem;
+}
+
+/* Card/List view toggle button group */
+.yj-view-toggle {
+    flex: 0 0 auto;
+}
+.yj-view-toggle .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 2.5rem;
+    padding-inline: .75rem;
+}
+.yj-view-toggle .btn.active,
+.yj-view-toggle .btn[aria-pressed=true] {
+    background-color: #8C1D24;
+    border-color: #8C1D24;
+    color: #fff;
+}
+.yj-view-toggle .btn:focus-visible {
+    box-shadow: 0 0 0 .2rem rgba(140, 29, 36, .25);
+}
+
+/* ----- List variant of _TourCard -----
+   Horizontal layout on md+; stacks on small screens. Uses only real
+   TourCardVm fields (image, title, rating, booking count, price). */
+.yj-list-card {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 0, 0, .075);
+    background: #fff;
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+.yj-list-card:hover {
+    box-shadow: 0 .5rem 1.25rem rgba(0, 0, 0, .08);
+    transform: translateY(-2px);
+}
+@media (min-width: 768px) {
+    .yj-list-card {
+        grid-template-columns: 260px 1fr;
+    }
+}
+@media (min-width: 992px) {
+    .yj-list-card {
+        grid-template-columns: 300px 1fr;
+    }
+}
+
+.yj-list-media {
+    position: relative;
+    inline-size: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: #f4ede2;
+}
+@media (min-width: 768px) {
+    .yj-list-media {
+        aspect-ratio: auto;
+        block-size: 100%;
+        min-block-size: 220px;
+    }
+}
+.yj-list-media img,
+.yj-list-media .yj-list-media-fallback {
+    inline-size: 100%;
+    block-size: 100%;
+}
+.yj-list-media img {
+    object-fit: cover;
+    display: block;
+}
+
+.yj-list-body {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    align-items: start;
+}
+@media (min-width: 992px) {
+    .yj-list-body {
+        grid-template-columns: 1fr 220px;
+        align-items: center;
+    }
+}
+
+.yj-list-body-main {
+    min-inline-size: 0; /* prevent overflow of long titles */
+}
+.yj-list-title {
+    line-height: 1.3;
+}
+
+.yj-list-body-side {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    padding-block-start: .25rem;
+    border-block-start: 1px solid rgba(0, 0, 0, .075);
+}
+@media (min-width: 992px) {
+    .yj-list-body-side {
+        padding-block-start: 0;
+        padding-inline-start: 1.25rem;
+        border-block-start: 0;
+        border-inline-start: 1px solid rgba(0, 0, 0, .075);
+        text-align: end;
+    }
+}
+.yj-list-price {
+    display: block;
+}
+@media (min-width: 992px) {
+    .yj-list-price {
+        text-align: end;
+    }
+}
+
+/* View-mode wrapper hooks (also used by JS to detect current mode) */
+.yj-view-list .col-12.js-tour-card { margin-block-end: .25rem; }
+.yj-view-card .card { block-size: 100%; }
+
+
+/* =====================================================================
+   §T — Tours page template parity (page-scoped under .yj-tours-page)
+   Do NOT edit style.css. All new visuals live here + rtl.css §13.
+   All selectors are scoped so /explore, /packages, and other pages
+   remain visually untouched.
+   ===================================================================== */
+
+/* Design tokens (kept as CSS vars so future themeing is one place) */
+.yj-tours-page {
+    --yj-sand: #faf4ec;
+    --yj-sand-2: #efe2d2;
+    --yj-ink: #2a2321;
+    --yj-ink-2: #5b5148;
+    --yj-mute: #8a7f72;
+    --yj-mute-2: #a99a89;
+    --yj-brand: #8C1D24;
+    --yj-brand-hover: #7a171d;
+    --yj-gold: #C0954A;
+    --yj-green: #2E7D5B;
+    --yj-line: #efe6da;
+    --yj-line-2: #f0e7db;
+    --yj-line-3: #ecdfce;
+    --yj-star: #E8A020;
+    background-color: var(--yj-sand);
+    overflow-x: hidden; /* Safety net against horizontal overflow */
+}
+
+/* Fluid shell — replaces Bootstrap container to match template's fluid layout.
+   padding-inline follows the template exactly (clamp 24 → 4vw → 140). */
+.yj-tours-shell {
+    width: 100%;
+    padding-inline: clamp(1.5rem, 4vw, 8.75rem);
+    box-sizing: border-box;
+}
+
+/* ---------- HERO ---------- */
+.yj-tours-page .yj-hero {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--yj-sand-2);
+    /* Controlled height to match template crop; the -46px search overlap
+       lives outside the hero, so keep the hero itself compact. */
+    min-block-size: clamp(22rem, 32vw, 30rem);
+    display: flex;
+    align-items: center;
+    isolation: isolate;
+}
+.yj-tours-page .yj-hero-img {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    /* Bias the crop toward the right/lower third where the vehicle sits,
+       matching the template composition (car low-right in LTR). */
+    object-position: 70% 60%;
+    filter: saturate(1.12) contrast(1.06);
+    z-index: 0;
+}
+/* LTR gradient: opaque sand on the LEFT (under the text), fading to reveal
+   the photo on the right. Physical `to right` does NOT auto-flip in RTL,
+   so rtl.css re-declares this as `to left`. */
+.yj-tours-page .yj-hero-gradient {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+        to right,
+        #faf4ec 0%,
+        #faf4ec 30%,
+        rgba(250,244,236,.86) 44%,
+        rgba(250,244,236,.35) 60%,
+        rgba(250,244,236,0) 78%
+    );
+    pointer-events: none;
+}
+.yj-tours-page .yj-hero-inner {
+    position: relative;
+    z-index: 2;
+    padding-block: 1.5rem 4.25rem;
+    max-inline-size: 100%;
+}
+
+.yj-tours-page .yj-hero-crumbs .breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-block-end: .75rem;
+    font-size: .8125rem;
+    color: var(--yj-mute);
+}
+.yj-tours-page .yj-hero-crumbs .breadcrumb-item + .breadcrumb-item::before {
+    color: var(--yj-mute-2);
+}
+.yj-tours-page .yj-hero-crumbs .breadcrumb-item a {
+    color: var(--yj-ink-2);
+    text-decoration: none;
+}
+.yj-tours-page .yj-hero-crumbs .breadcrumb-item.active {
+    color: var(--yj-brand);
+    font-weight: 600;
+}
+
+.yj-tours-page .yj-hero-title {
+    font-family: "Playfair Display", "Times New Roman", var(--bs-font-serif, serif);
+    font-weight: 700;
+    font-size: clamp(1.875rem, 5.2vw, 3.25rem);
+    line-height: 1.1;
+    color: var(--yj-ink);
+    max-inline-size: 35rem;
+    margin: 0 0 .75rem;
+    letter-spacing: -0.01em;
+}
+.yj-tours-page .yj-hero-accent {
+    color: var(--yj-gold);
+    font-style: italic;
+}
+
+.yj-tours-page .yj-hero-divider {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-block: .75rem 1rem;
+}
+.yj-tours-page .yj-hero-divider-bar {
+    inline-size: 34px;
+    block-size: 3px;
+    background: var(--yj-gold);
+    border-radius: 2px;
+}
+.yj-tours-page .yj-hero-divider-dot {
+    inline-size: 6px;
+    block-size: 6px;
+    border-radius: 50%;
+    background: var(--yj-gold);
+}
+.yj-tours-page .yj-hero-divider-dot-faint {
+    opacity: .5;
+}
+
+.yj-tours-page .yj-hero-subtitle {
+    color: var(--yj-ink-2);
+    font-size: .9375rem;
+    line-height: 1.55;
+    max-inline-size: 25rem;
+}
+
+.yj-tours-page .yj-hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .625rem;
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0 0;
+}
+.yj-tours-page .yj-hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem .875rem;
+    background: rgba(255,255,255,.85);
+    border: 1px solid var(--yj-line-3);
+    border-radius: 999px;
+    font-size: .8125rem;
+    font-weight: 500;
+    color: var(--yj-ink);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+.yj-tours-page .yj-hero-pill i {
+    color: var(--yj-gold);
+    font-size: 1rem;
+    line-height: 1;
+}
+
+/* ---------- FLOATING SEARCH (template-parity) ----------
+   Template ref: single white rounded row, padding 8px, fields separated
+   by inline-end dividers, Where field 1.4x, others 1x (flex-basis 0 so
+   they size proportionally, NOT by content), burgundy button that
+   stretches to the row height. No wrap on desktop; clean stacking below. */
+.yj-tours-page .yj-search-wrap {
+    position: relative;
+    z-index: 10;
+    margin-block-start: -2.875rem; /* -46px overlap with hero */
+}
+.yj-tours-page .yj-search {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 18px 45px rgba(60,30,10,.14);
+    padding: .5rem;              /* 8px */
+    display: flex;
+    flex-wrap: nowrap;           /* template keeps a single row on desktop */
+    align-items: stretch;
+    gap: 0;
+    margin: 0;
+}
+.yj-tours-page .yj-search-field {
+    flex: 1 1 0;                 /* proportional sizing, basis 0 like template flex:1 */
+    display: flex;
+    align-items: center;
+    gap: .6875rem;              /* 11px */
+    padding: .75rem 1.125rem;   /* 12px 18px */
+    border-inline-end: 1px solid var(--yj-line);
+    min-inline-size: 0;
+}
+.yj-tours-page .yj-search-field:last-of-type {
+    border-inline-end: 0;
+}
+.yj-tours-page .yj-search-field-where {
+    flex: 1.4 1 0;             /* template flex:1.4 */
+}
+.yj-tours-page .yj-search-icon {
+    color: var(--yj-gold);
+    font-size: 1.1875rem;      /* 19px */
+    line-height: 1;
+    flex-shrink: 0;
+}
+.yj-tours-page .yj-search-field-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-inline-size: 0;
+    flex: 1 1 0;
+}
+.yj-tours-page .yj-search-label {
+    font-size: .8125rem;       /* 13px */
+    font-weight: 600;
+    color: #2a2321;
+    line-height: 1.15;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.yj-tours-page .yj-search-input {
+    border: 0;
+    outline: 0;
+    padding: 0;
+    font-size: .75rem;         /* 12px hint hierarchy */
+    color: #9a8f82;
+    background: transparent;
+    box-shadow: none;
+    inline-size: 100%;
+    min-inline-size: 0;
+    line-height: 1.3;
+    height: auto;
+    text-overflow: ellipsis;
+}
+.yj-tours-page .yj-search-input::placeholder { color: #9a8f82; }
+.yj-tours-page .yj-search-input:focus {
+    box-shadow: none;
+    color: var(--yj-ink);
+    background: transparent;
+}
+.yj-tours-page .yj-search-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    padding-inline-end: 1rem;
+    cursor: pointer;
+}
+.yj-tours-page .yj-search-field-decorative .yj-search-input {
+    cursor: not-allowed;
+}
+.yj-tours-page .yj-search-btn {
+    background: var(--yj-brand);
+    color: #fff;
+    border: 0;
+    border-radius: .75rem;      /* 12px */
+    padding: 0 1.875rem;        /* 0 30px */
+    margin-inline-start: .375rem; /* 6px */
+    align-self: stretch;        /* fill the row height like template */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5625rem;             /* 9px */
+    font-weight: 600;
+    font-size: .9375rem;       /* 15px */
+    line-height: 1;
+    white-space: nowrap;
+    flex: 0 0 auto;            /* button keeps its natural width, never stretches */
+    min-block-size: 3rem;
+    transition: background-color .15s ease;
+}
+.yj-tours-page .yj-search-btn:hover,
+.yj-tours-page .yj-search-btn:focus-visible {
+    background: var(--yj-brand-hover);
+    color: #fff;
+    outline: 0;
+    box-shadow: 0 0 0 .2rem rgba(140,29,36,.25);
+}
+
+/* Tablet: wrap fields into 2 rows, button spans full width */
+@media (max-width: 61.99em) {  /* < 992px */
+    .yj-tours-page .yj-search {
+        flex-wrap: wrap;
+        gap: .25rem;
+    }
+    .yj-tours-page .yj-search-field {
+        flex: 1 1 45%;
+        border-inline-end: 0;
+        border-block-end: 1px solid var(--yj-line);
+    }
+    .yj-tours-page .yj-search-field-where {
+        flex: 1 1 100%;
+    }
+    .yj-tours-page .yj-search-btn {
+        flex: 1 1 100%;
+        inline-size: 100%;
+        margin-inline-start: 0;
+        margin-block-start: .25rem;
+        min-block-size: 2.75rem;
+    }
+}
+
+/* Mobile: full single-column stack */
+@media (max-width: 40em) {     /* < 640px */
+    .yj-tours-page .yj-search-field {
+        flex: 1 1 100%;
+        border-block-end: 1px solid var(--yj-line);
+    }
+    .yj-tours-page .yj-search-field:nth-last-of-type(1) {
+        border-block-end: 0;
+    }
+}
+
+/* ---------- BODY GRID ---------- */
+.yj-tours-page .yj-body {
+    margin-block-start: 1.875rem;
+    padding-block-end: 2.75rem;
+}
+.yj-tours-page .yj-body-notice {
+    margin-block-end: 1rem;
+}
+.yj-tours-page .yj-body-grid {
+    display: grid;
+    grid-template-columns: 18.75rem 1fr; /* 300px sidebar + fluid main */
+    gap: 1.625rem;
+    align-items: flex-start;
+}
+@media (max-width: 62.5em) { /* ≤1000px: stack */
+    .yj-tours-page .yj-body-grid {
+        grid-template-columns: 1fr;
+    }
+    /* Hide aside container completely on mobile — the offcanvas markup lives inside it and is rendered by Bootstrap */
+    .yj-tours-page .yj-aside-wrap {
+        display: contents; /* let the offcanvas child position itself off-screen normally */
+    }
+    /* On mobile the .yj-aside is inside an offcanvas-lg — Bootstrap handles show/hide 
+*/
+}
+
+/* ---------- SIDEBAR (aside) ---------- */
+.yj-tours-page .yj-aside {
+    background: #fff;
+    border: 1px solid var(--yj-line);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    box-shadow: 0 4px 16px rgba(60,30,10,.04);
+}
+@media (max-width: 62.5em) {
+    .yj-tours-page .offcanvas.yj-aside {
+        border-radius: 0;
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+    }
+    .yj-tours-page .yj-aside .yj-aside-body { padding: 1rem; }
+}
+.yj-tours-page .yj-aside-body { padding: 0; }
+.yj-tours-page .yj-aside-head { margin-block-end: 1rem; }
+.yj-tours-page .yj-aside-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--yj-ink);
+    display: inline-flex;
+    align-items: center;
+}
+.yj-tours-page .yj-aside-title i { color: var(--yj-brand); }
+.yj-tours-page .yj-aside-clear {
+    color: var(--yj-brand);
+    font-size: .8125rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+.yj-tours-page .yj-aside-clear:hover { text-decoration: underline; }
+.yj-tours-page .yj-aside-section {
+    padding-block: 1rem;
+    border: 0;
+    border-block-end: 1px solid var(--yj-line-2);
+}
+.yj-tours-page .yj-aside-section:last-child { border-block-end: 0; padding-block-end: 0; }
+.yj-tours-page .yj-aside-section:first-of-type { padding-block-start: 0; }
+.yj-tours-page .yj-aside-legend {
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--yj-ink);
+    margin-block-end: .625rem;
+    padding: 0;
+    float: none;
+}
+
+/* Template-style checkbox rows */
+.yj-tours-page .yj-filter-check {
+    inline-size: 100%;
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    padding: .375rem 0;
+    background: transparent;
+    border: 0;
+    text-align: start;
+    color: var(--yj-ink);
+    font-size: .84375rem;
+    cursor: pointer;
+    transition: color .12s ease;
+}
+.yj-tours-page .yj-filter-check:hover { color: var(--yj-brand); }
+.yj-tours-page .yj-check-box {
+    inline-size: 18px;
+    block-size: 18px;
+    border-radius: 5px;
+    border: 2px solid #d8cab8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #fff;
+    transition: background-color .12s ease, border-color .12s ease;
+}
+.yj-tours-page .yj-check-box i { color: transparent; font-size: 12px; line-height: 1; transition: color .12s ease; }
+.yj-tours-page .yj-filter-check.active .yj-check-box { background: var(--yj-brand); border-color: var(--yj-brand); }
+.yj-tours-page .yj-filter-check.active .yj-check-box i { color: #fff; }
+.yj-tours-page .yj-filter-check-label { flex: 1; min-inline-size: 0; }
+
+/* Price range */
+.yj-tours-page .yj-price-range { accent-color: var(--yj-brand); }
+.yj-tours-page .yj-price-range::-webkit-slider-runnable-track { block-size: 5px; background: #eadfce; border-radius: 4px; }
+.yj-tours-page .yj-price-range::-moz-range-track { block-size: 5px; background: #eadfce; border-radius: 4px; }
+.yj-tours-page .yj-price-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    inline-size: 16px; block-size: 16px;
+    background: #fff; border: 3px solid var(--yj-brand); border-radius: 50%;
+    margin-block-start: -6px; box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+.yj-tours-page .yj-price-range::-moz-range-thumb {
+    inline-size: 16px; block-size: 16px;
+    background: #fff; border: 3px solid var(--yj-brand); border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+
+/* Selects & inputs in sidebar */
+.yj-tours-page .yj-aside .form-select,
+.yj-tours-page .yj-aside .form-control {
+    border: 1px solid var(--yj-line);
+    border-radius: .625rem;
+    background-color: #fff;
+    font-size: .875rem;
+    color: var(--yj-ink);
+}
+.yj-tours-page .yj-aside .form-select:focus,
+.yj-tours-page .yj-aside .form-control:focus {
+    border-color: var(--yj-brand);
+    box-shadow: 0 0 0 .15rem rgba(140,29,36,.15);
+}
+
+/* Rating chips */
+.yj-tours-page .yj-chip {
+    border: 1px solid var(--yj-line);
+    background: #fff;
+    color: var(--yj-ink);
+    padding: .375rem .875rem;
+    border-radius: .625rem;
+    font-size: .8125rem;
+    font-weight: 500;
+    transition: background-color .12s ease, color .12s ease, border-color .12s ease;
+}
+.yj-tours-page .btn-check:checked + .yj-chip,
+.yj-tours-page .yj-chip.active {
+    background: var(--yj-brand);
+    color: #fff;
+    border-color: var(--yj-brand);
+}
+.yj-tours-page .btn-check:checked + .yj-chip .bi-star-fill { color: #fff !important; }
+
+/* Preferences */
+.yj-tours-page .yj-aside .form-switch .form-check-input { background-color: #eadfce; border-color: #eadfce; }
+.yj-tours-page .yj-aside .form-switch .form-check-input:checked { background-color: var(--yj-brand); border-color: var(--yj-brand); }
+.yj-tours-page .yj-aside .form-check-label { font-size: .875rem; color: var(--yj-ink); }
+
+.yj-tours-page .yj-filter-apply { margin-block-start: 1.25rem; }
+.yj-tours-page .yj-apply-btn {
+    background: var(--yj-brand);
+    border-color: var(--yj-brand);
+    border-radius: .625rem;
+    padding: .8125rem 1rem;
+    font-weight: 700;
+    font-size: .9375rem;
+    color: #fff;
+    inline-size: 100%;
+}
+.yj-tours-page .yj-apply-btn:hover,
+.yj-tours-page .yj-apply-btn:focus-visible {
+    background: var(--yj-brand-hover);
+    border-color: var(--yj-brand-hover);
+    color: #fff;
+    box-shadow: 0 0 0 .2rem rgba(140,29,36,.25);
+}
+
+/* ---------- TOOLBAR ---------- */
+.yj-tours-page .yj-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: .875rem;
+    margin-block-end: 1.25rem;
+}
+.yj-tours-page .yj-toolbar-search { max-inline-size: 20rem; flex: 1 1 12rem; }
+.yj-tours-page .yj-toolbar-search .input-group-text,
+.yj-tours-page .yj-toolbar-search .form-control {
+    background: #fff;
+    border-color: var(--yj-line);
+}
+.yj-tours-page .yj-toolbar-search .form-control:focus {
+    box-shadow: 0 0 0 .15rem rgba(140,29,36,.12);
+    border-color: var(--yj-brand);
+}
+.yj-tours-page .yj-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1.125rem;
+    flex-wrap: wrap;
+}
+
+/* Segmented view toggle */
+.yj-tours-page .yj-view-tabs {
+    background: #f4ece1;
+    border: 1px solid var(--yj-line);
+    border-radius: .625rem;
+    padding: 3px;
+    display: inline-flex;
+    gap: 0;
+}
+.yj-tours-page .yj-view-tabs .yj-view-tab {
+    border: 0;
+    background: transparent;
+    color: var(--yj-mute);
+    padding: .375rem .875rem;
+    border-radius: .5rem;
+    font-weight: 600;
+    font-size: .8125rem;
+    display: inline-flex;
+    align-items: center;
+    transition: background-color .12s ease, color .12s ease, box-shadow .12s ease;
+}
+.yj-tours-page .yj-view-tabs .yj-view-tab.active {
+    background: #fff;
+    color: var(--yj-brand);
+    box-shadow: 0 1px 3px rgba(60,30,10,.08);
+}
+.yj-tours-page .yj-view-tabs .yj-view-tab:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 .15rem rgba(140,29,36,.25);
+}
+
+/* Sort */
+.yj-tours-page .yj-sort-form { display: flex; align-items: center; gap: .625rem; margin: 0; }
+.yj-tours-page .yj-sort-label { font-size: .8125rem; color: var(--yj-mute); white-space: nowrap; margin: 0; }
+.yj-tours-page .yj-sort-select {
+    border: 1px solid var(--yj-line);
+    border-radius: .625rem;
+    background-color: #fff;
+    font-size: .875rem;
+    color: var(--yj-ink);
+    inline-size: auto;
+    min-inline-size: 10rem;
+}
+.yj-tours-page .yj-sort-select:focus {
+    border-color: var(--yj-brand);
+    box-shadow: 0 0 0 .15rem rgba(140,29,36,.15);
+}
+
+/* Results count + chips */
+.yj-tours-page .yj-results-count { font-size: .875rem; color: var(--yj-mute); font-weight: 500; }
+.yj-tours-page .yj-results-count strong,
+.yj-tours-page .yj-results-count b { color: var(--yj-brand); font-weight: 700; }
+.yj-tours-page .yj-active-filters .js-filter-chip {
+    border-color: var(--yj-line);
+    background: #fff;
+    color: var(--yj-ink);
+    border-radius: 999px;
+}
+
+/* ---------- CARD VIEW ---------- */
+.yj-tours-page .yj-view-card .card.yj-tour-card {
+    border: 1px solid var(--yj-line);
+    border-radius: .875rem;
+    box-shadow: 0 4px 16px rgba(60,30,10,.05);
+    background: #fff;
+    overflow: hidden;
+    transition: box-shadow .15s ease, transform .15s ease;
+}
+.yj-tours-page .yj-view-card .card.yj-tour-card:hover {
+    box-shadow: 0 10px 28px rgba(60,30,10,.10);
+}
+.yj-tours-page .yj-view-card .yj-tour-card .card-body { padding: .875rem .9375rem .9375rem; }
+.yj-tours-page .yj-view-card .yj-tour-card .card-title {
+    font-size: .90625rem;
+    font-weight: 700;
+    line-height: 1.3;
+    min-block-size: 2.375rem;
+    color: var(--yj-ink);
+}
+.yj-tours-page .yj-view-card .yj-tour-card .card-title a { color: inherit; text-decoration: none; }
+.yj-tours-page .yj-view-card .yj-tour-card .card-title a:hover { color: var(--yj-brand); }
+.yj-tours-page .card-img-h220 { block-size: 158px; object-fit: cover; }
+@media (min-width: 62em) { .yj-tours-page .card-img-h220 { block-size: 180px; } }
+
+.yj-tours-page .yj-view-card .yj-tour-card .btn-primary {
+    background: var(--yj-brand);
+    border-color: var(--yj-brand);
+    border-radius: .5rem;
+    padding: .375rem .75rem;
+    font-size: .8125rem;
+    font-weight: 600;
+}
+.yj-tours-page .yj-view-card .yj-tour-card .btn-primary:hover,
+.yj-tours-page .yj-view-card .yj-tour-card .btn-primary:focus-visible {
+    background: var(--yj-brand-hover);
+    border-color: var(--yj-brand-hover);
+    box-shadow: 0 0 0 .15rem rgba(140,29,36,.2);
+}
+
+.yj-tours-page .yj-tour-card .badge.bg-danger,
+.yj-tours-page .yj-tour-card .badge.text-bg-danger { background-color: var(--yj-brand) !important; color: #fff !important; }
+.yj-tours-page .yj-tour-card .badge.bg-primary,
+.yj-tours-page .yj-tour-card .badge.text-bg-primary { background-color: #E7D3A8 !important; color: #7a5a22 !important; }
+.yj-tours-page .yj-tour-card .badge { font-size: .71875rem; font-weight: 700; padding: .3125rem .6875rem; border-radius: 7px; }
+
+.yj-tours-page .yj-tour-card .btn-wishlist,
+.yj-tours-page .yj-list-card .btn-wishlist {
+    inline-size: 32px;
+    block-size: 32px;
+    background: rgba(255,255,255,.92);
+    border: 0;
+    border-radius: 50%;
+    color: var(--yj-brand);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(60,30,10,.12);
+}
+.yj-tours-page .yj-tour-card .btn-wishlist:hover,
+.yj-tours-page .yj-list-card .btn-wishlist:hover { background: #fff; }
+
+.yj-tours-page .yj-tour-card .bi-star-fill,
+.yj-tours-page .yj-list-card .bi-star-fill { color: var(--yj-star); }
+
+.yj-tours-page .yj-tour-card .text-primary,
+.yj-tours-page .yj-list-card .text-primary,
+.yj-tours-page .yj-list-price .text-primary { color: var(--yj-brand) !important; }
+
+/* ---------- LIST VIEW ---------- */
+.yj-tours-page .yj-view-list .yj-list-card {
+    background: #fff;
+    border: 1px solid var(--yj-line);
+    border-radius: .875rem;
+    box-shadow: 0 4px 16px rgba(60,30,10,.05);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr;
+}
+@media (min-width: 48em) {
+    .yj-tours-page .yj-view-list .yj-list-card { grid-template-columns: 222px 1fr; }
+}
+.yj-tours-page .yj-view-list .yj-list-media {
+    position: relative;
+    background: var(--yj-sand-2);
+    aspect-ratio: 16 / 10;
+}
+@media (min-width: 48em) {
+    .yj-tours-page .yj-view-list .yj-list-media {
+        aspect-ratio: auto;
+        block-size: 100%;
+        min-block-size: 200px;
+    }
+}
+.yj-tours-page .yj-view-list .yj-list-media img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+.yj-tours-page .yj-view-list .yj-list-body {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 0;
+    align-items: stretch;
+}
+@media (min-width: 62em) {
+    .yj-tours-page .yj-view-list .yj-list-body { grid-template-columns: 1fr 198px; }
+}
+.yj-tours-page .yj-view-list .yj-list-body-main {
+    padding: 1rem 1.25rem;
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.yj-tours-page .yj-view-list .yj-list-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--yj-ink);
+    line-height: 1.3;
+    margin-block-end: .5rem;
+}
+.yj-tours-page .yj-view-list .yj-list-title a { color: inherit; text-decoration: none; }
+.yj-tours-page .yj-view-list .yj-list-title a:hover { color: var(--yj-brand); }
+.yj-tours-page .yj-view-list .yj-list-body-side {
+    padding: 1rem;
+    border-block-start: 1px solid var(--yj-line-2);
+    border-inline-start: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: .625rem;
+    text-align: start;
+}
+@media (min-width: 62em) {
+    .yj-tours-page .yj-view-list .yj-list-body-side {
+        border-block-start: 0;
+        border-inline-start: 1px solid var(--yj-line-2);
+        text-align: end;
+    }
+}
+.yj-tours-page .yj-view-list .yj-list-price {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--yj-brand);
+}
+.yj-tours-page .yj-view-list .yj-list-card .btn-primary {
+    background: var(--yj-brand);
+    border-color: var(--yj-brand);
+    border-radius: .5625rem;
+    padding: .625rem 1rem;
+    font-weight: 600;
+    inline-size: 100%;
+}
+.yj-tours-page .yj-view-list .yj-list-card .btn-primary:hover,
+.yj-tours-page .yj-view-list .yj-list-card .btn-primary:focus-visible {
+    background: var(--yj-brand-hover);
+    border-color: var(--yj-brand-hover);
+}
+.yj-tours-page .yj-view-list .yj-list-media .badge {
+    position: absolute;
+    inset-block-start: .75rem;
+    inset-inline-start: .75rem;
+}
+.yj-tours-page .yj-view-list .yj-list-media .btn-wishlist {
+    position: absolute;
+    inset-block-start: .75rem;
+    inset-inline-end: .75rem;
+}
+.yj-tours-page .yj-view-list.yj-tour-grid { row-gap: 1rem; }
+
+/* ---------- TRUST STRIP ---------- */
+.yj-tours-page .yj-trust-wrap { margin-block: 2.75rem 2.75rem; }
+.yj-tours-page .yj-trust {
+    background: #fff;
+    border: 1px solid var(--yj-line);
+    border-radius: 1rem;
+    padding: 1.5rem .75rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    box-shadow: 0 4px 16px rgba(60,30,10,.04);
+}
+@media (max-width: 62.5em) { .yj-tours-page .yj-trust { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 40em) { .yj-tours-page .yj-trust { grid-template-columns: 1fr; } }
+.yj-tours-page .yj-trust-col {
+    display: flex;
+    align-items: center;
+    gap: .8125rem;
+    padding-inline: 1.25rem;
+    padding-block: .5rem;
+    border-inline-end: 1px solid var(--yj-line-2);
+}
+.yj-tours-page .yj-trust-col:last-child { border-inline-end: 0; }
+@media (max-width: 62.5em) {
+    .yj-tours-page .yj-trust-col:nth-child(2n) { border-inline-end: 0; }
+    .yj-tours-page .yj-trust-col:nth-child(1),
+    .yj-tours-page .yj-trust-col:nth-child(2) { border-block-end: 1px solid var(--yj-line-2); padding-block-end: 1rem; }
+    .yj-tours-page .yj-trust-col:nth-child(3),
+    .yj-tours-page .yj-trust-col:nth-child(4) { padding-block-start: 1rem; }
+}
+@media (max-width: 40em) {
+    .yj-tours-page .yj-trust-col {
+        border-inline-end: 0;
+        border-block-end: 1px solid var(--yj-line-2);
+        padding-block: .75rem;
+    }
+    .yj-tours-page .yj-trust-col:last-child { border-block-end: 0; }
+}
+.yj-tours-page .yj-trust-icon {
+    inline-size: 48px;
+    block-size: 48px;
+    border-radius: 50%;
+    background: #f7f0e5;
+    border: 1px solid rgba(192,149,74,.4);
+    color: var(--yj-gold);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    flex-shrink: 0;
+}
+.yj-tours-page .yj-trust-body { min-inline-size: 0; }
+.yj-tours-page .yj-trust-title {
+    font-size: .875rem;
+    font-weight: 700;
+    color: var(--yj-ink);
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.yj-tours-page .yj-trust-text {
+    font-size: .75rem;
+    color: var(--yj-mute);
+    margin: 0;
+}
+
+/* Mobile filter button */
+.yj-tours-page .yj-filterbtn {
+    border-color: var(--yj-line);
+    color: var(--yj-ink);
+    background: #fff;
+}
+.yj-tours-page .yj-filterbtn:hover { color: var(--yj-brand); border-color: var(--yj-brand); }
+
+/* Pagination inside results */
+.yj-tours-page #tourResults .pagination .page-link { color: var(--yj-brand); border-color: var(--yj-line); }
+.yj-tours-page #tourResults .pagination .page-item.active .page-link {
+    background-color: var(--yj-brand);
+    border-color: var(--yj-brand);
+    color: #fff;
 }

@@ -1,0 +1,68 @@
+@*
+    Reusable Explore section header (eyebrow + title [+accent] + subtitle, optional "see all" link).
+    Pure presentational partial — carries NO model; all values come from ViewData knobs so it can be
+    reused by any section without coupling to a view model.
+
+    ViewData knobs (section-specific keys to avoid collision with the page-level ViewData["Title"],
+    which is case-insensitive in Razor ViewDataDictionary):
+      - "SectionEyebrow"      (string?)  small uppercase kicker above the title
+      - "SectionEyebrowGold"  (bool)     use the gold eyebrow accent instead of primary (default false)
+      - "SectionTitle"        (string)   main heading text
+      - "SectionAccent"       (string?)  optional highlighted fragment appended to the title
+      - "SectionAccentGold"   (bool)     render the accent in gold (default: primary)
+      - "SectionDescription"  (string?)  supporting copy under the title
+      - "SectionActionText"   (string?)  optional trailing CTA link label (e.g. "See all")
+      - "SectionActionUrl"    (string?)  href for the CTA link (already-resolved URL)
+      - "SectionCenter"       (bool)     center-align the header (default false)
+      - "SectionHeadingTag"   (string?)  h2 (default) or h1/h3 etc.
+*@
+@{
+    var eyebrow = ViewData["SectionEyebrow"] as string;
+    var eyebrowGold = ViewData["SectionEyebrowGold"] as bool? ?? false;
+    var title = ViewData["SectionTitle"] as string ?? string.Empty;
+    var accent = ViewData["SectionAccent"] as string;
+    var accentGold = ViewData["SectionAccentGold"] as bool? ?? false;
+    var subtitle = ViewData["SectionDescription"] as string;
+    var linkText = ViewData["SectionActionText"] as string;
+    var linkHref = ViewData["SectionActionUrl"] as string;
+    var center = ViewData["SectionCenter"] as bool? ?? false;
+    var headingTag = ViewData["SectionHeadingTag"] as string ?? "h2";
+    var hasLink = !string.IsNullOrWhiteSpace(linkText) && !string.IsNullOrWhiteSpace(linkHref);
+    var accentClass = accentGold ? "text-warning" : "text-primary";
+    var eyebrowClass = eyebrowGold ? "yj-eyebrow yj-eyebrow-gold" : "yj-eyebrow";
+}
+<div class="yj-section-head @(center ? "yj-section-head-center text-center" : "row align-items-end g-3") mb-4 mb-md-5">
+    <div class="@(center ? "" : "col-md-8")">
+        @if (!string.IsNullOrWhiteSpace(eyebrow))
+        {
+            <span class="@eyebrowClass">@eyebrow</span>
+        }
+        <@headingTag class="yj-section-title mt-2 mb-2">
+            @title
+            @if (!string.IsNullOrWhiteSpace(accent))
+            {
+                <span class="@accentClass">@accent</span>
+            }
+        </@headingTag>
+        @if (!string.IsNullOrWhiteSpace(subtitle))
+        {
+            <p class="text-body-secondary mb-0 yj-section-subtitle">@subtitle</p>
+        }
+    </div>
+    @if (hasLink && !center)
+    {
+        <div class="col-md-4 text-md-end">
+            <a href="@linkHref" class="btn btn-link p-0 fw-semibold text-decoration-none yj-section-link">
+                @linkText <i class="bi bi-arrow-right ic-arrow ms-1" aria-hidden="true"></i>
+            </a>
+        </div>
+    }
+    @if (hasLink && center)
+    {
+        <div class="mt-3">
+            <a href="@linkHref" class="btn btn-link p-0 fw-semibold text-decoration-none yj-section-link">
+                @linkText <i class="bi bi-arrow-right ic-arrow ms-1" aria-hidden="true"></i>
+            </a>
+        </div>
+    }
+</div>

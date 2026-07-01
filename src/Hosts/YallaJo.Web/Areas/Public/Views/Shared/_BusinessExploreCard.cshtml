@@ -1,0 +1,66 @@
+@model YallaJo.Web.Areas.Public.Models.Directory.BusinessCardVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Explore "Loved by locals" business card with a floating brand icon. The card body reserves
+    padding-block-start so the floating icon NEVER overlaps the location/city text (known-issue fix #4).
+    Uses dynamic BusinessCardVm data + shared _WishlistButton. Does NOT modify the shared _BusinessCard.
+    Links to Directory/Detail by id (existing route).
+    ViewData knobs:
+      - "isAuthed" (bool)   enables the wishlist toggle
+      - "colClass" (string) grid column classes, default "col-12 col-md-6 col-lg-4"
+*@
+@{
+    var isAuthed = ViewData["isAuthed"] as bool? ?? false;
+    var colClass = ViewData["colClass"] as string ?? "col-12 col-md-6 col-lg-4";
+}
+<div class="@colClass">
+    <article class="yj-biz-card h-100">
+        <div class="yj-biz-media">
+            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" class="object-cover" alt="@Model.Name" loading="lazy" decoding="async" />
+            }
+            else
+            {
+                <img src="/assets/images/default-business.jpg" class="object-cover" alt="@Model.Name" loading="lazy" decoding="async" />
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Location))
+            {
+                <span class="yj-biz-loc"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>@Model.Location</span>
+            }
+            <div class="yj-card-heart">
+                <partial name="_WishlistButton" model="@(new YallaJo.Web.Areas.Public.Models.Shared.WishlistButtonVm
+                         {
+                             EntityType = "Business",
+                             EntityId = Model.Id,
+                             IsAuthenticated = isAuthed,
+                             ExtraClass = "shadow-sm"
+                         })" />
+            </div>
+        </div>
+        <div class="yj-biz-body">
+            <span class="yj-biz-icon" aria-hidden="true"><i class="bi bi-shop-window"></i></span>
+            @if (Model.IsVerified)
+            {
+                <span class="yj-biz-verify"><i class="bi bi-patch-check-fill me-1" aria-hidden="true"></i>@Localizer["Public.Verified"]</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.BusinessType))
+            {
+                <div class="yj-biz-cat">@Model.BusinessType</div>
+            }
+            <h3 class="h6 yj-biz-name mb-2">
+                <a class="text-reset stretched-link"
+                   asp-area="Public" asp-controller="Directory" asp-action="Detail" asp-route-id="@Model.Id">@Model.Name</a>
+            </h3>
+            <div class="mt-auto d-flex align-items-center justify-content-between pt-2 yj-biz-foot">
+                <span class="small d-inline-flex align-items-center">
+                    <i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>
+                    <span class="fw-semibold">@Model.AverageRating.ToString("0.0")</span>
+                    <span class="text-body-secondary ms-1">(@Model.ReviewCount)</span>
+                </span>
+                <span class="btn btn-sm btn-outline-primary rounded-pill px-3 yj-z-1">@Localizer["Public.View.Details"]</span>
+            </div>
+        </div>
+    </article>
+</div>

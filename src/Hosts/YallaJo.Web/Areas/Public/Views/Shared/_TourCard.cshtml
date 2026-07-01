@@ -2,41 +2,85 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @*
-    Canonical tour card (master plan §3.1). Used by Home rails, Tours index, Search results,
-    Packages detail. ViewData knobs:
-      - "isAuthed"  (bool)    enables the wishlist toggle
-      - "colClass"  (string)  grid column classes, default "col-md-6 col-xl-4"
-      - "dataTitle" (string?) optional data-title attr for client-side page filtering (Tours index)
+    Canonical tour card. Used by Home rails/grids, Tours index, Search results, Packages detail,
+    and any future favorites/sidebar rails.
+
+    ViewData knobs (all optional, all safe defaults; NEVER use generic keys like title/description):
+      - "isAuthed"    (bool)    enables the wishlist toggle. Default false.
+      - "colClass"    (string)  Bootstrap column classes wrapper (ignored by "popularRail" variant
+                                since rail children must not be wrapped in a .col-*).
+                                Default per-variant (see below).
+      - "dataTitle"   (string?) optional data-title attr for client-side page filtering
+                                (Tours index tours-index.js). Applied to the outer element.
+      - "CardVariant" (string)  "standard" (default) | "featured" | "popularRail" | "compact" | "list"
+      - "ShowOverlay" (bool)    force/disable the gradient overlay on image-dominant variants.
+                                Default: true for popularRail, false otherwise.
+      - "Tall"        (bool)    hint for taller media (currently used by popularRail/compact).
+                                Default false.
+
+    All variants:
+      * consume TourCardVm only (dynamic data, no dummy content)
+      * reuse the shared _WishlistButton
+      * link to Public/Tours/Detail with Model.Slug
+      * localize every user-facing string via Localizer / SharedResource
+      * preserve RTL/LTR (no hardcoded ltr/rtl inline styles; uses existing yj-* classes
+        already covered by rtl.css §11)
 *@
 @{
+    var variant = ViewData["CardVariant"] as string ?? "standard";
     var isAuthed = ViewData["isAuthed"] as bool? ?? false;
-    var colClass = ViewData["colClass"] as string ?? "col-md-6 col-xl-4";
     var dataTitle = ViewData["dataTitle"] as string;
+    var tall = ViewData["Tall"] as bool? ?? false;
+
+    // Per-variant default column class (kept identical to the pre-refactor partials).
+    string defaultColClass = variant switch
+    {
+        "featured" => "col-12 col-lg-6",
+        "compact" => "col-sm-6 col-md-4 col-xl-3",
+        "list" => "col-12",
+        // "popularRail" has no col wrapper — colClass ignored below.
+        _ => "col-md-6 col-xl-4"
+    };
+    var colClass = ViewData["colClass"] as string ?? defaultColClass;
+
+    var showOverlayDefault = variant == "popularRail";
+    var showOverlay = ViewData["ShowOverlay"] as bool? ?? showOverlayDefault;
+
+    var imageUrl = string.IsNullOrWhiteSpace(Model.ImageUrl)
+        ? "/assets/images/default-tour.jpg"
+        : Model.ImageUrl;
+    var hasRealImage = !string.IsNullOrWhiteSpace(Model.ImageUrl);
+    var detailUrl = Url.Action("Detail", "Tours", new { area = "Public", slug = Model.Slug });
 }
-<div class="@colClass" data-title="@dataTitle">
-    <div class="card card-hover-shadow yj-tour-card h-100">
-        <div class="yj-card-media position-relative">
-            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+
+@* ============================== Variant: popularRail (no col wrapper; article-only) ============================== *@
+@if (variant == "popularRail")
+{
+    var showFeaturedBadge = Model.IsFeatured;
+    var showPopularBadge = !showFeaturedBadge && Model.BookingCount > 0;
+
+    <article class="yj-pop-card@(tall ? " yj-pop-card-tall" : "")" data-title="@(dataTitle ?? Model.Name)">
+        <div class="yj-pop-media">
+            <img src="@imageUrl" class="object-cover" alt="@Model.Name" loading="lazy" decoding="async" />
+            @if (showOverlay)
             {
-                <img src="@Model.ImageUrl" class="card-img-top object-cover card-img-h220" alt="@Model.Name" loading="lazy" />
+                <span class="yj-pop-overlay" aria-hidden="true"></span>
             }
-            else
+
+            @if (showFeaturedBadge)
             {
-                <div class="card-img-top card-img-h220 bg-light d-flex align-items-center justify-content-center" aria-hidden="true">
-                    <i class="bi bi-image display-5 text-secondary"></i>
-                </div>
+                <span class="yj-pop-badge yj-pop-badge-featured"><i class="bi bi-star-fill me-1" aria-hidden="true"></i>@Localizer["Public.Featured"]</span>
             }
-            <div class="position-absolute top-0 start-0 p-3 z-index-1">
-                @if (Model.HasDiscount)
-                {
-                    <span class="badge text-bg-danger me-1">@Localizer["Public.PercentOff", Model.DiscountPercent]</span>
-                }
-                @if (Model.IsFeatured)
-                {
-                    <span class="badge text-bg-primary">@Localizer["Public.Featured"]</span>
-                }
-            </div>
-            <div class="position-absolute top-0 end-0 p-3 z-index-2">
+            else if (showPopularBadge)
+            {
+                <span class="yj-pop-badge yj-pop-badge-popular"><i class="bi bi-fire me-1" aria-hidden="true"></i>@Localizer["Home.Popular.Badge"]</span>
+            }
+            @if (Model.HasDiscount)
+            {
+                <span class="yj-pop-badge yj-pop-badge-deal">@Localizer["Public.PercentOff", Model.DiscountPercent]</span>
+            }
+
+            <div class="yj-card-heart">
                 <partial name="_WishlistButton" model="@(new YallaJo.Web.Areas.Public.Models.Shared.WishlistButtonVm
                          {
                              EntityType = "Tour",
@@ -45,35 +89,277 @@
                              ExtraClass = "shadow-sm"
                          })" />
             </div>
-        </div>
-        <div class="card-body d-flex flex-column">
-            <h5 class="card-title h6 mb-2">
-                <a class="stretched-link text-reset"
-                   asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug">@Model.Name</a>
-            </h5>
-            <ul class="nav nav-divider small text-body-secondary mb-2">
-                <li class="nav-item">
-                    <i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>@Model.AverageRating.ToString("0.0")
-                    <span>(@Model.ReviewCount)</span>
-                </li>
-                @if (Model.BookingCount > 0)
-                {
-                    <li class="nav-item">@Localizer["Public.BookedCount", Model.BookingCount]</li>
-                }
-            </ul>
-            <div class="mt-auto d-flex align-items-end justify-content-between pt-2">
-                <div>
-                    <small class="text-body-secondary text-uppercase d-block lh-1">@Localizer["Public.From"]</small>
-                    <span class="fs-5 fw-bold text-body-emphasis mb-0">@($"{Model.EffectivePrice:N0} {Model.Currency}")</span>
-                    <small class="text-body-secondary"> @Localizer["Public.per.person"]</small>
-                    @if (Model.HasDiscount)
+
+            <div class="yj-pop-info">
+                <div class="d-flex align-items-center gap-2 mb-1 small yj-pop-meta">
+                    <span class="d-inline-flex align-items-center">
+                        <i class="bi bi-star-fill me-1" aria-hidden="true"></i>@Model.AverageRating.ToString("0.0")
+                        <span class="ms-1 opacity-75">(@Model.ReviewCount)</span>
+                    </span>
+                    @if (Model.BookingCount > 0)
                     {
-                        <small class="text-decoration-line-through text-body-secondary d-block">@($"{Model.BasePrice:N0} {Model.Currency}")</small>
+                        <span class="opacity-75">· @Localizer["Public.BookedCount", Model.BookingCount]</span>
                     }
                 </div>
-                <a class="btn btn-sm btn-primary rounded-pill px-3 z-index-2 position-relative"
-                   asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug">@Localizer["Public.View.Details"]</a>
+                <h3 class="h6 yj-pop-title mb-1">
+                    <a class="text-reset stretched-link"
+                       asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug">@Model.Name</a>
+                </h3>
+                <div class="yj-pop-price">
+                    <span class="opacity-75">@Localizer["Public.From"]</span>
+                    <span class="fw-bold">@($"{Model.EffectivePrice:N0} {Model.Currency}")</span>
+                </div>
+            </div>
+        </div>
+    </article>
+}
+@* ============================== Variant: featured (wide horizontal editor pick) ============================== *@
+else if (variant == "featured")
+{
+    <div class="@colClass" data-title="@dataTitle">
+        <article class="yj-featured-wide h-100">
+            <div class="yj-featured-wide-media">
+                <img src="@imageUrl" class="object-cover" alt="@Model.Name" loading="lazy" decoding="async" />
+                <span class="yj-pick-ribbon">@Localizer["Home.Featured.EditorPick"]</span>
+                <div class="yj-card-heart">
+                    <partial name="_WishlistButton" model="@(new YallaJo.Web.Areas.Public.Models.Shared.WishlistButtonVm
+                             {
+                                 EntityType = "Tour",
+                                 EntityId = Model.Id,
+                                 IsAuthenticated = isAuthed,
+                                 ExtraClass = "shadow-sm"
+                             })" />
+                </div>
+            </div>
+            <div class="yj-featured-wide-body">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2 small">
+                    <span class="d-inline-flex align-items-center text-warning">
+                        <i class="bi bi-star-fill me-1" aria-hidden="true"></i>
+                        <span class="text-body-emphasis fw-semibold">@Model.AverageRating.ToString("0.0")</span>
+                        <span class="text-body-secondary ms-1">(@Model.ReviewCount)</span>
+                    </span>
+                    @if (Model.BookingCount > 0)
+                    {
+                        <span class="text-body-secondary">@Localizer["Public.BookedCount", Model.BookingCount]</span>
+                    }
+                </div>
+                <h3 class="h5 yj-featured-wide-title mb-2">
+                    <a class="text-reset stretched-link"
+                       asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug">@Model.Name</a>
+                </h3>
+                <div class="mt-auto d-flex align-items-end justify-content-between pt-2">
+                    <div>
+                        <small class="text-body-secondary d-block lh-1">@Localizer["Public.From"]</small>
+                        <span class="fs-4 fw-bold text-body-emphasis">@($"{Model.EffectivePrice:N0} {Model.Currency}")</span>
+                        <small class="text-body-secondary">@Localizer["Public.per.person"]</small>
+                        @if (Model.HasDiscount)
+                        {
+                            <small class="text-decoration-line-through text-body-secondary d-block">@($"{Model.BasePrice:N0} {Model.Currency}")</small>
+                        }
+                    </div>
+                    <span class="btn btn-sm btn-primary rounded-pill px-3 yj-z-1">@Localizer["Public.View.Details"]</span>
+                </div>
+            </div>
+        </article>
+    </div>
+}
+@* ============================== Variant: compact (dense reusable tile) ============================== *@
+else if (variant == "compact")
+{
+    <div class="@colClass" data-title="@dataTitle">
+        <div class="card card-hover-shadow yj-tc-compact h-100">
+            <div class="yj-tc-compact-media position-relative">
+                @if (hasRealImage)
+                {
+                    <img src="@imageUrl" class="card-img-top object-cover" alt="@Model.Name" loading="lazy" decoding="async" />
+                }
+                else
+                {
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center yj-tc-compact-fallback" aria-hidden="true">
+                        <i class="bi bi-image display-6 text-secondary"></i>
+                    </div>
+                }
+                <div class="position-absolute top-0 start-0 p-2 z-index-1 d-flex flex-wrap gap-1">
+                    @if (Model.HasDiscount)
+                    {
+                        <span class="badge text-bg-danger">@Localizer["Public.PercentOff", Model.DiscountPercent]</span>
+                    }
+                    @if (Model.IsFeatured)
+                    {
+                        <span class="badge text-bg-primary">@Localizer["Public.Featured"]</span>
+                    }
+                </div>
+                <div class="position-absolute top-0 end-0 p-2 z-index-2">
+                    <partial name="_WishlistButton" model="@(new YallaJo.Web.Areas.Public.Models.Shared.WishlistButtonVm
+                             {
+                                 EntityType = "Tour",
+                                 EntityId = Model.Id,
+                                 IsAuthenticated = isAuthed,
+                                 ExtraClass = "shadow-sm"
+                             })" />
+                </div>
+            </div>
+            <div class="card-body d-flex flex-column p-3">
+                <h5 class="card-title h6 mb-1 yj-tc-compact-title">
+                    <a class="stretched-link text-reset"
+                       asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug">@Model.Name</a>
+                </h5>
+                <div class="small text-body-secondary mb-2 d-flex align-items-center gap-2">
+                    <span class="d-inline-flex align-items-center">
+                        <i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>@Model.AverageRating.ToString("0.0")
+                        <span class="ms-1">(@Model.ReviewCount)</span>
+                    </span>
+                </div>
+                <div class="mt-auto">
+                    <small class="text-body-secondary d-block lh-1">@Localizer["Public.From"]</small>
+                    <span class="fw-bold text-body-emphasis">@($"{Model.EffectivePrice:N0} {Model.Currency}")</span>
+                    @if (Model.HasDiscount)
+                    {
+                        <small class="text-decoration-line-through text-body-secondary ms-1">@($"{Model.BasePrice:N0} {Model.Currency}")</small>
+                    }
+                </div>
             </div>
         </div>
     </div>
-</div>
+}
+@* ============================== Variant: list (horizontal card for /tours List view) ==============================
+     CSS reflow only — uses ONLY existing TourCardVm fields (image, name, rating, review count,
+     booking count, price, discount, featured). No fabricated duration/difficulty/pickup metadata.
+     Wrapper stays a full-width col so the AJAX .row.g-4 in _TourResults still flows correctly. *@
+else if (variant == "list")
+{
+    <div class="@colClass" data-title="@dataTitle">
+        <article class="card yj-list-card">
+            <div class="yj-list-media">
+                @if (hasRealImage)
+                {
+                    <img src="@Model.ImageUrl" class="object-cover" alt="@Model.Name" loading="lazy" decoding="async" />
+                }
+                else
+                {
+                    <div class="yj-list-media-fallback bg-light d-flex align-items-center justify-content-center" aria-hidden="true">
+                        <i class="bi bi-image display-5 text-secondary"></i>
+                    </div>
+                }
+                <div class="position-absolute top-0 start-0 p-3 z-index-1 d-flex flex-wrap gap-1">
+                    @if (Model.HasDiscount)
+                    {
+                        <span class="badge text-bg-danger">@Localizer["Public.PercentOff", Model.DiscountPercent]</span>
+                    }
+                    @if (Model.IsFeatured)
+                    {
+                        <span class="badge text-bg-primary">@Localizer["Public.Featured"]</span>
+                    }
+                </div>
+                <div class="position-absolute top-0 end-0 p-3 z-index-2">
+                    <partial name="_WishlistButton" model="@(new YallaJo.Web.Areas.Public.Models.Shared.WishlistButtonVm
+                             {
+                                 EntityType = "Tour",
+                                 EntityId = Model.Id,
+                                 IsAuthenticated = isAuthed,
+                                 ExtraClass = "shadow-sm"
+                             })" />
+                </div>
+            </div>
+            <div class="yj-list-body">
+                <div class="yj-list-body-main">
+                    <h5 class="card-title h5 mb-2 yj-list-title">
+                        <a class="stretched-link text-reset"
+                           asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug">@Model.Name</a>
+                    </h5>
+                    <ul class="nav nav-divider small text-body-secondary mb-0">
+                        <li class="nav-item">
+                            <i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>@Model.AverageRating.ToString("0.0")
+                            <span>(@Model.ReviewCount)</span>
+                        </li>
+                        @if (Model.BookingCount > 0)
+                        {
+                            <li class="nav-item">@Localizer["Public.BookedCount", Model.BookingCount]</li>
+                        }
+                    </ul>
+                </div>
+                <div class="yj-list-body-side">
+                    <div class="yj-list-price">
+                        <small class="text-body-secondary d-block lh-1">@Localizer["Public.From"]</small>
+                        <span class="fs-4 fw-bold text-body-emphasis">@($"{Model.EffectivePrice:N0} {Model.Currency}")</span>
+                        <small class="text-body-secondary d-block">@Localizer["Public.per.person"]</small>
+                        @if (Model.HasDiscount)
+                        {
+                            <small class="text-decoration-line-through text-body-secondary d-block">@($"{Model.BasePrice:N0} {Model.Currency}")</small>
+                        }
+                    </div>
+                    <a class="btn btn-primary rounded-pill w-100 mt-2 z-index-2 position-relative"
+                       asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug">@Localizer["Public.View.Details"]</a>
+                </div>
+            </div>
+        </article>
+    </div>
+}
+@* ============================== Variant: standard (default — byte-compatible with the pre-refactor _TourCard) ============================== *@
+else
+{
+    <div class="@colClass" data-title="@dataTitle">
+        <div class="card card-hover-shadow yj-tour-card h-100">
+            <div class="yj-card-media position-relative">
+                @if (hasRealImage)
+                {
+                    <img src="@Model.ImageUrl" class="card-img-top object-cover card-img-h220" alt="@Model.Name" loading="lazy" />
+                }
+                else
+                {
+                    <div class="card-img-top card-img-h220 bg-light d-flex align-items-center justify-content-center" aria-hidden="true">
+                        <i class="bi bi-image display-5 text-secondary"></i>
+                    </div>
+                }
+                <div class="position-absolute top-0 start-0 p-3 z-index-1">
+                    @if (Model.HasDiscount)
+                    {
+                        <span class="badge text-bg-danger me-1">@Localizer["Public.PercentOff", Model.DiscountPercent]</span>
+                    }
+                    @if (Model.IsFeatured)
+                    {
+                        <span class="badge text-bg-primary">@Localizer["Public.Featured"]</span>
+                    }
+                </div>
+                <div class="position-absolute top-0 end-0 p-3 z-index-2">
+                    <partial name="_WishlistButton" model="@(new YallaJo.Web.Areas.Public.Models.Shared.WishlistButtonVm
+                             {
+                                 EntityType = "Tour",
+                                 EntityId = Model.Id,
+                                 IsAuthenticated = isAuthed,
+                                 ExtraClass = "shadow-sm"
+                             })" />
+                </div>
+            </div>
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title h6 mb-2">
+                    <a class="stretched-link text-reset"
+                       asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug">@Model.Name</a>
+                </h5>
+                <ul class="nav nav-divider small text-body-secondary mb-2">
+                    <li class="nav-item">
+                        <i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>@Model.AverageRating.ToString("0.0")
+                        <span>(@Model.ReviewCount)</span>
+                    </li>
+                    @if (Model.BookingCount > 0)
+                    {
+                        <li class="nav-item">@Localizer["Public.BookedCount", Model.BookingCount]</li>
+                    }
+                </ul>
+                <div class="mt-auto d-flex align-items-end justify-content-between pt-2">
+                    <div>
+                        <small class="text-body-secondary text-uppercase d-block lh-1">@Localizer["Public.From"]</small>
+                        <span class="fs-5 fw-bold text-body-emphasis mb-0">@($"{Model.EffectivePrice:N0} {Model.Currency}")</span>
+                        <small class="text-body-secondary"> @Localizer["Public.per.person"]</small>
+                        @if (Model.HasDiscount)
+                        {
+                            <small class="text-decoration-line-through text-body-secondary d-block">@($"{Model.BasePrice:N0} {Model.Currency}")</small>
+                        }
+                    </div>
+                    <a class="btn btn-sm btn-primary rounded-pill px-3 z-index-2 position-relative"
+                       asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug">@Localizer["Public.View.Details"]</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
