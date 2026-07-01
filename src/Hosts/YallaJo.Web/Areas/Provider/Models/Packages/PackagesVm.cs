@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace YallaJo.Web.Areas.Provider.Models.Packages;
 
@@ -92,12 +93,24 @@ public sealed class PackageManageVm
     public string Currency { get; init; } = "";
     public int? MaxParticipants { get; init; }
     public bool IsActive { get; init; }
+    public string? CoverImageUrl { get; init; }
     public IReadOnlyList<PackageIncludedTourResponse> IncludedTours { get; init; } = [];
     public IReadOnlyList<PackageInclusionResponse> Inclusions { get; init; } = [];
 
     public AddInclusionFormVm AddInclusion { get; set; } = new();
 
     public string PriceLabel => $"{PriceAmount:N3} {Currency}";
+
+    public bool HasCoverImage => !string.IsNullOrWhiteSpace(CoverImageUrl);
+}
+
+/// <summary>Multipart cover-image upload form for the package Manage screen.</summary>
+public sealed class UploadCoverFormVm
+{
+    [Required(ErrorMessage = "Please choose an image to upload.")]
+    public IFormFile? File { get; set; }
+
+    public const string AcceptAttribute = "image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp";
 }
 
 public sealed class AddInclusionFormVm

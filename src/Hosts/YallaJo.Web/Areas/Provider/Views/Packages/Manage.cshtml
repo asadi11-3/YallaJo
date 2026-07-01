@@ -58,6 +58,49 @@
             <p class="mb-0"><bdi>@Model.Description</bdi></p>
         }
 
+        <div class="card shadow-sm">
+            <div class="card-header border-bottom"><h2 class="card-header-title h5 mb-0">@Localizer["Provider.Packages.Cover.Heading"]</h2></div>
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-sm-5 col-md-4">
+                        @if (Model.HasCoverImage)
+                        {
+                            <img src="@Model.CoverImageUrl" alt="" loading="lazy" decoding="async"
+                                 class="img-fluid rounded w-100" style="aspect-ratio: 16 / 10; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center justify-content-center rounded bg-body-secondary text-body-secondary w-100"
+                                 style="aspect-ratio: 16 / 10;" aria-hidden="true">
+                                <i class="bi bi-box-seam fs-1"></i>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-sm-7 col-md-8">
+                        <p class="small text-body-secondary">@Localizer["Provider.Packages.Cover.Help"]</p>
+                        <permission require="@WebPermission.Package.Update">
+                            <form asp-action="UploadCover" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" data-loading>
+                                @Html.AntiForgeryToken()
+                                <div class="input-group">
+                                    <input type="file" name="File" class="form-control"
+                                           accept="@YallaJo.Web.Areas.Provider.Models.Packages.UploadCoverFormVm.AcceptAttribute"
+                                           aria-label="@Localizer["Provider.Packages.Cover.Upload"]" required />
+                                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-upload me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.Cover.Upload"]</button>
+                                </div>
+                            </form>
+                            @if (Model.HasCoverImage)
+                            {
+                                <form asp-action="RemoveCover" asp-route-id="@Model.Id" method="post" data-loading class="mt-2">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash-can me-1" aria-hidden="true"></i>@Localizer["Provider.Packages.Cover.Remove"]</button>
+                                </form>
+                            }
+                        </permission>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row g-4">
             <div class="col-lg-6">
                 <div class="card shadow-sm h-100">

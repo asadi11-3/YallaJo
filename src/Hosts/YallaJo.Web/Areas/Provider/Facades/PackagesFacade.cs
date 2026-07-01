@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Provider.ApiClients;
 using YallaJo.Web.Areas.Provider.Models.Packages;
 using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Services;
 
 namespace YallaJo.Web.Areas.Provider.Facades;
 
@@ -37,12 +39,18 @@ public sealed class PackagesFacade
     private readonly PackagesApiClient _api;
     private readonly ProviderToursApiClient _tours;
     private readonly IOutputCacheStore _cache;
+    private readonly IApiAssetUrlResolver _assetResolver;
 
-    public PackagesFacade(PackagesApiClient api, ProviderToursApiClient tours, IOutputCacheStore cache)
+    public PackagesFacade(
+        PackagesApiClient api,
+        ProviderToursApiClient tours,
+        IOutputCacheStore cache,
+        IApiAssetUrlResolver assetResolver)
     {
         _api = api;
         _tours = tours;
         _cache = cache;
+        _assetResolver = assetResolver;
     }
 
     public async Task<PackageListResult> GetIndexAsync(int page, CancellationToken ct = default)
@@ -83,7 +91,7 @@ public sealed class PackagesFacade
         if (!result.IsSuccess || result.Data is null)
             return new(PackageOutcome.ValidationError, Error: result.Error ?? "Could not load the package.");
 
-        return new(PackageOutcome.Ok, PackagesMapper.ToManageVm(result.Data));
+        return new(PackageOutcome.Ok, PackagesMapper.ToManageVm(result.Data, _assetResolver));
     }
 
     public async Task<PackageActionResult> CreateAsync(CreatePackageFormVm vm, CancellationToken ct = default)
@@ -108,6 +116,26 @@ public sealed class PackagesFacade
     public async Task<PackageActionResult> DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var outcome = Normalize(await _api.DeleteAsync(id, ct), "Could not delete the package.");
+        if (outcome.Outcome == PackageOutcome.Ok) await _cache.EvictByTagAsync($"package:{id}", ct);
+        return outcome;
+    }
+
+    public async Task<PackageActionResult> UploadCoverAsync(Guid id, IFormFile file, CancellationToken ct = default)
+    {
+        if (file is null || file.Length == 0)
+            return new(PackageOutcome.ValidationError, Error: "Please choose an image to upload.");
+
+        await using var stream = file.OpenReadStream();
+        var outcome = Normalize(
+            await _api.UploadCoverAsync(id, stream, file.FileName, file.ContentType, ct),
+            "Could not upload the cover image.");
+        if (outcome.Outcome == PackageOutcome.Ok) await _cache.EvictByTagAsync($"package:{id}", ct);
+        return outcome;
+    }
+
+    public async Task<PackageActionResult> RemoveCoverAsync(Guid id, CancellationToken ct = default)
+    {
+        var outcome = Normalize(await _api.DeleteCoverAsync(id, ct), "Could not remove the cover image.");
         if (outcome.Outcome == PackageOutcome.Ok) await _cache.EvictByTagAsync($"package:{id}", ct);
         return outcome;
     }

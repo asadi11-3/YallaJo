@@ -42,6 +42,11 @@ public class TourPackageConfiguration : IEntityTypeConfiguration<TourPackage>
         builder.Property(x => x.ValidTo).IsRequired(false);
         builder.Property(x => x.IsActive).IsRequired().HasDefaultValue(true);
 
+        // Optional cover image URL (nullable). Existing rows remain NULL.
+        builder.Property(x => x.CoverImageUrl)
+            .IsRequired(false)
+            .HasMaxLength(500);
+
         // ── WS-5a (Phase 3 G3a) — package approval state machine ────────────
         builder.Property(x => x.Status)
             .IsRequired()

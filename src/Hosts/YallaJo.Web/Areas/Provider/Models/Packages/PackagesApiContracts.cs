@@ -38,6 +38,7 @@ public sealed class PackageDetailResponse
     public DateTime? ValidTo { get; init; }
     public bool IsActive { get; init; }
     public DateTime CreatedAt { get; init; }
+    public string? CoverImageUrl { get; init; }
     public List<PackageIncludedTourResponse> IncludedTours { get; init; } = [];
     public List<PackageInclusionResponse> Inclusions { get; init; } = [];
 }

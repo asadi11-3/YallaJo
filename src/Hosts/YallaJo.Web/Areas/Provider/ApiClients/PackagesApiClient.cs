@@ -43,4 +43,12 @@ public sealed class PackagesApiClient
     // DELETE /api/v1/tours/packages/{id}  (soft-delete; no RowVersion per backend Decision #6)
     public Task<ApiResult> DeleteAsync(Guid id, CancellationToken ct = default)
         => _api.DeleteAsync($"{Base}/{id}", ct);
+
+    // POST /api/v1/tours/packages/{id}/cover/upload  (multipart, form-field "file")
+    public Task<ApiResult> UploadCoverAsync(Guid id, Stream content, string fileName, string contentType, CancellationToken ct = default)
+        => _api.PostFileAsync($"{Base}/{id}/cover/upload", content, fileName, contentType, formFieldName: "file", ct: ct);
+
+    // DELETE /api/v1/tours/packages/{id}/cover  (clears the cover image)
+    public Task<ApiResult> DeleteCoverAsync(Guid id, CancellationToken ct = default)
+        => _api.DeleteAsync($"{Base}/{id}/cover", ct);
 }

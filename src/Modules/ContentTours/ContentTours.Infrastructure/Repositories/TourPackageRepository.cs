@@ -105,7 +105,8 @@ internal sealed class TourPackageRepository(ContentToursDbContext context)
                 p.ValidFrom,
                 p.ValidTo,
                 p.IncludedTours.Count,
-                p.CreatedAt))
+                p.CreatedAt,
+                p.CoverImageUrl))
             .ToListAsync(ct)
             .ConfigureAwait(false);
 

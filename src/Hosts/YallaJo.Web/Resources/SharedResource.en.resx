@@ -16867,4 +16867,25 @@
   <data name="Public.Hero.Pill.TopRated" xml:space="preserve">
     <value>Top rated tours</value>
   </data>
+  <data name="Provider.Packages.Cover.Heading" xml:space="preserve">
+    <value>Cover image</value>
+  </data>
+  <data name="Provider.Packages.Cover.Help" xml:space="preserve">
+    <value>Add a cover photo to showcase this package. Use a landscape JPEG, PNG, or WebP up to 5 MB.</value>
+  </data>
+  <data name="Provider.Packages.Cover.Upload" xml:space="preserve">
+    <value>Upload cover</value>
+  </data>
+  <data name="Provider.Packages.Cover.Remove" xml:space="preserve">
+    <value>Remove cover</value>
+  </data>
+  <data name="Provider.Packages.Cover.InvalidFile" xml:space="preserve">
+    <value>Please choose a valid image file (JPEG, PNG, or WebP up to 5 MB).</value>
+  </data>
+  <data name="Provider.Flash.PackageCoverUpdated" xml:space="preserve">
+    <value>Cover image updated.</value>
+  </data>
+  <data name="Provider.Flash.PackageCoverRemoved" xml:space="preserve">
+    <value>Cover image removed.</value>
+  </data>
 </root>

@@ -16867,4 +16867,25 @@
   <data name="Public.Hero.Pill.TopRated" xml:space="preserve">
     <value>جولات الأعلى تقييمًا</value>
   </data>
+  <data name="Provider.Packages.Cover.Heading" xml:space="preserve">
+    <value>صورة الغلاف</value>
+  </data>
+  <data name="Provider.Packages.Cover.Help" xml:space="preserve">
+    <value>أضِف صورة غلاف لإبراز هذه الباقة. استخدم صورة أفقية بصيغة JPEG أو PNG أو WebP بحجم لا يتجاوز 5 ميغابايت.</value>
+  </data>
+  <data name="Provider.Packages.Cover.Upload" xml:space="preserve">
+    <value>رفع الغلاف</value>
+  </data>
+  <data name="Provider.Packages.Cover.Remove" xml:space="preserve">
+    <value>إزالة الغلاف</value>
+  </data>
+  <data name="Provider.Packages.Cover.InvalidFile" xml:space="preserve">
+    <value>يرجى اختيار ملف صورة صالح (JPEG أو PNG أو WebP بحجم لا يتجاوز 5 ميغابايت).</value>
+  </data>
+  <data name="Provider.Flash.PackageCoverUpdated" xml:space="preserve">
+    <value>تم تحديث صورة الغلاف.</value>
+  </data>
+  <data name="Provider.Flash.PackageCoverRemoved" xml:space="preserve">
+    <value>تمت إزالة صورة الغلاف.</value>
+  </data>
 </root>

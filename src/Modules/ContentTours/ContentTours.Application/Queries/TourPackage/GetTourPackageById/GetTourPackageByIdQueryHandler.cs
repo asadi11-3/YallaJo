@@ -63,6 +63,7 @@ public sealed class GetTourPackageByIdQueryHandler(
                 ValidTo:          package.ValidTo,
                 IsActive:         package.IsActive,
                 CreatedAt:        package.CreatedAt,
+                CoverImageUrl:    package.CoverImageUrl,
                 IncludedTours:    includedTours,
                 Inclusions:       inclusions);
 

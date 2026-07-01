@@ -64,6 +64,20 @@
     <div class="container">
         <div class="row g-4">
             <div class="col-lg-8">
+                @* Cover media: real image when present, premium gradient hero as fallback. *@
+                <div class="yj-pkg-detail-media mb-4" aria-hidden="true">
+                    @if (Model.HasCoverImage)
+                    {
+                        <img src="@Model.CoverImageUrl" alt="" loading="lazy" decoding="async" class="yj-pkg-detail-media-img" />
+                    }
+                    else
+                    {
+                        <div class="yj-pkg-detail-media-fallback">
+                            <i class="bi bi-box-seam" aria-hidden="true"></i>
+                        </div>
+                    }
+                </div>
+
                 @if (!string.IsNullOrWhiteSpace(Model.Description))
                 {
                     <div class="card border mb-4">

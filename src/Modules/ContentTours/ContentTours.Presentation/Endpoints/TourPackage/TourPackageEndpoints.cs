@@ -2,7 +2,9 @@ using ContentTours.Application.Commands.TourPackage.AddInclusion;
 using ContentTours.Application.Commands.TourPackage.ApproveTourPackage;
 using ContentTours.Application.Commands.TourPackage.CreateTourPackage;
 using ContentTours.Application.Commands.TourPackage.DeleteTourPackage;
+using ContentTours.Application.Commands.TourGuides.UploadAvatar;
 using ContentTours.Application.Commands.TourPackage.RejectTourPackage;
+using ContentTours.Application.Commands.TourPackage.SetCoverImage;
 using ContentTours.Application.Commands.TourPackage.SubmitTourPackage;
 using ContentTours.Application.Commands.TourPackage.UpdateTourPackage;
 using ContentTours.Application.Queries.TourPackage.Common;
@@ -14,6 +16,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
@@ -154,6 +157,102 @@ internal static class TourPackageEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(
+            ContentToursFeatures.Package,
+            AppAction.Update));
+
+        // ── POST /packages/{id}/cover/upload ──────────────────────────
+        // Owner uploads a package cover image (managed: magic-byte JPEG/PNG/WEBP, 5 MB, local storage).
+        packages.MapPost("/{id:guid}/cover/upload", async (
+            Guid id,
+            IFormFile file,
+            ISender sender,
+            IFileStorageService fileStorage,
+            CancellationToken ct) =>
+        {
+            if (file is null || file.Length == 0)
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["file"] = ["An image file is required."],
+                });
+            }
+
+            const long maxCoverBytes = 5 * 1024 * 1024;
+            if (file.Length > maxCoverBytes)
+            {
+                return Results.ValidationProblem(
+                    new Dictionary<string, string[]> { ["file"] = ["The cover image must be 5 MB or smaller."] },
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+
+            using var buffered = new MemoryStream();
+            await using (var source = file.OpenReadStream())
+            {
+                await source.CopyToAsync(buffered, ct);
+            }
+
+            // Reuse the ContentTours-local image validator (JPEG/PNG/WEBP magic-byte check).
+            buffered.Position = 0;
+            var validation = TourGuideAvatarFileValidator.Validate(buffered, file.ContentType, file.FileName);
+            if (!validation.IsValid)
+            {
+                return Results.ValidationProblem(
+                    new Dictionary<string, string[]>
+                    {
+                        [validation.Field ?? "file"] = [validation.Message ?? "Invalid image file."],
+                    },
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+
+            buffered.Position = 0;
+            var upload = await fileStorage.UploadAsync(buffered, file.FileName, file.ContentType, "packages/covers", ct);
+            if (upload.IsFailure)
+            {
+                return Results.Problem(
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    detail: upload.Errors.FirstOrDefault()?.Message ?? "File upload failed.");
+            }
+
+            var result = await sender.Send(new SetPackageCoverImageCommand(id, upload.Value.Url), ct);
+            if (!result.IsSuccess)
+            {
+                // Roll back the just-stored file if the domain mutation/persistence failed.
+                await fileStorage.DeleteAsync(upload.Value.Url, ct);
+            }
+
+            return result.ToApiResult();
+        })
+        .WithName("UploadTourPackageCover")
+        .WithSummary("Upload a tour package cover image")
+        .Accepts<IFormFile>("multipart/form-data")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(
+            ContentToursFeatures.Package,
+            AppAction.Update))
+        .RequireAuthorization()
+        .DisableAntiforgery();
+
+        // ── DELETE /packages/{id}/cover ───────────────────────────────
+        // Owner clears the package cover image.
+        packages.MapDelete("/{id:guid}/cover", async (
+            Guid id,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new SetPackageCoverImageCommand(id, null), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ClearTourPackageCover")
+        .WithSummary("Clear a tour package cover image")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
         .WithMetadata(new MustHavePermissionAttribute(
             ContentToursFeatures.Package,
             AppAction.Update));

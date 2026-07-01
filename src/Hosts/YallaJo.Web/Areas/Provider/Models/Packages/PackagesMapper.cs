@@ -1,3 +1,5 @@
+using YallaJo.Web.Services;
+
 namespace YallaJo.Web.Areas.Provider.Models.Packages;
 
 public static class PackagesMapper
@@ -24,7 +26,7 @@ public static class PackagesMapper
         CreatedAt         = p.CreatedAt,
     };
 
-    public static PackageManageVm ToManageVm(PackageDetailResponse d) => new()
+    public static PackageManageVm ToManageVm(PackageDetailResponse d, IApiAssetUrlResolver assetResolver) => new()
     {
         Id              = d.Id,
         Name            = d.Name,
@@ -33,6 +35,7 @@ public static class PackagesMapper
         Currency        = d.Currency,
         MaxParticipants = d.MaxParticipants,
         IsActive        = d.IsActive,
+        CoverImageUrl   = assetResolver.Resolve(d.CoverImageUrl),
         IncludedTours   = d.IncludedTours,
         Inclusions      = d.Inclusions.OrderBy(i => i.SortOrder).ToList(),
     };

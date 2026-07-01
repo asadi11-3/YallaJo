@@ -31,6 +31,13 @@ public sealed class TourPackage : AuditableEntity, IAggregateRoot
 
     public bool IsActive { get; private set; } = true;
 
+    /// <summary>
+    /// Optional cover image URL for the package (nullable — existing packages may have none).
+    /// Set via <see cref="SetCoverImage"/> after upload through the storage service.
+    /// Stored as a relative "/uploads/..." path (local storage) or an absolute URL.
+    /// </summary>
+    public string? CoverImageUrl { get; private set; }
+
     // ─── Phase-3 WS-5a approval state machine ───────────────────────────────
     // Draft → Submitted → Approved | Rejected. Rejected packages can be edited
     // back to Draft via Update() and resubmitted. Existing rows pre-migration
@@ -191,6 +198,28 @@ public sealed class TourPackage : AuditableEntity, IAggregateRoot
         }
 
         MarkUpdated();
+    }
+
+    /// <summary>
+    /// Sets (or clears) the package cover image URL. Passing null/whitespace clears it,
+    /// allowing removal. Existing packages default to null (no cover).
+    /// </summary>
+    public Result SetCoverImage(string? url)
+    {
+        EnsureNotDeleted();
+
+        var normalized = string.IsNullOrWhiteSpace(url) ? null : url.Trim();
+
+        if (normalized is { Length: > 500 })
+        {
+            return Result.Failure(new Error(
+                "TourPackage.CoverImageUrlTooLong",
+                "Cover image URL must be 500 characters or fewer."));
+        }
+
+        CoverImageUrl = normalized;
+        MarkUpdated();
+        return Result.Success();
     }
 
     /// <summary>

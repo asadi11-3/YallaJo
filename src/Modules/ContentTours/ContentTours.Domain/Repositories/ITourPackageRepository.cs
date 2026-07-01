@@ -37,7 +37,8 @@ public sealed record TourPackageSummaryRow(
     DateTime? ValidFrom,
     DateTime? ValidTo,
     int IncludedTourCount,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    string? CoverImageUrl);
 
 public enum TourPackageSortOption
 {

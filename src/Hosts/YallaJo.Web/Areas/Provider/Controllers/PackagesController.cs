@@ -115,6 +115,32 @@ public sealed class PackagesController : BaseController
         return Finish(result, id, L["Provider.Flash.PackageSubmitted"]);
     }
 
+    // ── POST /provider/packages/{id}/cover ───────────────────────────────────────────
+    [HttpPost("provider/packages/{id:guid}/cover")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Package.Update)]
+    public async Task<IActionResult> UploadCover(Guid id, UploadCoverFormVm form, CancellationToken ct = default)
+    {
+        if (!ModelState.IsValid)
+        {
+            SetError(L["Provider.Packages.Cover.InvalidFile"]);
+            return RedirectToAction(nameof(Manage), new { id });
+        }
+
+        var result = await _facade.UploadCoverAsync(id, form.File!, ct);
+        return Finish(result, id, L["Provider.Flash.PackageCoverUpdated"]);
+    }
+
+    // ── POST /provider/packages/{id}/cover/remove ─────────────────────────────────────
+    [HttpPost("provider/packages/{id:guid}/cover/remove")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Package.Update)]
+    public async Task<IActionResult> RemoveCover(Guid id, CancellationToken ct = default)
+    {
+        var result = await _facade.RemoveCoverAsync(id, ct);
+        return Finish(result, id, L["Provider.Flash.PackageCoverRemoved"]);
+    }
+
     // ── POST /provider/packages/{id}/delete ──────────────────────────────────────────
     [HttpPost("provider/packages/{id:guid}/delete")]
     [ValidateAntiForgeryToken]

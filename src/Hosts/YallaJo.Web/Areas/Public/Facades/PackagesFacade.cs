@@ -3,11 +3,12 @@ using YallaJo.Web.Areas.Public.Helpers;
 using YallaJo.Web.Areas.Public.Models.Packages;
 using YallaJo.Web.Areas.Public.Models.Shared;
 using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Services;
 
 namespace YallaJo.Web.Areas.Public.Facades;
 
 /// <summary>Maps public package endpoints into view models.</summary>
-public sealed class PackagesFacade(PackagesApiClient api)
+public sealed class PackagesFacade(PackagesApiClient api, IApiAssetUrlResolver assetResolver)
 {
     private const int PageSize = 12;
 
@@ -30,6 +31,7 @@ public sealed class PackagesFacade(PackagesApiClient api)
             IncludedTourCount = p.IncludedTourCount,
             ValidFrom = p.ValidFrom,
             ValidTo = p.ValidTo,
+            CoverImageUrl = assetResolver.Resolve(p.CoverImageUrl),
         }).ToList();
 
         return ApiResult<PackagesGridVm>.Ok(new PackagesGridVm
@@ -83,6 +85,7 @@ public sealed class PackagesFacade(PackagesApiClient api)
             MaxParticipants = d.MaxParticipants,
             ValidFrom = d.ValidFrom,
             ValidTo = d.ValidTo,
+            CoverImageUrl = assetResolver.Resolve(d.CoverImageUrl),
             IncludedTours = includedTours,
             Inclusions = inclusions,
         });

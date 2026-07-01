@@ -91,7 +91,8 @@ public sealed class ListTourPackagesRedactionTests
                 ValidFrom:         null,
                 ValidTo:           null,
                 IncludedTourCount: 2,
-                CreatedAt:         DateTime.UtcNow),
+                CreatedAt:         DateTime.UtcNow,
+                CoverImageUrl:     null),
         };
 
         repo.GetPagedSummariesAsync(

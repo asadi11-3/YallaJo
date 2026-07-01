@@ -13,6 +13,7 @@ public sealed class PackageSummaryResponse
     public DateTime? ValidTo { get; init; }
     public int IncludedTourCount { get; init; }
     public DateTime CreatedAt { get; init; }
+    public string? CoverImageUrl { get; init; }
 }
 
 /// <summary>Public detail payload for GET /api/v1/tours/packages/{id} (mirrors TourPackageDetailDto).</summary>
@@ -28,6 +29,7 @@ public sealed class PackageDetailResponse
     public DateTime? ValidTo { get; init; }
     public bool IsActive { get; init; }
     public DateTime CreatedAt { get; init; }
+    public string? CoverImageUrl { get; init; }
     public List<PackageIncludedTourResponse> IncludedTours { get; init; } = [];
     public List<PackageInclusionResponse> Inclusions { get; init; } = [];
 }

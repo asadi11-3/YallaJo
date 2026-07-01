@@ -472,3 +472,15 @@
     text-align: end;
 }
 
+
+/* =========================================================================
+   §14 — Package cover images (listing cards + detail hero)
+   Cover photos must never be mirrored in RTL (they are real content
+   photography, not directional UI). Force transform:none as a safety net
+   in case any global RTL flip rule is introduced later. Layout position
+   already flips automatically via logical properties.
+   ========================================================================= */
+[dir="rtl"] .yj-pkg-media-img,
+[dir="rtl"] .yj-pkg-detail-media-img {
+    transform: none;
+}

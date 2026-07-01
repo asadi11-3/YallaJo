@@ -13,5 +13,6 @@ public sealed record TourPackageDetailDto(
     DateTime? ValidTo,
     bool IsActive,
     DateTime CreatedAt,
+    string? CoverImageUrl,
     IReadOnlyList<TourSummaryDto> IncludedTours,
     IReadOnlyList<TourPackageInclusionDto> Inclusions);

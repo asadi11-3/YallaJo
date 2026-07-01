@@ -50,7 +50,8 @@ public sealed class ListTourPackagesQueryHandler(
                     ValidFrom:          r.ValidFrom,
                     ValidTo:            r.ValidTo,
                     IncludedTourCount:  r.IncludedTourCount,
-                    CreatedAt:          r.CreatedAt))
+                    CreatedAt:          r.CreatedAt,
+                    CoverImageUrl:      r.CoverImageUrl))
                 .ToList();
 
             var result = new PaginatedResult<TourPackageSummaryDto>(dtos, total, page, pageSize);

@@ -24,4 +24,5 @@ public sealed record TourPackageSummaryDto(
     DateTime? ValidFrom,
     DateTime? ValidTo,
     int IncludedTourCount,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    string? CoverImageUrl);

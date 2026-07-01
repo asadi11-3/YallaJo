@@ -13,6 +13,10 @@ public sealed class PackageCardVm
     public int IncludedTourCount { get; init; }
     public DateTime? ValidFrom { get; init; }
     public DateTime? ValidTo { get; init; }
+
+    /// <summary>Absolute cover image URL, or null to render the gradient fallback tile.</summary>
+    public string? CoverImageUrl { get; init; }
+    public bool HasCoverImage => !string.IsNullOrWhiteSpace(CoverImageUrl);
     public bool HasValidity => ValidFrom is not null || ValidTo is not null;
 }
 
@@ -40,6 +44,10 @@ public sealed class PackageDetailVm
     public int? MaxParticipants { get; init; }
     public DateTime? ValidFrom { get; init; }
     public DateTime? ValidTo { get; init; }
+
+    /// <summary>Absolute cover image URL, or null to render the gradient fallback hero.</summary>
+    public string? CoverImageUrl { get; init; }
+    public bool HasCoverImage => !string.IsNullOrWhiteSpace(CoverImageUrl);
 
     /// <summary>The tours bundled in this package, rendered with the shared Home tour card.</summary>
     public IReadOnlyList<TourCardVm> IncludedTours { get; init; } = [];
