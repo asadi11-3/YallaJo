@@ -1,0 +1,93 @@
+@model YallaJo.Web.Areas.Public.Models.Packages.PackageCardVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Reusable package card for the public packages listing.
+    Renders a grid tile ("card") or a horizontal row ("list") based on ViewData["viewMode"].
+    Only real PackageCardVm fields are rendered — no fake rating/reviews/duration/etc.
+*@
+@{
+    var viewMode = (ViewData["viewMode"] as string) == "list" ? "list" : "card";
+    var isList = viewMode == "list";
+
+    string Money(decimal amount, string currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+
+    string Validity()
+    {
+        if (Model.ValidFrom is not null && Model.ValidTo is not null)
+        {
+            return $"{Model.ValidFrom:d MMM yyyy} \u2013 {Model.ValidTo:d MMM yyyy}";
+        }
+        if (Model.ValidFrom is not null)
+        {
+            return Localizer["Public.ValidFrom", $"{Model.ValidFrom:d MMM yyyy}"].Value;
+        }
+        return Localizer["Public.ValidUntil", $"{Model.ValidTo:d MMM yyyy}"].Value;
+    }
+}
+<article class="yj-pkg-card @(isList ? "yj-pkg-card--list" : "yj-pkg-card--grid")">
+    @* Cover media band: real image when present, premium gradient tile as fallback. *@
+    <div class="yj-pkg-media" aria-hidden="true">
+        @if (Model.HasCoverImage)
+        {
+            <img src="@Model.CoverImageUrl" alt="" loading="lazy" decoding="async" class="yj-pkg-media-img" />
+        }
+        else
+        {
+            <div class="yj-pkg-media-fallback">
+                <span class="yj-pkg-media-mark">
+                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                </span>
+                <span class="yj-pkg-media-label">@Localizer["Public.Packages.FallbackLabel"]</span>
+            </div>
+        }
+        <span class="yj-pkg-tours-badge">
+            <i class="bi bi-collection" aria-hidden="true"></i>
+            <span>@Localizer["Public.Tours.Count", Model.IncludedTourCount]</span>
+        </span>
+    </div>
+
+    <div class="yj-pkg-body">
+        <h3 class="yj-pkg-name">
+            <a class="stretched-link" asp-area="Public" asp-controller="Packages" asp-action="Detail" asp-route-id="@Model.Id">@Model.Name</a>
+        </h3>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <p class="yj-pkg-desc">@Model.Description</p>
+        }
+
+        @if (Model.HasMaxParticipants || Model.HasValidity)
+        {
+            <ul class="yj-pkg-meta">
+                @if (Model.HasMaxParticipants)
+                {
+                    <li class="yj-pkg-meta-item">
+                        <i class="bi bi-people" aria-hidden="true"></i>
+                        <span>@Localizer["Public.UpToPeople", Model.MaxParticipants!.Value]</span>
+                    </li>
+                }
+                @if (Model.HasValidity)
+                {
+                    <li class="yj-pkg-meta-item">
+                        <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                        <span>@Validity()</span>
+                    </li>
+                }
+            </ul>
+        }
+
+        <div class="yj-pkg-footer">
+            <div class="yj-pkg-price">
+                <span class="yj-pkg-price-label">@Localizer["Public.From"]</span>
+                <span class="yj-pkg-price-value"><bdi dir="ltr" class="font-data">@Money(Model.PriceAmount, Model.Currency)</bdi></span>
+            </div>
+            <a class="btn btn-primary yj-pkg-cta position-relative"
+               asp-area="Public" asp-controller="Packages" asp-action="Detail" asp-route-id="@Model.Id"
+               aria-label="@Localizer["Public.ViewPackage"] — @Model.Name">
+                @Localizer["Public.ViewPackage"]
+            </a>
+        </div>
+    </div>
+</article>

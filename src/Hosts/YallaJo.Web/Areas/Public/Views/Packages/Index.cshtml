@@ -4,6 +4,9 @@
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+    // Page-scoped CSS lives under `.yj-packages-page`; keep the shared sand canvas.
+    ViewData["BodyClass"] = "yj-sand-page yj-packages-page";
+
     var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
     ViewData.SetSeo(new SeoModel
     {
@@ -12,21 +15,199 @@
         Canonical = $"{baseUrl}/packages",
         OgType = "website"
     });
+
+    // View mode round-trip (card|list). Server-authoritative via ?viewMode; carried
+    // through the toolbar form + the two toggle links so the fragment re-renders the
+    // same variant. No controller/VM change required (query is echoed by the view).
+    var viewMode = Context.Request.Query["viewMode"].ToString();
+    if (!string.Equals(viewMode, "list", StringComparison.OrdinalIgnoreCase))
+    {
+        viewMode = "card";
+    }
+
+    var sort = Model.Sort ?? "";
+    var minPrice = Model.MinPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
+    var maxPrice = Model.MaxPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
+
+    // Toggle links preserve the active sort + price filters.
+    string ToggleUrl(string mode) => Url.Action("Index", "Packages", new
+    {
+        area = "Public",
+        sort = string.IsNullOrEmpty(sort) ? null : sort,
+        minPrice = string.IsNullOrEmpty(minPrice) ? (string?)null : minPrice,
+        maxPrice = string.IsNullOrEmpty(maxPrice) ? (string?)null : maxPrice,
+        viewMode = mode == "list" ? "list" : (string?)null
+    })!;
 }
 
-<section class="pt-4 pb-2">
-    <div class="container">
-        <h1 class="fs-2 mb-1">@Localizer["Public.Tour.packages"]</h1>
-        <p class="text-body-secondary mb-0">@Localizer["Public.Curated.bundles.of.tours.at.a.single.price"]</p>
+@* ============================================================
+   HERO — full-bleed banner (template parity, Wadi Rum desert mood).
+   - Fluid width via .yj-tours-shell (padding-inline: clamp(24px,4vw,140px)).
+   - Breadcrumb inside the hero; gold country accent; dash-dot divider; trust pills.
+   - Hero photo is the ONLY layer mirrored in Arabic RTL (see rtl.css §15).
+   - Image is decorative → alt="" aria-hidden.
+============================================================ *@
+<section class="yj-hero" aria-labelledby="packagesHeroTitle">
+    <picture>
+        <source srcset="~/assets/images/jordan/packages-hero.webp" type="image/webp" />
+        <img src="~/assets/images/jordan/packages-hero.jpg" class="yj-hero-img" alt="" aria-hidden="true" fetchpriority="high" decoding="async" />
+    </picture>
+    <div class="yj-hero-gradient" aria-hidden="true"></div>
+
+    <div class="yj-hero-inner yj-tours-shell">
+        <nav aria-label="breadcrumb" class="yj-hero-crumbs">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Home" asp-action="Index">@Localizer["Public.Breadcrumb.Home"]</a></li>
+                <li class="breadcrumb-item"><a href="/explore">@Localizer["Public.Breadcrumb.Explore"]</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Localizer["Public.Packages"]</li>
+            </ol>
+        </nav>
+
+        <p class="yj-hero-eyebrow">@Localizer["Public.Packages.Hero.Eyebrow"]</p>
+
+        <h1 class="yj-hero-title" id="packagesHeroTitle">
+            @Localizer["Public.Packages.Hero.Title1"]
+            <span class="yj-hero-accent">@Localizer["Public.Packages.Hero.TitleAccent"]</span>
+            @Localizer["Public.Packages.Hero.Title2"]
+        </h1>
+
+        <div class="yj-hero-divider" aria-hidden="true">
+            <span class="yj-hero-divider-bar"></span>
+            <span class="yj-hero-divider-dot"></span>
+            <span class="yj-hero-divider-dot yj-hero-divider-dot-faint"></span>
+        </div>
+
+        <p class="yj-hero-subtitle mb-0">@Localizer["Public.Packages.Hero.Subtitle"]</p>
+
+        <ul class="yj-hero-pills" aria-label="@Localizer["Public.Packages"]">
+            <li class="yj-hero-pill">
+                <i class="bi bi-patch-check" aria-hidden="true"></i>
+                <span>@Localizer["Public.Packages.Hero.Pill.BestPrice"]</span>
+            </li>
+            <li class="yj-hero-pill">
+                <i class="bi bi-bookmark-star" aria-hidden="true"></i>
+                <span>@Localizer["Public.Packages.Hero.Pill.Handpicked"]</span>
+            </li>
+            <li class="yj-hero-pill">
+                <i class="bi bi-shield-check" aria-hidden="true"></i>
+                <span>@Localizer["Public.Packages.Hero.Pill.Secure"]</span>
+            </li>
+            <li class="yj-hero-pill">
+                <i class="bi bi-headset" aria-hidden="true"></i>
+                <span>@Localizer["Public.Packages.Hero.Pill.Support"]</span>
+            </li>
+        </ul>
     </div>
 </section>
 
-<section class="pb-5">
-    <div class="container">
-        @* Phase 7: results fragment is swapped in place by listing.js (UI-UX-S1); plain GET navigation without JS (PE1). *@
-        <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
-             data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]" data-loading-text="@Localizer["Public.Loading"]">
-            <partial name="_PackagesResults" model="Model" />
+@* ============================================================
+   TOOLBAR — clean, uncluttered. REAL controls only:
+   Sort + Min/Max price (wired to the backend) + Apply + Clear + Grid/List toggle.
+   - Form opts into AJAX via data-yj-listing (listing.js intercepts submit, GET).
+   - Empty values are skipped by listing.js so blank filters stay out of the URL.
+   - No fake destination/duration/theme/rating/group-size filters.
+============================================================ *@
+<div class="yj-pkg-toolbar-wrap yj-tours-shell">
+    <form class="yj-pkg-toolbar" method="get" data-yj-listing
+          asp-area="Public" asp-controller="Packages" asp-action="Index"
+          role="search" aria-label="@Localizer["Public.Filter.Apply"]">
+        @* Echo view mode so sort/price submissions preserve the card/list variant. *@
+        <input type="hidden" name="viewMode" value="@viewMode" />
+
+        <div class="yj-pkg-toolbar-group yj-pkg-toolbar-sort">
+            <label class="yj-pkg-toolbar-label" for="pkgSort">@Localizer["Public.SortLabel"]</label>
+            <select class="form-select yj-pkg-select" id="pkgSort" name="sort"
+                    onchange="this.form.requestSubmit();" aria-label="@Localizer["Public.SortLabel"]">
+                <option value="" selected="@(sort == "")">@Localizer["Public.Packages.SortRecommended"]</option>
+                <option value="price_asc" selected="@(sort == "price_asc")">@Localizer["Public.Price.low.to.high"]</option>
+                <option value="price_desc" selected="@(sort == "price_desc")">@Localizer["Public.Price.high.to.low"]</option>
+                <option value="validity_ending_soon" selected="@(sort == "validity_ending_soon")">@Localizer["Public.Packages.SortEndingSoon"]</option>
+            </select>
+        </div>
+
+        <span class="yj-pkg-toolbar-divider" aria-hidden="true"></span>
+
+        <div class="yj-pkg-toolbar-group yj-pkg-toolbar-price">
+            <span class="yj-pkg-toolbar-label">@Localizer["Public.Packages.PriceRange"]</span>
+            <div class="yj-pkg-price-fields">
+                <input type="number" inputmode="numeric" min="0" step="1" class="form-control yj-pkg-price-input"
+                       name="minPrice" value="@minPrice" placeholder="@Localizer["Public.Filter.PriceMin"]"
+                       aria-label="@Localizer["Public.Filter.PriceMin"]" />
+                <span class="yj-pkg-price-sep" aria-hidden="true">&ndash;</span>
+                <input type="number" inputmode="numeric" min="0" step="1" class="form-control yj-pkg-price-input"
+                       name="maxPrice" value="@maxPrice" placeholder="@Localizer["Public.Filter.PriceMax"]"
+                       aria-label="@Localizer["Public.Filter.PriceMax"]" />
+            </div>
+        </div>
+
+        <div class="yj-pkg-toolbar-actions">
+            <button type="submit" class="btn btn-primary yj-pkg-apply">@Localizer["Public.Filter.Apply"]</button>
+            <a class="btn btn-link yj-pkg-clear" asp-area="Public" asp-controller="Packages" asp-action="Index"
+               asp-route-viewMode="@(viewMode == "list" ? "list" : null)">@Localizer["Public.Filter.ClearAll"]</a>
+        </div>
+
+        @* Card/List view toggle — server-authoritative links (preserve filters). *@
+        <div class="yj-pkg-view-toggle" role="group" aria-label="@Localizer["Public.View.Card"]">
+            <a href="@ToggleUrl("card")"
+               class="yj-pkg-view-tab@(viewMode == "card" ? " active" : "")"
+               aria-pressed="@(viewMode == "card" ? "true" : "false")"
+               aria-label="@Localizer["Public.View.CardAria"]" title="@Localizer["Public.View.Card"]">
+                <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
+            </a>
+            <a href="@ToggleUrl("list")"
+               class="yj-pkg-view-tab@(viewMode == "list" ? " active" : "")"
+               aria-pressed="@(viewMode == "list" ? "true" : "false")"
+               aria-label="@Localizer["Public.View.ListAria"]" title="@Localizer["Public.View.List"]">
+                <i class="bi bi-list-ul" aria-hidden="true"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+@* ============================================================
+   RESULTS — listing.js swaps this fragment in place (UI-UX-S1);
+   plain GET navigation without JS (PE1). Container contract preserved verbatim.
+============================================================ *@
+<section class="yj-pkg-results yj-tours-shell">
+    <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+         data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]" data-loading-text="@Localizer["Public.Loading"]">
+        <partial name="_PackagesResults" model="Model" />
+    </div>
+</section>
+
+@* ============================================================
+   TRUST BAR — template parity (white card, circular gold icons, 4 columns).
+   Reuses existing Home.Strip.* localization keys.
+============================================================ *@
+<section class="yj-trust-wrap yj-tours-shell">
+    <div class="yj-trust">
+        <div class="yj-trust-col">
+            <span class="yj-trust-icon"><i class="bi bi-shield-lock" aria-hidden="true"></i></span>
+            <div class="yj-trust-body">
+                <h3 class="yj-trust-title">@Localizer["Home.Strip.SecureTitle"]</h3>
+                <p class="yj-trust-text">@Localizer["Home.Strip.SecureText"]</p>
+            </div>
+        </div>
+        <div class="yj-trust-col">
+            <span class="yj-trust-icon"><i class="bi bi-person-badge" aria-hidden="true"></i></span>
+            <div class="yj-trust-body">
+                <h3 class="yj-trust-title">@Localizer["Home.Strip.ExpertsTitle"]</h3>
+                <p class="yj-trust-text">@Localizer["Home.Strip.ExpertsText"]</p>
+            </div>
+        </div>
+        <div class="yj-trust-col">
+            <span class="yj-trust-icon"><i class="bi bi-bookmark-star" aria-hidden="true"></i></span>
+            <div class="yj-trust-body">
+                <h3 class="yj-trust-title">@Localizer["Home.Strip.HandpickedTitle"]</h3>
+                <p class="yj-trust-text">@Localizer["Home.Strip.HandpickedText"]</p>
+            </div>
+        </div>
+        <div class="yj-trust-col">
+            <span class="yj-trust-icon"><i class="bi bi-headset" aria-hidden="true"></i></span>
+            <div class="yj-trust-body">
+                <h3 class="yj-trust-title">@Localizer["Home.Strip.SupportTitle"]</h3>
+                <p class="yj-trust-text">@Localizer["Home.Strip.SupportText"]</p>
+            </div>
         </div>
     </div>
 </section>

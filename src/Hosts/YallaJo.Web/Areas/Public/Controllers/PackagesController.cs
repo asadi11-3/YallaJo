@@ -14,9 +14,14 @@ public sealed class PackagesController(PackagesFacade packages) : BaseController
 {
     [HttpGet("packages")]
     [OutputCache(PolicyName = "PublicShort", VaryByHeaderNames = new[] { "X-Requested-With" })]
-    public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
+    public async Task<IActionResult> Index(
+        int page = 1,
+        string? sort = null,
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        CancellationToken ct = default)
     {
-        var result = await packages.GetGridAsync(page, ct);
+        var result = await packages.GetGridAsync(page, sort, minPrice, maxPrice, ct);
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);

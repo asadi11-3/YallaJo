@@ -12,10 +12,16 @@ public sealed class PackagesFacade(PackagesApiClient api, IApiAssetUrlResolver a
 {
     private const int PageSize = 12;
 
-    public async Task<ApiResult<PackagesGridVm>> GetGridAsync(int page, CancellationToken ct = default)
+    public async Task<ApiResult<PackagesGridVm>> GetGridAsync(
+        int page,
+        string? sort = null,
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        CancellationToken ct = default)
     {
         var pageNumber = page < 1 ? 1 : page;
-        var result = await api.GetPackagesAsync(pageNumber, PageSize, ct);
+        var sortKey = NormalizeSort(sort);
+        var result = await api.GetPackagesAsync(pageNumber, PageSize, sortKey, minPrice, maxPrice, ct);
         if (result is not { IsSuccess: true, Data: { } data })
         {
             return ApiResult<PackagesGridVm>.Fail(result.StatusCode, result.Error ?? "Could not load packages.");
@@ -29,6 +35,7 @@ public sealed class PackagesFacade(PackagesApiClient api, IApiAssetUrlResolver a
             PriceAmount = p.PriceAmount,
             Currency = p.Currency,
             IncludedTourCount = p.IncludedTourCount,
+            MaxParticipants = p.MaxParticipants,
             ValidFrom = p.ValidFrom,
             ValidTo = p.ValidTo,
             CoverImageUrl = assetResolver.Resolve(p.CoverImageUrl),
@@ -43,8 +50,18 @@ public sealed class PackagesFacade(PackagesApiClient api, IApiAssetUrlResolver a
             TotalPages = data.TotalPages,
             HasPreviousPage = data.HasPreviousPage,
             HasNextPage = data.HasNextPage,
+            Sort = sortKey,
+            MinPrice = minPrice,
+            MaxPrice = maxPrice,
         });
     }
+
+    /// <summary>Maps toolbar sort keys to the values the backend accepts; unknown values fall back to Newest (null).</summary>
+    private static string? NormalizeSort(string? sort) => sort switch
+    {
+        "price_asc" or "price_desc" or "validity_ending_soon" => sort,
+        _ => null,
+    };
 
     public async Task<ApiResult<PackageDetailVm>> GetDetailAsync(Guid id, CancellationToken ct = default)
     {

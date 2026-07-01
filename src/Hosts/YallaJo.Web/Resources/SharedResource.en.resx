@@ -16888,4 +16888,49 @@
   <data name="Provider.Flash.PackageCoverRemoved" xml:space="preserve">
     <value>Cover image removed.</value>
   </data>
+  <data name="Public.Packages.Hero.Eyebrow" xml:space="preserve">
+    <value>Handcrafted journeys across Jordan</value>
+  </data>
+  <data name="Public.Packages.Hero.Title1" xml:space="preserve">
+    <value>Curated</value>
+  </data>
+  <data name="Public.Packages.Hero.TitleAccent" xml:space="preserve">
+    <value>Jordan</value>
+  </data>
+  <data name="Public.Packages.Hero.Title2" xml:space="preserve">
+    <value>Travel Packages</value>
+  </data>
+  <data name="Public.Packages.Hero.Subtitle" xml:space="preserve">
+    <value>Multi-tour bundles that pair Jordan's desert nights, ancient wonders and warm hospitality into one seamless, fairly priced trip.</value>
+  </data>
+  <data name="Public.Packages.Hero.Pill.BestPrice" xml:space="preserve">
+    <value>Best price guarantee</value>
+  </data>
+  <data name="Public.Packages.Hero.Pill.Handpicked" xml:space="preserve">
+    <value>Handpicked packages</value>
+  </data>
+  <data name="Public.Packages.Hero.Pill.Secure" xml:space="preserve">
+    <value>Secure booking</value>
+  </data>
+  <data name="Public.Packages.Hero.Pill.Support" xml:space="preserve">
+    <value>24/7 local support</value>
+  </data>
+  <data name="Public.Packages.Found" xml:space="preserve">
+    <value>{0} packages found</value>
+  </data>
+  <data name="Public.Packages.PriceRange" xml:space="preserve">
+    <value>Price range</value>
+  </data>
+  <data name="Public.Packages.SortRecommended" xml:space="preserve">
+    <value>Recommended</value>
+  </data>
+  <data name="Public.Packages.SortTours" xml:space="preserve">
+    <value>Number of tours</value>
+  </data>
+  <data name="Public.Packages.SortEndingSoon" xml:space="preserve">
+    <value>Ending soon</value>
+  </data>
+  <data name="Public.Packages.FallbackLabel" xml:space="preserve">
+    <value>YallaJo Package</value>
+  </data>
 </root>

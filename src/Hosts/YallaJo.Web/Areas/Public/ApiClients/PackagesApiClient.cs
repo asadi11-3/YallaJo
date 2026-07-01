@@ -10,13 +10,35 @@ public sealed class PackagesApiClient(IApiClient api)
 {
     private const string Base = "/api/v1/tours/packages";
 
-    public Task<ApiResult<PaginatedPackagesResponse>> GetPackagesAsync(int page, int pageSize, CancellationToken ct = default)
+    public Task<ApiResult<PaginatedPackagesResponse>> GetPackagesAsync(
+        int page,
+        int pageSize,
+        string? sort = null,
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        CancellationToken ct = default)
     {
         var query = new Dictionary<string, string?>
         {
             ["page"] = page.ToString(),
             ["pageSize"] = pageSize.ToString(),
         };
+
+        if (!string.IsNullOrWhiteSpace(sort))
+        {
+            query["sort"] = sort;
+        }
+
+        if (minPrice is { } min)
+        {
+            query["minPrice"] = min.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        if (maxPrice is { } max)
+        {
+            query["maxPrice"] = max.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
         var url = QueryHelpers.AddQueryString(Base, query);
         return api.GetAsync<PaginatedPackagesResponse>(url, ct);
     }

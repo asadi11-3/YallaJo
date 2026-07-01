@@ -16888,4 +16888,49 @@
   <data name="Provider.Flash.PackageCoverRemoved" xml:space="preserve">
     <value>تمت إزالة صورة الغلاف.</value>
   </data>
+  <data name="Public.Packages.Hero.Eyebrow" xml:space="preserve">
+    <value>رحلات مصمّمة بعناية في ربوع الأردن</value>
+  </data>
+  <data name="Public.Packages.Hero.Title1" xml:space="preserve">
+    <value>باقات سفر</value>
+  </data>
+  <data name="Public.Packages.Hero.TitleAccent" xml:space="preserve">
+    <value>أردنية</value>
+  </data>
+  <data name="Public.Packages.Hero.Title2" xml:space="preserve">
+    <value>مختارة بعناية</value>
+  </data>
+  <data name="Public.Packages.Hero.Subtitle" xml:space="preserve">
+    <value>باقات تجمع أكثر من جولة لتمزج ليالي الصحراء وكنوز الأردن العريقة وكرم الضيافة في رحلة واحدة متكاملة بسعرٍ عادل.</value>
+  </data>
+  <data name="Public.Packages.Hero.Pill.BestPrice" xml:space="preserve">
+    <value>ضمان أفضل سعر</value>
+  </data>
+  <data name="Public.Packages.Hero.Pill.Handpicked" xml:space="preserve">
+    <value>باقات منتقاة بعناية</value>
+  </data>
+  <data name="Public.Packages.Hero.Pill.Secure" xml:space="preserve">
+    <value>حجز آمن</value>
+  </data>
+  <data name="Public.Packages.Hero.Pill.Support" xml:space="preserve">
+    <value>دعم محلي على مدار الساعة</value>
+  </data>
+  <data name="Public.Packages.Found" xml:space="preserve">
+    <value>{0} باقة متاحة</value>
+  </data>
+  <data name="Public.Packages.PriceRange" xml:space="preserve">
+    <value>نطاق السعر</value>
+  </data>
+  <data name="Public.Packages.SortRecommended" xml:space="preserve">
+    <value>موصى بها</value>
+  </data>
+  <data name="Public.Packages.SortTours" xml:space="preserve">
+    <value>عدد الجولات</value>
+  </data>
+  <data name="Public.Packages.SortEndingSoon" xml:space="preserve">
+    <value>ينتهي قريباً</value>
+  </data>
+  <data name="Public.Packages.FallbackLabel" xml:space="preserve">
+    <value>باقة يلا جو</value>
+  </data>
 </root>

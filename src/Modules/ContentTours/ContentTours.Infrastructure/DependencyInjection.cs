@@ -66,6 +66,8 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, Fe2dSmokeTourGuideSeeder>();
         // DEV-SEED-B1: Development/QA-only seeder (guarded internally by IHostEnvironment.IsDevelopment()).
         services.AddScoped<IModuleDbInitializer, DevToursSeeder>();
+        // DEV-SEED-PKG: Development/QA-only Jordan travel packages seeder (guarded internally by IHostEnvironment.IsDevelopment()).
+        services.AddScoped<IModuleDbInitializer, DevPackagesSeeder>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentToursDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentToursDbContext>>();

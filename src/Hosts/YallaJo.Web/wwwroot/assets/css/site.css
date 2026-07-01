@@ -2929,3 +2929,602 @@ details.card > summary { cursor: pointer; list-style-position: inside; }
 }
 
 .yj-pkg-detail-media-fallback > i { font-size: 2.75rem; }
+
+/* =========================================================================
+   PACKAGES LISTING PAGE  (.yj-packages-page)
+   Page-scoped redesign — template parity with the Tours page.
+   Palette: sand #faf4ec, sand-2 #efe2d2, brand #8C1D24, gold #C0954A.
+   Reuses the shared .yj-tours-shell fluid shell. All spacing is clamp-based
+   and every directional property is logical so RTL only needs the hero mirror
+   (rtl.css §15). No fixed desktop-only widths.
+   ========================================================================= */
+
+/* Design tokens — mirror the .yj-tours-page palette so the Packages hero uses
+   the SAME premium dark-brown ink + gold accent as Tours (fixes gray title).
+   These vars were previously only defined on .yj-tours-page / .yj-home-page,
+   so var(--yj-ink)/var(--yj-gold) here resolved to nothing → inherited gray. */
+.yj-packages-page {
+    --yj-sand: #faf4ec;
+    --yj-sand-2: #efe2d2;
+    --yj-ink: #2a2321;
+    --yj-ink-2: #5b5148;
+    --yj-mute: #8a7f72;
+    --yj-mute-2: #a99a89;
+    --yj-brand: #8C1D24;
+    --yj-brand-hover: #7a171d;
+    --yj-gold: #C0954A;
+    --yj-green: #2E7D5B;
+    --yj-line: #efe6da;
+    --yj-line-2: #f0e7db;
+    --yj-line-3: #ecdfce;
+    --yj-star: #E8A020;
+    background-color: var(--yj-sand);
+    overflow-x: hidden; /* Safety net against horizontal overflow */
+}
+
+/* ---------- HERO (mirrors .yj-tours-page hero, scoped for Packages) ---------- */
+.yj-packages-page .yj-hero {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--yj-sand-2);
+    min-block-size: clamp(22rem, 32vw, 30rem);
+    display: flex;
+    align-items: center;
+    isolation: isolate;
+}
+.yj-packages-page .yj-hero-img {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    /* Bias the crop toward the right (camel/tent/flag sit there in LTR) and
+       toward the TOP so the Jordan flag — which sits in the upper-right sky —
+       stays in frame on wide/zoomed-out viewports. Y kept high (small %) to
+       preserve the flag; the tent/camel/person remain balanced. Tuned per
+       breakpoint below. Mirrored in RTL via rtl.css §15. */
+    object-position: 70% 32%;
+    filter: saturate(1.1) contrast(1.05);
+    z-index: 0;
+}
+/* Opaque sand on the LEFT (under the text), fading to reveal the photo on the
+   right. Physical `to right` does NOT auto-flip → rtl.css §15 re-declares it. */
+.yj-packages-page .yj-hero-gradient {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+        to right,
+        #faf4ec 0%,
+        #faf4ec 30%,
+        rgba(250,244,236,.86) 44%,
+        rgba(250,244,236,.35) 60%,
+        rgba(250,244,236,0) 78%
+    );
+    pointer-events: none;
+}
+.yj-packages-page .yj-hero-inner {
+    position: relative;
+    z-index: 2;
+    padding-block: 1.5rem 4.25rem;
+    max-inline-size: 100%;
+}
+
+.yj-packages-page .yj-hero-crumbs .breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-block-end: .75rem;
+    font-size: .8125rem;
+    color: var(--yj-mute);
+}
+.yj-packages-page .yj-hero-crumbs .breadcrumb-item + .breadcrumb-item::before { color: var(--yj-mute-2); }
+.yj-packages-page .yj-hero-crumbs .breadcrumb-item a { color: var(--yj-ink-2); text-decoration: none; }
+.yj-packages-page .yj-hero-crumbs .breadcrumb-item.active { color: var(--yj-brand); font-weight: 600; }
+
+.yj-packages-page .yj-hero-eyebrow {
+    font-style: italic;
+    color: var(--yj-gold);
+    font-size: .9375rem;
+    font-weight: 600;
+    letter-spacing: .01em;
+    margin: 0 0 .5rem;
+}
+.yj-packages-page .yj-hero-title {
+    font-family: "Playfair Display", "Times New Roman", var(--bs-font-serif, serif);
+    font-weight: 700;
+    font-size: clamp(1.875rem, 5.2vw, 3.25rem);
+    line-height: 1.1;
+    color: var(--yj-ink);
+    max-inline-size: 35rem;
+    margin: 0 0 .75rem;
+    letter-spacing: -0.01em;
+}
+.yj-packages-page .yj-hero-accent { color: var(--yj-gold); font-style: italic; }
+
+.yj-packages-page .yj-hero-divider {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-block: .75rem 1rem;
+}
+.yj-packages-page .yj-hero-divider-bar { inline-size: 34px; block-size: 3px; background: var(--yj-gold); border-radius: 2px; }
+.yj-packages-page .yj-hero-divider-dot { inline-size: 6px; block-size: 6px; border-radius: 50%; background: var(--yj-gold); }
+.yj-packages-page .yj-hero-divider-dot-faint { opacity: .5; }
+
+.yj-packages-page .yj-hero-subtitle {
+    color: var(--yj-ink-2);
+    font-size: .9375rem;
+    line-height: 1.55;
+    max-inline-size: 26rem;
+}
+
+.yj-packages-page .yj-hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .625rem;
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0 0;
+}
+.yj-packages-page .yj-hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem .875rem;
+    background: rgba(255,255,255,.85);
+    border: 1px solid var(--yj-line-3);
+    border-radius: 999px;
+    font-size: .8125rem;
+    font-weight: 500;
+    color: var(--yj-ink);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+.yj-packages-page .yj-hero-pill i { color: var(--yj-gold); font-size: 1rem; line-height: 1; }
+
+/* ---------- TOOLBAR (clean, uncluttered — real controls only) ---------- */
+.yj-packages-page .yj-pkg-toolbar-wrap {
+    position: relative;
+    z-index: 10;
+    margin-block-start: -2.875rem; /* -46px overlap with hero, like Tours search */
+}
+.yj-packages-page .yj-pkg-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    background: #fff;
+    border: 1px solid var(--yj-line);
+    border-radius: 1rem;
+    padding: .875rem 1.125rem;
+    box-shadow: 0 10px 30px rgba(60,30,10,.08);
+}
+.yj-packages-page .yj-pkg-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    min-inline-size: 0;
+}
+.yj-packages-page .yj-pkg-toolbar-label {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--yj-mute);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+    margin: 0;
+}
+.yj-packages-page .yj-pkg-select {
+    border-color: var(--yj-line);
+    color: var(--yj-ink);
+    font-size: .875rem;
+    min-inline-size: 11rem;
+    max-inline-size: 100%;
+}
+.yj-packages-page .yj-pkg-select:focus {
+    border-color: var(--yj-gold);
+    box-shadow: 0 0 0 .2rem rgba(192,149,74,.2);
+}
+.yj-packages-page .yj-pkg-toolbar-divider {
+    inline-size: 1px;
+    align-self: stretch;
+    min-block-size: 1.75rem;
+    background: var(--yj-line-2);
+}
+.yj-packages-page .yj-pkg-price-fields {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.yj-packages-page .yj-pkg-price-input {
+    inline-size: 6.5rem;
+    max-inline-size: 100%;
+    border-color: var(--yj-line);
+    font-size: .875rem;
+}
+.yj-packages-page .yj-pkg-price-input:focus {
+    border-color: var(--yj-gold);
+    box-shadow: 0 0 0 .2rem rgba(192,149,74,.2);
+}
+.yj-packages-page .yj-pkg-price-sep { color: var(--yj-mute-2); }
+.yj-packages-page .yj-pkg-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+}
+.yj-packages-page .yj-pkg-apply {
+    background-color: var(--yj-brand);
+    border-color: var(--yj-brand);
+    font-weight: 600;
+    white-space: nowrap;
+}
+.yj-packages-page .yj-pkg-apply:hover,
+.yj-packages-page .yj-pkg-apply:focus {
+    background-color: var(--yj-brand-hover);
+    border-color: var(--yj-brand-hover);
+}
+.yj-packages-page .yj-pkg-clear {
+    color: var(--yj-mute);
+    text-decoration: none;
+    font-size: .8125rem;
+    white-space: nowrap;
+}
+.yj-packages-page .yj-pkg-clear:hover { color: var(--yj-brand); }
+
+/* View toggle (card/list) — server-authoritative links styled as tabs */
+.yj-packages-page .yj-pkg-view-toggle {
+    display: inline-flex;
+    margin-inline-start: auto; /* push to the trailing edge on desktop */
+    border: 1px solid var(--yj-line);
+    border-radius: .625rem;
+    overflow: hidden;
+    background: #fff;
+}
+.yj-packages-page .yj-pkg-view-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.5rem;
+    block-size: 2.375rem;
+    color: var(--yj-mute);
+    text-decoration: none;
+    font-size: 1rem;
+    transition: background-color .15s ease, color .15s ease;
+}
+.yj-packages-page .yj-pkg-view-tab + .yj-pkg-view-tab { border-inline-start: 1px solid var(--yj-line); }
+.yj-packages-page .yj-pkg-view-tab:hover { color: var(--yj-brand); }
+.yj-packages-page .yj-pkg-view-tab.active { background: var(--yj-brand); color: #fff; }
+
+/* ---------- RESULTS HEADER ---------- */
+.yj-packages-page .yj-pkg-results { margin-block-start: 1.75rem; }
+.yj-packages-page .yj-pkg-results-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-block-end: 1.125rem;
+}
+.yj-packages-page .yj-pkg-results-count {
+    font-size: .9375rem;
+    font-weight: 600;
+    color: var(--yj-ink-2);
+    margin: 0;
+}
+
+/* ---------- GRID ---------- */
+.yj-packages-page .yj-pkg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: 1.375rem;
+}
+.yj-packages-page .yj-pkg-grid--list {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+/* ---------- CARD (shared) ---------- */
+.yj-packages-page .yj-pkg-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--yj-line);
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(60,30,10,.05);
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+.yj-packages-page .yj-pkg-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 34px rgba(60,30,10,.12);
+}
+
+/* Media band — stable aspect ratio, object-fit cover already on the shared img */
+.yj-packages-page .yj-pkg-card .yj-pkg-media {
+    aspect-ratio: 16 / 10;
+    border-radius: 0;
+}
+
+/* Premium burgundy fallback tile (no fake photo, no broken icon) */
+.yj-packages-page .yj-pkg-media-fallback {
+    flex-direction: column;
+    gap: .5rem;
+    background:
+        radial-gradient(120% 120% at 15% 10%, rgba(192,149,74,.28) 0%, rgba(192,149,74,0) 45%),
+        radial-gradient(120% 120% at 85% 90%, rgba(192,149,74,.22) 0%, rgba(192,149,74,0) 42%),
+        linear-gradient(135deg, #8C1D24 0%, #6d1119 55%, #3c1f1c 100%);
+    color: rgba(255,255,255,.92);
+}
+.yj-packages-page .yj-pkg-media-mark {
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(192,149,74,.55);
+    color: var(--yj-gold);
+    font-size: 1.25rem;
+}
+.yj-packages-page .yj-pkg-media-fallback > i { color: var(--yj-gold); }
+.yj-packages-page .yj-pkg-media-label {
+    font-size: .6875rem;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.85);
+}
+
+/* Included-tours badge (top-leading, dark blur) */
+.yj-packages-page .yj-pkg-tours-badge {
+    position: absolute;
+    inset-block-start: .75rem;
+    inset-inline-start: .75rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    padding: .3125rem .625rem;
+    border-radius: 999px;
+    background: rgba(31,23,18,.62);
+    color: #fff;
+    font-size: .75rem;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.yj-packages-page .yj-pkg-tours-badge i { color: var(--yj-gold); font-size: .875rem; }
+
+/* Body */
+.yj-packages-page .yj-pkg-body {
+    display: flex;
+    flex-direction: column;
+    gap: .625rem;
+    padding: 1.125rem 1.125rem 1.25rem;
+    flex: 1 1 auto;
+    min-inline-size: 0;
+}
+.yj-packages-page .yj-pkg-name {
+    font-family: "Playfair Display", "Times New Roman", var(--bs-font-serif, serif);
+    font-weight: 700;
+    font-size: 1.1875rem;
+    line-height: 1.25;
+    color: var(--yj-ink);
+    margin: 0;
+}
+.yj-packages-page .yj-pkg-name a {
+    color: inherit;
+    text-decoration: none;
+}
+.yj-packages-page .yj-pkg-name a:hover { color: var(--yj-brand); }
+.yj-packages-page .yj-pkg-desc {
+    color: var(--yj-mute);
+    font-size: .875rem;
+    line-height: 1.5;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.yj-packages-page .yj-pkg-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem .75rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.yj-packages-page .yj-pkg-meta li {
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    font-size: .8125rem;
+    color: var(--yj-ink-2);
+}
+.yj-packages-page .yj-pkg-meta i { color: var(--yj-gold); font-size: .9375rem; }
+
+/* Footer — From / price / CTA */
+.yj-packages-page .yj-pkg-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-block-start: auto;
+    padding-block-start: .875rem;
+    border-block-start: 1px solid var(--yj-line-2);
+}
+.yj-packages-page .yj-pkg-price {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    min-inline-size: 0;
+}
+.yj-packages-page .yj-pkg-price-label {
+    font-size: .6875rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--yj-mute-2);
+}
+.yj-packages-page .yj-pkg-price-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--yj-brand);
+}
+.yj-packages-page .yj-pkg-cta {
+    position: relative;
+    z-index: 3; /* above the stretched-link so the button stays clickable */
+    background-color: var(--yj-brand);
+    border-color: var(--yj-brand);
+    font-size: .8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.yj-packages-page .yj-pkg-cta:hover,
+.yj-packages-page .yj-pkg-cta:focus {
+    background-color: var(--yj-brand-hover);
+    border-color: var(--yj-brand-hover);
+}
+
+/* ---------- LIST VARIANT (horizontal card) ---------- */
+.yj-packages-page .yj-pkg-card--list { flex-direction: row; }
+.yj-packages-page .yj-pkg-card--list .yj-pkg-media {
+    aspect-ratio: auto;
+    inline-size: clamp(11.25rem, 26%, 16.25rem);
+    flex: 0 0 auto;
+    align-self: stretch;
+    min-block-size: 100%;
+}
+.yj-packages-page .yj-pkg-card--list .yj-pkg-body { flex: 1 1 auto; }
+
+/* ---------- PAGINATION inside results ---------- */
+.yj-packages-page .yj-pkg-pagination { margin-block-start: 1.75rem; }
+.yj-packages-page #listingResults .pagination .page-link { color: var(--yj-brand); border-color: var(--yj-line); }
+.yj-packages-page #listingResults .pagination .page-item.active .page-link {
+    background-color: var(--yj-brand);
+    border-color: var(--yj-brand);
+    color: #fff;
+}
+
+/* ---------- EMPTY STATE ---------- */
+.yj-packages-page .yj-pkg-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--yj-mute);
+}
+.yj-packages-page .yj-pkg-empty i { color: var(--yj-gold); }
+
+/* ---------- TRUST STRIP (scoped for Packages) ---------- */
+.yj-packages-page .yj-trust-wrap { margin-block: 2.75rem 2.75rem; }
+.yj-packages-page .yj-trust {
+    background: #fff;
+    border: 1px solid var(--yj-line);
+    border-radius: 1rem;
+    padding: 1.5rem .75rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    box-shadow: 0 4px 16px rgba(60,30,10,.04);
+}
+.yj-packages-page .yj-trust-col {
+    display: flex;
+    align-items: center;
+    gap: .8125rem;
+    padding-inline: 1.25rem;
+    padding-block: .5rem;
+    border-inline-end: 1px solid var(--yj-line-2);
+}
+.yj-packages-page .yj-trust-col:last-child { border-inline-end: 0; }
+.yj-packages-page .yj-trust-icon {
+    inline-size: 48px;
+    block-size: 48px;
+    border-radius: 50%;
+    background: #f7f0e5;
+    border: 1px solid rgba(192,149,74,.4);
+    color: var(--yj-gold);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    flex-shrink: 0;
+}
+.yj-packages-page .yj-trust-body { min-inline-size: 0; }
+.yj-packages-page .yj-trust-title {
+    font-size: .875rem;
+    font-weight: 700;
+    color: var(--yj-ink);
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.yj-packages-page .yj-trust-text { font-size: .75rem; color: var(--yj-mute); margin: 0; }
+
+/* ---------- RESPONSIVE ---------- */
+/* Tablet / small laptop: toolbar wraps gracefully, view toggle keeps trailing. */
+@media (max-width: 62em) {
+    .yj-packages-page .yj-pkg-toolbar-divider { display: none; }
+    .yj-packages-page .yj-trust { grid-template-columns: repeat(2, 1fr); }
+    .yj-packages-page .yj-trust-col:nth-child(2n) { border-inline-end: 0; }
+    .yj-packages-page .yj-trust-col:nth-child(1),
+    .yj-packages-page .yj-trust-col:nth-child(2) { border-block-end: 1px solid var(--yj-line-2); padding-block-end: 1rem; }
+    .yj-packages-page .yj-trust-col:nth-child(3),
+    .yj-packages-page .yj-trust-col:nth-child(4) { padding-block-start: 1rem; }
+}
+/* Narrow tablet / large phone: toolbar groups stack; controls go full width. */
+@media (max-width: 48em) {
+    .yj-packages-page .yj-pkg-toolbar { align-items: stretch; }
+    .yj-packages-page .yj-pkg-toolbar-group { flex-wrap: wrap; }
+    .yj-packages-page .yj-pkg-select { min-inline-size: 0; flex: 1 1 auto; }
+    .yj-packages-page .yj-pkg-price-input { flex: 1 1 0; inline-size: auto; }
+    .yj-packages-page .yj-pkg-view-toggle { margin-inline-start: 0; }
+}
+/* Phone: list variant becomes a stacked card so it never overflows. */
+@media (max-width: 40em) {
+    .yj-packages-page .yj-pkg-card--list { flex-direction: column; }
+    .yj-packages-page .yj-pkg-card--list .yj-pkg-media {
+        inline-size: 100%;
+        aspect-ratio: 16 / 10;
+        min-block-size: 0;
+    }
+    .yj-packages-page .yj-pkg-results-head { flex-direction: column; align-items: flex-start; gap: .5rem; }
+    .yj-packages-page .yj-trust { grid-template-columns: 1fr; }
+    .yj-packages-page .yj-trust-col {
+        border-inline-end: 0;
+        border-block-end: 1px solid var(--yj-line-2);
+        padding-block: .75rem;
+    }
+    .yj-packages-page .yj-trust-col:last-child { border-block-end: 0; }
+}
+
+/* ---------- HERO FOCAL POINT (keep the Jordan flag visible) ----------
+   The flag sits in the upper-right of the photo. With object-fit:cover the
+   image is scaled to fill the hero box, so on WIDE / short / zoomed-out
+   viewports the TOP gets cropped first — that is what was hiding the flag.
+   We bias the vertical focal point UPWARD as the viewport widens so the
+   flag-and-sky band is always retained, while the tent/camel/person stay
+   balanced. Horizontal stays right-of-centre (LTR). No stretching: only
+   object-position changes; RTL mirrors the X in rtl.css §15. */
+
+/* Wide desktop (1440px+): more horizontal room → cover crops vertically,
+   so pull the focus higher to protect the flag. */
+@media (min-width: 90em) {
+    .yj-packages-page .yj-hero-img { object-position: 68% 26%; }
+}
+/* Extra-wide / large monitors & 25–50% browser zoom-out (very wide ratio):
+   keep the flag firmly in frame near the top of the sky. */
+@media (min-width: 120em) {
+    .yj-packages-page .yj-hero-img { object-position: 66% 20%; }
+}
+/* Tablet: balanced crop, flag still visible. */
+@media (max-width: 62em) {
+    .yj-packages-page .yj-hero-img { object-position: 66% 34%; }
+}
+/* Phone (portrait): hero is relatively taller → vertical crop eases, keep
+   the right/flag side and a touch more of the scene. */
+@media (max-width: 40em) {
+    .yj-packages-page .yj-hero-img { object-position: 62% 36%; }
+}

@@ -484,3 +484,70 @@
 [dir="rtl"] .yj-pkg-detail-media-img {
     transform: none;
 }
+
+
+/* =========================================================================
+   §15 — Packages listing page (.yj-packages-page) RTL
+   Companion to the site.css .yj-packages-page block. Follows the exact
+   §13 strategy: ONLY the hero photo layer is mirrored in Arabic so the
+   camel/tent/flag composition balances toward the LEFT and the light sand
+   gradient sits on the RIGHT under the Arabic text. Text, pills, toolbar,
+   UI controls and card cover photos are NEVER flipped. All layout spacing
+   uses logical properties, so it flips automatically.
+   ========================================================================= */
+
+/* Mirror ONLY the hero <img>. The LTR object-position is 70% 32% (biased up
+   so the Jordan flag stays in frame). After scaleX(-1) the X axis is visually
+   inverted, so we set X = 100 - LTR_X (=> 30%) and keep the same Y. The flag
+   thus stays visible in Arabic too, while the composition balances LEFT. */
+[dir="rtl"] .yj-packages-page .yj-hero-img {
+    transform: scaleX(-1);
+    object-position: 30% 32%;
+}
+/* Responsive focal points mirror the site.css LTR values (X flipped, Y kept)
+   so the flag is retained across wide / tablet / phone in RTL as well. */
+@media (min-width: 90em) {
+    [dir="rtl"] .yj-packages-page .yj-hero-img { object-position: 32% 26%; }
+}
+@media (min-width: 120em) {
+    [dir="rtl"] .yj-packages-page .yj-hero-img { object-position: 34% 20%; }
+}
+@media (max-width: 62em) {
+    [dir="rtl"] .yj-packages-page .yj-hero-img { object-position: 34% 34%; }
+}
+@media (max-width: 40em) {
+    [dir="rtl"] .yj-packages-page .yj-hero-img { object-position: 38% 36%; }
+}
+
+/* Re-declare the hero gradient for RTL (gradient keywords are physical and
+   ignore `dir`). Fade right→left so opaque sand sits under the Arabic text
+   on the RIGHT while the photo shows through on the LEFT. */
+[dir="rtl"] .yj-packages-page .yj-hero-gradient {
+    background: linear-gradient(
+        to left,
+        #faf4ec 0%,
+        #faf4ec 30%,
+        rgba(250,244,236,.86) 44%,
+        rgba(250,244,236,.35) 60%,
+        rgba(250,244,236,0) 78%
+    );
+}
+
+/* No-flip safeguards for direction-neutral glyphs on this page. */
+[dir="rtl"] .yj-packages-page .yj-hero-pill i,
+[dir="rtl"] .yj-packages-page .yj-hero-pill .bi,
+[dir="rtl"] .yj-packages-page .yj-pkg-toolbar .bi,
+[dir="rtl"] .yj-packages-page .yj-pkg-view-tab i,
+[dir="rtl"] .yj-packages-page .yj-pkg-view-tab .bi,
+[dir="rtl"] .yj-packages-page .yj-pkg-tours-badge i,
+[dir="rtl"] .yj-packages-page .yj-pkg-meta i,
+[dir="rtl"] .yj-packages-page .yj-trust-icon .bi,
+[dir="rtl"] .yj-packages-page .yj-trust-col .bi {
+    transform: none;
+}
+
+/* Cover photos on package cards must never mirror (covered by §14 too,
+   restated here scoped to the page for clarity/safety). */
+[dir="rtl"] .yj-packages-page .yj-pkg-media-img {
+    transform: none;
+}

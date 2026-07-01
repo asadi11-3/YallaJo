@@ -11,6 +11,7 @@ public sealed class PackageCardVm
     public decimal PriceAmount { get; init; }
     public string Currency { get; init; } = "";
     public int IncludedTourCount { get; init; }
+    public int? MaxParticipants { get; init; }
     public DateTime? ValidFrom { get; init; }
     public DateTime? ValidTo { get; init; }
 
@@ -18,6 +19,7 @@ public sealed class PackageCardVm
     public string? CoverImageUrl { get; init; }
     public bool HasCoverImage => !string.IsNullOrWhiteSpace(CoverImageUrl);
     public bool HasValidity => ValidFrom is not null || ValidTo is not null;
+    public bool HasMaxParticipants => MaxParticipants is > 0;
 }
 
 /// <summary>The public packages listing page view model (paged grid).</summary>
@@ -31,6 +33,15 @@ public sealed class PackagesGridVm
     public bool HasPreviousPage { get; init; }
     public bool HasNextPage { get; init; }
     public bool HasResults => Packages.Count > 0;
+
+    /// <summary>Active sort key, echoed back so the toolbar + pagination can persist it.</summary>
+    public string? Sort { get; init; }
+
+    /// <summary>Active minimum price filter, echoed back for the toolbar + pagination.</summary>
+    public decimal? MinPrice { get; init; }
+
+    /// <summary>Active maximum price filter, echoed back for the toolbar + pagination.</summary>
+    public decimal? MaxPrice { get; init; }
 }
 
 /// <summary>The public package detail page view model.</summary>

@@ -2,84 +2,49 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @*
-    Phase 7: results fragment for the packages listing.
+    Results fragment for the packages listing.
     Rendered inside Packages/Index.cshtml on full page loads and returned
     standalone for AJAX requests (WantsAjax); swapped client-side by listing.js.
+    The wrapping #listingResults container lives in Index.cshtml and is preserved.
 *@
 @{
-    string Money(decimal amount, string currency) =>
-        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+    var viewMode = (Context.Request.Query["viewMode"].ToString() == "list") ? "list" : "card";
+    var isList = viewMode == "list";
+
+    // Echoed filter/sort state so pagination keeps the active query (AJAX-safe).
+    var routeValues = new Dictionary<string, string?>();
+    if (!string.IsNullOrWhiteSpace(Model.Sort)) { routeValues["sort"] = Model.Sort; }
+    if (Model.MinPrice is { } min) { routeValues["minPrice"] = min.ToString(System.Globalization.CultureInfo.InvariantCulture); }
+    if (Model.MaxPrice is { } max) { routeValues["maxPrice"] = max.ToString(System.Globalization.CultureInfo.InvariantCulture); }
+    if (isList) { routeValues["viewMode"] = "list"; }
 }
 @if (Model.HasResults)
 {
-    <div class="row g-3 g-md-4">
+    <div class="yj-pkg-results-head">
+        <p class="yj-pkg-results-count mb-0">@Localizer["Public.Packages.Found", Model.TotalCount]</p>
+    </div>
+
+    <div class="yj-pkg-grid @(isList ? "yj-pkg-grid--list" : "yj-pkg-grid--card")">
         @foreach (var package in Model.Packages)
         {
-            <div class="col-sm-6 col-xl-4">
-                <div class="card border h-100 card-hover-shadow yj-pkg-card">
-                    @* Cover media band: real image when present, premium gradient tile as fallback. *@
-                    <div class="yj-pkg-media" aria-hidden="true">
-                        @if (package.HasCoverImage)
-                        {
-                            <img src="@package.CoverImageUrl" alt="" loading="lazy" decoding="async" class="yj-pkg-media-img" />
-                        }
-                        else
-                        {
-                            <div class="yj-pkg-media-fallback">
-                                <i class="bi bi-box-seam" aria-hidden="true"></i>
-                            </div>
-                        }
-                    </div>
-                    <div class="card-body d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge text-bg-primary">@Localizer["Public.Tours.Count", package.IncludedTourCount]</span>
-                            <span class="h6 mb-0 text-primary"><bdi dir="ltr" class="font-data">@Money(package.PriceAmount, package.Currency)</bdi></span>
-                        </div>
-                        <h2 class="h5 card-title mb-2">
-                            <a class="stretched-link text-reset" asp-area="Public" asp-controller="Packages" asp-action="Detail" asp-route-id="@package.Id">@package.Name</a>
-                        </h2>
-                        @if (!string.IsNullOrWhiteSpace(package.Description))
-                        {
-                            <p class="text-body-secondary small mb-3 text-truncate-3">@package.Description</p>
-                        }
-                        @if (package.HasValidity)
-                        {
-                            <p class="small text-body-secondary mb-3">
-                                <i class="bi bi-calendar-event me-1" aria-hidden="true"></i>
-                                @if (package.ValidFrom is not null && package.ValidTo is not null)
-                                {
-                                    @($"{package.ValidFrom:d MMM yyyy} – {package.ValidTo:d MMM yyyy}")
-                                }
-                                else if (package.ValidFrom is not null)
-                                {
-                                    @Localizer["Public.ValidFrom", $"{package.ValidFrom:d MMM yyyy}"]
-                                }
-                                else
-                                {
-                                    @Localizer["Public.ValidUntil", $"{package.ValidTo:d MMM yyyy}"]
-                                }
-                            </p>
-                        }
-                        @* Phase 8.3: visible CTA in addition to the stretched-link title. *@
-                        <div class="mt-auto">
-                            <a class="btn btn-sm btn-primary position-relative z-index-2" asp-area="Public" asp-controller="Packages" asp-action="Detail" asp-route-id="@package.Id" aria-label="@Localizer["Public.ViewPackage"] – @package.Name">@Localizer["Public.ViewPackage"]</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <partial name="_PackageCard" model="package" view-data="@(new ViewDataDictionary(ViewData) { ["viewMode"] = viewMode })" />
         }
     </div>
 
     @if (Model.HasPreviousPage || Model.HasNextPage)
     {
-        <nav class="mt-4" aria-label="@Localizer["Public.Packages.pages"]">
+        <nav class="yj-pkg-pagination" aria-label="@Localizer["Public.Packages.pages"]">
             <ul class="pagination justify-content-center mb-0">
                 <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                    <a class="page-link" asp-area="Public" asp-controller="Packages" asp-action="Index" asp-route-page="@(Model.PageNumber - 1)" tabindex="@(Model.HasPreviousPage ? "0" : "-1")">@Localizer["Public.Previous"]</a>
+                    <a class="page-link" asp-area="Public" asp-controller="Packages" asp-action="Index"
+                       asp-route-page="@(Model.PageNumber - 1)" asp-all-route-data="routeValues"
+                       tabindex="@(Model.HasPreviousPage ? "0" : "-1")">@Localizer["Public.Previous"]</a>
                 </li>
                 <li class="page-item active" aria-current="page"><span class="page-link">@Model.PageNumber</span></li>
                 <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                    <a class="page-link" asp-area="Public" asp-controller="Packages" asp-action="Index" asp-route-page="@(Model.PageNumber + 1)" tabindex="@(Model.HasNextPage ? "0" : "-1")">@Localizer["Public.Next"]</a>
+                    <a class="page-link" asp-area="Public" asp-controller="Packages" asp-action="Index"
+                       asp-route-page="@(Model.PageNumber + 1)" asp-all-route-data="routeValues"
+                       tabindex="@(Model.HasNextPage ? "0" : "-1")">@Localizer["Public.Next"]</a>
                 </li>
             </ul>
         </nav>
@@ -87,7 +52,7 @@
 }
 else
 {
-    <div class="text-center py-5">
+    <div class="yj-pkg-empty text-center py-5">
         <i class="bi bi-box-seam display-4 text-body-secondary" aria-hidden="true"></i>
         <h2 class="h4 mt-3">@Localizer["Public.No.packages.available.yet"]</h2>
         <p class="text-body-secondary">@Localizer["Public.Check.back.soon.for.curated.tour.bundles"]</p>
