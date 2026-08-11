@@ -2,11 +2,6 @@ using System.Linq.Expressions;
 
 namespace YallaJo.SharedKernel.Domain.Abstractions.Data
 {
-    /// <summary>
-    /// Domain-level write repository interface. Contains no EF Core dependencies.
-    /// The EF-specific ExecuteUpdateAsync (which uses SetPropertyCalls&lt;T&gt;) lives
-    /// only on the concrete EfWriteRepository implementation.
-    /// </summary>
     public interface IWriteRepository<TEntity, in TKey>
        where TEntity : class
        where TKey : notnull

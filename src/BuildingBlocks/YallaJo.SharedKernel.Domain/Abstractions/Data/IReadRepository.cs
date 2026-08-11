@@ -8,7 +8,6 @@ namespace YallaJo.SharedKernel.Domain.Abstractions.Data
         where TEntity : class
         where TKey : notnull
     {
-        // Expression-based queries
         Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default, bool asNoTracking = true);
 
         Task<TEntity?> GetAsync(

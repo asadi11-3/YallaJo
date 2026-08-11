@@ -9,5 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tracking.Application\Tracking.Application.csproj" />
+    <ProjectReference Include="..\Tracking.Contracts\Tracking.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Presentation\YallaJo.SharedKernel.Presentation.csproj" />
   </ItemGroup>
 </Project>
