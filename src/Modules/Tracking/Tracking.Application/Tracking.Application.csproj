@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.15" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Booking\Booking.Contracts\Booking.Contracts.csproj" />
     <ProjectReference Include="..\..\Security\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\Tracking.Contracts\Tracking.Contracts.csproj" />
     <ProjectReference Include="..\Tracking.Domain\Tracking.Domain.csproj" />
